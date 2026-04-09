@@ -30,11 +30,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ps5-vault
+        working-directory: Games
 
       - name: Build
         run: npm run build
-        working-directory: ps5-vault
+        working-directory: Games
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
