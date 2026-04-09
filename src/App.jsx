@@ -175,19 +175,19 @@ body { overflow-x:hidden; max-width:100%; background:${G.bg}; color:${G.txt}; fo
 
 /* MODAL */
 .ovr { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(4,6,14,.9); z-index:9999; display:flex; align-items:flex-end; }
-.mdl { width:100%; max-width:100%; overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch; background:${G.card2}; border-top:1px solid ${G.bdr}; border-radius:20px 20px 0 0; padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 24px); max-height:90dvh; animation:slideUp .22s ease; }
+.mdl { width:100%; max-width:100%; overflow:visible; overflow-y:auto; -webkit-overflow-scrolling:touch; background:${G.card2}; border-top:1px solid ${G.bdr}; border-radius:20px 20px 0 0; padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 24px); max-height:90dvh; animation:slideUp .22s ease; }
 .mhdl { width:32px; height:4px; background:${G.bdr}; border-radius:2px; margin:0 auto 16px; }
 .mttl { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:${G.blu}; letter-spacing:.06em; margin-bottom:16px; }
 
 /* RAWG */
-.rwrp { position:relative; margin-bottom:12px; max-width:100%; overflow:hidden; }
+.rwrp { position:relative; margin-bottom:12px; max-width:100%; }
 .rlbl { display:block; font-size:9px; font-weight:700; color:${G.dim}; letter-spacing:.1em; text-transform:uppercase; margin-bottom:5px; }
 .rrow { display:flex; gap:6px; align-items:center; max-width:100%; overflow:hidden; }
 .rin  { flex:1; min-width:0; display:block; background:${G.bg}; border:1px solid ${G.blu}; border-radius:9px; padding:10px 11px; color:${G.txt}; font-family:'Syne',sans-serif; font-size:16px; outline:none; -webkit-appearance:none; }
 .rin::placeholder { color:${G.dim}; }
 .rbdg2 { font-size:9px; font-weight:700; padding:4px 8px; border-radius:6px; background:rgba(0,212,255,.15); color:${G.blu}; flex-shrink:0; white-space:nowrap; }
 .rhnt { font-size:10px; color:${G.dim}; margin-top:4px; }
-.rdd  { position:absolute; top:100%; left:0; right:0; background:${G.card}; border:1px solid ${G.bdr}; border-radius:12px; z-index:200; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,.6); margin-top:4px; }
+.rdd  { position:absolute; top:100%; left:0; right:0; background:${G.card}; border:1px solid ${G.bdr}; border-radius:12px; z-index:99998; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,.6); margin-top:4px; }
 .rit  { display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer; border-bottom:1px solid ${G.bdr}; min-height:52px; }
 .rit:last-child { border-bottom:none; }
 .rit:active { background:rgba(0,212,255,.08); }
