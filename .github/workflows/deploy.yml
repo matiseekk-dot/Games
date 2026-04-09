@@ -29,8 +29,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
-        working-directory: ps5-vault
+        run: npm ci
 
       - name: Build
         run: npm run build
