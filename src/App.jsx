@@ -12,7 +12,8 @@ const SM = {
 const GENRES = ["Action","RPG","FPS","Horror","Sport","Racing","Platformer","Puzzle","Adventure","Strategia","Fighting","Indie","Inne"];
 const RMAP   = {"action":"Action","role-playing-games-rpg":"RPG","shooter":"FPS","horror":"Horror","sports":"Sport","racing":"Racing","platformer":"Platformer","puzzle":"Puzzle","adventure":"Adventure","strategy":"Strategia","fighting":"Fighting","indie":"Indie"};
 const G = { bg:"#080B14", card:"#0D1120", card2:"#111827", bdr:"#1E2A42", txt:"#E8EDF8", dim:"#5A6A8A", blu:"#00D4FF", grn:"#39FF6E", pur:"#A78BFA", red:"#FF4D6D", gld:"#FFD166", org:"#FF9F1C" };
-const EF = { title:"", abbr:"", status:"planuje", year:new Date().getFullYear(), genre:"", hours:"", rating:"", notes:"", cover:"", releaseDate:"", notifyEnabled:false };
+const EF = { title:"", abbr:"", status:"planuje", year:new Date().getFullYear(), genre:"", hours:"", rating:"", notes:"", cover:"", releaseDate:"", notifyEnabled:false, priceBought:"", priceSold:"", storeBought:"" };
+const STORES = ["PSN","Disc","CDP","Media Expert","Allegro","OLX","Klucz","Inne"];
 
 function uid()  { return "g" + Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
 function mkAbbr(t) { const w=t.trim().split(/\s+/).filter(Boolean); return !w.length?"??":(w.length===1?w[0].slice(0,2):w[0][0]+w[1][0]).toUpperCase(); }
@@ -226,6 +227,33 @@ body { overflow-x:hidden; max-width:100%; background:${G.bg}; color:${G.txt}; fo
 .bcn { min-height:50px; padding:13px 14px; border:1px solid ${G.bdr}; border-radius:11px; background:${G.card}; color:${G.dim}; font-family:'Syne',sans-serif; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
 .bdl { min-height:50px; padding:13px 14px; border:1px solid rgba(255,77,109,.3); border-radius:11px; background:rgba(255,77,109,.1); color:${G.red}; font-size:16px; cursor:pointer; }
 
+
+/* FINANCE */
+.fin-row { display:grid; grid-template-columns:1fr 1fr; gap:9px; max-width:100%; }
+.fin-divider { height:1px; background:${G.bdr}; margin:14px 0 12px; }
+.fin-section-lbl { font-size:9px; font-weight:700; color:${G.org}; letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
+.sold-toggle { display:flex; align-items:center; justify-content:space-between; padding:11px 14px; background:${G.bg}; border:1px solid ${G.bdr}; border-radius:9px; cursor:pointer; margin-bottom:11px; }
+.sold-toggle-lbl { font-size:14px; color:${G.txt}; }
+.sold-sw { width:44px; height:26px; border-radius:13px; background:${G.bdr}; position:relative; flex-shrink:0; transition:background .2s; }
+.sold-sw.on { background:${G.grn}; }
+.sold-knob { position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:transform .2s; }
+.sold-sw.on .sold-knob { transform:translateX(18px); }
+/* card finance badge */
+.gprice { font-size:11px; font-weight:700; color:${G.org}; white-space:nowrap; }
+.gprice-sold { font-size:11px; font-weight:700; color:${G.grn}; white-space:nowrap; }
+/* finance stats */
+.fin-kgd { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:12px; }
+.fin-kcd { border-radius:13px; padding:14px; overflow:hidden; border:1px solid ${G.bdr}; }
+.fin-kv { font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:var(--c); line-height:1; margin-bottom:4px; }
+.fin-kl { font-size:9px; color:${G.dim}; font-weight:600; letter-spacing:.07em; text-transform:uppercase; }
+.roi-positive { color:${G.grn}; }
+.roi-negative { color:${G.red}; }
+.top-list { list-style:none; }
+.top-item { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid ${G.bdr}; gap:8px; }
+.top-item:last-child { border-bottom:none; }
+.top-title { flex:1; min-width:0; font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.top-val { font-family:'Orbitron',monospace; font-size:12px; font-weight:700; flex-shrink:0; }
+
 .tst { position:fixed; bottom:calc(env(safe-area-inset-bottom,0px) + 32px); left:50%; transform:translateX(-50%); background:${G.grn}; color:#000; font-family:'Orbitron',monospace; font-size:11px; font-weight:700; padding:9px 20px; border-radius:20px; z-index:99999; white-space:nowrap; pointer-events:none; }
 `;
 
@@ -373,6 +401,36 @@ function Modal({ game, onSave, onDel, onClose, notifPermission, onRequestNotif }
         <div className="fg"><label className="fl">Ocena (1–10)</label>
           <input className="fi" inputMode="decimal" value={f.rating??""} onChange={e=>upd("rating",e.target.value)} placeholder="—"/>
         </div>
+
+        {/* FINANSE */}
+        <div className="fin-divider"/>
+        <div className="fin-section-lbl">💰 Finanse</div>
+        <div className="fin-row">
+          <div className="fg">
+            <label className="fl">Zapłacono (PLN)</label>
+            <input className="fi" inputMode="decimal" value={f.priceBought??""} onChange={e=>upd("priceBought",e.target.value)} placeholder="0"/>
+          </div>
+          <div className="fg">
+            <label className="fl">Sklep / źródło</label>
+            <select className="fs" value={f.storeBought||""} onChange={e=>upd("storeBought",e.target.value)}>
+              <option value="">— wybierz —</option>
+              {STORES.map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="sold-toggle" onClick={()=>upd("priceSold", f.priceSold==null?"":null)}>
+          <div className="sold-toggle-lbl">Sprzedałem tę grę</div>
+          <div className={"sold-sw"+(f.priceSold!=null?" on":"")}>
+            <div className="sold-knob"/>
+          </div>
+        </div>
+        {f.priceSold!=null && (
+          <div className="fg">
+            <label className="fl">Sprzedano za (PLN)</label>
+            <input className="fi" inputMode="decimal" value={f.priceSold??""} onChange={e=>upd("priceSold",e.target.value)} placeholder="0"/>
+          </div>
+        )}
+
         <div className="fg"><label className="fl">Notatki</label>
           <textarea className="fta" value={f.notes} onChange={e=>upd("notes",e.target.value)} placeholder="Twoje przemyślenia..."/>
         </div>
@@ -510,7 +568,9 @@ function Upcoming({ games, onOpen, onToggleNotify, notifPermission, onRequestNot
 
 // ─── STATS ────────────────────────────────────────────────────────────────────
 function Stats({ games }) {
+  const [finTab, setFinTab] = useState("general");
   if (!games.length) return <div className="sta"><div className="empty"><div className="eic">📈</div><div className="ett">Brak danych</div><div className="ess">Dodaj gry, żeby zobaczyć statystyki</div></div></div>;
+
   const hrs=games.reduce((s,g)=>s+(g.hours||0),0);
   const rated=games.filter(g=>g.rating!=null);
   const avg=rated.length?(rated.reduce((s,g)=>s+g.rating,0)/rated.length).toFixed(1):"—";
@@ -524,18 +584,117 @@ function Stats({ games }) {
   const gMap={}; games.forEach(g=>{if(g.genre)gMap[g.genre]=(gMap[g.genre]||0)+1;});
   const gData=Object.entries(gMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v}));
   const buckets=[1,2,3,4,5,6,7,8,9,10].map(r=>({n:String(r),v:games.filter(g=>g.rating!=null&&Math.round(g.rating)===r).length}));
+
+  // ── FINANCE ──
+  const bought     = games.filter(g=>!!+g.priceBought);
+  const sold       = games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
+  const totalSpent = bought.reduce((s,g)=>s+ +g.priceBought,0);
+  const totalEarned= sold.reduce((s,g)=>s+ +g.priceSold,0);
+  const netCost    = totalSpent - totalEarned;
+  const withHours  = bought.filter(g=>g.hours>0);
+  const costPerHr  = withHours.length ? (withHours.reduce((s,g)=>s+ +g.priceBought,0) / withHours.reduce((s,g)=>s+g.hours,0)) : null;
+
+  // Store breakdown
+  const storeMap={}; bought.forEach(g=>{const s=g.storeBought||"Inne"; storeMap[s]=(storeMap[s]||0)+ +g.priceBought;});
+  const storeData=Object.entries(storeMap).sort((a,b)=>b[1]-a[1]).map(([n,v])=>({n,v:+v.toFixed(0)}));
+
+  // Best/worst investment (bought + sold)
+  const soldGames = sold.map(g=>({...g, roi: +g.priceSold - +g.priceBought})).sort((a,b)=>b.roi-a.roi);
+
+  // Cost per genre
+  const genreCostMap={}; bought.forEach(g=>{if(g.genre){genreCostMap[g.genre]=(genreCostMap[g.genre]||0)+ +g.priceBought;}});
+  const genreCostData=Object.entries(genreCostMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v:+v.toFixed(0)}));
+
+  const finKpis=[
+    {l:"Wydano łącznie",  v:totalSpent.toFixed(0)+" zł",  c:G.red,  bg:"rgba(255,77,109,.07)"},
+    {l:"Odzyskano",       v:totalEarned.toFixed(0)+" zł", c:G.grn,  bg:"rgba(57,255,110,.07)"},
+    {l:"Realny koszt",    v:netCost.toFixed(0)+" zł",     c:netCost>0?G.org:G.grn, bg:"rgba(255,159,28,.07)"},
+    {l:"Koszt/godzinę",   v:costPerHr?costPerHr.toFixed(1)+" zł":"—", c:G.blu, bg:"rgba(0,212,255,.07)"},
+  ];
+
   return (
     <div className="sta">
-      <div className="kgd">{kpis.map(k=><div key={k.l} className="kcd" style={{"--c":k.c}}><div className="kvl">{k.v}</div><div className="klb">{k.l}</div></div>)}</div>
-      <div className="ccd"><div className="ctl">📊 Status kolekcji</div>
-        <ResponsiveContainer width="100%" height={120}><BarChart data={sData} barSize={24} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey="n" tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey="v" radius={[4,4,0,0]}>{sData.map((d,i)=><Cell key={i} fill={d.c} fillOpacity={.85}/>)}</Bar></BarChart></ResponsiveContainer>
+      {/* SUB TABS */}
+      <div style={{display:"flex",gap:4,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:11,padding:4,marginBottom:14}}>
+        {[["general","🎮 Ogólne"],["finance","💰 Finanse"]].map(([k,l])=>(
+          <button key={k} type="button" onClick={()=>setFinTab(k)}
+            style={{flex:1,minHeight:40,padding:"7px 4px",border:"none",borderRadius:8,background:finTab===k?"rgba(0,212,255,.15)":"transparent",color:finTab===k?G.blu:G.dim,fontFamily:"'Syne',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+            {l}
+          </button>
+        ))}
       </div>
-      {gData.length>0&&<div className="ccd"><div className="ctl">🎮 Top gatunki</div>
-        <ResponsiveContainer width="100%" height={120}><BarChart data={gData} barSize={20} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey="n" tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey="v" radius={[4,4,0,0]} fill={G.pur} fillOpacity={.8}/></BarChart></ResponsiveContainer>
-      </div>}
-      {rated.length>0&&<div className="ccd"><div className="ctl">⭐ Histogram ocen</div>
-        <ResponsiveContainer width="100%" height={120}><BarChart data={buckets} barSize={16} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey="n" tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey="v" radius={[4,4,0,0]}>{buckets.map((_,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={.85}/>)}</Bar></BarChart></ResponsiveContainer>
-      </div>}
+
+      {finTab==="general" && <>
+        <div className="kgd">{kpis.map(k=><div key={k.l} className="kcd" style={{"--c":k.c}}><div className="kvl">{k.v}</div><div className="klb">{k.l}</div></div>)}</div>
+        <div className="ccd"><div className="ctl">📊 Status kolekcji</div>
+          <ResponsiveContainer width="100%" height={120}><BarChart data={sData} barSize={24} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey="n" tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey="v" radius={[4,4,0,0]}>{sData.map((d,i)=><Cell key={i} fill={d.c} fillOpacity={.85}/>)}</Bar></BarChart></ResponsiveContainer>
+        </div>
+        {gData.length>0&&<div className="ccd"><div className="ctl">🎮 Top gatunki</div>
+          <ResponsiveContainer width="100%" height={120}><BarChart data={gData} barSize={20} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey="n" tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey="v" radius={[4,4,0,0]} fill={G.pur} fillOpacity={.8}/></BarChart></ResponsiveContainer>
+        </div>}
+        {rated.length>0&&<div className="ccd"><div className="ctl">⭐ Histogram ocen</div>
+          <ResponsiveContainer width="100%" height={120}><BarChart data={buckets} barSize={16} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey="n" tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey="v" radius={[4,4,0,0]}>{buckets.map((_,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={.85}/>)}</Bar></BarChart></ResponsiveContainer>
+        </div>}
+      </>}
+
+      {finTab==="finance" && <>
+        {bought.length===0 ? (
+          <div className="empty"><div className="eic">💰</div><div className="ett">Brak danych finansowych</div><div className="ess">Dodaj ceny kupna do gier żeby zobaczyć statystyki</div></div>
+        ) : <>
+          <div className="fin-kgd">
+            {finKpis.map(k=>(
+              <div key={k.l} className="fin-kcd" style={{"--c":k.c,background:k.bg}}>
+                <div className="fin-kv">{k.v}</div>
+                <div className="fin-kl">{k.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {storeData.length>0&&<div className="ccd"><div className="ctl">🏪 Wydatki wg sklepu (zł)</div>
+            <ResponsiveContainer width="100%" height={120}><BarChart data={storeData} barSize={24} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey="n" tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey="v" radius={[4,4,0,0]} fill={G.org} fillOpacity={.85}/></BarChart></ResponsiveContainer>
+          </div>}
+
+          {genreCostData.length>0&&<div className="ccd"><div className="ctl">🎮 Wydatki wg gatunku (zł)</div>
+            <ResponsiveContainer width="100%" height={120}><BarChart data={genreCostData} barSize={20} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey="n" tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey="v" radius={[4,4,0,0]} fill={G.pur} fillOpacity={.8}/></BarChart></ResponsiveContainer>
+          </div>}
+
+          {soldGames.length>0&&<div className="ccd"><div className="ctl">📈 ROI sprzedanych gier</div>
+            <ul className="top-list">
+              {soldGames.map(g=>(
+                <li key={g.id} className="top-item">
+                  <span className="top-title">{g.title}</span>
+                  <span style={{fontSize:10,color:G.dim,flexShrink:0}}>{(+g.priceBought).toFixed(0)}→{(+g.priceSold).toFixed(0)} zł</span>
+                  <span className={"top-val "+(g.roi>=0?"roi-positive":"roi-negative")}>{g.roi>=0?"+":""}{g.roi.toFixed(0)} zł</span>
+                </li>
+              ))}
+            </ul>
+          </div>}
+
+          <div className="ccd"><div className="ctl">💸 Najdroższe gry</div>
+            <ul className="top-list">
+              {[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=>(
+                <li key={g.id} className="top-item">
+                  <span className="top-title">{g.title}</span>
+                  {g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}
+                  <span className="top-val" style={{color:G.org}}>{(+g.priceBought).toFixed(0)} zł</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {withHours.length>0&&<div className="ccd"><div className="ctl">⏱ Najlepsza wartość (zł/h)</div>
+            <ul className="top-list">
+              {[...withHours].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=>(
+                <li key={g.id} className="top-item">
+                  <span className="top-title">{g.title}</span>
+                  <span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.hours}h</span>
+                  <span className="top-val" style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)} zł/h</span>
+                </li>
+              ))}
+            </ul>
+          </div>}
+        </>}
+      </>}
     </div>
   );
 }
@@ -657,6 +816,7 @@ export default function App() {
                           ?<><span className="grn">{g.rating}</span><span className="grd">/10</span></>
                           :<span style={{color:G.dim,fontSize:17}}>—</span>}
                         {g.notifyEnabled && <span style={{fontSize:12}}>🔔</span>}
+                        {!!+g.priceBought && <span className={g.priceSold!=null?"gprice-sold":"gprice"}>{g.priceSold!=null?`+${(+(g.priceSold||0)-+(g.priceBought||0)).toFixed(0)} zł`:`${(+g.priceBought).toFixed(0)} zł`}</span>}
                       </div>
                     </div>
                   </div>
