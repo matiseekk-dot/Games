@@ -9,6 +9,7 @@ const LS_ONBOARD= "ps5vault_onboarded";
 
 const SM = {
   gram:      { label:"Gram",      c:"#00D4FF", bg:"rgba(0,212,255,.13)" },
+  psplus:    { label:"PS Plus",   c:"#FFD166", bg:"rgba(255,209,102,.13)" },
   ukonczone: { label:"Ukończone", c:"#39FF6E", bg:"rgba(57,255,110,.13)" },
   planuje:   { label:"Planuję",   c:"#A78BFA", bg:"rgba(167,139,250,.13)" },
   porzucone: { label:"Porzucone", c:"#FF4D6D", bg:"rgba(255,77,109,.13)" },
@@ -1029,7 +1030,7 @@ export default function App(){
                     </div>
                     <div className="grt">
                       {g.rating!=null?<><span className="grn">{g.rating}</span><span className="grd">/10</span></>:<span style={{color:G.dim,fontSize:17}}>—</span>}
-                      {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
+                      {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}{g.status==="psplus"&&<span style={{fontSize:11,fontWeight:700,color:"#FFD166"}}>PS+</span>}
                       {roi!==null?<span className={"gprice-roi "+(roi>=0?"roi-pos":"roi-neg")}>{roi>=0?"+":""}{roi.toFixed(0)} zł</span>:!!+g.priceBought&&<span className="gprice">{(+g.priceBought).toFixed(0)} zł</span>}
                     </div>
                   </div>
