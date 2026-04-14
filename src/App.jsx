@@ -793,12 +793,38 @@ function InsightsTab({insights,games,lang}){
   const unsold=porzucone.reduce((s,g)=>s+ +g.priceBought*0.5,0);
   const totalSav=Math.round(losses+unsold);
   const ctaKeys={[t(lang,'biggestLoss')]:{label:t(lang,'avoidLoss'),flow:'avoid'},[t(lang,'bestInvestment')]:{label:t(lang,'buyBetter'),flow:'invest'},[t(lang,'mostExpensiveHours')]:{label:t(lang,'optimizeBacklog'),flow:'optim'},[t(lang,'bestValueShort')]:{label:t(lang,'findSimilar'),flow:'similar'},[t(lang,'financeSummary')]:{label:t(lang,'saveMoney'),flow:'save'}};
+  const isEn = lang==='en';
   const flowData={
-    avoid:{title:t(lang,'flowAvoidTitle'),steps:[{ico:'⏰',tip:lang==='en'?'Buy 3–6 months after release — price drops 30–50%.':'Kupuj 3–6 miesięcy po premierze — cena spada o 30–50%.'},{ico:'🏷',tip:lang==='en'?'Track sales on PSN and stores. Set price alerts.':'Śledź promocje PSN, CDP i Allegro. Ustaw alerty cenowe.'},{ico:'📦',tip:lang==='en'?'Buy physical — you can resell. Digital is permanent.':'Kupuj pudełkowe — możesz odsprzedać. Cyfrowe są definitywne.'},{ico:'⭐',tip:lang==='en'?'Check reviews before buying. Games below 7/10 rarely worth full price.':'Sprawdź oceny przed zakupem. Gry <7/10 rzadko warte pełnej ceny.'}]},
-    invest:{title:t(lang,'flowInvestTitle'),steps:[{ico:'🎮',tip:lang==='en'?'Long RPGs and open worlds give the best cost/hour ratio.':'Długie RPG i otwarte światy dają najlepszy koszt/godzinę.'},{ico:'💎',tip:lang==='en'?'Sony exclusives (GoW, Spider-Man) hold resale value well.':'Gry Sony (GoW, Spider-Man) utrzymują wartość przy odsprzedaży.'},{ico:'🛒',tip:lang==='en'?'GOTY editions often include all DLC at a lower price.':'Edycje GOTY — wszystkie DLC w niższej cenie.'},{ico:'👥',tip:lang==='en'?'Multiplayer with active community has long lifespan.':'Multiplayer z aktywną społecznością ma długą żywotność.'}]},
-    optim:{title:t(lang,'flowOptimTitle'),steps:[{ico:'📋',tip:lang==='en'?'Remove games waiting over 1 year — chance of playing is low.':'Usuń gry czekające >1 rok — szansa że zagrasz jest mała.'},{ico:'⏱',tip:lang==='en'?'Prioritize short games (10–20h) for quick satisfaction.':'Priorytetyzuj krótkie gry (10–20h) dla szybkiej satysfakcji.'},{ico:'💰',tip:lang==='en'?'Sell abandoned games before they lose value — sooner is better.':'Sprzedaj porzucone zanim stracą wartość — im szybciej tym lepiej.'},{ico:'🎯',tip:lang==='en'?'Play your favourite genre — you'll finish faster.':'Graj w swój ulubiony gatunek — szybciej ukończysz.'}]},
-    similar:{title:t(lang,'flowSimilarTitle'),steps:[{ico:'🔍',tip:lang==='en'?'RAWG.io has a 'Similar games' section for every title.':'RAWG.io ma sekcję 'Similar games' dla każdego tytułu.'},{ico:'📊',tip:lang==='en'?'Filter your backlog by genre — you already have games you like.':'Filtruj backlog po gatunku — masz już gry które lubisz.'},{ico:'⭐',tip:lang==='en'?'PS Plus Extra offers games similar to your favourites.':'PS Plus Extra oferuje gry podobne do Twoich ulubionych.'},{ico:'💬',tip:lang==='en'?'r/PS5 and r/patientgamers recommend games by preference.':'r/PS5 i r/patientgamers polecają gry wg preferencji.'}]},
-    save:{title:t(lang,'flowSaveTitle'),steps:[{ico:'📅',tip:lang==='en'?'Max 1–2 full-price games per month. Rest on sale.':'Max 1–2 gry miesięcznie po pełnej cenie. Resztę w promocjach.'},{ico:'🔄',tip:lang==='en'?'Resell immediately after finishing — less value lost.':'Odsprzedaj zaraz po ukończeniu — tracisz mniej wartości.'},{ico:'📦',tip:lang==='en'?'1 new + 2 used = same gaming for less money.':'1 nowa + 2 używane = tyle samo grania za mniej pieniędzy.'},{ico:'🎮',tip:lang==='en'?'PS Plus Extra gives access to hundreds of games for a fraction.':'PS Plus Extra daje dostęp do setek gier za ułamek ceny.'}]},
+    avoid:{title:t(lang,"flowAvoidTitle"),steps:[
+      {ico:"⏰",tip:isEn?"Buy 3-6 months after release — price drops 30-50%.":"Kupuj 3-6 miesięcy po premierze — cena spada o 30-50%."},
+      {ico:"🏷",tip:isEn?"Track sales on PSN and stores. Set price alerts.":"Śledź promocje PSN, CDP i Allegro. Ustaw alerty cenowe."},
+      {ico:"📦",tip:isEn?"Buy physical — you can resell. Digital is permanent.":"Kupuj pudełkowe — możesz odsprzedać. Cyfrowe są definitywne."},
+      {ico:"⭐",tip:isEn?"Check reviews before buying. Games below 7/10 rarely worth full price.":"Sprawdź oceny przed zakupem. Gry poniżej 7/10 rzadko warte pełnej ceny."},
+    ]},
+    invest:{title:t(lang,"flowInvestTitle"),steps:[
+      {ico:"🎮",tip:isEn?"Long RPGs and open worlds give the best cost/hour ratio.":"Długie RPG i otwarte światy dają najlepszy koszt/godzinę."},
+      {ico:"💎",tip:isEn?"Sony exclusives hold resale value well.":"Gry Sony utrzymują wartość przy odsprzedaży."},
+      {ico:"🛒",tip:isEn?"GOTY editions often include all DLC at a lower price.":"Edycje GOTY — wszystkie DLC w niższej cenie."},
+      {ico:"👥",tip:isEn?"Multiplayer with active community has long lifespan.":"Multiplayer z aktywną społecznością ma długą żywotność."},
+    ]},
+    optim:{title:t(lang,"flowOptimTitle"),steps:[
+      {ico:"📋",tip:isEn?"Remove games waiting over 1 year — chance of playing is low.":"Usuń gry czekające ponad rok — szansa że zagrasz jest mała."},
+      {ico:"⏱",tip:isEn?"Prioritize short games (10-20h) for quick satisfaction.":"Priorytetyzuj krótkie gry (10-20h) dla szybkiej satysfakcji."},
+      {ico:"💰",tip:isEn?"Sell abandoned games before they lose value.":"Sprzedaj porzucone zanim stracą wartość — im szybciej tym lepiej."},
+      {ico:"🎯",tip:isEn?"Play your favourite genre — you finish faster.":"Graj w swój ulubiony gatunek — szybciej ukończysz."},
+    ]},
+    similar:{title:t(lang,"flowSimilarTitle"),steps:[
+      {ico:"🔍",tip:isEn?"RAWG.io has a Similar games section for every title.":"RAWG.io ma sekcję Similar games dla każdego tytułu."},
+      {ico:"📊",tip:isEn?"Filter your backlog by genre — you already have games you like.":"Filtruj backlog po gatunku — masz już gry które lubisz."},
+      {ico:"⭐",tip:isEn?"PS Plus Extra offers games similar to your favourites.":"PS Plus Extra oferuje gry podobne do Twoich ulubionych."},
+      {ico:"💬",tip:isEn?"r/PS5 and r/patientgamers recommend games by preference.":"r/PS5 i r/patientgamers polecają gry wg preferencji."},
+    ]},
+    save:{title:t(lang,"flowSaveTitle"),steps:[
+      {ico:"📅",tip:isEn?"Max 1-2 full-price games per month. Rest on sale.":"Max 1-2 gry miesięcznie po pełnej cenie. Resztę w promocjach."},
+      {ico:"🔄",tip:isEn?"Resell immediately after finishing — less value lost.":"Odsprzedaj zaraz po ukończeniu — tracisz mniej wartości."},
+      {ico:"📦",tip:isEn?"1 new + 2 used = same gaming for less money.":"1 nowa + 2 używane = tyle samo grania za mniej pieniędzy."},
+      {ico:"🎮",tip:isEn?"PS Plus Extra gives access to hundreds of games for a fraction.":"PS Plus Extra daje dostęp do setek gier za ułamek ceny."},
+    ]},
   };
   return(
     <div>
