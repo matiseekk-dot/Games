@@ -10,196 +10,184 @@ const LS_LANG    = 'ps5vault_lang';
 // ─── i18n ────────────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
   pl: {
-    // statuses
-    gram:'Gram', psplus:'PS Plus', ukonczone:'Ukończone', planuje:'Planuję', porzucone:'Porzucone',
-    // tabs
-    home:'🏠 Home', collection:'🎮 Gry', releases:'📅 Premiery', stats:'📊 Statsy', settings:'⚙️ Opcje',
-    // home
-    goodMorning:'🌅 Dzień dobry', goodAfternoon:'🎮 Cześć!', goodEvening:'🌆 Dobry wieczór', goodNight:'🌙 Dobranoc',
-    gamesInCollection:'gier', active:'aktywnych', upcomingReleases:'premier',
-    continuePlay:'Kontynuuj granie', whatToPlay:'Co teraz grać', nextRelease:'Najbliższa premiera',
-    financeInsight:'Finansowy insight', backlog:'BACKLOG',
-    noActiveGame:'Nie grasz teraz w żadną grę.', changeStatusHint:"Zmień status gry na 'Gram'",
-    startPlaying:'▶ Zacznij grać', completed:'ukończone', remaining:'pozostało',
-    addTargetHint:'Dodaj cel godzinowy żeby śledzić postęp',
-    moreActive:'+{n} innych aktywnych gier',
-    genreReason:'Lubisz {genre} — masz {n} ukończone w tym gatunku',
-    backlogReason:'Czeka najdłużej w backlogu',
-    releaseToday:'Premiera dzisiaj!', releaseTomorrow:'Jutro!',
-    daysToRelease:'dni do premiery', dayToRelease:'dzień do premiery',
-    details:'📋 Szczegóły', remind:'🔔 Przypomnij', addToCollection:'+ Edytuj',
-    spentTotal:'Wydano łącznie', recovered:'Odzyskano ze sprzedaży', realCost:'Realny koszt kolekcji',
-    sellSuggestion:'💡 Sprzedaj {title} i odzyskaj ~{amount}',
-    // collection
-    searchPlaceholder:'Szukaj gry...', allGames:'Wszystkie',
-    noGames:'Brak gier', noResults:'Brak wyników', addFirst:'Naciśnij + żeby dodać grę.',
-    noResultsFor:'Brak gier dla '{q}'',
-    addGame:'+ DODAJ GRĘ',
-    export:'⬆ Export', import:'⬇ Import',
-    // releases
-    upcoming:'Nadchodzące premiery', alreadyOut:'📦 Już dostępne', tba:'TBA — brak daty',
-    noReleases:'Brak nadchodzących premier',
-    noReleasesHint:'Dodaj datę premiery do gier ze statusem 'Planuję'.',
-    today:'DZIŚ!', out:'✓ Wyszło', premiere:'Premiera:',
-    edit:'📋 Edytuj', watch:'👀 Obserwuj', buy:'🛒 Kup', addToColl:'+ Edytuj',
-    notifyToggle:'🔔 Powiadomienie o premierze',
-    enableNotif:'Włącz powiadomienia', enableNotifDesc:'Alert 3 dni przed premierą i w dniu wydania',
-    enable:'Włącz',
-    // stats
-    general:'🎮 Ogólne', finance:'💰 Finanse', analysis:'💡 Analiza',
-    gamesTotal:'Gier razem', completed2:'Ukończone', hoursTotal:'Godzin łącznie', avgRating:'Śr. ocena',
-    statusChart:'📊 Status kolekcji', genreChart:'🎮 Top gatunki', ratingChart:'⭐ Histogram ocen',
-    noFinanceData:'Brak danych finansowych', addPricesHint:'Dodaj ceny kupna do gier',
-    spent:'Wydano', earnedBack:'Odzyskano', realCostShort:'Realny koszt', costPerHour:'Koszt/godzinę',
-    byStore:'🏪 Wydatki wg sklepu', byGenre:'🎮 Wydatki wg gatunku',
-    roi:'📈 ROI sprzedanych', mostExpensive:'💸 Najdroższe gry', bestValue:'⏱ Najlepsza wartość (zł/h)',
-    noInsights:'Za mało danych', addPricesAndHours:'Dodaj ceny i godziny do gier',
-    potentialSaving:'💡 Potencjalna oszczędność',
-    savingsFrom:'z unikniętych strat', savingsFromSell:'z odsprzedaży porzuconych gier',
-    clickCards:'Kliknij karty poniżej żeby dowiedzieć się jak',
-    biggestLoss:'Największa strata', bestInvestment:'Najlepsza inwestycja',
-    mostExpensiveHours:'Najdroższe godziny', bestValueShort:'Najlepsza wartość',
-    financeSummary:'Podsumowanie finansowe',
-    biggestLossDesc:'Sprzedając {title} straciłeś {amount}',
-    bestInvestDesc:'{title} przyniosło {amount} zysku',
-    expHoursDesc:'{title} — {cph} zł/h. Powyżej 10 zł/h to słaba wartość.',
-    bestValDesc:'{title} — tylko {cph} zł/h. Twoja najlepsza inwestycja.',
-    finSummaryDesc:'Wydałeś {spent}, odzyskałeś {earned}. Realny koszt to {net}.',
-    // settings
-    data:'Dane', exportData:'Eksportuj dane', exportDesc:'Pobierz backup {n} gier jako JSON',
-    importData:'Importuj dane', importDesc:'Wczytaj backup z pliku JSON',
-    info:'Informacje', privacyPolicy:'Polityka prywatności', privacyDesc:'Nie zbieramy żadnych danych osobowych',
-    poweredBy:'Powered by RAWG.io', poweredByDesc:'Baza ponad 800 000 gier',
-    appInfo:'PS5 Vault', appInfoDesc:'Wersja {ver} · Dane przechowywane lokalnie',
-    language:'Język / Language', dangerZone:'Niebezpieczna strefa',
-    clearCollection:'Wyczyść kolekcję', clearDesc:'Usuń wszystkie {n} gier',
-    clearConfirm:'Usunąć wszystkie {n} gier? Tej operacji nie można cofnąć.',
-    // modal
-    addGameTitle:'+ DODAJ GRĘ', editGameTitle:'✎ EDYTUJ GRĘ',
-    searchRawg:'🔍 Szukaj w RAWG', rawgPlaceholder:'Wpisz nazwę gry...',
-    rawgHint:'Wybierz grę żeby auto-uzupełnić pola + datę premiery',
-    titleField:'Tytuł *', abbrField:'Skrót (2 lit.)', yearField:'Rok',
-    releaseDateField:'Data premiery', releaseDateHint:'Zostaw puste jeśli nieznana (TBA)',
-    statusField:'Status', genreField:'Gatunek', hoursField:'Godziny',
-    ratingField:'Ocena (1–10)', targetHoursField:'Cel (godz.)', notesField:'Notatki',
-    notesPh:'Twoje przemyślenia...', genrePh:'— wybierz —', targetPh:'np. 40',
-    finances:'💰 Finanse', priceBoughtField:'Zapłacono (PLN)', storeField:'Sklep',
-    storePh:'—', soldToggle:'Sprzedałem tę grę', soldPriceField:'Sprzedano za (PLN)',
-    notifications:'Powiadomienia', notifyOn:'🔔 Powiadamiaj o premierze',
-    notifyDesc:'3 dni przed i w dniu premiery', notifyBlocked:'⛔ Zablokowane w ustawieniach przeglądarki',
-    cancel:'Anuluj', save:'ZAPISZ', enterTitle:'Wpisz tytuł',
-    delete:'🗑', confirmDelete:'Usuń grę', confirmDeleteBody:'Czy na pewno chcesz usunąć '{title}' z kolekcji?',
-    // onboarding
-    obTitle:'PS5 VAULT', obSub:'Twój osobisty tracker gier PlayStation 5. Zero rejestracji — wszystko lokalnie na urządzeniu.',
-    obStart:'ZACZYNAMY →',
-    obF1Title:'Kolekcja gier', obF1Desc:'Dodaj grę ręcznie lub wyszukaj przez bazę RAWG z okładkami',
-    obF2Title:'Śledzenie premier', obF2Desc:'Countdown do premiery + powiadomienia 3 dni wcześniej',
-    obF3Title:'Analiza finansowa', obF3Desc:'Ile wydajesz, ile odzyskujesz — realny koszt kolekcji',
-    obF4Title:'Statystyki', obF4Desc:'Wykresy, oceny, koszt/godzinę i inteligentna analiza',
-    // toasts
-    saved:'✓ Zapisano', added:'✓ Dodano', deleted:'✓ Usunięto '{title}'',
-    imported:'✓ Zaimportowano {n} gier', cleared:'ℹ Kolekcja wyczyszczona',
-    statusChanged:'✓ Status → {status}',
-    // insights CTA
-    avoidLoss:'🔍 Unikaj takich strat', buyBetter:'📋 Kup podobne gry',
-    optimizeBacklog:'⚡ Zoptymalizuj backlog', findSimilar:'🎯 Znajdź podobne gry', saveMoney:'💡 Jak oszczędzić więcej',
-    // flow titles
-    flowAvoidTitle:'Jak uniknąć strat', flowInvestTitle:'Strategie dobrego zakupu',
-    flowOptimTitle:'Optymalizacja backlogu', flowSimilarTitle:'Jak znaleźć podobne gry',
-    flowSaveTitle:'Plan oszczędności',
-    iUnderstand:'ROZUMIEM',
-    hoursPlayed:'{n}h zagranych',
-    progComplete:'{n}% ukończone',
+    gram:"Gram", psplus:"PS Plus", ukonczone:"Ukończone", planuje:"Planuję", porzucone:"Porzucone",
+    home:"🏠 Home", collection:"🎮 Gry", releases:"📅 Premiery", stats:"📊 Statsy", settings:"⚙️ Opcje",
+    goodMorning:"🌅 Dzień dobry", goodAfternoon:"🎮 Cześć!", goodEvening:"🌆 Dobry wieczór", goodNight:"🌙 Dobranoc",
+    gamesInCollection:"gier", active:"aktywnych", upcomingReleases:"premier",
+    continuePlay:"Kontynuuj granie", whatToPlay:"Co teraz grać", nextRelease:"Najbliższa premiera",
+    financeInsight:"Finansowy insight", backlog:"BACKLOG",
+    noActiveGame:"Nie grasz teraz w żadną grę.", changeStatusHint:"Zmień status gry na Gram",
+    startPlaying:"▶ Zacznij grać", completed:"ukończone", remaining:"pozostało",
+    addTargetHint:"Dodaj cel godzinowy żeby śledzić postęp",
+    moreActive:"+{n} innych aktywnych gier",
+    genreReason:"Lubisz {genre} — masz {n} ukończone w tym gatunku",
+    backlogReason:"Czeka najdłużej w backlogu",
+    releaseToday:"Premiera dzisiaj!", releaseTomorrow:"Jutro!",
+    daysToRelease:"dni do premiery", dayToRelease:"dzień do premiery",
+    details:"📋 Szczegóły", remind:"🔔 Przypomnij", addToCollection:"+ Edytuj",
+    spentTotal:"Wydano łącznie", recovered:"Odzyskano ze sprzedaży", realCost:"Realny koszt kolekcji",
+    sellSuggestion:"💡 Sprzedaj {title} i odzyskaj ~{amount}",
+    searchPlaceholder:"Szukaj gry...", allGames:"Wszystkie",
+    noGames:"Brak gier", noResults:"Brak wyników", addFirst:"Naciśnij + żeby dodać grę.",
+    noResultsFor:"Brak gier dla {q}",
+    addGame:"+ DODAJ GRĘ",
+    export:"⬆ Export", import:"⬇ Import",
+    upcoming:"Nadchodzące premiery", alreadyOut:"📦 Już dostępne", tba:"TBA — brak daty",
+    noReleases:"Brak nadchodzących premier",
+    noReleasesHint:"Dodaj datę premiery do gier ze statusem Planuję.",
+    today:"DZIŚ!", out:"✓ Wyszło", premiere:"Premiera:",
+    edit:"📋 Edytuj", watch:"👀 Obserwuj", buy:"🛒 Kup", addToColl:"+ Edytuj",
+    notifyToggle:"🔔 Powiadomienie o premierze",
+    enableNotif:"Włącz powiadomienia", enableNotifDesc:"Alert 3 dni przed premierą i w dniu wydania",
+    enable:"Włącz",
+    general:"🎮 Ogólne", finance:"💰 Finanse", analysis:"💡 Analiza",
+    gamesTotal:"Gier razem", completed2:"Ukończone", hoursTotal:"Godzin łącznie", avgRating:"Śr. ocena",
+    statusChart:"📊 Status kolekcji", genreChart:"🎮 Top gatunki", ratingChart:"⭐ Histogram ocen",
+    noFinanceData:"Brak danych finansowych", addPricesHint:"Dodaj ceny kupna do gier",
+    spent:"Wydano", earnedBack:"Odzyskano", realCostShort:"Realny koszt", costPerHour:"Koszt/godzinę",
+    byStore:"🏪 Wydatki wg sklepu", byGenre:"🎮 Wydatki wg gatunku",
+    roi:"📈 ROI sprzedanych", mostExpensive:"💸 Najdroższe gry", bestValue:"⏱ Najlepsza wartość (zł/h)",
+    noInsights:"Za mało danych", addPricesAndHours:"Dodaj ceny i godziny do gier",
+    potentialSaving:"💡 Potencjalna oszczędność",
+    savingsFrom:"z unikniętych strat", savingsFromSell:"z odsprzedaży porzuconych gier",
+    clickCards:"Kliknij karty poniżej żeby dowiedzieć się jak",
+    biggestLoss:"Największa strata", bestInvestment:"Najlepsza inwestycja",
+    mostExpensiveHours:"Najdroższe godziny", bestValueShort:"Najlepsza wartość",
+    financeSummary:"Podsumowanie finansowe",
+    biggestLossDesc:"Sprzedając {title} straciłeś {amount}",
+    bestInvestDesc:"{title} przyniosło {amount} zysku",
+    expHoursDesc:"{title} — {cph} zł/h. Powyżej 10 zł/h to słaba wartość.",
+    bestValDesc:"{title} — tylko {cph} zł/h. Twoja najlepsza inwestycja.",
+    finSummaryDesc:"Wydałeś {spent}, odzyskałeś {earned}. Realny koszt to {net}.",
+    data:"Dane", exportData:"Eksportuj dane", exportDesc:"Pobierz backup {n} gier jako JSON",
+    importData:"Importuj dane", importDesc:"Wczytaj backup z pliku JSON",
+    info:"Informacje", privacyPolicy:"Polityka prywatności", privacyDesc:"Nie zbieramy żadnych danych osobowych",
+    poweredBy:"Powered by RAWG.io", poweredByDesc:"Baza ponad 800 000 gier",
+    appInfo:"PS5 Vault", appInfoDesc:"Wersja {ver} — Dane przechowywane lokalnie",
+    language:"Język / Language", dangerZone:"Niebezpieczna strefa",
+    clearCollection:"Wyczyść kolekcję", clearDesc:"Usuń wszystkie {n} gier",
+    clearConfirm:"Usunąć wszystkie {n} gier? Tej operacji nie można cofnąć.",
+    addGameTitle:"+ DODAJ GRĘ", editGameTitle:"✎ EDYTUJ GRĘ",
+    searchRawg:"🔍 Szukaj w RAWG", rawgPlaceholder:"Wpisz nazwę gry...",
+    rawgHint:"Wybierz grę żeby auto-uzupełnić pola + datę premiery",
+    titleField:"Tytuł *", abbrField:"Skrót (2 lit.)", yearField:"Rok",
+    releaseDateField:"Data premiery", releaseDateHint:"Zostaw puste jeśli nieznana (TBA)",
+    statusField:"Status", genreField:"Gatunek", hoursField:"Godziny",
+    ratingField:"Ocena (1–10)", targetHoursField:"Cel (godz.)", notesField:"Notatki",
+    notesPh:"Twoje przemyślenia...", genrePh:"— wybierz —", targetPh:"np. 40",
+    finances:"💰 Finanse", priceBoughtField:"Zapłacono (PLN)", storeField:"Sklep",
+    storePh:"—", soldToggle:"Sprzedałem tę grę", soldPriceField:"Sprzedano za (PLN)",
+    notifications:"Powiadomienia", notifyOn:"🔔 Powiadamiaj o premierze",
+    notifyDesc:"3 dni przed i w dniu premiery", notifyBlocked:"⛔ Zablokowane w ustawieniach przeglądarki",
+    cancel:"Anuluj", save:"ZAPISZ", enterTitle:"Wpisz tytuł",
+    delete:"🗑", confirmDelete:"Usuń grę", confirmDeleteBody:"Czy na pewno chcesz usunąć {title} z kolekcji?",
+    obTitle:"PS5 VAULT", obSub:"Twój osobisty tracker gier PlayStation 5. Zero rejestracji — wszystko lokalnie na urządzeniu.",
+    obStart:"ZACZYNAMY →",
+    obF1Title:"Kolekcja gier", obF1Desc:"Dodaj grę ręcznie lub wyszukaj przez bazę RAWG z okładkami",
+    obF2Title:"Śledzenie premier", obF2Desc:"Countdown do premiery + powiadomienia 3 dni wcześniej",
+    obF3Title:"Analiza finansowa", obF3Desc:"Ile wydajesz, ile odzyskujesz — realny koszt kolekcji",
+    obF4Title:"Statystyki", obF4Desc:"Wykresy, oceny, koszt/godzinę i inteligentna analiza",
+    saved:"✓ Zapisano", added:"✓ Dodano", deleted:"✓ Usunięto {title}",
+    imported:"✓ Zaimportowano {n} gier", cleared:"ℹ Kolekcja wyczyszczona",
+    statusChanged:"✓ Status → {status}",
+    avoidLoss:"🔍 Unikaj takich strat", buyBetter:"📋 Kup podobne gry",
+    optimizeBacklog:"⚡ Zoptymalizuj backlog", findSimilar:"🎯 Znajdź podobne gry", saveMoney:"💡 Jak oszczędzić więcej",
+    flowAvoidTitle:"Jak uniknąć strat", flowInvestTitle:"Strategie dobrego zakupu",
+    flowOptimTitle:"Optymalizacja backlogu", flowSimilarTitle:"Jak znaleźć podobne gry",
+    flowSaveTitle:"Plan oszczędności",
+    iUnderstand:"ROZUMIEM",
+    hoursPlayed:"{n}h zagranych",
+    progComplete:"{n}% ukończone",
   },
   en: {
-    gram:'Playing', psplus:'PS Plus', ukonczone:'Completed', planuje:'Planning', porzucone:'Abandoned',
-    home:'🏠 Home', collection:'🎮 Games', releases:'📅 Releases', stats:'📊 Stats', settings:'⚙️ Settings',
-    goodMorning:'🌅 Good morning', goodAfternoon:'🎮 Hey!', goodEvening:'🌆 Good evening', goodNight:'🌙 Good night',
-    gamesInCollection:'games', active:'active', upcomingReleases:'releases',
-    continuePlay:'Continue playing', whatToPlay:'What to play next', nextRelease:'Upcoming release',
-    financeInsight:'Financial insight', backlog:'BACKLOG',
-    noActiveGame:'You're not playing anything right now.', changeStatusHint:"Set a game status to 'Playing'",
-    startPlaying:'▶ Start playing', completed:'%', remaining:'left',
-    addTargetHint:'Add a target hours goal to track progress',
-    moreActive:'+{n} more active games',
-    genreReason:'You like {genre} — {n} completed in this genre',
-    backlogReason:'Waiting longest in backlog',
-    releaseToday:'Releases today!', releaseTomorrow:'Tomorrow!',
-    daysToRelease:'days to release', dayToRelease:'day to release',
-    details:'📋 Details', remind:'🔔 Remind me', addToCollection:'+ Edit',
-    spentTotal:'Total spent', recovered:'Recovered from sales', realCost:'Real collection cost',
-    sellSuggestion:'💡 Sell {title} and recover ~{amount}',
-    searchPlaceholder:'Search games...', allGames:'All',
-    noGames:'No games', noResults:'No results', addFirst:'Tap + to add your first game.',
-    noResultsFor:'No games for \'{q}\'',
-    addGame:'+ ADD GAME',
-    export:'⬆ Export', import:'⬇ Import',
-    upcoming:'Upcoming releases', alreadyOut:'📦 Already out', tba:'TBA — no date',
-    noReleases:'No upcoming releases',
-    noReleasesHint:'Add a release date to games with status 'Planning'.',
-    today:'TODAY!', out:'✓ Out', premiere:'Released:',
-    edit:'📋 Edit', watch:'👀 Watch', buy:'🛒 Buy', addToColl:'+ Edit',
-    notifyToggle:'🔔 Notify on release',
-    enableNotif:'Enable notifications', enableNotifDesc:'Alert 3 days before and on release day',
-    enable:'Enable',
-    general:'🎮 General', finance:'💰 Finance', analysis:'💡 Analysis',
-    gamesTotal:'Total games', completed2:'Completed', hoursTotal:'Total hours', avgRating:'Avg rating',
-    statusChart:'📊 Collection status', genreChart:'🎮 Top genres', ratingChart:'⭐ Rating histogram',
-    noFinanceData:'No financial data', addPricesHint:'Add purchase prices to games',
-    spent:'Spent', earnedBack:'Recovered', realCostShort:'Real cost', costPerHour:'Cost/hour',
-    byStore:'🏪 Spending by store', byGenre:'🎮 Spending by genre',
-    roi:'📈 ROI on sold games', mostExpensive:'💸 Most expensive', bestValue:'⏱ Best value ($/h)',
-    noInsights:'Not enough data', addPricesAndHours:'Add prices and hours to games',
-    potentialSaving:'💡 Potential savings',
-    savingsFrom:'from avoided losses', savingsFromSell:'from selling abandoned games',
-    clickCards:'Click cards below to learn how',
-    biggestLoss:'Biggest loss', bestInvestment:'Best investment',
-    mostExpensiveHours:'Most expensive hours', bestValueShort:'Best value',
-    financeSummary:'Financial summary',
-    biggestLossDesc:'Selling {title} lost you {amount}',
-    bestInvestDesc:'{title} earned {amount} profit',
-    expHoursDesc:'{title} — {cph}/h. Above $10/h is poor value.',
-    bestValDesc:'{title} — only {cph}/h. Your best investment.',
-    finSummaryDesc:'Spent {spent}, recovered {earned}. Real cost is {net}.',
-    data:'Data', exportData:'Export data', exportDesc:'Download backup of {n} games as JSON',
-    importData:'Import data', importDesc:'Load backup from JSON file',
-    info:'Info', privacyPolicy:'Privacy policy', privacyDesc:'We collect no personal data',
-    poweredBy:'Powered by RAWG.io', poweredByDesc:'Database of 800,000+ games',
-    appInfo:'PS5 Vault', appInfoDesc:'Version {ver} · Data stored locally',
-    language:'Język / Language', dangerZone:'Danger zone',
-    clearCollection:'Clear collection', clearDesc:'Delete all {n} games',
-    clearConfirm:'Delete all {n} games? This cannot be undone.',
-    addGameTitle:'+ ADD GAME', editGameTitle:'✎ EDIT GAME',
-    searchRawg:'🔍 Search RAWG', rawgPlaceholder:'Type game name...',
-    rawgHint:'Select a game to auto-fill fields + release date',
-    titleField:'Title *', abbrField:'Abbr (2 chars)', yearField:'Year',
-    releaseDateField:'Release date', releaseDateHint:'Leave empty if unknown (TBA)',
-    statusField:'Status', genreField:'Genre', hoursField:'Hours',
-    ratingField:'Rating (1–10)', targetHoursField:'Target (hrs)', notesField:'Notes',
-    notesPh:'Your thoughts...', genrePh:'— select —', targetPh:'e.g. 40',
-    finances:'💰 Finances', priceBoughtField:'Price paid', storeField:'Store',
-    storePh:'—', soldToggle:'I sold this game', soldPriceField:'Sold for',
-    notifications:'Notifications', notifyOn:'🔔 Notify on release',
-    notifyDesc:'3 days before and on release day', notifyBlocked:'⛔ Blocked in browser settings',
-    cancel:'Cancel', save:'SAVE', enterTitle:'Enter title',
-    delete:'🗑', confirmDelete:'Delete game', confirmDeleteBody:'Delete \'{title}\' from collection?',
-    obTitle:'PS5 VAULT', obSub:'Your personal PS5 game tracker. No registration — everything stored locally on device.',
-    obStart:'GET STARTED →',
-    obF1Title:'Game collection', obF1Desc:'Add manually or search RAWG database with cover art',
-    obF2Title:'Release tracking', obF2Desc:'Countdown + notifications 3 days before release',
-    obF3Title:'Financial analysis', obF3Desc:'Track spending, recovery — real collection cost',
-    obF4Title:'Statistics', obF4Desc:'Charts, ratings, cost/hour and smart insights',
-    saved:'✓ Saved', added:'✓ Added', deleted:'✓ Deleted \'{title}\'',
-    imported:'✓ Imported {n} games', cleared:'ℹ Collection cleared',
-    statusChanged:'✓ Status → {status}',
-    avoidLoss:'🔍 Avoid such losses', buyBetter:'📋 Find similar games',
-    optimizeBacklog:'⚡ Optimize backlog', findSimilar:'🎯 Find similar games', saveMoney:'💡 How to save more',
-    flowAvoidTitle:'How to avoid losses', flowInvestTitle:'Smart buying strategies',
-    flowOptimTitle:'Optimize your backlog', flowSimilarTitle:'How to find similar games',
-    flowSaveTitle:'Savings plan',
-    iUnderstand:'GOT IT',
-    hoursPlayed:'{n}h played',
-    progComplete:'{n}% complete',
+    gram:"Playing", psplus:"PS Plus", ukonczone:"Completed", planuje:"Planning", porzucone:"Abandoned",
+    home:"🏠 Home", collection:"🎮 Games", releases:"📅 Releases", stats:"📊 Stats", settings:"⚙️ Settings",
+    goodMorning:"🌅 Good morning", goodAfternoon:"🎮 Hey!", goodEvening:"🌆 Good evening", goodNight:"🌙 Good night",
+    gamesInCollection:"games", active:"active", upcomingReleases:"releases",
+    continuePlay:"Continue playing", whatToPlay:"What to play next", nextRelease:"Upcoming release",
+    financeInsight:"Financial insight", backlog:"BACKLOG",
+    noActiveGame:"Not playing anything right now.", changeStatusHint:"Set a game status to Playing",
+    startPlaying:"▶ Start playing", completed:"complete", remaining:"left",
+    addTargetHint:"Add a target hours goal to track progress",
+    moreActive:"+{n} more active games",
+    genreReason:"You like {genre} — {n} completed in this genre",
+    backlogReason:"Waiting longest in backlog",
+    releaseToday:"Releases today!", releaseTomorrow:"Tomorrow!",
+    daysToRelease:"days to release", dayToRelease:"day to release",
+    details:"📋 Details", remind:"🔔 Remind me", addToCollection:"+ Edit",
+    spentTotal:"Total spent", recovered:"Recovered from sales", realCost:"Real collection cost",
+    sellSuggestion:"💡 Sell {title} and recover ~{amount}",
+    searchPlaceholder:"Search games...", allGames:"All",
+    noGames:"No games", noResults:"No results", addFirst:"Tap + to add your first game.",
+    noResultsFor:"No games for {q}",
+    addGame:"+ ADD GAME",
+    export:"⬆ Export", import:"⬇ Import",
+    upcoming:"Upcoming releases", alreadyOut:"📦 Already out", tba:"TBA — no date",
+    noReleases:"No upcoming releases",
+    noReleasesHint:"Add a release date to games with status Planning.",
+    today:"TODAY!", out:"✓ Out", premiere:"Released:",
+    edit:"📋 Edit", watch:"👀 Watch", buy:"🛒 Buy", addToColl:"+ Edit",
+    notifyToggle:"🔔 Notify on release",
+    enableNotif:"Enable notifications", enableNotifDesc:"Alert 3 days before and on release day",
+    enable:"Enable",
+    general:"🎮 General", finance:"💰 Finance", analysis:"💡 Analysis",
+    gamesTotal:"Total games", completed2:"Completed", hoursTotal:"Total hours", avgRating:"Avg rating",
+    statusChart:"📊 Collection status", genreChart:"🎮 Top genres", ratingChart:"⭐ Rating histogram",
+    noFinanceData:"No financial data", addPricesHint:"Add purchase prices to games",
+    spent:"Spent", earnedBack:"Recovered", realCostShort:"Real cost", costPerHour:"Cost/hour",
+    byStore:"🏪 Spending by store", byGenre:"🎮 Spending by genre",
+    roi:"📈 ROI on sold games", mostExpensive:"💸 Most expensive", bestValue:"⏱ Best value ($/h)",
+    noInsights:"Not enough data", addPricesAndHours:"Add prices and hours to games",
+    potentialSaving:"💡 Potential savings",
+    savingsFrom:"from avoided losses", savingsFromSell:"from selling abandoned games",
+    clickCards:"Click cards below to learn how",
+    biggestLoss:"Biggest loss", bestInvestment:"Best investment",
+    mostExpensiveHours:"Most expensive hours", bestValueShort:"Best value",
+    financeSummary:"Financial summary",
+    biggestLossDesc:"Selling {title} lost you {amount}",
+    bestInvestDesc:"{title} earned {amount} profit",
+    expHoursDesc:"{title} — {cph}/h. Above $10/h is poor value.",
+    bestValDesc:"{title} — only {cph}/h. Your best investment.",
+    finSummaryDesc:"Spent {spent}, recovered {earned}. Real cost is {net}.",
+    data:"Data", exportData:"Export data", exportDesc:"Download backup of {n} games as JSON",
+    importData:"Import data", importDesc:"Load backup from JSON file",
+    info:"Info", privacyPolicy:"Privacy policy", privacyDesc:"We collect no personal data",
+    poweredBy:"Powered by RAWG.io", poweredByDesc:"Database of 800,000+ games",
+    appInfo:"PS5 Vault", appInfoDesc:"Version {ver} — Data stored locally",
+    language:"Język / Language", dangerZone:"Danger zone",
+    clearCollection:"Clear collection", clearDesc:"Delete all {n} games",
+    clearConfirm:"Delete all {n} games? This cannot be undone.",
+    addGameTitle:"+ ADD GAME", editGameTitle:"✎ EDIT GAME",
+    searchRawg:"🔍 Search RAWG", rawgPlaceholder:"Type game name...",
+    rawgHint:"Select a game to auto-fill fields + release date",
+    titleField:"Title *", abbrField:"Abbr (2 chars)", yearField:"Year",
+    releaseDateField:"Release date", releaseDateHint:"Leave empty if unknown (TBA)",
+    statusField:"Status", genreField:"Genre", hoursField:"Hours",
+    ratingField:"Rating (1–10)", targetHoursField:"Target (hrs)", notesField:"Notes",
+    notesPh:"Your thoughts...", genrePh:"— select —", targetPh:"e.g. 40",
+    finances:"💰 Finances", priceBoughtField:"Price paid", storeField:"Store",
+    storePh:"—", soldToggle:"I sold this game", soldPriceField:"Sold for",
+    notifications:"Notifications", notifyOn:"🔔 Notify on release",
+    notifyDesc:"3 days before and on release day", notifyBlocked:"⛔ Blocked in browser settings",
+    cancel:"Cancel", save:"SAVE", enterTitle:"Enter title",
+    delete:"🗑", confirmDelete:"Delete game", confirmDeleteBody:"Delete {title} from collection?",
+    obTitle:"PS5 VAULT", obSub:"Your personal PS5 game tracker. No registration — everything stored locally on device.",
+    obStart:"GET STARTED →",
+    obF1Title:"Game collection", obF1Desc:"Add manually or search RAWG database with cover art",
+    obF2Title:"Release tracking", obF2Desc:"Countdown + notifications 3 days before release",
+    obF3Title:"Financial analysis", obF3Desc:"Track spending, recovery — real collection cost",
+    obF4Title:"Statistics", obF4Desc:"Charts, ratings, cost/hour and smart insights",
+    saved:"✓ Saved", added:"✓ Added", deleted:"✓ Deleted {title}",
+    imported:"✓ Imported {n} games", cleared:"ℹ Collection cleared",
+    statusChanged:"✓ Status → {status}",
+    avoidLoss:"🔍 Avoid such losses", buyBetter:"📋 Find similar games",
+    optimizeBacklog:"⚡ Optimize backlog", findSimilar:"🎯 Find similar games", saveMoney:"💡 How to save more",
+    flowAvoidTitle:"How to avoid losses", flowInvestTitle:"Smart buying strategies",
+    flowOptimTitle:"Optimize your backlog", flowSimilarTitle:"How to find similar games",
+    flowSaveTitle:"Savings plan",
+    iUnderstand:"GOT IT",
+    hoursPlayed:"{n}h played",
+    progComplete:"{n}% complete",
   }
 };
 
@@ -703,7 +691,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
   return(
     <div className='scr'>
       <div style={{marginBottom:16}}>
-        <div style={{fontFamily:''Orbitron',monospace',fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
       </div>
       {active?(
@@ -732,7 +720,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
             {rec.cover?<div className='rec-cover' style={{backgroundImage:`url(${rec.cover})`}}/>:<div className='rec-cover0'>{rec.abbr||'??'}</div>}
             <div className='rec-body'><div className='rec-title'>{rec.title}</div><div className='rec-reason'>{rec.genre&&games.filter(g=>g.status==='ukonczone'&&g.genre===rec.genre).length>0?t(lang,'genreReason',{genre:rec.genre,n:games.filter(g=>g.status==='ukonczone'&&g.genre===rec.genre).length}):t(lang,'backlogReason')}</div></div>
           </div>
-          <button type='button' onClick={e=>{e.stopPropagation();onStatusChange(rec.id,'gram');}} style={{width:'100%',marginTop:10,padding:'9px 16px',border:`1px solid rgba(167,139,250,.3)`,borderRadius:9,background:'rgba(167,139,250,.1)',color:G.pur,fontFamily:''Syne',sans-serif',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+          <button type='button' onClick={e=>{e.stopPropagation();onStatusChange(rec.id,'gram');}} style={{width:'100%',marginTop:10,padding:'9px 16px',border:`1px solid rgba(167,139,250,.3)`,borderRadius:9,background:'rgba(167,139,250,.1)',color:G.pur,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:'pointer'}}>
             {t(lang,'startPlaying')}
           </button>
         </div>
@@ -741,7 +729,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>📅 {t(lang,'nextRelease')}</span>{days===0?<span className='hcard-badge' style={{background:'rgba(57,255,110,.12)',color:G.grn,animation:'pulse 1s infinite'}}>{t(lang,'today')}</span>:<span className='hcard-badge' style={{background:'rgba(255,159,28,.12)',color:G.org}}>{days}d</span>}</div>
           <div className='cnt-game-row'>
-            {nextUp.cover?<div className='cnt-cover' style={{backgroundImage:`url(${nextUp.cover})`}}/>:<div style={{width:44,height:44,borderRadius:8,background:G.card2,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontFamily:''Orbitron',monospace',fontWeight:900,color:G.pur,flexShrink:0}}>{nextUp.abbr||'??'}</div>}
+            {nextUp.cover?<div className='cnt-cover' style={{backgroundImage:`url(${nextUp.cover})`}}/>:<div style={{width:44,height:44,borderRadius:8,background:G.card2,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.pur,flexShrink:0}}>{nextUp.abbr||'??'}</div>}
             <div><div style={{fontSize:13,fontWeight:700,marginBottom:2}}>{nextUp.title}</div><div style={{fontSize:11,color:G.dim}}>{days===0?t(lang,'releaseToday'):days===1?t(lang,'releaseTomorrow'):fmtDate(nextUp.releaseDate,lang)}</div></div>
           </div>
           {days>0&&<><div className='cnt-big'>{days}</div><div className='cnt-label'>{days===1?t(lang,'dayToRelease'):t(lang,'daysToRelease')}</div></>}
@@ -755,10 +743,10 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>💰 {t(lang,'financeInsight')}</span></div>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'spentTotal')}</span><span style={{fontFamily:''Orbitron',monospace',fontWeight:700,color:G.red}}>{pln(totalSpent,lang)}</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'recovered')}</span><span style={{fontFamily:''Orbitron',monospace',fontWeight:700,color:G.grn}}>{pln(totalEarned,lang)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'spentTotal')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.red}}>{pln(totalSpent,lang)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'recovered')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.grn}}>{pln(totalEarned,lang)}</span></div>
             <div style={{height:1,background:G.bdr,margin:'2px 0'}}/>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}><span style={{fontWeight:600}}>{t(lang,'realCost')}</span><span style={{fontFamily:''Orbitron',monospace',fontWeight:900,color:G.org}}>{pln(totalSpent-totalEarned,lang)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}><span style={{fontWeight:600}}>{t(lang,'realCost')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.org}}>{pln(totalSpent-totalEarned,lang)}</span></div>
             {sellable.length>0&&<div style={{marginTop:6,padding:'10px 12px',background:'rgba(57,255,110,.07)',border:'1px solid rgba(57,255,110,.2)',borderRadius:10,fontSize:11,color:G.txt,lineHeight:1.5}}>{t(lang,'sellSuggestion',{title:sellable[0].title,amount:pln(+sellable[0].priceBought*0.6,lang)})}{sellable.length>1&&` (+${sellable.length-1})`}</div>}
           </div>
         </div>
@@ -816,7 +804,7 @@ function InsightsTab({insights,games,lang}){
     <div>
       {totalSav>0&&(<div style={{background:'linear-gradient(135deg,rgba(57,255,110,.08),rgba(0,212,255,.06))',border:'1px solid rgba(57,255,110,.22)',borderRadius:16,padding:16,marginBottom:14}}>
         <div style={{fontSize:10,fontWeight:700,color:G.dim,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:4}}>{t(lang,'potentialSaving')}</div>
-        <div style={{fontFamily:''Orbitron',monospace',fontSize:36,fontWeight:900,color:G.grn,lineHeight:1,marginBottom:4}}>{pln(totalSav,lang)}</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:36,fontWeight:900,color:G.grn,lineHeight:1,marginBottom:4}}>{pln(totalSav,lang)}</div>
         <div style={{fontSize:11,color:'#B0B8CC',lineHeight:1.5}}>{losses>0&&`${pln(Math.round(losses),lang)} ${t(lang,'savingsFrom')}`}{losses>0&&unsold>0&&' + '}{unsold>0&&`~${pln(Math.round(unsold),lang)} ${t(lang,'savingsFromSell')}`}</div>
         <div style={{fontSize:10,color:G.dim,marginTop:6}}>{t(lang,'clickCards')}</div>
       </div>)}
@@ -826,16 +814,16 @@ function InsightsTab({insights,games,lang}){
           <div style={{fontSize:22,marginBottom:8}}>{ins.ico}</div>
           <div style={{fontSize:12,fontWeight:700,color:ins.color,marginBottom:4}}>{ins.title}</div>
           <div style={{fontSize:11,lineHeight:1.6,opacity:.85,marginBottom:10}}>{ins.body}</div>
-          <div style={{fontFamily:''Orbitron',monospace',fontSize:18,fontWeight:900,color:ins.color,marginBottom:cta?12:0}}>{ins.val}</div>
-          {cta&&<button type='button' onClick={()=>setFlowModal(flowData[cta.flow])} style={{width:'100%',padding:'10px',border:`1px solid ${ins.color}50`,borderRadius:9,background:`${ins.color}15`,color:ins.color,fontFamily:''Syne',sans-serif',fontSize:12,fontWeight:700,cursor:'pointer'}}>{cta.label}</button>}
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:18,fontWeight:900,color:ins.color,marginBottom:cta?12:0}}>{ins.val}</div>
+          {cta&&<button type='button' onClick={()=>setFlowModal(flowData[cta.flow])} style={{width:'100%',padding:'10px',border:`1px solid ${ins.color}50`,borderRadius:9,background:`${ins.color}15`,color:ins.color,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:'pointer'}}>{cta.label}</button>}
         </div>);
       })}
       {flowModal&&(<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(4,6,14,.92)',zIndex:19999,display:'flex',alignItems:'flex-end'}} onClick={()=>setFlowModal(null)}>
         <div style={{width:'100%',background:G.card2,borderTop:`1px solid ${G.bdr}`,borderRadius:'20px 20px 0 0',padding:`18px 16px calc(env(safe-area-inset-bottom,0px) + 24px)`,maxHeight:'80dvh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
           <div style={{width:32,height:4,background:G.bdr,borderRadius:2,margin:'0 auto 16px'}}/>
-          <div style={{fontFamily:''Orbitron',monospace',fontSize:13,fontWeight:700,color:G.blu,marginBottom:16}}>{flowModal.title}</div>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,marginBottom:16}}>{flowModal.title}</div>
           {flowModal.steps.map((s,i)=>(<div key={i} className='flow-step'><span className='flow-ico'>{s.ico}</span><p style={{fontSize:13,color:'#B0B8CC',lineHeight:1.6}}>{s.tip}</p></div>))}
-          <button type='button' onClick={()=>setFlowModal(null)} style={{width:'100%',marginTop:16,padding:13,border:'none',borderRadius:11,background:`linear-gradient(135deg,${G.blu},#0060FF)`,color:'#fff',fontFamily:''Orbitron',monospace',fontSize:11,fontWeight:700,cursor:'pointer'}}>{t(lang,'iUnderstand')}</button>
+          <button type='button' onClick={()=>setFlowModal(null)} style={{width:'100%',marginTop:16,padding:13,border:'none',borderRadius:11,background:`linear-gradient(135deg,${G.blu},#0060FF)`,color:'#fff',fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,cursor:'pointer'}}>{t(lang,'iUnderstand')}</button>
         </div>
       </div>)}
     </div>
@@ -883,7 +871,7 @@ function Stats({games,lang}){
   return(
     <div className='scr'>
       <div style={{display:'flex',gap:3,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:11,padding:4,marginBottom:14}}>
-        {subTabs.map(([k,l])=><button key={k} type='button' onClick={()=>setTab(k.trim())} style={{flex:1,minHeight:40,padding:'7px 2px',border:'none',borderRadius:8,background:tab===k.trim()?'rgba(0,212,255,.15)':'transparent',color:tab===k.trim()?G.blu:G.dim,fontFamily:''Syne',sans-serif',fontSize:10,fontWeight:600,cursor:'pointer'}}>{l}</button>)}
+        {subTabs.map(([k,l])=><button key={k} type='button' onClick={()=>setTab(k.trim())} style={{flex:1,minHeight:40,padding:'7px 2px',border:'none',borderRadius:8,background:tab===k.trim()?'rgba(0,212,255,.15)':'transparent',color:tab===k.trim()?G.blu:G.dim,fontFamily:"'Syne',sans-serif",fontSize:10,fontWeight:600,cursor:'pointer'}}>{l}</button>)}
       </div>
       {tab==='general'&&<>
         <div className='kgd'>{kpis.map(k=><div key={k.l} className='kcd' style={{'--c':k.c}}><div className='kvl'>{k.v}</div><div className='klb'>{k.l}</div></div>)}</div>
