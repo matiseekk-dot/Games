@@ -27,6 +27,32 @@ const KEY = "ps5vault_v1";
 function lsRead()   { try{ return JSON.parse(localStorage.getItem(KEY)||"[]"); }catch{ return []; } }
 function lsWrite(g) { try{ localStorage.setItem(KEY,JSON.stringify(g)); }catch{} }
 
+
+// ── EXPORT / IMPORT ──────────────────────────────────────────────────────────
+function exportData(games) {
+  const data = { version:1, exported: new Date().toISOString(), games };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  a.download = `ps5vault-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file, onSuccess, onError) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const games = Array.isArray(data) ? data : data.games;
+      if (!Array.isArray(games)) throw new Error("Nieprawidłowy format pliku");
+      onSuccess(games);
+    } catch(err) { onError(err.message); }
+  };
+  reader.readAsText(file);
+}
+
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
 async function registerSW(){ if(!("serviceWorker"in navigator))return; try{ await navigator.serviceWorker.register("/Games/sw.js"); }catch{} }
 async function requestNotifPermission(){ if(!("Notification"in window))return"denied"; if(Notification.permission==="granted")return"granted"; if(Notification.permission==="denied")return"denied"; return await Notification.requestPermission(); }
@@ -814,6 +840,24 @@ export default function App(){
 
         {tab==="col"&&<>
           <div className="sw"><span className="sx">🔍</span><input className="si" value={q} onChange={e=>setQ(e.target.value)} placeholder="Szukaj gry..."/></div>
+
+          <div style={{display:"flex",gap:8,padding:"0 16px 8px",justifyContent:"flex-end"}}>
+            <button type="button" onClick={()=>exportData(games)}
+              style={{padding:"6px 12px",border:`1px solid ${G.bdr}`,borderRadius:8,background:G.card,color:G.dim,fontFamily:"'Syne',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+              ⬆ Export
+            </button>
+            <label style={{padding:"6px 12px",border:`1px solid ${G.bdr}`,borderRadius:8,background:G.card,color:G.dim,fontFamily:"'Syne',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+              ⬇ Import
+              <input type="file" accept=".json" style={{display:"none"}} onChange={e=>{
+                if(!e.target.files[0])return;
+                importData(e.target.files[0],
+                  imported=>{ setGames(imported); flash(`Zaimportowano ${imported.length} gier ✓`); },
+                  err=>flash("Błąd: "+err)
+                );
+                e.target.value="";
+              }}/>
+            </label>
+          </div>
           <div className="chips">{chips.map(c=><button type="button" key={c.k} className={"chip"+(flt===c.k?" on":"")} onClick={()=>setFlt(c.k)}>{c.l}</button>)}</div>
           <div className="lst">
             {visible.length===0

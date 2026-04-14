@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "TWOJA_NAZWA_PAKIETU",
+      "sha256_cert_fingerprints": [
+        "WKLEJ_HASH_SHA256_Z_PWABUILDER"
+      ]
+    }
+  }
+]
