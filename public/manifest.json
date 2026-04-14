@@ -1,8 +1,9 @@
 {
+  "id": "ps5vault",
   "name": "PS5 Vault",
   "short_name": "PS5 Vault",
   "description": "Personal PS5 game tracker — collection, releases, finances and stats",
-  "start_url": "/Games/?source=pwa",
+  "start_url": "/Games/",
   "scope": "/Games/",
   "display": "standalone",
   "orientation": "portrait",
@@ -11,31 +12,39 @@
   "lang": "pl",
   "dir": "ltr",
   "categories": ["games", "entertainment", "utilities"],
-  "screenshots": [],
   "icons": [
     {
-      "src": "/Games/icon-192.png",
+      "src": "/Games/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Games/icon-192.png",
+      "src": "/Games/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/Games/icon-512.png",
+      "src": "/Games/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Games/icon-512.png",
+      "src": "/Games/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/Games/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "PS5 Vault home screen"
     }
   ]
 }
