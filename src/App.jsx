@@ -98,6 +98,8 @@ const TRANSLATIONS = {
     iUnderstand:"ROZUMIEM",
     hoursPlayed:"{n}h zagranych",
     progComplete:"{n}% ukończone",
+    sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena",
+    rateGame:"⭐ Oceń grę", ratingQuick:"Twoja ocena (1–10):", rateSkip:"Pomiń", rateSave:"Zapisz ocenę",
   },
   en: {
     gram:"Playing", psplus:"PS Plus", ukonczone:"Completed", planuje:"Planning", porzucone:"Abandoned",
@@ -188,6 +190,8 @@ const TRANSLATIONS = {
     iUnderstand:"GOT IT",
     hoursPlayed:"{n}h played",
     progComplete:"{n}% complete",
+    sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price",
+    rateGame:"⭐ Rate game", ratingQuick:"Your rating (1–10):", rateSkip:"Skip", rateSave:"Save rating",
   }
 };
 
@@ -327,6 +331,18 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .chip.on{border-color:${G.blu};color:${G.blu};background:rgba(0,212,255,.1)}
 .toolbar{display:flex;gap:8px;padding:0 16px 8px;justify-content:flex-end}
 .tbtn{padding:6px 12px;border:1px solid ${G.bdr};border-radius:8px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.sort-row{display:flex;gap:6px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:center}
+.sort-row::-webkit-scrollbar{display:none}
+.sort-lbl{font-size:10px;color:${G.dim};font-weight:600;white-space:nowrap;flex-shrink:0}
+.sort-btn{padding:5px 10px;border-radius:16px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
+.sort-btn.on{border-color:${G.pur};color:${G.pur};background:rgba(167,139,250,.1)}
+.rate-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.88);z-index:19999;display:flex;align-items:center;justify-content:center;padding:20px}
+.rate-box{background:${G.card2};border:1px solid ${G.bdr};border-radius:18px;padding:24px 20px;max-width:320px;width:100%;animation:scaleIn .2s ease}
+.rate-title{font-size:14px;color:${G.dim};margin-bottom:12px;text-align:center}
+.rate-stars{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.rate-star{width:42px;height:42px;border-radius:10px;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-family:'Orbitron',monospace;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.rate-star.on{border-color:${G.gld};background:rgba(255,209,102,.15);color:${G.gld}}
+.rate-btns{display:flex;gap:8px}
 .lst{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:4px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
 .gc{width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:9px;display:flex;align-items:stretch;cursor:pointer;position:relative;overflow:hidden;animation:fadeIn .25s ease;transition:border-color .15s}
 .gc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c);opacity:.75;z-index:1}
@@ -908,8 +924,8 @@ function Stats({games,lang}){
       {tab==='finance'&&<>
         {!bought.length?<div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noFinanceData')}</div><div className='ess'>{t(lang,'addPricesHint')}</div></div>:<>
           <div className='fkgd'>{fkpis.map(k=><div key={k.l} className='fkcd' style={{'--c':k.c,background:k.bg}}><div className='fkv'>{k.v}</div><div className='fkl'>{k.l}</div></div>)}</div>
-          {storeData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byStore')}</div><ResponsiveContainer width='100%' height={120}><BarChart data={storeData} barSize={24} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.org} fillOpacity={.85}/></BarChart></ResponsiveContainer></div>}
-          {gcData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byGenre')}</div><ResponsiveContainer width='100%' height={120}><BarChart data={gcData} barSize={20} margin={{top:4,left:-20,right:4,bottom:0}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={.8}/></BarChart></ResponsiveContainer></div>}
+          {storeData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byStore')}</div><ResponsiveContainer width='100%' height={120}><BarChart data={storeData} barSize={24} margin={{top:4,left:10,right:10,bottom:0}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.org} fillOpacity={.85}/></BarChart></ResponsiveContainer></div>}
+          {gcData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byGenre')}</div><ResponsiveContainer width='100%' height={120}><BarChart data={gcData} barSize={20} margin={{top:4,left:10,right:10,bottom:0}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={.8}/></BarChart></ResponsiveContainer></div>}
           {soldG.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'roi')}</div><ul className='top-list'>{soldG.map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{pln(+g.priceBought,lang)}→{pln(+g.priceSold,lang)}</span><span className={'top-val '+(g.roi>=0?'roi-pos':'roi-neg')}>{g.roi>=0?'+':''}{pln(g.roi,lang)}</span></li>)}</ul></div>}
           <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{pln(+g.priceBought,lang)}</span></li>)}</ul></div>
           {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.hours}h</span><span className='top-val' style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)}{lang==='en'?' $/h':' zł/h'}</span></li>)}</ul></div>}
@@ -970,6 +986,8 @@ export default function App(){
   const [tab,setTab]           = useState('home');
   const [flt,setFlt]           = useState('all');
   const [q,setQ]               = useState('');
+  const [sortBy,setSortBy]     = useState('added');
+  const [rateModal,setRateModal]= useState(null);
   const [modal,setModal]       = useState(null);
   const [toast,setToast]       = useState(null);
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
@@ -1001,7 +1019,17 @@ export default function App(){
   const SM2=getSM(lang);
   const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).length;
   const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label}))];
-  const visible=games.filter(g=>flt==='all'||g.status===flt).filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()));
+  const sortFn = {
+    added:  (a,b) => 0,
+    title:  (a,b) => a.title.localeCompare(b.title),
+    rating: (a,b) => (b.rating??-1)-(a.rating??-1),
+    hours:  (a,b) => (b.hours||0)-(a.hours||0),
+    price:  (a,b) => (+b.priceBought||0)-(+a.priceBought||0),
+  };
+  const visible=games
+    .filter(g=>flt==='all'||g.status===flt)
+    .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
+    .sort(sortFn[sortBy]||sortFn.added);
 
   return(
     <>
@@ -1030,6 +1058,12 @@ export default function App(){
             <label className='tbtn'>{t(lang,'import')}<input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importData(e.target.files[0],g=>{setGames(g);flash(t(lang,'imported',{n:g.length}));},err=>flash('❌ '+err));e.target.value='';}}/></label>
           </div>
           <div className='chips'>{chips.map(c=><button type='button' key={c.k} className={'chip'+(flt===c.k?' on':'')} onClick={()=>setFlt(c.k)}>{c.l}</button>)}</div>
+          <div className='sort-row'>
+            <span className='sort-lbl'>{t(lang,'sortBy')}</span>
+            {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
+              <button type='button' key={k} className={'sort-btn'+(sortBy===k?' on':'')} onClick={()=>setSortBy(k)}>{l}</button>
+            ))}
+          </div>
           <div className='lst'>
             {visible.length===0
               ?<div className='empty'><div className='eic'>🎮</div><div className='ett'>{q?t(lang,'noResults'):t(lang,'noGames')}</div><div className='ess'>{q?t(lang,'noResultsFor',{q}):t(lang,'addFirst')}</div>{!q&&<button className='empty-cta' onClick={()=>setModal('add')}>{t(lang,'addGame')}</button>}</div>
@@ -1043,6 +1077,7 @@ export default function App(){
                       {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
                       {g.status==='psplus'&&<span style={{fontSize:11,fontWeight:700,color:G.gld}}>PS+</span>}
                       {roi!==null?<span className={'gprice-roi '+(roi>=0?'roi-pos':'roi-neg')}>{roi>=0?'+':''}{pln(roi,lang)}</span>:!!+g.priceBought&&<span className='gprice'>{pln(+g.priceBought,lang)}</span>}
+                      {g.status==='ukonczone'&&g.rating==null&&<span style={{fontSize:11,color:G.gld,cursor:'pointer',fontWeight:700}} onClick={e=>{e.stopPropagation();setRateModal({id:g.id,title:g.title});}} title={t(lang,'rateGame')}>★?</span>}
                     </div>
                   </div>
                 </div>
@@ -1057,6 +1092,33 @@ export default function App(){
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         <Toast msg={toast}/>
+        {rateModal&&(
+          <div className='rate-modal' onClick={()=>setRateModal(null)}>
+            <div className='rate-box' onClick={e=>e.stopPropagation()}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,color:G.blu,marginBottom:8,textAlign:'center'}}>{rateModal.title}</div>
+              <div className='rate-title'>{t(lang,'ratingQuick')}</div>
+              <div className='rate-stars'>
+                {[1,2,3,4,5,6,7,8,9,10].map(n=>(
+                  <button key={n} type='button' className={'rate-star'+(rateModal.val===n?' on':'')}
+                    onClick={()=>setRateModal(p=>({...p,val:n}))}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <div className='rate-btns'>
+                <button type='button' className='confirm-no' onClick={()=>setRateModal(null)}>{t(lang,'rateSkip')}</button>
+                <button type='button' className='confirm-yes' style={{background:G.gld,color:'#000'}}
+                  onClick={()=>{
+                    if(rateModal.val){
+                      setGames(prev=>prev.map(g=>g.id===rateModal.id?{...g,rating:rateModal.val}:g));
+                      flash('⭐ '+rateModal.val+'/10');
+                    }
+                    setRateModal(null);
+                  }}>{t(lang,'rateSave')}</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
