@@ -329,6 +329,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .chips::-webkit-scrollbar{display:none}
 .chip{padding:7px 14px;border-radius:20px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
 .chip.on{border-color:${G.blu};color:${G.blu};background:rgba(0,212,255,.1)}
+.chip.sold-on{border-color:${G.grn};color:${G.grn};background:rgba(57,255,110,.1)}
 .toolbar{display:flex;gap:8px;padding:0 16px 8px;justify-content:flex-end}
 .tbtn{padding:6px 12px;border:1px solid ${G.bdr};border-radius:8px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
 .sort-row{display:flex;gap:6px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:center}
@@ -1018,7 +1019,7 @@ export default function App(){
 
   const SM2=getSM(lang);
   const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).length;
-  const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:t(lang,'filterSold')}];
+  const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:'💰 '+t(lang,'filterSold')}];
   const sortFn = {
     added:  (a,b) => 0,
     title:  (a,b) => a.title.localeCompare(b.title),
@@ -1058,7 +1059,7 @@ export default function App(){
             <button type='button' className='tbtn' onClick={()=>exportData(games,lang)}>{t(lang,'export')}</button>
             <label className='tbtn'>{t(lang,'import')}<input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importMerge(e.target.files[0],games,(merged,added,dupes)=>{setGames(merged);flash(lang==='pl'?`✓ Dodano ${added} gier (${dupes} duplikatów pominięto)`:`✓ Added ${added} games (${dupes} duplicates skipped)`);},err=>flash('❌ '+err));e.target.value='';}}/></label>
           </div>
-          <div className='chips'>{chips.map(c=><button type='button' key={c.k} className={'chip'+(flt===c.k?' on':'')} onClick={()=>setFlt(c.k)}>{c.l}</button>)}</div>
+          <div className='chips'>{chips.map(ch=><button type='button' key={ch.k} className={'chip'+(flt===ch.k?' on':'')} onClick={()=>setFlt(ch.k)}>{ch.l}</button>)}</div>
           <div className='sort-row'>
             <span className='sort-lbl'>{t(lang,'sortBy')}</span>
             {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
