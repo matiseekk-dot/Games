@@ -98,7 +98,7 @@ const TRANSLATIONS = {
     iUnderstand:"ROZUMIEM",
     hoursPlayed:"{n}h zagranych",
     progComplete:"{n}% ukończone",
-    sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", sortSold:"Sprzedane",
+    sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", filterSold:"Sprzedane",
     rateGame:"⭐ Oceń grę", ratingQuick:"Twoja ocena (1–10):", rateSkip:"Pomiń", rateSave:"Zapisz ocenę",
   },
   en: {
@@ -190,7 +190,7 @@ const TRANSLATIONS = {
     iUnderstand:"GOT IT",
     hoursPlayed:"{n}h played",
     progComplete:"{n}% complete",
-    sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", sortSold:"Sold",
+    sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", filterSold:"Sold",
     rateGame:"⭐ Rate game", ratingQuick:"Your rating (1–10):", rateSkip:"Skip", rateSave:"Save rating",
   }
 };
@@ -1018,17 +1018,17 @@ export default function App(){
 
   const SM2=getSM(lang);
   const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).length;
-  const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label}))];
+  const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:t(lang,'filterSold')}];
   const sortFn = {
     added:  (a,b) => 0,
     title:  (a,b) => a.title.localeCompare(b.title),
     rating: (a,b) => (b.rating??-1)-(a.rating??-1),
     hours:  (a,b) => (b.hours||0)-(a.hours||0),
     price:  (a,b) => (+b.priceBought||0)-(+a.priceBought||0),
-    sold:   (a,b) => (b.priceSold!=null?1:0)-(a.priceSold!=null?1:0),
+
   };
   const visible=games
-    .filter(g=>flt==='all'||g.status===flt)
+    .filter(g=>flt==='all'||(flt==='sold'?g.priceSold!=null&&!!+g.priceSold:g.status===flt))
     .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
     .sort(sortFn[sortBy]||sortFn.added);
 
@@ -1061,7 +1061,7 @@ export default function App(){
           <div className='chips'>{chips.map(c=><button type='button' key={c.k} className={'chip'+(flt===c.k?' on':'')} onClick={()=>setFlt(c.k)}>{c.l}</button>)}</div>
           <div className='sort-row'>
             <span className='sort-lbl'>{t(lang,'sortBy')}</span>
-            {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')],['sold',t(lang,'sortSold')]].map(([k,l])=>(
+            {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
               <button type='button' key={k} className={'sort-btn'+(sortBy===k?' on':'')} onClick={()=>setSortBy(k)}>{l}</button>
             ))}
           </div>
