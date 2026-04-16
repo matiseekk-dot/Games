@@ -14,7 +14,7 @@ const TRANSLATIONS = {
     home:"🏠 Home", collection:"🎮 Gry", releases:"📅 Premiery", stats:"📊 Statsy", settings:"⚙️ Opcje",
     goodMorning:"🌅 Dzień dobry", goodAfternoon:"🎮 Cześć!", goodEvening:"🌆 Dobry wieczór", goodNight:"🌙 Dobranoc",
     gamesInCollection:"gier", active:"aktywnych", upcomingReleases:"premier",
-    continuePlay:"Kontynuuj granie", whatToPlay:"Co teraz grać", nextRelease:"Najbliższa premiera",
+    continuePlay:"Teraz gram", whatToPlay:"Co teraz grać", nextRelease:"Najbliższa premiera",
     financeInsight:"Finansowy insight", backlog:"BACKLOG",
     noActiveGame:"Nie grasz teraz w żadną grę.", changeStatusHint:"Zmień status gry na Gram",
     startPlaying:"▶ Zacznij grać", completed:"ukończone", remaining:"pozostało",
@@ -98,7 +98,7 @@ const TRANSLATIONS = {
     iUnderstand:"ROZUMIEM",
     hoursPlayed:"{n}h zagranych",
     progComplete:"{n}% ukończone",
-    sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena",
+    sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", sortSold:"Sprzedane",
     rateGame:"⭐ Oceń grę", ratingQuick:"Twoja ocena (1–10):", rateSkip:"Pomiń", rateSave:"Zapisz ocenę",
   },
   en: {
@@ -106,7 +106,7 @@ const TRANSLATIONS = {
     home:"🏠 Home", collection:"🎮 Games", releases:"📅 Releases", stats:"📊 Stats", settings:"⚙️ Settings",
     goodMorning:"🌅 Good morning", goodAfternoon:"🎮 Hey!", goodEvening:"🌆 Good evening", goodNight:"🌙 Good night",
     gamesInCollection:"games", active:"active", upcomingReleases:"releases",
-    continuePlay:"Continue playing", whatToPlay:"What to play next", nextRelease:"Upcoming release",
+    continuePlay:"Now playing", whatToPlay:"What to play next", nextRelease:"Upcoming release",
     financeInsight:"Financial insight", backlog:"BACKLOG",
     noActiveGame:"Not playing anything right now.", changeStatusHint:"Set a game status to Playing",
     startPlaying:"▶ Start playing", completed:"complete", remaining:"left",
@@ -190,7 +190,7 @@ const TRANSLATIONS = {
     iUnderstand:"GOT IT",
     hoursPlayed:"{n}h played",
     progComplete:"{n}% complete",
-    sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price",
+    sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", sortSold:"Sold",
     rateGame:"⭐ Rate game", ratingQuick:"Your rating (1–10):", rateSkip:"Skip", rateSave:"Save rating",
   }
 };
@@ -284,7 +284,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .lico{width:34px;height:34px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#fff;box-shadow:0 0 12px rgba(0,212,255,.35)}
 .lnm{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;letter-spacing:.1em;white-space:nowrap}
 .lsb{font-size:9px;color:${G.dim};letter-spacing:.2em;text-transform:uppercase}
-.abtn{width:44px;height:44px;flex-shrink:0;border:none;border-radius:10px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.abtn{height:44px;flex-shrink:0;border:none;border-radius:10px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0 14px;gap:6px;white-space:nowrap}
 .abtn:active{opacity:.7;transform:scale(.95)}
 
 .tabs{display:flex;gap:2px;background:${G.card};border:1px solid ${G.bdr};border-radius:13px;padding:4px}
@@ -917,15 +917,15 @@ function Stats({games,lang}){
       </div>
       {tab==='general'&&<>
         <div className='kgd'>{kpis.map(k=><div key={k.l} className='kcd' style={{'--c':k.c}}><div className='kvl'>{k.v}</div><div className='klb'>{k.l}</div></div>)}</div>
-        <div className='ccd'><div className='ctl'>{t(lang,'statusChart')}</div><ResponsiveContainer width='100%' height={120}><BarChart data={sData} barSize={24} margin={{top:4,left:10,right:10,bottom:0}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]}>{sData.map((d,i)=><Cell key={i} fill={d.c} fillOpacity={.85}/>)}</Bar></BarChart></ResponsiveContainer></div>
-        {gData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'genreChart')}</div><ResponsiveContainer width='100%' height={120}><BarChart data={gData} barSize={20} margin={{top:4,left:10,right:10,bottom:0}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={.8}/></BarChart></ResponsiveContainer></div>}
-        {rated.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'ratingChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={buckets} barSize={16} margin={{top:4,left:10,right:10,bottom:0}}><CartesianGrid vertical={false} stroke={G.bdr} strokeDasharray='3 3'/><XAxis dataKey='n' tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} minPointSize={3}>{buckets.map((_,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={d=>d.v===0?.25:.85}/>)}</Bar></BarChart></ResponsiveContainer></div>}
+        <div className='ccd'><div className='ctl'>{t(lang,'statusChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={sData} barSize={28} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:24,right:24}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]}>{sData.map((d,i)=><Cell key={i} fill={d.c} fillOpacity={0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>
+        {gData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'genreChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
+        {rated.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'ratingChart')}</div><ResponsiveContainer width='100%' height={140}><BarChart data={buckets} barSize={20} margin={{top:4,left:0,right:0,bottom:4}}><CartesianGrid vertical={false} stroke={G.bdr} strokeDasharray='3 3'/><XAxis dataKey='n' tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false} padding={{left:20,right:20}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} minPointSize={3}>{buckets.map((b,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={b.v===0?0.2:0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>}
       </>}
       {tab==='finance'&&<>
         {!bought.length?<div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noFinanceData')}</div><div className='ess'>{t(lang,'addPricesHint')}</div></div>:<>
           <div className='fkgd'>{fkpis.map(k=><div key={k.l} className='fkcd' style={{'--c':k.c,background:k.bg}}><div className='fkv'>{k.v}</div><div className='fkl'>{k.l}</div></div>)}</div>
-          {storeData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byStore')}</div><ResponsiveContainer width='100%' height={120}><BarChart data={storeData} barSize={24} margin={{top:4,left:10,right:10,bottom:0}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.org} fillOpacity={.85}/></BarChart></ResponsiveContainer></div>}
-          {gcData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byGenre')}</div><ResponsiveContainer width='100%' height={120}><BarChart data={gcData} barSize={20} margin={{top:4,left:10,right:10,bottom:0}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={.8}/></BarChart></ResponsiveContainer></div>}
+          {storeData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byStore')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={storeData} barSize={28} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:28,right:28}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.org} fillOpacity={0.85}/></BarChart></ResponsiveContainer></div>}
+          {gcData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byGenre')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gcData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
           {soldG.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'roi')}</div><ul className='top-list'>{soldG.map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{pln(+g.priceBought,lang)}→{pln(+g.priceSold,lang)}</span><span className={'top-val '+(g.roi>=0?'roi-pos':'roi-neg')}>{g.roi>=0?'+':''}{pln(g.roi,lang)}</span></li>)}</ul></div>}
           <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{pln(+g.priceBought,lang)}</span></li>)}</ul></div>
           {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.hours}h</span><span className='top-val' style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)}{lang==='en'?' $/h':' zł/h'}</span></li>)}</ul></div>}
@@ -955,7 +955,7 @@ function Settings({games,setGames,flash,lang,setLang}){
         <div className='set-row' onClick={()=>importRef.current?.click()}>
           <span className='set-row-ico'>⬇️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'importData')}</div><div className='set-row-desc'>{t(lang,'importDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        <input ref={importRef} type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importData(e.target.files[0],g=>{setGames(g);flash(t(lang,'imported',{n:g.length}));},err=>flash('❌ '+err));e.target.value='';}}/>
+        <input ref={importRef} type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importMerge(e.target.files[0],games,(merged,added,dupes)=>{setGames(merged);flash(lang==='pl'?`✓ Dodano ${added} gier (${dupes} duplikatów pominięto)`:`✓ Added ${added} games (${dupes} duplicates skipped)`);},err=>flash('❌ '+err));e.target.value='';}}/>
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'info')}</div>
@@ -1025,6 +1025,7 @@ export default function App(){
     rating: (a,b) => (b.rating??-1)-(a.rating??-1),
     hours:  (a,b) => (b.hours||0)-(a.hours||0),
     price:  (a,b) => (+b.priceBought||0)-(+a.priceBought||0),
+    sold:   (a,b) => (b.priceSold!=null?1:0)-(a.priceSold!=null?1:0),
   };
   const visible=games
     .filter(g=>flt==='all'||g.status===flt)
@@ -1038,7 +1039,7 @@ export default function App(){
         <div className='hdr'>
           <div className='htop'>
             <div className='logo'><div className='lico'>PS5</div><div><div className='lnm'>VAULT</div><div className='lsb'>Game Tracker</div></div></div>
-            <button type='button' className='abtn' onClick={()=>setModal('add')}>+</button>
+            <button type='button' className='abtn' onClick={()=>setModal('add')}>+ {lang==='pl'?'Dodaj grę':'Add game'}</button>
           </div>
           <div className='tabs'>
             <button type='button' className={'tab'+(tab==='home'?' on':'')} onClick={()=>setTab('home')}>{t(lang,'home')}</button>
@@ -1055,12 +1056,12 @@ export default function App(){
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
           <div className='toolbar'>
             <button type='button' className='tbtn' onClick={()=>exportData(games,lang)}>{t(lang,'export')}</button>
-            <label className='tbtn'>{t(lang,'import')}<input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importData(e.target.files[0],g=>{setGames(g);flash(t(lang,'imported',{n:g.length}));},err=>flash('❌ '+err));e.target.value='';}}/></label>
+            <label className='tbtn'>{t(lang,'import')}<input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importMerge(e.target.files[0],games,(merged,added,dupes)=>{setGames(merged);flash(lang==='pl'?`✓ Dodano ${added} gier (${dupes} duplikatów pominięto)`:`✓ Added ${added} games (${dupes} duplicates skipped)`);},err=>flash('❌ '+err));e.target.value='';}}/></label>
           </div>
           <div className='chips'>{chips.map(c=><button type='button' key={c.k} className={'chip'+(flt===c.k?' on':'')} onClick={()=>setFlt(c.k)}>{c.l}</button>)}</div>
           <div className='sort-row'>
             <span className='sort-lbl'>{t(lang,'sortBy')}</span>
-            {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
+            {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')],['sold',t(lang,'sortSold')]].map(([k,l])=>(
               <button type='button' key={k} className={'sort-btn'+(sortBy===k?' on':'')} onClick={()=>setSortBy(k)}>{l}</button>
             ))}
           </div>
