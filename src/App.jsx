@@ -269,7 +269,28 @@ function importMerge(file,existing,onOk,onErr){
   }catch(err){onErr(err.message);}};
   r.readAsText(file);
 }
-async function registerSW(){ if(!('serviceWorker'in navigator))return;try{await navigator.serviceWorker.register('/Games/sw.js');}catch{} }
+async function registerSW(){
+  if(!('serviceWorker'in navigator))return;
+  try{
+    const reg=await navigator.serviceWorker.register('/Games/sw.js');
+    // Force update check on every load
+    reg.update();
+    // If new SW is waiting, activate immediately
+    if(reg.waiting){ reg.waiting.postMessage({type:'SKIP_WAITING'}); }
+    // Listen for updates
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;
+      if(nw){
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            // New SW available — reload once to use it
+            window.location.reload();
+          }
+        });
+      }
+    });
+  }catch(e){console.log('SW register error:',e);}
+}
 async function requestNotifPerm(){ if(!('Notification'in window))return'denied';if(Notification.permission!=='default')return Notification.permission;return await Notification.requestPermission(); }
 async function checkReleases(games){ if(!('serviceWorker'in navigator))return;try{const reg=await navigator.serviceWorker.ready;reg.active?.postMessage({type:'CHECK_RELEASES',games});}catch{} }
 async function rawgSearch(q){

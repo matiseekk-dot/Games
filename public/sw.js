@@ -1,5 +1,5 @@
-// PS5 Vault — Service Worker v1.0
-const CACHE = "ps5vault-v1";
+// PS5 Vault — Service Worker v1.2 (NETWORK-FIRST)
+const CACHE = "ps5vault-v3";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 self.addEventListener("install", e => {
@@ -11,19 +11,25 @@ self.addEventListener("install", e => {
 
 self.addEventListener("activate", e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    Promise.all([
+      caches.keys().then(keys =>
+        Promise.all(keys.filter(k => k !== CACHE && k !== "ps5vault-notifs").map(k => caches.delete(k)))
+      ),
+      self.clients.claim()
+    ])
   );
 });
 
+// NETWORK-FIRST strategy: always try network, fallback to cache
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   if (!e.request.url.startsWith("https://")) return;
   if (e.request.url.includes("api.rawg.io")) return;
+  
   e.respondWith(
     fetch(e.request)
       .then(res => {
+        // Always update cache with latest response
         if (res && res.status === 200) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
@@ -35,6 +41,7 @@ self.addEventListener("fetch", e => {
 });
 
 self.addEventListener("message", async event => {
+  if (event.data?.type === "SKIP_WAITING") { self.skipWaiting(); return; }
   if (event.data?.type !== "CHECK_RELEASES") return;
   const games = event.data.games || [];
   const today = new Date(); today.setHours(0,0,0,0);
