@@ -238,6 +238,12 @@ const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),gen
 
 function lsRead()  { try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
 function lsWrite(g){ try{ localStorage.setItem(LS_KEY,JSON.stringify(g)); }catch{} }
+function wlRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_wishlist')||'[]'); }catch{ return []; } }
+function wlWrite(d){ try{ localStorage.setItem('ps5vault_wishlist',JSON.stringify(d)); }catch{} }
+function budgetRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_budget')||'{}'); }catch{ return {}; } }
+function budgetWrite(d){ try{ localStorage.setItem('ps5vault_budget',JSON.stringify(d)); }catch{} }
+function timerRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_timer')); }catch{ return null; } }
+function timerWrite(d){ try{ if(d===null)localStorage.removeItem('ps5vault_timer'); else localStorage.setItem('ps5vault_timer',JSON.stringify(d)); }catch{} }
 function isOnboarded(){ return !!localStorage.getItem(LS_ONBOARD); }
 function setOnboarded(){ localStorage.setItem(LS_ONBOARD,'1'); }
 
@@ -249,6 +255,17 @@ function exportData(games,lang){
 function importData(file,onOk,onErr){
   const r=new FileReader();
   r.onload=e=>{try{const d=JSON.parse(e.target.result);const g=Array.isArray(d)?d:d.games;if(!Array.isArray(g))throw new Error('Invalid format');onOk(g);}catch(e){onErr(e.message);}};
+  r.readAsText(file);
+}
+function importMerge(file,existing,onOk,onErr){
+  const r=new FileReader();
+  r.onload=e=>{try{
+    const d=JSON.parse(e.target.result);const imported=Array.isArray(d)?d:d.games;
+    if(!Array.isArray(imported))throw new Error('Invalid format');
+    const existingIds=new Set(existing.map(g=>g.id));
+    const newGames=imported.filter(g=>!existingIds.has(g.id));
+    onOk([...existing,...newGames],newGames.length,imported.length-newGames.length);
+  }catch(err){onErr(err.message);}};
   r.readAsText(file);
 }
 async function registerSW(){ if(!('serviceWorker'in navigator))return;try{await navigator.serviceWorker.register('/Games/sw.js');}catch{} }
@@ -702,8 +719,8 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
 
 
 function WishForm({lang, onAdd, onClose}) {
-  const [title, setTitle] = React.useState('');
-  const [price, setPrice] = React.useState('');
+  const [title, setTitle] = useState('');
+  const [price, setPrice] = useState('');
   return (
     <div>
       <div className='fg' style={{marginBottom:10}}>
@@ -726,10 +743,10 @@ function WishForm({lang, onAdd, onClose}) {
 }
 
 function SessionTimer({game, onSave, lang}) {
-  const [active, setActive] = React.useState(()=>{ const t=timerRead(); return t&&t.gameId===game.id?t:null; });
-  const [elapsed, setElapsed] = React.useState(0);
+  const [active, setActive] = useState(()=>{ const t=timerRead(); return t&&t.gameId===game.id?t:null; });
+  const [elapsed, setElapsed] = useState(0);
   const G2 = G;
-  React.useEffect(()=>{
+  useEffect(()=>{
     if(!active) return;
     const iv = setInterval(()=>{ setElapsed(Math.floor((Date.now()-active.start)/1000)); },1000);
     return ()=>clearInterval(iv);
