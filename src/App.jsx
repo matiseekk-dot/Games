@@ -610,7 +610,7 @@ function RawgSearch({onSelect,lang}){
 
 function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
   const isEdit=!!game;
-  const [f,setF]=useState(()=>game?{...game}:{...EF});
+  const [f,setF]=useState(()=>game?{...EF,...game}:{...EF});
   const [confirmDel,setConfirmDel]=useState(false);
   const [shake,setShake]=useState(false);
   const titleRef=useRef(null);
@@ -779,14 +779,13 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
   const backlog=games.filter(g=>g.status==='planuje'&&!g.releaseDate);
-  const forgotten=games.filter(g=>g.status==='planuje'&&!g.hours&&g.addedAt).sort((a,b)=>new Date(a.addedAt)-new Date(b.addedAt)).slice(0,5);
+  const forgotten=games.filter(g=>g.status==='planuje'&&!g.hours).sort((a,b)=>{const da=a.addedAt?new Date(a.addedAt).getTime():0;const db=b.addedAt?new Date(b.addedAt).getTime():0;return da-db;}).slice(0,5);
   const upcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
   const bought=games.filter(g=>!!+g.priceBought);
   const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
   const active=[...current].sort((a,b)=>(b.hours||0)-(a.hours||0))[0]||null;
   const prog=active&&active.targetHours>0?Math.min(100,Math.round((active.hours/active.targetHours)*100)):null;
   const remHrs=active&&active.targetHours>0?Math.max(0,active.targetHours-active.hours).toFixed(0):null;
-  const rec=(()=>{if(!backlog.length)return null;const fav=games.filter(g=>g.status==='ukonczone'&&g.genre&&g.rating>=8).sort((a,b)=>b.rating-a.rating)[0]?.genre;return(fav&&backlog.find(g=>g.genre===fav))||backlog[0];})();
   const nextUp=upcoming[0]||null;
   const days=nextUp?daysUntil(nextUp.releaseDate):null;
   const totalBase=bought.reduce((s,g)=>s+ +g.priceBought,0);
@@ -815,6 +814,10 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
             </div>
           </div>
           {current.length>1&&<div style={{fontSize:10,color:G.dim,marginTop:10}}>{t(lang,'moreActive',{n:current.length-1})}</div>}
+          <div onClick={e=>e.stopPropagation()}><SessionTimer game={active} lang={lang} onSave={hrs=>{
+            const newHrs=Math.round(((+active.hours||0)+hrs)*10)/10;
+            onStatusChange(active.id,'gram',{hours:newHrs,lastPlayed:new Date().toISOString()});
+          }}/></div>
         </div>
       ):(
         <div className='hcard'>
@@ -822,18 +825,21 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
           <div style={{textAlign:'center',padding:'16px 0',color:G.dim,fontSize:12}}>{t(lang,'noActiveGame')}<br/><span style={{color:G.pur}}>{t(lang,'changeStatusHint')}</span></div>
         </div>
       )}
-      {rec&&(
+
+      {forgotten.length>0&&(
         <div className='hcard'>
-          <div className='hcard-hdr'><span className='hcard-title'>🎯 {t(lang,'whatToPlay')}</span><span className='hcard-badge' style={{background:'rgba(167,139,250,.12)',color:G.pur}}>{t(lang,'backlog')}</span></div>
-          <div className='rec-game'>
-            {rec.cover?<div className='rec-cover' style={{backgroundImage:`url(${rec.cover})`}}/>:<div className='rec-cover0'>{rec.abbr||'??'}</div>}
-            <div className='rec-body'><div className='rec-title'>{rec.title}</div><div className='rec-reason'>{rec.genre&&games.filter(g=>g.status==='ukonczone'&&g.genre===rec.genre).length>0?t(lang,'genreReason',{genre:rec.genre,n:games.filter(g=>g.status==='ukonczone'&&g.genre===rec.genre).length}):t(lang,'backlogReason')}</div></div>
-          </div>
-          <button type='button' onClick={e=>{e.stopPropagation();onStatusChange(rec.id,'gram');}} style={{width:'100%',marginTop:10,padding:'9px 16px',border:`1px solid rgba(167,139,250,.3)`,borderRadius:9,background:'rgba(167,139,250,.1)',color:G.pur,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {t(lang,'startPlaying')}
-          </button>
+          <div className='hcard-hdr'><span className='hcard-title'>🕰 {lang==='pl'?'Zapomniane gry':'Forgotten games'}</span><span className='hcard-badge' style={{background:'rgba(255,159,28,.12)',color:G.org}}>{forgotten.length}</span></div>
+          <div style={{fontSize:11,color:G.dim,marginBottom:8}}>{lang==='pl'?'Kupione dawno temu, nigdy nieuruchomione:':'Bought long ago, never launched:'}</div>
+          {forgotten.map(g=><div key={g.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid '+G.bdr}} onClick={()=>onOpen(g)}>
+            <div style={{width:36,height:36,borderRadius:8,background:G.card2,backgroundImage:g.cover?`url(${g.cover})`:'none',backgroundSize:'cover',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              {!g.cover&&<span style={{fontSize:10,color:G.dim,fontWeight:700}}>{g.abbr||'??'}</span>}
+            </div>
+            <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,color:G.txt,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{g.title}</div><div style={{fontSize:11,color:G.dim}}>{g.genre||''}{g.priceBought?` · ${pln(+g.priceBought,lang)}`:''}</div></div>
+            <button type='button' onClick={e=>{e.stopPropagation();onStatusChange(g.id,'gram');}} style={{padding:'4px 10px',border:'none',borderRadius:7,background:G.blu,color:'#000',fontSize:11,fontWeight:700,cursor:'pointer',flexShrink:0}}>{lang==='pl'?'Gram':'Play'}</button>
+          </div>)}
         </div>
       )}
+
       {nextUp&&(
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>📅 {t(lang,'nextRelease')}</span>{days===0?<span className='hcard-badge' style={{background:'rgba(57,255,110,.12)',color:G.grn,animation:'pulse 1s infinite'}}>{t(lang,'today')}</span>:<span className='hcard-badge' style={{background:'rgba(255,159,28,.12)',color:G.org}}>{days}d</span>}</div>
