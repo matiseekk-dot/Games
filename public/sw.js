@@ -1,5 +1,5 @@
-// PS5 Vault — Service Worker v1.2 (NETWORK-FIRST)
-const CACHE = "ps5vault-v3";
+// PS5 Vault — Service Worker v1.3 (NETWORK-FIRST)
+const CACHE = "ps5vault-v4";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 self.addEventListener("install", e => {

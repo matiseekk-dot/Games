@@ -801,7 +801,6 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
   const backlog=games.filter(g=>g.status==='planuje'&&!g.releaseDate);
-  const forgotten=games.filter(g=>g.status==='planuje'&&!g.hours).sort((a,b)=>{const da=a.addedAt?new Date(a.addedAt).getTime():0;const db=b.addedAt?new Date(b.addedAt).getTime():0;return da-db;}).slice(0,5);
   const upcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
   const bought=games.filter(g=>!!+g.priceBought);
   const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
@@ -824,41 +823,32 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
       </div>
-      {active?(
-        <div className='hcard' onClick={()=>onOpen(active)} style={{cursor:'pointer'}}>
-          <div className='hcard-hdr'><span className='hcard-title'>▶️ {t(lang,'continuePlay')}</span><span className='hcard-badge' style={{background:'rgba(0,212,255,.12)',color:G.blu}}>GRAM</span></div>
-          <div className='cont-game'>
-            {active.cover?<div className='cont-cover' style={{backgroundImage:`url(${active.cover})`}}/>:<div className='cont-cover0'>{active.abbr||'??'}</div>}
-            <div className='cont-body'>
-              <div className='cont-title'>{active.title}</div>
-              <div className='cont-meta'>{[active.genre,active.hours&&t(lang,'hoursPlayed',{n:active.hours})].filter(Boolean).join(' · ')}</div>
-              {prog!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:prog+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:prog})}</span><span>~{remHrs}h {t(lang,'remaining')}</span></div></>):(active.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
-            </div>
-          </div>
-          {current.length>1&&<div style={{fontSize:10,color:G.dim,marginTop:10}}>{t(lang,'moreActive',{n:current.length-1})}</div>}
-          <div onClick={e=>e.stopPropagation()}><SessionTimer game={active} lang={lang} onSave={hrs=>{
-            const newHrs=Math.round(((+active.hours||0)+hrs)*10)/10;
-            onStatusChange(active.id,'gram',{hours:newHrs,lastPlayed:new Date().toISOString()});
-          }}/></div>
+      {current.length>0?(
+        <div className='hcard'>
+          <div className='hcard-hdr'><span className='hcard-title'>▶️ {t(lang,'continuePlay')}</span><span className='hcard-badge' style={{background:'rgba(0,212,255,.12)',color:G.blu}}>{current.length}</span></div>
+          {current.map((g,idx)=>{
+            const gProg=(g.targetHours&&g.hours)?Math.min(100,Math.round(g.hours/g.targetHours*100)):null;
+            const gRem=g.targetHours?Math.max(0,g.targetHours-(g.hours||0)):0;
+            return <div key={g.id} style={{marginTop:idx>0?14:0,paddingTop:idx>0?14:0,borderTop:idx>0?'1px solid '+G.bdr:'none'}}>
+              <div className='cont-game' onClick={()=>onOpen(g)} style={{cursor:'pointer'}}>
+                {g.cover?<div className='cont-cover' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='cont-cover0'>{g.abbr||'??'}</div>}
+                <div className='cont-body'>
+                  <div className='cont-title'>{g.title}</div>
+                  <div className='cont-meta'>{[g.genre,g.hours&&t(lang,'hoursPlayed',{n:g.hours})].filter(Boolean).join(' · ')}</div>
+                  {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span><span>~{gRem}h {t(lang,'remaining')}</span></div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
+                </div>
+              </div>
+              <SessionTimer game={g} lang={lang} onSave={hrs=>{
+                const newHrs=Math.round(((+g.hours||0)+hrs)*10)/10;
+                onStatusChange(g.id,'gram',{hours:newHrs,lastPlayed:new Date().toISOString()});
+              }}/>
+            </div>;
+          })}
         </div>
       ):(
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>▶️ {t(lang,'continuePlay')}</span></div>
           <div style={{textAlign:'center',padding:'16px 0',color:G.dim,fontSize:12}}>{t(lang,'noActiveGame')}<br/><span style={{color:G.pur}}>{t(lang,'changeStatusHint')}</span></div>
-        </div>
-      )}
-
-      {forgotten.length>0&&(
-        <div className='hcard'>
-          <div className='hcard-hdr'><span className='hcard-title'>🕰 {lang==='pl'?'Zapomniane gry':'Forgotten games'}</span><span className='hcard-badge' style={{background:'rgba(255,159,28,.12)',color:G.org}}>{forgotten.length}</span></div>
-          <div style={{fontSize:11,color:G.dim,marginBottom:8}}>{lang==='pl'?'Kupione dawno temu, nigdy nieuruchomione:':'Bought long ago, never launched:'}</div>
-          {forgotten.map(g=><div key={g.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid '+G.bdr}} onClick={()=>onOpen(g)}>
-            <div style={{width:36,height:36,borderRadius:8,background:G.card2,backgroundImage:g.cover?`url(${g.cover})`:'none',backgroundSize:'cover',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-              {!g.cover&&<span style={{fontSize:10,color:G.dim,fontWeight:700}}>{g.abbr||'??'}</span>}
-            </div>
-            <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,color:G.txt,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{g.title}</div><div style={{fontSize:11,color:G.dim}}>{g.genre||''}{g.priceBought?` · ${pln(+g.priceBought,lang)}`:''}</div></div>
-            <button type='button' onClick={e=>{e.stopPropagation();onStatusChange(g.id,'gram');}} style={{padding:'4px 10px',border:'none',borderRadius:7,background:G.blu,color:'#000',fontSize:11,fontWeight:700,cursor:'pointer',flexShrink:0}}>{lang==='pl'?'Gram':'Play'}</button>
-          </div>)}
         </div>
       )}
 
