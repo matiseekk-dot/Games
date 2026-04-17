@@ -37,14 +37,14 @@ const TRANSLATIONS = {
     noReleasesHint:"Dodaj datę premiery do gier ze statusem Planuję.",
     today:"DZIŚ!", out:"✓ Wyszło", premiere:"Premiera:",
     edit:"📋 Edytuj", watch:"👀 Obserwuj", buy:"🛒 Kup", addToColl:"+ Edytuj",
-    notifyToggle:"🔔 Powiadomienie o premierze",
+    notifyToggle:"🔔 Powiadomienie o premierze", notifyMonth:"Miesiąc przed", notifyWeek:"Tydzień przed", notifyDay:"W dniu premiery",
     enableNotif:"Włącz powiadomienia", enableNotifDesc:"Alert 3 dni przed premierą i w dniu wydania",
     enable:"Włącz",
     general:"🎮 Ogólne", finance:"💰 Finanse", analysis:"💡 Analiza",
     gamesTotal:"Gier razem", completed2:"Ukończone", hoursTotal:"Godzin łącznie", avgRating:"Śr. ocena",
     statusChart:"📊 Status kolekcji", genreChart:"🎮 Top gatunki", ratingChart:"⭐ Histogram ocen",
     noFinanceData:"Brak danych finansowych", addPricesHint:"Dodaj ceny kupna do gier",
-    spent:"Wydano", earnedBack:"Odzyskano", realCostShort:"Realny koszt", costPerHour:"Koszt/godzinę",
+    spent:"Gry (cena bazowa)", earnedBack:"Odzyskano", realCostShort:"Realny koszt", costPerHour:"Koszt/godzinę", spentDLC:"DLC / Mikrotransakcje", spentTotal2:"Łącznie wydano",
     byStore:"🏪 Wydatki wg sklepu", byGenre:"🎮 Wydatki wg gatunku",
     roi:"📈 ROI sprzedanych", mostExpensive:"💸 Najdroższe gry", bestValue:"⏱ Najlepsza wartość (zł/h)",
     noInsights:"Za mało danych", addPricesAndHours:"Dodaj ceny i godziny do gier",
@@ -75,7 +75,7 @@ const TRANSLATIONS = {
     statusField:"Status", genreField:"Gatunek", hoursField:"Godziny",
     ratingField:"Ocena (1–10)", targetHoursField:"Cel (godz.)", notesField:"Notatki",
     notesPh:"Twoje przemyślenia...", genrePh:"— wybierz —", targetPh:"np. 40",
-    finances:"💰 Finanse", priceBoughtField:"Zapłacono (PLN)", storeField:"Sklep",
+    finances:"💰 Finanse", priceBoughtField:"Zapłacono (PLN)", storeField:"Sklep", extraSpendField:"DLC / Mikrotransakcje (PLN)", extraSpendHint:"Dodatkowe zakupy w grze", platformField:"Platforma",
     storePh:"—", soldToggle:"Sprzedałem tę grę", soldPriceField:"Sprzedano za (PLN)",
     notifications:"Powiadomienia", notifyOn:"🔔 Powiadamiaj o premierze",
     notifyDesc:"3 dni przed i w dniu premiery", notifyBlocked:"⛔ Zablokowane w ustawieniach przeglądarki",
@@ -98,7 +98,8 @@ const TRANSLATIONS = {
     iUnderstand:"ROZUMIEM",
     hoursPlayed:"{n}h zagranych",
     progComplete:"{n}% ukończone",
-    sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", filterSold:"Sprzedane",
+    timerStart:"▶ Zacznij sesję", timerStop:"⏹ Zakończ sesję", timerToday:"Dziś: {h}h {m}min", sessionSaved:"✓ Sesja zapisana ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Dodaj do wishlisty", wishlistEmpty:"Wishlist jest pusta", targetPrice:"Docelowa cena", addedToWishlist:"✓ Dodano do wishlisty", removedFromWishlist:"✓ Usunięto z wishlisty", forgotten:"🕰 Zapomniane gry", forgottenSub:"Kupione dawno, nigdy nieuruchomione", budget:"💳 Budżet miesięczny", budgetSet:"Ustaw budżet", budgetSpent:"Wydano w tym miesiącu", budgetLeft:"Pozostało", budgetOver:"⚠️ Przekroczono budżet!",
+    sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", filterSold:"Sprzedane", filterPlatinum:"🏆 Platyna", platinum:"Platyna",
     rateGame:"⭐ Oceń grę", ratingQuick:"Twoja ocena (1–10):", rateSkip:"Pomiń", rateSave:"Zapisz ocenę",
   },
   en: {
@@ -129,14 +130,14 @@ const TRANSLATIONS = {
     noReleasesHint:"Add a release date to games with status Planning.",
     today:"TODAY!", out:"✓ Out", premiere:"Released:",
     edit:"📋 Edit", watch:"👀 Watch", buy:"🛒 Buy", addToColl:"+ Edit",
-    notifyToggle:"🔔 Notify on release",
+    notifyToggle:"🔔 Notify on release", notifyMonth:"1 month before", notifyWeek:"1 week before", notifyDay:"On release day",
     enableNotif:"Enable notifications", enableNotifDesc:"Alert 3 days before and on release day",
     enable:"Enable",
     general:"🎮 General", finance:"💰 Finance", analysis:"💡 Analysis",
     gamesTotal:"Total games", completed2:"Completed", hoursTotal:"Total hours", avgRating:"Avg rating",
     statusChart:"📊 Collection status", genreChart:"🎮 Top genres", ratingChart:"⭐ Rating histogram",
     noFinanceData:"No financial data", addPricesHint:"Add purchase prices to games",
-    spent:"Spent", earnedBack:"Recovered", realCostShort:"Real cost", costPerHour:"Cost/hour",
+    spent:"Games (base price)", earnedBack:"Recovered", realCostShort:"Real cost", costPerHour:"Cost/hour", spentDLC:"DLC / Microtransactions", spentTotal2:"Total spent",
     byStore:"🏪 Spending by store", byGenre:"🎮 Spending by genre",
     roi:"📈 ROI on sold games", mostExpensive:"💸 Most expensive", bestValue:"⏱ Best value ($/h)",
     noInsights:"Not enough data", addPricesAndHours:"Add prices and hours to games",
@@ -167,7 +168,7 @@ const TRANSLATIONS = {
     statusField:"Status", genreField:"Genre", hoursField:"Hours",
     ratingField:"Rating (1–10)", targetHoursField:"Target (hrs)", notesField:"Notes",
     notesPh:"Your thoughts...", genrePh:"— select —", targetPh:"e.g. 40",
-    finances:"💰 Finances", priceBoughtField:"Price paid", storeField:"Store",
+    finances:"💰 Finances", priceBoughtField:"Price paid", storeField:"Store", extraSpendField:"DLC / Microtransactions", extraSpendHint:"Additional in-game purchases", platformField:"Platform",
     storePh:"—", soldToggle:"I sold this game", soldPriceField:"Sold for",
     notifications:"Notifications", notifyOn:"🔔 Notify on release",
     notifyDesc:"3 days before and on release day", notifyBlocked:"⛔ Blocked in browser settings",
@@ -190,7 +191,8 @@ const TRANSLATIONS = {
     iUnderstand:"GOT IT",
     hoursPlayed:"{n}h played",
     progComplete:"{n}% complete",
-    sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", filterSold:"Sold",
+    timerStart:"▶ Start session", timerStop:"⏹ Stop session", timerToday:"Today: {h}h {m}min", sessionSaved:"✓ Session saved ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Add to wishlist", wishlistEmpty:"Wishlist is empty", targetPrice:"Target price", addedToWishlist:"✓ Added to wishlist", removedFromWishlist:"✓ Removed from wishlist", forgotten:"🕰 Forgotten games", forgottenSub:"Bought long ago, never played", budget:"💳 Monthly budget", budgetSet:"Set budget", budgetSpent:"Spent this month", budgetLeft:"Remaining", budgetOver:"⚠️ Budget exceeded!",
+    sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", filterSold:"Sold", filterPlatinum:"🏆 Platinum", platinum:"Platinum",
     rateGame:"⭐ Rate game", ratingQuick:"Your rating (1–10):", rateSkip:"Skip", rateSave:"Save rating",
   }
 };
@@ -232,7 +234,7 @@ function fmtDate(d,lang){ if(!d)return''; return new Date(d).toLocaleDateString(
 function fmtShort(d,lang){ if(!d)return''; return new Date(d).toLocaleDateString(lang==='en'?'en-GB':'pl-PL',{day:'numeric',month:'short'}); }
 function pln(v,lang){ return lang==='en'?`$${(+v||0).toFixed(0)}`:`${(+v||0).toFixed(0)} zł`; }
 
-const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),genre:'',hours:'',rating:'',notes:'',cover:'',releaseDate:'',notifyEnabled:false,priceBought:'',priceSold:'',storeBought:'',targetHours:'' };
+const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),genre:'',hours:'',rating:'',notes:'',cover:'',releaseDate:'',notifyEnabled:false,priceBought:'',priceSold:'',storeBought:'',targetHours:'',extraSpend:'',platform:'PS5',platinum:false,lastPlayed:null,sessions:[] };
 
 function lsRead()  { try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
 function lsWrite(g){ try{ localStorage.setItem(LS_KEY,JSON.stringify(g)); }catch{} }
@@ -402,9 +404,9 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .top-title{flex:1;min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-val{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;flex-shrink:0}
 .roi-pos{color:${G.grn}} .roi-neg{color:${G.red}}
-.fkgd{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.fkgd{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
 .fkcd{border-radius:13px;padding:14px;overflow:hidden;border:1px solid ${G.bdr}}
-.fkv{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--c);line-height:1;margin-bottom:4px}
+.fkv{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--c);line-height:1;margin-bottom:4px}
 .fkl{font-size:9px;color:${G.dim};font-weight:600;letter-spacing:.07em;text-transform:uppercase}
 .ins-card{border-radius:13px;padding:14px;margin-bottom:10px;border:1px solid transparent;animation:fadeIn .35s ease}
 .ovr{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.9);z-index:9999;display:flex;align-items:flex-end}
@@ -627,6 +629,11 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
             <div className='fg'><label className='fl'>{t(lang,'abbrField')}</label><input className='fi' value={f.abbr} maxLength={2} onChange={e=>upd('abbr',e.target.value.toUpperCase())} placeholder='GW'/></div>
             <div className='fg'><label className='fl'>{t(lang,'yearField')}</label><input className='fi' inputMode='numeric' value={f.year} onChange={e=>upd('year',e.target.value)}/></div>
           </div>
+          <div className='fg'><label className='fl'>{t(lang,'platformField')}</label>
+            <select className='fs' value={f.platform||'PS5'} onChange={e=>upd('platform',e.target.value)}>
+              {PLATFORMS.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
           <div className='fg'>
             <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):`— ${lang==='en'?'in':'za'} ${days} ${lang==='en'?'days':'dni'}`}</span>}</label>
             <input className='fi' type='date' value={f.releaseDate} onChange={e=>upd('releaseDate',e.target.value)} style={{colorScheme:'dark'}}/>
@@ -651,6 +658,12 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
             <div className='fg'><label className='fl'>{t(lang,'targetHoursField')}</label><input className='fi' inputMode='decimal' value={f.targetHours||''} onChange={e=>upd('targetHours',e.target.value)} placeholder={t(lang,'targetPh')}/></div>
           </div>
           <div className='fg'><label className='fl'>{t(lang,'notesField')}</label><textarea className='fta' value={f.notes} onChange={e=>upd('notes',e.target.value)} placeholder={t(lang,'notesPh')}/></div>
+          {f.status==='ukonczone'&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:f.platinum?'rgba(255,209,102,.08)':G.bg,border:f.platinum?'1px solid rgba(255,209,102,.4)':'1px solid '+G.bdr,borderRadius:9,cursor:'pointer',transition:'all .2s'}} onClick={()=>upd('platinum',!f.platinum)}>
+            <div><div style={{fontSize:14,color:f.platinum?G.gld:G.txt}}>🏆 {t(lang,'platinum')}</div><div style={{fontSize:10,color:G.dim,marginTop:2}}>{lang==='pl'?'Zdobyłem platynowe trofeum':'I earned the platinum trophy'}</div></div>
+            <div style={{width:44,height:26,borderRadius:13,background:f.platinum?G.gld:G.bdr,position:'relative',flexShrink:0,transition:'background .2s'}}>
+              <div style={{position:'absolute',top:3,left:f.platinum?21:3,width:20,height:20,borderRadius:'50%',background:'#fff',transition:'left .2s'}}/>
+            </div>
+          </div>}
           <div className='fdiv'/><div className='fslbl'>{t(lang,'finances')}</div>
           <div className='frow'>
             <div className='fg'><label className='fl'>{t(lang,'priceBoughtField')}</label><input className='fi' inputMode='decimal' value={f.priceBought??''} onChange={e=>upd('priceBought',e.target.value)} placeholder='0'/></div>
@@ -661,6 +674,7 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
               </select>
             </div>
           </div>
+          <div className='fg'><label className='fl'>{t(lang,'extraSpendField')}</label><input className='fi' inputMode='decimal' value={f.extraSpend||''} onChange={e=>upd('extraSpend',e.target.value)} placeholder='0'/><div style={{fontSize:10,color:G.dim,marginTop:3}}>{t(lang,'extraSpendHint')}</div></div>
           <div className='sold-tgl' onClick={()=>upd('priceSold',f.priceSold==null?'':null)}>
             <span style={{fontSize:14,color:G.txt}}>{t(lang,'soldToggle')}</span>
             <div className={'sold-sw'+(f.priceSold!=null?' on':'')}><div className='sold-k'/></div>
@@ -686,10 +700,69 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
   );
 }
 
+
+function WishForm({lang, onAdd, onClose}) {
+  const [title, setTitle] = React.useState('');
+  const [price, setPrice] = React.useState('');
+  return (
+    <div>
+      <div className='fg' style={{marginBottom:10}}>
+        <label className='fl'>{lang==='pl'?'Tytuł gry':'Game title'}</label>
+        <input className='fi' value={title} onChange={e=>setTitle(e.target.value)} placeholder={lang==='pl'?'np. Final Fantasy VII':'e.g. Final Fantasy VII'}/>
+      </div>
+      <div className='fg' style={{marginBottom:14}}>
+        <label className='fl'>{lang==='pl'?'Docelowa cena (PLN)':'Target price'}</label>
+        <input className='fi' inputMode='decimal' value={price} onChange={e=>setPrice(e.target.value)} placeholder='0'/>
+      </div>
+      <div className='rate-btns'>
+        <button type='button' className='confirm-no' onClick={onClose}>{lang==='pl'?'Anuluj':'Cancel'}</button>
+        <button type='button' className='confirm-yes' style={{background:G.pur,color:'#000'}}
+          onClick={()=>{ if(title.trim()) onAdd(title.trim(), price); }}>
+          {lang==='pl'?'Dodaj':'Add'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SessionTimer({game, onSave, lang}) {
+  const [active, setActive] = React.useState(()=>{ const t=timerRead(); return t&&t.gameId===game.id?t:null; });
+  const [elapsed, setElapsed] = React.useState(0);
+  const G2 = G;
+  React.useEffect(()=>{
+    if(!active) return;
+    const iv = setInterval(()=>{ setElapsed(Math.floor((Date.now()-active.start)/1000)); },1000);
+    return ()=>clearInterval(iv);
+  },[active]);
+  function start(){
+    const t={gameId:game.id,start:Date.now()};
+    timerWrite(t); setActive(t); setElapsed(0);
+  }
+  function stop(){
+    if(!active) return;
+    const secs=Math.floor((Date.now()-active.start)/1000);
+    const hrs=secs/3600;
+    timerWrite(null); setActive(null); setElapsed(0);
+    onSave(hrs);
+  }
+  const h=Math.floor(elapsed/3600), m=Math.floor((elapsed%3600)/60), s=elapsed%60;
+  return (
+    <div style={{marginTop:8,padding:'10px 12px',background:active?'rgba(57,255,110,.08)':'rgba(0,212,255,.06)',border:'1px solid '+(active?'rgba(57,255,110,.3)':'rgba(0,212,255,.2)'),borderRadius:10}}>
+      {active&&<div style={{fontFamily:"'Orbitron',monospace",fontSize:22,fontWeight:900,color:G2.grn,textAlign:'center',marginBottom:6}}>
+        {String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}
+      </div>}
+      <button type='button' onClick={active?stop:start} style={{width:'100%',padding:'8px 0',border:'none',borderRadius:8,background:active?G2.grn:G2.blu,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,cursor:'pointer'}}>
+        {active?(lang==='pl'?'⏹ Zakończ sesję':'⏹ Stop session'):(lang==='pl'?'▶ Zacznij sesję':'▶ Start session')}
+      </button>
+    </div>
+  );
+}
+
 function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
   const backlog=games.filter(g=>g.status==='planuje'&&!g.releaseDate);
+  const forgotten=games.filter(g=>g.status==='planuje'&&!g.hours&&g.addedAt).sort((a,b)=>new Date(a.addedAt)-new Date(b.addedAt)).slice(0,5);
   const upcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
   const bought=games.filter(g=>!!+g.priceBought);
   const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
@@ -699,7 +772,9 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
   const rec=(()=>{if(!backlog.length)return null;const fav=games.filter(g=>g.status==='ukonczone'&&g.genre&&g.rating>=8).sort((a,b)=>b.rating-a.rating)[0]?.genre;return(fav&&backlog.find(g=>g.genre===fav))||backlog[0];})();
   const nextUp=upcoming[0]||null;
   const days=nextUp?daysUntil(nextUp.releaseDate):null;
-  const totalSpent=bought.reduce((s,g)=>s+ +g.priceBought,0);
+  const totalBase=bought.reduce((s,g)=>s+ +g.priceBought,0);
+  const totalDLC=games.filter(g=>!!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
+  const totalSpent=totalBase+totalDLC;
   const totalEarned=sold.reduce((s,g)=>s+ +g.priceSold,0);
   const sellable=games.filter(g=>g.status==='porzucone'&&!!+g.priceBought&&(g.priceSold==null||!+g.priceSold)).sort((a,b)=>+b.priceBought - +a.priceBought);
   if(!games.length)return(<div className='scr'><div className='empty' style={{paddingTop:60}}><div className='eic'>🎮</div><div className='ett'>{t(lang,'obTitle')}</div><div className='ess'>{t(lang,'obSub')}</div><button className='empty-cta' onClick={onAddFirst}>{t(lang,'addGame')}</button></div></div>);
@@ -760,7 +835,8 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>💰 {t(lang,'financeInsight')}</span></div>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'spentTotal')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.red}}>{pln(totalSpent,lang)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{lang==='pl'?'Gry (cena bazowa)':'Games (base price)'}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.red}}>{pln(totalBase,lang)}</span></div>
+            {totalDLC>0&&<div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{lang==='pl'?'DLC / Mikrotransakcje':'DLC / Microtransactions'}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:'#FF6B9D'}}>{pln(totalDLC,lang)}</span></div>}
             <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'recovered')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.grn}}>{pln(totalEarned,lang)}</span></div>
             <div style={{height:1,background:G.bdr,margin:'2px 0'}}/>
             <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}><span style={{fontWeight:600}}>{t(lang,'realCost')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.org}}>{pln(totalSpent-totalEarned,lang)}</span></div>
@@ -887,17 +963,26 @@ function Stats({games,lang}){
   const buckets=[1,2,3,4,5,6,7,8,9,10].map(r=>({n:String(r),v:games.filter(g=>g.rating!=null&&Math.round(g.rating)===r).length,min:0.01}));
   const bought=games.filter(g=>!!+g.priceBought);
   const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
-  const totalSpent=bought.reduce((s,g)=>s+ +g.priceBought,0);
+  const totalBase=bought.reduce((s,g)=>s+ +g.priceBought,0);
+  const totalDLC=games.filter(g=>!!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
+  const totalSpent=totalBase+totalDLC;
   const totalEarned=sold.reduce((s,g)=>s+ +g.priceSold,0);
   const netCost=totalSpent-totalEarned;
   const withHrs=bought.filter(g=>g.hours>0);
-  const cph=withHrs.length?(withHrs.reduce((s,g)=>s+ +g.priceBought,0)/withHrs.reduce((s,g)=>s+g.hours,0)):null;
+  const cph=withHrs.length?(withHrs.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0)/withHrs.reduce((s,g)=>s+g.hours,0)):null;
   const storeMap={}; bought.forEach(g=>{const s=g.storeBought||'Other';storeMap[s]=(storeMap[s]||0)+ +g.priceBought;});
   const storeData=Object.entries(storeMap).sort((a,b)=>b[1]-a[1]).map(([n,v])=>({n,v:+v.toFixed(0)}));
   const gcMap={}; bought.forEach(g=>{if(g.genre)gcMap[g.genre]=(gcMap[g.genre]||0)+ +g.priceBought;});
   const gcData=Object.entries(gcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v:+v.toFixed(0)}));
   const soldG=sold.map(g=>({...g,roi:+g.priceSold - +g.priceBought})).sort((a,b)=>b.roi-a.roi);
-  const fkpis=[{l:t(lang,'spent'),v:pln(totalSpent,lang),c:G.red,bg:'rgba(255,77,109,.07)'},{l:t(lang,'earnedBack'),v:pln(totalEarned,lang),c:G.grn,bg:'rgba(57,255,110,.07)'},{l:t(lang,'realCostShort'),v:pln(netCost,lang),c:netCost>0?G.org:G.grn,bg:'rgba(255,159,28,.07)'},{l:t(lang,'costPerHour'),v:cph?cph.toFixed(1)+(lang==='en'?' $/h':' zł/h'):'—',c:G.blu,bg:'rgba(0,212,255,.07)'}];
+  const fkpis=[
+    {l:t(lang,'spent'),        v:pln(totalBase,lang),   c:G.red, bg:'rgba(255,77,109,.07)'},
+    {l:t(lang,'spentDLC'),     v:pln(totalDLC,lang),    c:'#FF6B9D', bg:'rgba(255,107,157,.07)'},
+    {l:t(lang,'spentTotal2'),  v:pln(totalSpent,lang),  c:G.org, bg:'rgba(255,159,28,.07)'},
+    {l:t(lang,'earnedBack'),   v:pln(totalEarned,lang), c:G.grn, bg:'rgba(57,255,110,.07)'},
+    {l:t(lang,'realCostShort'),v:pln(netCost,lang),     c:netCost>0?G.org:G.grn, bg:'rgba(255,159,28,.05)'},
+    {l:t(lang,'costPerHour'),  v:cph?cph.toFixed(1)+(lang==='en'?' $/h':' zł/h'):'—', c:G.blu, bg:'rgba(0,212,255,.07)'},
+  ];
   const insights=[];
   if(bought.length){
     const worst=soldG.filter(g=>g.roi<0).slice(-1)[0];
@@ -988,7 +1073,11 @@ export default function App(){
   const [flt,setFlt]           = useState('all');
   const [q,setQ]               = useState('');
   const [sortBy,setSortBy]     = useState('added');
+  const [platFilter,setPlatFilter]= useState('all');
   const [rateModal,setRateModal]= useState(null);
+  const [wishlist,setWishlistRaw]  = useState(()=>wlRead());
+  const [budget,setBudgetRaw]      = useState(()=>budgetRead());
+  const [wishModal,setWishModal]   = useState(false);
   const [modal,setModal]       = useState(null);
   const [toast,setToast]       = useState(null);
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
@@ -999,7 +1088,7 @@ export default function App(){
   const requestNotif=async()=>{const p=await requestNotifPerm();setNotifP(p);return p;};
 
   function handleSave(form){
-    const isEdit=!!form.id;const id=isEdit?form.id:uid();const game={...form,id};
+    const isEdit=!!form.id;const id=isEdit?form.id:uid();const game={...form,id,addedAt:form.addedAt||new Date().toISOString()};
     setGames(prev=>isEdit?prev.map(g=>g.id===id?game:g):[...prev,game]);
     setModal(null);flash(isEdit?t(lang,'saved'):t(lang,'added'));
   }
@@ -1008,10 +1097,11 @@ export default function App(){
     setGames(prev=>prev.filter(g=>g.id!==id));
     setModal(null);flash(t(lang,'deleted',{title}));
   }
-  function handleStatusChange(id,status){
+  function handleStatusChange(id,status,extra={}){
     const SM2=getSM(lang);
-    setGames(prev=>prev.map(g=>g.id===id?{...g,status}:g));
-    flash(t(lang,'statusChanged',{status:SM2[status]?.label}));
+    setGames(prev=>prev.map(g=>g.id===id?{...g,status,...extra}:g));
+    if(extra.hours!==undefined)flash(lang==='pl'?`✓ Sesja zapisana`:t(lang,'sessionSaved',{h:Math.floor(extra.hours),m:Math.round((extra.hours%1)*60)}));
+    else flash(t(lang,'statusChanged',{status:SM2[status]?.label}));
   }
   function toggleNotify(id){setGames(prev=>prev.map(g=>g.id===id?{...g,notifyEnabled:!g.notifyEnabled}:g));}
 
@@ -1019,7 +1109,7 @@ export default function App(){
 
   const SM2=getSM(lang);
   const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).length;
-  const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:'💰 '+t(lang,'filterSold')}];
+  const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:'💰 '+t(lang,'filterSold')},{k:'platinum',l:t(lang,'filterPlatinum')}];
   const sortFn = {
     added:  (a,b) => 0,
     title:  (a,b) => a.title.localeCompare(b.title),
@@ -1029,7 +1119,8 @@ export default function App(){
 
   };
   const visible=games
-    .filter(g=>flt==='all'||(flt==='sold'?g.priceSold!=null&&!!+g.priceSold:g.status===flt))
+    .filter(g=>flt==='all'||(flt==='sold'?g.priceSold!=null&&!!+g.priceSold:flt==='platinum'?g.platinum===true:g.status===flt))
+    .filter(g=>platFilter==='all'||g.platform===platFilter)
     .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
     .sort(sortFn[sortBy]||sortFn.added);
 
@@ -1060,6 +1151,13 @@ export default function App(){
             <label className='tbtn'>{t(lang,'import')}<input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importMerge(e.target.files[0],games,(merged,added,dupes)=>{setGames(merged);flash(lang==='pl'?`✓ Dodano ${added} gier (${dupes} duplikatów pominięto)`:`✓ Added ${added} games (${dupes} duplicates skipped)`);},err=>flash('❌ '+err));e.target.value='';}}/></label>
           </div>
           <div className='chips'>{chips.map(ch=><button type='button' key={ch.k} className={'chip'+(flt===ch.k?' on':'')} onClick={()=>setFlt(ch.k)}>{ch.l}</button>)}</div>
+          {[...new Set(games.map(g=>g.platform||'PS5'))].filter(p=>p!=='PS5').length>0&&<div className='sort-row'>
+            <span className='sort-lbl'>{lang==='pl'?'Platforma:':'Platform:'}</span>
+            <button type='button' className={'sort-btn'+(platFilter==='all'?' on':'')} onClick={()=>setPlatFilter('all')}>{lang==='pl'?'Wszystkie':'All'}</button>
+            {[...new Set(games.map(g=>g.platform||'PS5'))].sort().map(p=>(
+              <button type='button' key={p} className={'sort-btn'+(platFilter===p?' on':'')} onClick={()=>setPlatFilter(p)}>{p}</button>
+            ))}
+          </div>}
           <div className='sort-row'>
             <span className='sort-lbl'>{t(lang,'sortBy')}</span>
             {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
@@ -1073,11 +1171,13 @@ export default function App(){
                 <div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>setModal(g)}>
                   {g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
-                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.genre&&<span className='gmp'>{g.genre}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{g.hours}h</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
+                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{g.genre&&<span className='gmp'>{g.genre}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{g.hours}h</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
                     <div className='grt'>
                       {g.rating!=null?<><span className='grn'>{g.rating}</span><span className='grd'>/10</span></>:<span style={{color:G.dim,fontSize:17}}>—</span>}
                       {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
                       {g.status==='psplus'&&<span style={{fontSize:11,fontWeight:700,color:G.gld}}>PS+</span>}
+                      {g.platinum&&<span style={{fontSize:13}} title={t(lang,'platinum')}>🏆</span>}
+                      {!!+g.extraSpend&&<span style={{fontSize:10,color:G.red,fontWeight:700}}>+{pln(+g.extraSpend,lang)} DLC</span>}
                       {roi!==null?<span className={'gprice-roi '+(roi>=0?'roi-pos':'roi-neg')}>{roi>=0?'+':''}{pln(roi,lang)}</span>:!!+g.priceBought&&<span className='gprice'>{pln(+g.priceBought,lang)}</span>}
                       {g.status==='ukonczone'&&g.rating==null&&<span style={{fontSize:11,color:G.gld,cursor:'pointer',fontWeight:700}} onClick={e=>{e.stopPropagation();setRateModal({id:g.id,title:g.title});}} title={t(lang,'rateGame')}>★?</span>}
                     </div>
@@ -1090,10 +1190,64 @@ export default function App(){
 
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
-        {tab==='cfg'&&<Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang}/>}
+        {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang}/>
+        {/* ── Budget ── */}
+        <div style={{padding:'0 16px 8px'}}>
+          <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
+          <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>
+            <div style={{display:'flex',gap:8,marginBottom:8}}>
+              <input className='fi' style={{flex:1}} inputMode='decimal' placeholder={lang==='pl'?'Budżet (PLN)':'Budget'} 
+                value={budget.amount||''} onChange={e=>setBudget(p=>({...p,amount:e.target.value}))}/>
+              <button type='button' onClick={()=>setBudget(p=>({...p,month:new Date().toISOString().slice(0,7)}))} 
+                style={{padding:'8px 14px',border:'none',borderRadius:9,background:G.blu,color:'#000',fontWeight:700,fontSize:12,cursor:'pointer'}}>
+                {lang==='pl'?'Ustaw':'Set'}
+              </button>
+            </div>
+            {budget.amount&&(()=>{
+              const thisMonth=new Date().toISOString().slice(0,7);
+              const spent=games.filter(g=>g.addedAt&&g.addedAt.slice(0,7)===thisMonth&&!!+g.priceBought).reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
+              const left=+budget.amount-spent;
+              return <><div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}><span style={{color:G.dim}}>{t(lang,'budgetSpent')}</span><span style={{fontWeight:700,color:G.org}}>{pln(spent,lang)}</span></div>
+              <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:8}}><span style={{color:G.dim}}>{t(lang,'budgetLeft')}</span><span style={{fontWeight:700,color:left>=0?G.grn:G.red}}>{pln(Math.abs(left),lang)}</span></div>
+              <div style={{height:8,borderRadius:4,background:G.bdr,overflow:'hidden'}}><div style={{height:'100%',borderRadius:4,background:left>=0?G.grn:G.red,width:Math.min(100,(spent/+budget.amount)*100)+'%',transition:'width .3s'}}/></div>
+              {left<0&&<div style={{fontSize:11,color:G.red,marginTop:6,fontWeight:700}}>⚠️ {t(lang,'budgetOver')}</div>}</>
+            })()}
+          </div>
+        </div>
+
+        {/* ── Wishlist ── */}
+        <div style={{padding:'0 16px 16px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10,marginTop:4}}>
+            <div style={{fontSize:10,fontWeight:700,color:G.pur,letterSpacing:'.1em',textTransform:'uppercase'}}>{t(lang,'wishlist')} ({wishlist.length})</div>
+            <button type='button' onClick={()=>setWishModal(true)} style={{padding:'5px 12px',border:'1px solid '+G.pur,borderRadius:8,background:'transparent',color:G.pur,fontSize:11,fontWeight:700,cursor:'pointer'}}>+ {lang==='pl'?'Dodaj':'Add'}</button>
+          </div>
+          {wishlist.length===0?<div style={{color:G.dim,fontSize:12,textAlign:'center',padding:'20px 0'}}>{t(lang,'wishlistEmpty')}</div>:
+            wishlist.map(w=><div key={w.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:G.card,border:'1px solid '+G.bdr,borderRadius:12,marginBottom:8}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:600,color:G.txt,marginBottom:2}}>{w.title}</div>
+                {w.targetPrice&&<div style={{fontSize:11,color:G.pur}}>🎯 {pln(+w.targetPrice,lang)}</div>}
+              </div>
+              <button type='button' onClick={()=>{setWishlist(p=>p.filter(x=>x.id!==w.id));flash(t(lang,'removedFromWishlist'));}} 
+                style={{padding:'4px 10px',border:'1px solid '+G.bdr,borderRadius:7,background:'transparent',color:G.dim,fontSize:11,cursor:'pointer'}}>✕</button>
+            </div>)
+          }
+        </div></> }
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         <Toast msg={toast}/>
+
+        {wishModal&&(
+          <div className='rate-modal' onClick={()=>setWishModal(false)}>
+            <div className='rate-box' onClick={e=>e.stopPropagation()}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.pur,marginBottom:12}}>{lang==='pl'?'DODAJ DO WISHLISTY':'ADD TO WISHLIST'}</div>
+              <WishForm lang={lang} onAdd={(title,price)=>{
+                setWishlist(p=>[...p,{id:Date.now(),title,targetPrice:price,addedAt:new Date().toISOString()}]);
+                flash(t(lang,'addedToWishlist'));
+                setWishModal(false);
+              }} onClose={()=>setWishModal(false)}/>
+            </div>
+          </div>
+        )}
         {rateModal&&(
           <div className='rate-modal' onClick={()=>setRateModal(null)}>
             <div className='rate-box' onClick={e=>e.stopPropagation()}>

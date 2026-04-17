@@ -48,6 +48,10 @@ self.addEventListener("message", async event => {
     if (shown) continue;
     if (diff === 0) {
       await self.registration.showNotification("🎮 Premiera dzisiaj!", { body:`${game.title} jest już dostępne!`, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
+    } else if (diff === 7) {
+      await self.registration.showNotification("⏳ Tydzień do premiery!", { body:`${game.title} — za 7 dni!`, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
+    } else if (diff === 30) {
+      await self.registration.showNotification("📅 Miesiąc do premiery", { body:`${game.title} — za miesiąc!`, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
     } else if (diff > 0 && diff <= 3) {
       await self.registration.showNotification(`⏳ ${diff} dni do premiery`, { body:`${game.title}`, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
     }
