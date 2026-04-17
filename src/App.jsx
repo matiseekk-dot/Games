@@ -239,8 +239,6 @@ const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),gen
 
 function lsRead()  { try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
 function lsWrite(g){ try{ localStorage.setItem(LS_KEY,JSON.stringify(g)); }catch{} }
-function wlRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_wishlist')||'[]'); }catch{ return []; } }
-function wlWrite(d){ try{ localStorage.setItem('ps5vault_wishlist',JSON.stringify(d)); }catch{} }
 function budgetRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_budget')||'{}'); }catch{ return {}; } }
 function budgetWrite(d){ try{ localStorage.setItem('ps5vault_budget',JSON.stringify(d)); }catch{} }
 function timerRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_timer')); }catch{ return null; } }
@@ -740,29 +738,6 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
 }
 
 
-function WishForm({lang, onAdd, onClose}) {
-  const [title, setTitle] = useState('');
-  const [price, setPrice] = useState('');
-  return (
-    <div>
-      <div className='fg' style={{marginBottom:10}}>
-        <label className='fl'>{lang==='pl'?'Tytuł gry':'Game title'}</label>
-        <input className='fi' value={title} onChange={e=>setTitle(e.target.value)} placeholder={lang==='pl'?'np. Final Fantasy VII':'e.g. Final Fantasy VII'}/>
-      </div>
-      <div className='fg' style={{marginBottom:14}}>
-        <label className='fl'>{lang==='pl'?'Docelowa cena (PLN)':'Target price'}</label>
-        <input className='fi' inputMode='decimal' value={price} onChange={e=>setPrice(e.target.value)} placeholder='0'/>
-      </div>
-      <div className='rate-btns'>
-        <button type='button' className='confirm-no' onClick={onClose}>{lang==='pl'?'Anuluj':'Cancel'}</button>
-        <button type='button' className='confirm-yes' style={{background:G.pur,color:'#000'}}
-          onClick={()=>{ if(title.trim()) onAdd(title.trim(), price); }}>
-          {lang==='pl'?'Dodaj':'Add'}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function SessionTimer({game, onSave, lang}) {
   const [active, setActive] = useState(()=>{ const t=timerRead(); return t&&t.gameId===game.id?t:null; });
@@ -1110,9 +1085,8 @@ export default function App(){
   const [sortBy,setSortBy]     = useState('added');
   const [platFilter,setPlatFilter]= useState('all');
   const [rateModal,setRateModal]= useState(null);
-  const [wishlist,setWishlistRaw]  = useState(()=>wlRead());
   const [budget,setBudgetRaw]      = useState(()=>budgetRead());
-  const [wishModal,setWishModal]   = useState(false);
+  const setBudget=useCallback(val=>{setBudgetRaw(prev=>{const next=typeof val==='function'?val(prev):val;budgetWrite(next);return next;});},[]);
   const [modal,setModal]       = useState(null);
   const [toast,setToast]       = useState(null);
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
@@ -1249,40 +1223,11 @@ export default function App(){
             })()}
           </div>
         </div>
-
-        {/* ── Wishlist ── */}
-        <div style={{padding:'0 16px 16px'}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10,marginTop:4}}>
-            <div style={{fontSize:10,fontWeight:700,color:G.pur,letterSpacing:'.1em',textTransform:'uppercase'}}>{t(lang,'wishlist')} ({wishlist.length})</div>
-            <button type='button' onClick={()=>setWishModal(true)} style={{padding:'5px 12px',border:'1px solid '+G.pur,borderRadius:8,background:'transparent',color:G.pur,fontSize:11,fontWeight:700,cursor:'pointer'}}>+ {lang==='pl'?'Dodaj':'Add'}</button>
-          </div>
-          {wishlist.length===0?<div style={{color:G.dim,fontSize:12,textAlign:'center',padding:'20px 0'}}>{t(lang,'wishlistEmpty')}</div>:
-            wishlist.map(w=><div key={w.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:G.card,border:'1px solid '+G.bdr,borderRadius:12,marginBottom:8}}>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:13,fontWeight:600,color:G.txt,marginBottom:2}}>{w.title}</div>
-                {w.targetPrice&&<div style={{fontSize:11,color:G.pur}}>🎯 {pln(+w.targetPrice,lang)}</div>}
-              </div>
-              <button type='button' onClick={()=>{setWishlist(p=>p.filter(x=>x.id!==w.id));flash(t(lang,'removedFromWishlist'));}} 
-                style={{padding:'4px 10px',border:'1px solid '+G.bdr,borderRadius:7,background:'transparent',color:G.dim,fontSize:11,cursor:'pointer'}}>✕</button>
-            </div>)
-          }
-        </div></> }
+</> }
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         <Toast msg={toast}/>
 
-        {wishModal&&(
-          <div className='rate-modal' onClick={()=>setWishModal(false)}>
-            <div className='rate-box' onClick={e=>e.stopPropagation()}>
-              <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.pur,marginBottom:12}}>{lang==='pl'?'DODAJ DO WISHLISTY':'ADD TO WISHLIST'}</div>
-              <WishForm lang={lang} onAdd={(title,price)=>{
-                setWishlist(p=>[...p,{id:Date.now(),title,targetPrice:price,addedAt:new Date().toISOString()}]);
-                flash(t(lang,'addedToWishlist'));
-                setWishModal(false);
-              }} onClose={()=>setWishModal(false)}/>
-            </div>
-          </div>
-        )}
         {rateModal&&(
           <div className='rate-modal' onClick={()=>setRateModal(null)}>
             <div className='rate-box' onClick={e=>e.stopPropagation()}>
