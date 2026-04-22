@@ -49,6 +49,15 @@ const TRANSLATIONS = {
     byStore:"🏪 Wydatki wg sklepu", byGenre:"🎮 Wydatki wg gatunku",
     roi:"📈 ROI sprzedanych", mostExpensive:"💸 Najdroższe gry", bestValue:"⏱ Najlepsza wartość (zł/h)",
     noInsights:"Za mało danych", addPricesAndHours:"Dodaj ceny i godziny do gier",
+    // F07 — Time tracking views
+    time:"⏱ Czas", noSessions:"Brak sesji", noSessionsHint:"Zacznij sesję na zakładce Home żeby śledzić czas grania",
+    today2:"Dziś", thisWeek:"Ten tydzień", thisMonth:"Ten miesiąc",
+    vsLastWeek:"vs poprzedni tydzień", vsLastMonth:"vs poprzedni miesiąc",
+    currentStreak:"Passa", longestStreak:"Najdłuższa passa", avgSession:"Średnia sesja", longestSession:"Najdłuższa sesja",
+    daysStreak:"dni", sessionsCount:"{n} sesji", noSessionsToday:"Dziś brak sesji", noSessionsWeek:"W tym tygodniu brak sesji", noSessionsMonth:"W tym miesiącu brak sesji",
+    dayMon:"Pn", dayTue:"Wt", dayWed:"Śr", dayThu:"Cz", dayFri:"Pt", daySat:"Sb", daySun:"Nd",
+    topGames:"🎮 Najczęściej grane",
+    sessionsList:"Sesje",
     potentialSaving:"💡 Potencjalna oszczędność",
     savingsFrom:"z unikniętych strat", savingsFromSell:"z odsprzedaży porzuconych gier",
     clickCards:"Kliknij karty poniżej żeby dowiedzieć się jak",
@@ -98,7 +107,7 @@ const TRANSLATIONS = {
     flowOptimTitle:"Optymalizacja backlogu", flowSimilarTitle:"Jak znaleźć podobne gry",
     flowSaveTitle:"Plan oszczędności",
     iUnderstand:"ROZUMIEM",
-    hoursPlayed:"{n}h zagranych",
+    hoursPlayed:"{h} zagranych",
     progComplete:"{n}% ukończone",
     timerStart:"▶ Zacznij sesję", timerStop:"⏹ Zakończ sesję", timerToday:"Dziś: {h}h {m}min", sessionSaved:"✓ Sesja zapisana ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Dodaj do wishlisty", wishlistEmpty:"Wishlist jest pusta", targetPrice:"Docelowa cena", addedToWishlist:"✓ Dodano do wishlisty", removedFromWishlist:"✓ Usunięto z wishlisty", forgotten:"🕰 Zapomniane gry", forgottenSub:"Kupione dawno, nigdy nieuruchomione", budget:"💳 Budżet miesięczny", budgetSet:"Ustaw budżet", budgetSpent:"Wydano w tym miesiącu", budgetLeft:"Pozostało", budgetOver:"⚠️ Przekroczono budżet!",
     sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", filterSold:"Sprzedane", filterPlatinum:"🏆 Platyna", platinum:"Platyna",
@@ -144,6 +153,15 @@ const TRANSLATIONS = {
     byStore:"🏪 Spending by store", byGenre:"🎮 Spending by genre",
     roi:"📈 ROI on sold games", mostExpensive:"💸 Most expensive", bestValue:"⏱ Best value (zł/h)",
     noInsights:"Not enough data", addPricesAndHours:"Add prices and hours to games",
+    // F07 — Time tracking views
+    time:"⏱ Time", noSessions:"No sessions", noSessionsHint:"Start a session on Home tab to track play time",
+    today2:"Today", thisWeek:"This week", thisMonth:"This month",
+    vsLastWeek:"vs last week", vsLastMonth:"vs last month",
+    currentStreak:"Streak", longestStreak:"Longest streak", avgSession:"Avg session", longestSession:"Longest session",
+    daysStreak:"days", sessionsCount:"{n} sessions", noSessionsToday:"No sessions today", noSessionsWeek:"No sessions this week", noSessionsMonth:"No sessions this month",
+    dayMon:"Mon", dayTue:"Tue", dayWed:"Wed", dayThu:"Thu", dayFri:"Fri", daySat:"Sat", daySun:"Sun",
+    topGames:"🎮 Most played",
+    sessionsList:"Sessions",
     potentialSaving:"💡 Potential savings",
     savingsFrom:"from avoided losses", savingsFromSell:"from selling abandoned games",
     clickCards:"Click cards below to learn how",
@@ -193,7 +211,7 @@ const TRANSLATIONS = {
     flowOptimTitle:"Optimize your backlog", flowSimilarTitle:"How to find similar games",
     flowSaveTitle:"Savings plan",
     iUnderstand:"GOT IT",
-    hoursPlayed:"{n}h played",
+    hoursPlayed:"{h} played",
     progComplete:"{n}% complete",
     timerStart:"▶ Start session", timerStop:"⏹ Stop session", timerToday:"Today: {h}h {m}min", sessionSaved:"✓ Session saved ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Add to wishlist", wishlistEmpty:"Wishlist is empty", targetPrice:"Target price", addedToWishlist:"✓ Added to wishlist", removedFromWishlist:"✓ Removed from wishlist", forgotten:"🕰 Forgotten games", forgottenSub:"Bought long ago, never played", budget:"💳 Monthly budget", budgetSet:"Set budget", budgetSpent:"Spent this month", budgetLeft:"Remaining", budgetOver:"⚠️ Budget exceeded!",
     sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", filterSold:"Sold", filterPlatinum:"🏆 Platinum", platinum:"Platinum",
@@ -238,6 +256,19 @@ function daysUntil(d){ if(!d)return null; const a=new Date();a.setHours(0,0,0,0)
 function fmtDate(d,lang){ if(!d)return''; return new Date(d).toLocaleDateString(lang==='en'?'en-GB':'pl-PL',{day:'numeric',month:'short',year:'numeric'}); }
 function fmtShort(d,lang){ if(!d)return''; return new Date(d).toLocaleDateString(lang==='en'?'en-GB':'pl-PL',{day:'numeric',month:'short'}); }
 function pln(v,lang){ return `${(+v||0).toFixed(0)} zł`; }
+// Format hours as "2h 54min" / "30min" / "5h" — replaces ugly "2.9h"
+// minStr: "min" in both PL/EN (common, no need to translate)
+function fmtHours(v,opts){
+  const h=+v||0;
+  if(h<=0)return '0h';
+  const hh=Math.floor(h);
+  const mm=Math.round((h-hh)*60);
+  if(mm===60){ return `${hh+1}h`; }  // rounding edge case: 2.995 -> 3h not "2h 60min"
+  if(hh===0)return `${mm}min`;
+  if(mm===0)return `${hh}h`;
+  if(opts&&opts.compact)return `${hh}h${mm}m`;  // for tight inline displays
+  return `${hh}h ${mm}min`;
+}
 
 const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),genre:'',hours:'',rating:'',notes:'',cover:'',releaseDate:'',notifyEnabled:false,priceBought:'',priceSold:'',storeBought:'',targetHours:'',extraSpend:'',platform:'PS5',platinum:false,lastPlayed:null,sessions:[] };
 
@@ -770,34 +801,114 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
 
 
 function SessionTimer({game, onSave, lang}) {
+  // Timer state shape in localStorage: {gameId, start, pausedAt?, totalPause?}
+  // - start: Unix ms when session began
+  // - pausedAt: Unix ms of current pause start (null if not paused)
+  // - totalPause: accumulated pause ms from all previous pauses in this session
   const [active, setActive] = useState(()=>{ const t=timerRead(); return t&&t.gameId===game.id?t:null; });
-  const [elapsed, setElapsed] = useState(0);
+  const [elapsed, setElapsed] = useState(0);  // seconds of ACTIVE play time (excluding pauses)
   const G2 = G;
+
+  // On mount: stale pause guard — if user paused and app was closed >24h ago, auto-stop saving what we have
+  useEffect(()=>{
+    if(!active || !active.pausedAt) return;
+    const pauseDurationMs = Date.now() - active.pausedAt;
+    if(pauseDurationMs > 24*60*60*1000){
+      // Stale pause — save whatever was played before pause, don't count 24h+ as play
+      const totalPauseMs = (active.totalPause||0) + 0; // freeze pause at moment it started
+      const activeMs = active.pausedAt - active.start - totalPauseMs;
+      const hrs = Math.max(0, activeMs/3600000);
+      timerWrite(null); setActive(null); setElapsed(0);
+      if(hrs > 0){
+        onSave(hrs, {startedAt: active.start, endedAt: active.pausedAt, hours: hrs});
+      }
+    }
+  },[]);
+
   useEffect(()=>{
     if(!active) return;
-    const iv = setInterval(()=>{ setElapsed(Math.floor((Date.now()-active.start)/1000)); },1000);
+    // Tick only when NOT paused; pause = frozen elapsed counter
+    if(active.pausedAt) return;
+    const iv = setInterval(()=>{
+      const totalPause = active.totalPause || 0;
+      setElapsed(Math.floor((Date.now()-active.start-totalPause)/1000));
+    },1000);
     return ()=>clearInterval(iv);
   },[active]);
+
+  // When resumed from pause, recompute elapsed once immediately (don't wait 1s tick)
+  useEffect(()=>{
+    if(!active || active.pausedAt) return;
+    const totalPause = active.totalPause || 0;
+    setElapsed(Math.floor((Date.now()-active.start-totalPause)/1000));
+  },[active]);
+
   function start(){
-    const t={gameId:game.id,start:Date.now()};
+    const t={gameId:game.id, start:Date.now(), pausedAt:null, totalPause:0};
     timerWrite(t); setActive(t); setElapsed(0);
+  }
+  function pause(){
+    if(!active || active.pausedAt) return;
+    const t={...active, pausedAt: Date.now()};
+    timerWrite(t); setActive(t);
+  }
+  function resume(){
+    if(!active || !active.pausedAt) return;
+    const thisPauseMs = Date.now() - active.pausedAt;
+    const t={...active, pausedAt: null, totalPause: (active.totalPause||0) + thisPauseMs};
+    timerWrite(t); setActive(t);
   }
   function stop(){
     if(!active) return;
-    const secs=Math.floor((Date.now()-active.start)/1000);
-    const hrs=secs/3600;
+    const endAt = Date.now();
+    // If stopping while paused, don't count current pause duration as play
+    const currentPauseMs = active.pausedAt ? (endAt - active.pausedAt) : 0;
+    const totalPauseMs = (active.totalPause||0) + currentPauseMs;
+    const activeMs = endAt - active.start - totalPauseMs;
+    const hrs = Math.max(0, activeMs/3600000);
     timerWrite(null); setActive(null); setElapsed(0);
-    onSave(hrs);
+    // Only save if at least 1 minute of actual play (prevents noise from accidental start/stop)
+    if(hrs * 60 < 1){ return; }
+    onSave(hrs, {startedAt: active.start, endedAt: endAt, hours: hrs, totalPauseMs});
   }
+
+  const isPaused = active && active.pausedAt;
   const h=Math.floor(elapsed/3600), m=Math.floor((elapsed%3600)/60), s=elapsed%60;
+  const timerColor = isPaused ? G2.gld : G2.grn;
+  const borderColor = !active ? 'rgba(0,212,255,.2)' : isPaused ? 'rgba(255,209,102,.3)' : 'rgba(57,255,110,.3)';
+  const bgColor = !active ? 'rgba(0,212,255,.06)' : isPaused ? 'rgba(255,209,102,.07)' : 'rgba(57,255,110,.08)';
+
   return (
-    <div style={{marginTop:8,padding:'10px 12px',background:active?'rgba(57,255,110,.08)':'rgba(0,212,255,.06)',border:'1px solid '+(active?'rgba(57,255,110,.3)':'rgba(0,212,255,.2)'),borderRadius:10}}>
-      {active&&<div style={{fontFamily:"'Orbitron',monospace",fontSize:22,fontWeight:900,color:G2.grn,textAlign:'center',marginBottom:6}}>
+    <div style={{marginTop:8,padding:'10px 12px',background:bgColor,border:'1px solid '+borderColor,borderRadius:10}}>
+      {active&&<div style={{fontFamily:"'Orbitron',monospace",fontSize:22,fontWeight:900,color:timerColor,textAlign:'center',marginBottom:6,letterSpacing:'.05em'}}>
         {String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}
+        {isPaused && <div style={{fontSize:9,fontWeight:600,color:G2.gld,letterSpacing:'.15em',marginTop:2}}>⏸ {lang==='pl'?'PAUZA':'PAUSED'}</div>}
       </div>}
-      <button type='button' onClick={active?stop:start} style={{width:'100%',padding:'8px 0',border:'none',borderRadius:8,background:active?G2.grn:G2.blu,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,cursor:'pointer'}}>
-        {active?(lang==='pl'?'⏹ Zakończ sesję':'⏹ Stop session'):(lang==='pl'?'▶ Zacznij sesję':'▶ Start session')}
-      </button>
+      {!active && (
+        <button type='button' onClick={start} style={{width:'100%',padding:'8px 0',border:'none',borderRadius:8,background:G2.blu,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,cursor:'pointer'}}>
+          {lang==='pl'?'▶ Zacznij sesję':'▶ Start session'}
+        </button>
+      )}
+      {active && !isPaused && (
+        <div style={{display:'flex',gap:6}}>
+          <button type='button' onClick={pause} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.gld,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
+            {lang==='pl'?'⏸ Pauza':'⏸ Pause'}
+          </button>
+          <button type='button' onClick={stop} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.grn,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
+            {lang==='pl'?'⏹ Zakończ':'⏹ Stop'}
+          </button>
+        </div>
+      )}
+      {active && isPaused && (
+        <div style={{display:'flex',gap:6}}>
+          <button type='button' onClick={resume} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.grn,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
+            {lang==='pl'?'▶ Wznów':'▶ Resume'}
+          </button>
+          <button type='button' onClick={stop} style={{flex:1,padding:'8px 0',border:'1px solid '+G2.bdr,borderRadius:8,background:'transparent',color:G2.txt,fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
+            {lang==='pl'?'⏹ Zakończ':'⏹ Stop'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -839,13 +950,22 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
                 {g.cover?<div className='cont-cover' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='cont-cover0'>{g.abbr||'??'}</div>}
                 <div className='cont-body'>
                   <div className='cont-title'>{g.title}</div>
-                  <div className='cont-meta'>{[g.genre,g.hours&&t(lang,'hoursPlayed',{n:g.hours})].filter(Boolean).join(' · ')}</div>
-                  {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span><span>~{gRem}h {t(lang,'remaining')}</span></div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
+                  <div className='cont-meta'>{[g.genre,g.hours&&t(lang,'hoursPlayed',{h:fmtHours(g.hours)})].filter(Boolean).join(' · ')}</div>
+                  {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span><span>~{fmtHours(gRem)} {t(lang,'remaining')}</span></div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
                 </div>
               </div>
-              <SessionTimer game={g} lang={lang} onSave={hrs=>{
+              <SessionTimer game={g} lang={lang} onSave={(hrs,session)=>{
                 const newHrs=Math.round(((+g.hours||0)+hrs)*10)/10;
-                onStatusChange(g.id,'gram',{hours:newHrs,lastPlayed:new Date().toISOString()});
+                // Append session to history for time-tracking stats (F07)
+                // Backward compat: existing games have sessions: undefined, coerce to []
+                const newSession={
+                  startedAt: session.startedAt,
+                  endedAt: session.endedAt,
+                  hours: Math.round(session.hours*10000)/10000,  // keep 4 decimals for accuracy
+                  pauseMs: session.totalPauseMs || 0,  // pause duration in ms — for future "active vs idle" analytics
+                };
+                const newSessions=[...(g.sessions||[]),newSession];
+                onStatusChange(g.id,'gram',{hours:newHrs,lastPlayed:new Date().toISOString(),sessions:newSessions});
               }}/>
             </div>;
           })}
@@ -989,6 +1109,67 @@ function InsightsTab({insights,games,lang}){
   );
 }
 
+// F07 — Time tracking helpers
+// Collect all sessions from all games into flat array, normalized
+function collectSessions(games){
+  const out=[];
+  games.forEach(g=>{
+    (g.sessions||[]).forEach(s=>{
+      out.push({
+        gameId: g.id,
+        gameTitle: g.title,
+        gameAbbr: g.abbr,
+        gameCover: g.cover,
+        startedAt: s.startedAt,
+        endedAt: s.endedAt,
+        hours: s.hours,
+        // Use startedAt date as the "session date" (YYYY-MM-DD in local time)
+        dateKey: new Date(s.startedAt).toISOString().slice(0,10),
+      });
+    });
+  });
+  return out.sort((a,b)=>b.startedAt-a.startedAt);  // newest first
+}
+// Get YYYY-MM-DD for a Date (local time)
+function dayKey(d){ return new Date(d).toISOString().slice(0,10); }
+// Monday of week containing date (ISO week)
+function weekStart(d){
+  const x=new Date(d); x.setHours(0,0,0,0);
+  const day=x.getDay(); // 0=Sun...6=Sat
+  const diff=day===0?-6:(1-day);  // Mon = -1, Sun = -6
+  x.setDate(x.getDate()+diff);
+  return x;
+}
+// Compute current streak: consecutive days ending today (or yesterday if no session today)
+function computeStreak(sessionsByDay){
+  if(!sessionsByDay.size)return 0;
+  let streak=0;
+  const today=new Date(); today.setHours(0,0,0,0);
+  let cursor=new Date(today);
+  // Allow streak to continue if today has no session but yesterday does
+  if(!sessionsByDay.has(dayKey(cursor))){
+    cursor.setDate(cursor.getDate()-1);
+    if(!sessionsByDay.has(dayKey(cursor)))return 0;
+  }
+  while(sessionsByDay.has(dayKey(cursor))){
+    streak++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return streak;
+}
+// Compute longest streak ever
+function computeLongestStreak(sessionsByDay){
+  if(!sessionsByDay.size)return 0;
+  const days=[...sessionsByDay.keys()].sort();
+  let longest=1, current=1;
+  for(let i=1;i<days.length;i++){
+    const prev=new Date(days[i-1]); prev.setDate(prev.getDate()+1);
+    if(dayKey(prev)===days[i]){ current++; if(current>longest)longest=current; }
+    else current=1;
+  }
+  return longest;
+}
+
 function Stats({games,lang}){
   const [tab,setTab]=useState('general');
   if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>📈</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
@@ -996,7 +1177,7 @@ function Stats({games,lang}){
   const rated=games.filter(g=>g.rating!=null);
   const avg=rated.length?(rated.reduce((s,g)=>s+g.rating,0)/rated.length).toFixed(1):'—';
   const SM2=getSM(lang);
-  const kpis=[{l:t(lang,'gamesTotal'),v:games.length,c:G.blu},{l:t(lang,'completed2'),v:games.filter(g=>g.status==='ukonczone').length,c:G.grn},{l:t(lang,'hoursTotal'),v:hrs%1?hrs.toFixed(1):hrs,c:G.pur},{l:t(lang,'avgRating'),v:avg,c:G.gld}];
+  const kpis=[{l:t(lang,'gamesTotal'),v:games.length,c:G.blu},{l:t(lang,'completed2'),v:games.filter(g=>g.status==='ukonczone').length,c:G.grn},{l:t(lang,'hoursTotal'),v:fmtHours(hrs),c:G.pur},{l:t(lang,'avgRating'),v:avg,c:G.gld}];
   const sData=Object.entries(SM2).map(([k,m])=>({n:m.label,v:games.filter(g=>g.status===k).length,c:m.c})).filter(d=>d.v>0);
   const gMap={}; games.forEach(g=>{if(g.genre)gMap[g.genre]=(gMap[g.genre]||0)+1;});
   const gData=Object.entries(gMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v}));
@@ -1035,7 +1216,7 @@ function Stats({games,lang}){
     if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:(+bCph.priceBought/bCph.hours).toFixed(1)}),val:(+bCph.priceBought/bCph.hours).toFixed(1)+' zł/h'});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
-  const subTabs=[[' general',t(lang,'general')],[' finance',t(lang,'finance')],[' insights',t(lang,'analysis')]];
+  const subTabs=[[' general',t(lang,'general')],[' time',t(lang,'time')],[' finance',t(lang,'finance')],[' insights',t(lang,'analysis')]];
   return(
     <div className='scr'>
       <div style={{display:'flex',gap:3,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:11,padding:4,marginBottom:14}}>
@@ -1047,6 +1228,205 @@ function Stats({games,lang}){
         {gData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'genreChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
         {rated.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'ratingChart')}</div><ResponsiveContainer width='100%' height={140}><BarChart data={buckets} barSize={20} margin={{top:4,left:0,right:0,bottom:4}}><CartesianGrid vertical={false} stroke={G.bdr} strokeDasharray='3 3'/><XAxis dataKey='n' tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false} padding={{left:20,right:20}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} minPointSize={3}>{buckets.map((b,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={b.v===0?0.2:0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>}
       </>}
+      {tab==='time'&&(()=>{
+        const sessions=collectSessions(games);
+        if(!sessions.length){
+          return <div className='empty'><div className='eic'>⏱</div><div className='ett'>{t(lang,'noSessions')}</div><div className='ess'>{t(lang,'noSessionsHint')}</div></div>;
+        }
+        // Group sessions by day
+        const byDay=new Map();
+        sessions.forEach(s=>{
+          const arr=byDay.get(s.dateKey)||[];
+          arr.push(s); byDay.set(s.dateKey,arr);
+        });
+        const todayKey=dayKey(new Date());
+        const todaySessions=byDay.get(todayKey)||[];
+        const todayHours=todaySessions.reduce((a,s)=>a+s.hours,0);
+        // This week (Mon-Sun)
+        const wkStart=weekStart(new Date());
+        const wkDays=[0,1,2,3,4,5,6].map(i=>{
+          const d=new Date(wkStart); d.setDate(d.getDate()+i);
+          const k=dayKey(d);
+          const hrs=(byDay.get(k)||[]).reduce((a,s)=>a+s.hours,0);
+          return {date:d, key:k, hours:hrs};
+        });
+        const weekHours=wkDays.reduce((a,d)=>a+d.hours,0);
+        // Previous week for comparison
+        const prevWkStart=new Date(wkStart); prevWkStart.setDate(prevWkStart.getDate()-7);
+        let prevWkHours=0;
+        for(let i=0;i<7;i++){
+          const d=new Date(prevWkStart); d.setDate(d.getDate()+i);
+          prevWkHours+=(byDay.get(dayKey(d))||[]).reduce((a,s)=>a+s.hours,0);
+        }
+        const weekDelta=weekHours-prevWkHours;
+        // This month — build calendar heatmap
+        const now=new Date();
+        const mStart=new Date(now.getFullYear(),now.getMonth(),1);
+        const mEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+        const daysInMonth=mEnd.getDate();
+        const monthDays=[];
+        let monthHours=0;
+        for(let i=1;i<=daysInMonth;i++){
+          const d=new Date(now.getFullYear(),now.getMonth(),i);
+          const k=dayKey(d);
+          const hrs=(byDay.get(k)||[]).reduce((a,s)=>a+s.hours,0);
+          monthDays.push({day:i,key:k,hours:hrs,isFuture:d>new Date()});
+          monthHours+=hrs;
+        }
+        // Prev month for comparison
+        const prevMStart=new Date(now.getFullYear(),now.getMonth()-1,1);
+        const prevMEnd=new Date(now.getFullYear(),now.getMonth(),0);
+        let prevMHours=0;
+        for(let d=new Date(prevMStart); d<=prevMEnd; d.setDate(d.getDate()+1)){
+          prevMHours+=(byDay.get(dayKey(d))||[]).reduce((a,s)=>a+s.hours,0);
+        }
+        const monthDelta=monthHours-prevMHours;
+        // Streaks
+        const currentStreak=computeStreak(byDay);
+        const longestStreak=computeLongestStreak(byDay);
+        // Session stats
+        const avgSessionHours=sessions.reduce((a,s)=>a+s.hours,0)/sessions.length;
+        const longestSessionHours=sessions.reduce((m,s)=>Math.max(m,s.hours),0);
+        // Top games by total session hours (this month scope)
+        const monthSessions=sessions.filter(s=>{
+          const d=new Date(s.startedAt);
+          return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+        });
+        const perGame={};
+        monthSessions.forEach(s=>{
+          perGame[s.gameId]=perGame[s.gameId]||{title:s.gameTitle,abbr:s.gameAbbr,cover:s.gameCover,hours:0,count:0};
+          perGame[s.gameId].hours+=s.hours;
+          perGame[s.gameId].count++;
+        });
+        const topGames=Object.values(perGame).sort((a,b)=>b.hours-a.hours).slice(0,5);
+        // Max hours in any day this month (for heatmap scaling)
+        const maxDayHours=Math.max(1,...monthDays.map(d=>d.hours));
+        // Max hours in week bar chart
+        const maxWkHours=Math.max(0.5,...wkDays.map(d=>d.hours));
+        const dayLabels=[t(lang,'dayMon'),t(lang,'dayTue'),t(lang,'dayWed'),t(lang,'dayThu'),t(lang,'dayFri'),t(lang,'daySat'),t(lang,'daySun')];
+        const deltaLine=(delta,label)=>{
+          if(Math.abs(delta)<0.05)return <span style={{color:G.dim}}>{t(lang,label)}: —</span>;
+          const positive=delta>0;
+          return <span style={{color:positive?G.grn:G.red,fontWeight:700}}>{positive?'↑':'↓'} {fmtHours(Math.abs(delta),{compact:true})} {t(lang,label)}</span>;
+        };
+        return <>
+          {/* KPI Grid */}
+          <div className='kgd'>
+            <div className='kcd' style={{'--c':G.grn}}><div className='kvl' style={{fontSize:currentStreak>=10?24:28}}>🔥 {currentStreak}</div><div className='klb'>{t(lang,'currentStreak')} ({t(lang,'daysStreak')})</div></div>
+            <div className='kcd' style={{'--c':G.gld}}><div className='kvl'>{longestStreak}</div><div className='klb'>{t(lang,'longestStreak')} ({t(lang,'daysStreak')})</div></div>
+            <div className='kcd' style={{'--c':G.blu}}><div className='kvl' style={{fontSize:18}}>{fmtHours(avgSessionHours,{compact:true})}</div><div className='klb'>{t(lang,'avgSession')}</div></div>
+            <div className='kcd' style={{'--c':G.pur}}><div className='kvl' style={{fontSize:18}}>{fmtHours(longestSessionHours,{compact:true})}</div><div className='klb'>{t(lang,'longestSession')}</div></div>
+          </div>
+
+          {/* Today */}
+          <div className='ccd'>
+            <div className='ctl'>{t(lang,'today2')}</div>
+            {todaySessions.length===0 ? (
+              <div style={{padding:'16px 0',textAlign:'center',color:G.dim,fontSize:12}}>{t(lang,'noSessionsToday')}</div>
+            ) : (
+              <div>
+                <div style={{display:'flex',alignItems:'baseline',gap:10,marginBottom:8}}>
+                  <span style={{fontFamily:"'Orbitron',monospace",fontSize:28,fontWeight:900,color:G.grn}}>{fmtHours(todayHours)}</span>
+                  <span style={{fontSize:11,color:G.dim}}>{t(lang,'sessionsCount',{n:todaySessions.length})}</span>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:6,paddingTop:8,borderTop:'1px solid '+G.bdr}}>
+                  {todaySessions.slice(0,4).map((s,i)=>(
+                    <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:11}}>
+                      <span style={{color:G.txt,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginRight:8}}>{s.gameTitle}</span>
+                      <span style={{color:G.dim,flexShrink:0,fontFamily:"'Orbitron',monospace"}}>{fmtHours(s.hours,{compact:true})}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* This Week — 7 day bar chart */}
+          <div className='ccd'>
+            <div className='ctl'>{t(lang,'thisWeek')}</div>
+            <div style={{display:'flex',alignItems:'baseline',gap:10,marginBottom:12}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.pur}}>{fmtHours(weekHours)}</span>
+              {prevWkHours>0 && deltaLine(weekDelta,'vsLastWeek')}
+            </div>
+            <div style={{display:'flex',gap:4,height:80,alignItems:'flex-end'}}>
+              {wkDays.map((d,i)=>{
+                const heightPct=d.hours/maxWkHours*100;
+                const isToday=d.key===todayKey;
+                return (
+                  <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                    <div style={{flex:1,width:'100%',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
+                      <div style={{width:'100%',height:heightPct+'%',minHeight:d.hours>0?4:0,background:d.hours>0?(isToday?G.grn:G.pur):'transparent',borderRadius:'4px 4px 0 0',opacity:d.hours>0?(isToday?1:0.7):0.2,transition:'height .3s'}}/>
+                    </div>
+                    <div style={{fontSize:9,color:isToday?G.grn:G.dim,fontWeight:isToday?700:500}}>{dayLabels[i]}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* This Month — calendar heatmap */}
+          <div className='ccd'>
+            <div className='ctl'>{t(lang,'thisMonth')}</div>
+            <div style={{display:'flex',alignItems:'baseline',gap:10,marginBottom:12}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.blu}}>{fmtHours(monthHours)}</span>
+              {prevMHours>0 && deltaLine(monthDelta,'vsLastMonth')}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3}}>
+              {monthDays.map((d,i)=>{
+                const intensity=d.hours/maxDayHours;
+                const isToday=d.key===todayKey;
+                let bg,color=G.dim;
+                if(d.isFuture){ bg='transparent'; color='rgba(90,106,138,.3)'; }
+                else if(d.hours===0){ bg=G.card2; }
+                else {
+                  // Green gradient: light to bright based on intensity
+                  const op=0.2+intensity*0.8;
+                  bg=`rgba(57,255,110,${op})`;
+                  color=intensity>0.5?'#000':G.txt;
+                }
+                return (
+                  <div key={i} title={d.hours>0?fmtHours(d.hours):''} style={{
+                    aspectRatio:'1',
+                    background:bg,
+                    border:'1px solid '+(isToday?G.grn:d.isFuture?'transparent':G.bdr),
+                    borderRadius:4,
+                    display:'flex',
+                    alignItems:'center',
+                    justifyContent:'center',
+                    fontSize:10,
+                    fontWeight:isToday?700:500,
+                    color,
+                    fontFamily:"'Orbitron',monospace",
+                  }}>{d.day}</div>
+                );
+              })}
+            </div>
+            <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:4,marginTop:8,fontSize:9,color:G.dim}}>
+              <span>{lang==='pl'?'Mniej':'Less'}</span>
+              {[0.2,0.4,0.6,0.8,1.0].map(op=>(
+                <div key={op} style={{width:10,height:10,background:`rgba(57,255,110,${op})`,borderRadius:2}}/>
+              ))}
+              <span>{lang==='pl'?'Więcej':'More'}</span>
+            </div>
+          </div>
+
+          {/* Top played games this month */}
+          {topGames.length>0 && (
+            <div className='ccd'>
+              <div className='ctl'>{t(lang,'topGames')}</div>
+              <ul className='top-list'>
+                {topGames.map((g,i)=>(
+                  <li key={i} className='top-item'>
+                    <span className='top-title'>{g.title}</span>
+                    <span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.count}×</span>
+                    <span className='top-val' style={{color:G.grn}}>{fmtHours(g.hours,{compact:true})}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>;
+      })()}
       {tab==='finance'&&<>
         <div style={{display:'flex',alignItems:'flex-start',gap:8,marginBottom:12,padding:'10px 12px',background:'rgba(0,212,255,.06)',border:`1px solid ${G.bdr}`,borderRadius:10,fontSize:11,color:G.dim,lineHeight:1.4}}>
           <span style={{fontSize:14,flexShrink:0}}>ℹ️</span>
@@ -1058,7 +1438,7 @@ function Stats({games,lang}){
           {gcData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byGenre')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gcData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
           {soldG.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'roi')}</div><ul className='top-list'>{soldG.map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{pln(+g.priceBought,lang)}→{pln(+g.priceSold,lang)}</span><span className={'top-val '+(g.roi>=0?'roi-pos':'roi-neg')}>{g.roi>=0?'+':''}{pln(g.roi,lang)}</span></li>)}</ul></div>}
           <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{pln(+g.priceBought,lang)}</span></li>)}</ul></div>
-          {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.hours}h</span><span className='top-val' style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)} zł/h</span></li>)}</ul></div>}
+          {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{fmtHours(g.hours,{compact:true})}</span><span className='top-val' style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)} zł/h</span></li>)}</ul></div>}
         </>}
       </>}
       {tab==='insights'&&<>{!insights.length?<div className='empty'><div className='eic'>💡</div><div className='ett'>{t(lang,'noInsights')}</div><div className='ess'>{t(lang,'addPricesAndHours')}</div></div>:<InsightsTab insights={insights} games={games} lang={lang}/>}</>}
@@ -1218,7 +1598,7 @@ export default function App(){
                 <div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>setModal(g)}>
                   {g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
-                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{g.genre&&<span className='gmp'>{g.genre}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{g.hours}h</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
+                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{g.genre&&<span className='gmp'>{g.genre}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
                     <div className='grt'>
                       {g.rating!=null?<><span className='grn'>{g.rating}</span><span className='grd'>/10</span></>:<span style={{color:G.dim,fontSize:17}}>—</span>}
                       {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
