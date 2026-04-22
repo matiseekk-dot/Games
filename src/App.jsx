@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
-const RAWG_KEY   = '0c13edec026d489a97cc183170d796fd';
+const RAWG_KEY   = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 const APP_VER    = '1.0.0';
 const LS_KEY     = 'ps5vault_v1';
 const LS_ONBOARD = 'ps5vault_onboarded';
@@ -44,6 +44,7 @@ const TRANSLATIONS = {
     gamesTotal:"Gier razem", completed2:"Ukończone", hoursTotal:"Godzin łącznie", avgRating:"Śr. ocena",
     statusChart:"📊 Status kolekcji", genreChart:"🎮 Top gatunki", ratingChart:"⭐ Histogram ocen",
     noFinanceData:"Brak danych finansowych", addPricesHint:"Dodaj ceny kupna do gier",
+    financeInfoHint:"Dane finansowe pochodzą z cen które wpisałeś ręcznie przy grach — nie z API.",
     spent:"Gry (cena bazowa)", earnedBack:"Odzyskano", realCostShort:"Realny koszt", costPerHour:"Koszt/godzinę", spentDLC:"DLC / Mikrotransakcje", spentTotal2:"Łącznie wydano",
     byStore:"🏪 Wydatki wg sklepu", byGenre:"🎮 Wydatki wg gatunku",
     roi:"📈 ROI sprzedanych", mostExpensive:"💸 Najdroższe gry", bestValue:"⏱ Najlepsza wartość (zł/h)",
@@ -82,7 +83,8 @@ const TRANSLATIONS = {
     cancel:"Anuluj", save:"ZAPISZ", enterTitle:"Wpisz tytuł",
     delete:"🗑", confirmDelete:"Usuń grę", confirmDeleteBody:"Czy na pewno chcesz usunąć {title} z kolekcji?",
     obTitle:"PS5 VAULT", obSub:"Twój osobisty tracker gier PlayStation 5. Zero rejestracji — wszystko lokalnie na urządzeniu.",
-    obStart:"ZACZYNAMY →",
+    obStart:"+ DODAJ PIERWSZĄ GRĘ",
+    obSkip:"Pominę, dodam później",
     obF1Title:"Kolekcja gier", obF1Desc:"Dodaj grę ręcznie lub wyszukaj przez bazę RAWG z okładkami",
     obF2Title:"Śledzenie premier", obF2Desc:"Countdown do premiery + powiadomienia 3 dni wcześniej",
     obF3Title:"Analiza finansowa", obF3Desc:"Ile wydajesz, ile odzyskujesz — realny koszt kolekcji",
@@ -137,9 +139,10 @@ const TRANSLATIONS = {
     gamesTotal:"Total games", completed2:"Completed", hoursTotal:"Total hours", avgRating:"Avg rating",
     statusChart:"📊 Collection status", genreChart:"🎮 Top genres", ratingChart:"⭐ Rating histogram",
     noFinanceData:"No financial data", addPricesHint:"Add purchase prices to games",
+    financeInfoHint:"Financial data comes from prices you entered manually — not from an API.",
     spent:"Games (base price)", earnedBack:"Recovered", realCostShort:"Real cost", costPerHour:"Cost/hour", spentDLC:"DLC / Microtransactions", spentTotal2:"Total spent",
     byStore:"🏪 Spending by store", byGenre:"🎮 Spending by genre",
-    roi:"📈 ROI on sold games", mostExpensive:"💸 Most expensive", bestValue:"⏱ Best value ($/h)",
+    roi:"📈 ROI on sold games", mostExpensive:"💸 Most expensive", bestValue:"⏱ Best value (zł/h)",
     noInsights:"Not enough data", addPricesAndHours:"Add prices and hours to games",
     potentialSaving:"💡 Potential savings",
     savingsFrom:"from avoided losses", savingsFromSell:"from selling abandoned games",
@@ -149,7 +152,7 @@ const TRANSLATIONS = {
     financeSummary:"Financial summary",
     biggestLossDesc:"Selling {title} lost you {amount}",
     bestInvestDesc:"{title} earned {amount} profit",
-    expHoursDesc:"{title} — {cph}/h. Above $10/h is poor value.",
+    expHoursDesc:"{title} — {cph} zł/h. Above 10 zł/h is poor value.",
     bestValDesc:"{title} — only {cph}/h. Your best investment.",
     finSummaryDesc:"Spent {spent}, recovered {earned}. Real cost is {net}.",
     data:"Data", exportData:"Export data", exportDesc:"Download backup of {n} games as JSON",
@@ -175,7 +178,8 @@ const TRANSLATIONS = {
     cancel:"Cancel", save:"SAVE", enterTitle:"Enter title",
     delete:"🗑", confirmDelete:"Delete game", confirmDeleteBody:"Delete {title} from collection?",
     obTitle:"PS5 VAULT", obSub:"Your personal PS5 game tracker. No registration — everything stored locally on device.",
-    obStart:"GET STARTED →",
+    obStart:"+ ADD FIRST GAME",
+    obSkip:"Skip, I'll add later",
     obF1Title:"Game collection", obF1Desc:"Add manually or search RAWG database with cover art",
     obF2Title:"Release tracking", obF2Desc:"Countdown + notifications 3 days before release",
     obF3Title:"Financial analysis", obF3Desc:"Track spending, recovery — real collection cost",
@@ -233,7 +237,7 @@ function mkAbbr(s){ const w=s.trim().split(/\s+/).filter(Boolean); return !w.len
 function daysUntil(d){ if(!d)return null; const a=new Date();a.setHours(0,0,0,0);const b=new Date(d);b.setHours(0,0,0,0);return Math.round((b-a)/86400000); }
 function fmtDate(d,lang){ if(!d)return''; return new Date(d).toLocaleDateString(lang==='en'?'en-GB':'pl-PL',{day:'numeric',month:'short',year:'numeric'}); }
 function fmtShort(d,lang){ if(!d)return''; return new Date(d).toLocaleDateString(lang==='en'?'en-GB':'pl-PL',{day:'numeric',month:'short'}); }
-function pln(v,lang){ return lang==='en'?`$${(+v||0).toFixed(0)}`:`${(+v||0).toFixed(0)} zł`; }
+function pln(v,lang){ return `${(+v||0).toFixed(0)} zł`; }
 
 const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),genre:'',hours:'',rating:'',notes:'',cover:'',releaseDate:'',notifyEnabled:false,priceBought:'',priceSold:'',storeBought:'',targetHours:'',extraSpend:'',platform:'PS5',platinum:false,lastPlayed:null,sessions:[] };
 
@@ -246,10 +250,17 @@ function timerWrite(d){ try{ if(d===null)localStorage.removeItem('ps5vault_timer
 function isOnboarded(){ return !!localStorage.getItem(LS_ONBOARD); }
 function setOnboarded(){ localStorage.setItem(LS_ONBOARD,'1'); }
 
-function exportData(games,lang){
+function exportData(games,lang,onDone){
   const blob=new Blob([JSON.stringify({version:1,exported:new Date().toISOString(),count:games.length,games},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`ps5vault-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`PS5Vault_Backup_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),100);
+  if(typeof onDone==='function')onDone();
 }
 function importData(file,onOk,onErr){
   const r=new FileReader();
@@ -560,7 +571,7 @@ function ReleaseBadge({releaseDate,lang}){
   return<span className='rbdg-upcoming'>📅 {fmtShort(releaseDate,lang)}</span>;
 }
 
-function Onboarding({onDone,lang}){
+function Onboarding({onAddFirst,onSkip,lang}){
   const features=[
     {ico:'🎮',tk:'obF1Title',dk:'obF1Desc'},{ico:'📅',tk:'obF2Title',dk:'obF2Desc'},
     {ico:'💰',tk:'obF3Title',dk:'obF3Desc'},{ico:'📊',tk:'obF4Title',dk:'obF4Desc'},
@@ -578,7 +589,8 @@ function Onboarding({onDone,lang}){
           </div>
         ))}
       </div>
-      <button className='ob-start' onClick={onDone}>{t(lang,'obStart')}</button>
+      <button type='button' className='ob-start' onClick={onAddFirst}>{t(lang,'obStart')}</button>
+      <button type='button' onClick={onSkip} style={{marginTop:10,padding:'10px',background:'transparent',border:'none',color:'#8B93A7',fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obSkip')}</button>
     </div>
   );
 }
@@ -608,8 +620,24 @@ function Confirm({title,body,onYes,onNo}){
 function RawgSearch({onSelect,lang}){
   const [q,setQ]=useState(''); const [res,setRes]=useState([]); const [busy,setBusy]=useState(false); const [open,setOpen]=useState(false);
   const timer=useRef(null);
-  const search=val=>{setQ(val);clearTimeout(timer.current);if(!val.trim()){setRes([]);setOpen(false);return;}setBusy(true);timer.current=setTimeout(async()=>{const r=await rawgSearch(val);setRes(r);setOpen(r.length>0);setBusy(false);},450);};
-  const pick=item=>{onSelect(item);setQ('');setRes([]);setOpen(false);};
+  const reqId=useRef(0);
+  const search=val=>{
+    setQ(val);
+    clearTimeout(timer.current);
+    setRes([]);
+    if(!val.trim()){setOpen(false);setBusy(false);return;}
+    setBusy(true);
+    setOpen(true);
+    const myReq=++reqId.current;
+    timer.current=setTimeout(async()=>{
+      const r=await rawgSearch(val);
+      if(myReq!==reqId.current)return;
+      setRes(r);
+      setOpen(r.length>0);
+      setBusy(false);
+    },450);
+  };
+  const pick=item=>{onSelect(item);setQ('');setRes([]);setOpen(false);reqId.current++;};
   return(
     <div className='rwrp'>
       <label className='rlbl'>{t(lang,'searchRawg')}</label>
@@ -618,7 +646,9 @@ function RawgSearch({onSelect,lang}){
         {busy?<span style={{flexShrink:0,display:'inline-block',animation:'spin .8s linear infinite'}}>⏳</span>:<span className='rbdg2'>RAWG</span>}
       </div>
       <div className='rhnt'>{t(lang,'rawgHint')}</div>
-      {open&&<div className='rdd'>{res.map(r=>(
+      {open&&<div className='rdd'>
+        {busy&&res.length===0&&<div style={{padding:'14px',textAlign:'center',color:'#8B93A7',fontSize:11}}>{lang==='pl'?'Szukam...':'Searching...'}</div>}
+        {res.map(r=>(
         <div key={r.id} className='rit' onClick={()=>pick(r)}>
           {r.cover?<img className='rthm' src={r.cover} alt='' loading='lazy'/>:<div className='rph'>🎮</div>}
           <div className='rinf'><div className='rnm'>{r.title}</div><div className='rmt'>{r.year}{r.genre?' · '+r.genre:''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div></div>
@@ -991,7 +1021,7 @@ function Stats({games,lang}){
     {l:t(lang,'spentTotal2'),  v:pln(totalSpent,lang),  c:G.org, bg:'rgba(255,159,28,.07)'},
     {l:t(lang,'earnedBack'),   v:pln(totalEarned,lang), c:G.grn, bg:'rgba(57,255,110,.07)'},
     {l:t(lang,'realCostShort'),v:pln(netCost,lang),     c:netCost>0?G.org:G.grn, bg:'rgba(255,159,28,.05)'},
-    {l:t(lang,'costPerHour'),  v:cph?cph.toFixed(1)+(lang==='en'?' $/h':' zł/h'):'—', c:G.blu, bg:'rgba(0,212,255,.07)'},
+    {l:t(lang,'costPerHour'),  v:cph?cph.toFixed(1)+' zł/h':'—', c:G.blu, bg:'rgba(0,212,255,.07)'},
   ];
   const insights=[];
   if(bought.length){
@@ -1001,8 +1031,8 @@ function Stats({games,lang}){
     const bCph=[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours))[0];
     if(worst)insights.push({ico:'📉',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:worst.title,amount:pln(Math.abs(worst.roi),lang)}),val:'-'+pln(Math.abs(worst.roi),lang)});
     if(best)insights.push({ico:'📈',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestDesc',{title:best.title,amount:pln(best.roi,lang)}),val:'+'+pln(best.roi,lang)});
-    if(wCph&&wCph.hours>0)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,28,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:wCph.title,cph:(+wCph.priceBought/wCph.hours).toFixed(1)}),val:(+wCph.priceBought/wCph.hours).toFixed(1)+(lang==='en'?' $/h':' zł/h')});
-    if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:(+bCph.priceBought/bCph.hours).toFixed(1)}),val:(+bCph.priceBought/bCph.hours).toFixed(1)+(lang==='en'?' $/h':' zł/h')});
+    if(wCph&&wCph.hours>0)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,28,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:wCph.title,cph:(+wCph.priceBought/wCph.hours).toFixed(1)}),val:(+wCph.priceBought/wCph.hours).toFixed(1)+' zł/h'});
+    if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:(+bCph.priceBought/bCph.hours).toFixed(1)}),val:(+bCph.priceBought/bCph.hours).toFixed(1)+' zł/h'});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
   const subTabs=[[' general',t(lang,'general')],[' finance',t(lang,'finance')],[' insights',t(lang,'analysis')]];
@@ -1018,13 +1048,17 @@ function Stats({games,lang}){
         {rated.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'ratingChart')}</div><ResponsiveContainer width='100%' height={140}><BarChart data={buckets} barSize={20} margin={{top:4,left:0,right:0,bottom:4}}><CartesianGrid vertical={false} stroke={G.bdr} strokeDasharray='3 3'/><XAxis dataKey='n' tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false} padding={{left:20,right:20}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} minPointSize={3}>{buckets.map((b,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={b.v===0?0.2:0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>}
       </>}
       {tab==='finance'&&<>
+        <div style={{display:'flex',alignItems:'flex-start',gap:8,marginBottom:12,padding:'10px 12px',background:'rgba(0,212,255,.06)',border:`1px solid ${G.bdr}`,borderRadius:10,fontSize:11,color:G.dim,lineHeight:1.4}}>
+          <span style={{fontSize:14,flexShrink:0}}>ℹ️</span>
+          <span>{t(lang,'financeInfoHint')}</span>
+        </div>
         {!bought.length?<div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noFinanceData')}</div><div className='ess'>{t(lang,'addPricesHint')}</div></div>:<>
           <div className='fkgd'>{fkpis.map(k=><div key={k.l} className='fkcd' style={{'--c':k.c,background:k.bg}}><div className='fkv'>{k.v}</div><div className='fkl'>{k.l}</div></div>)}</div>
           {storeData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byStore')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={storeData} barSize={28} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:28,right:28}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.org} fillOpacity={0.85}/></BarChart></ResponsiveContainer></div>}
           {gcData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byGenre')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gcData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
           {soldG.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'roi')}</div><ul className='top-list'>{soldG.map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{pln(+g.priceBought,lang)}→{pln(+g.priceSold,lang)}</span><span className={'top-val '+(g.roi>=0?'roi-pos':'roi-neg')}>{g.roi>=0?'+':''}{pln(g.roi,lang)}</span></li>)}</ul></div>}
           <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{pln(+g.priceBought,lang)}</span></li>)}</ul></div>
-          {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.hours}h</span><span className='top-val' style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)}{lang==='en'?' $/h':' zł/h'}</span></li>)}</ul></div>}
+          {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.hours}h</span><span className='top-val' style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)} zł/h</span></li>)}</ul></div>}
         </>}
       </>}
       {tab==='insights'&&<>{!insights.length?<div className='empty'><div className='eic'>💡</div><div className='ett'>{t(lang,'noInsights')}</div><div className='ess'>{t(lang,'addPricesAndHours')}</div></div>:<InsightsTab insights={insights} games={games} lang={lang}/>}</>}
@@ -1045,7 +1079,7 @@ function Settings({games,setGames,flash,lang,setLang}){
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'data')}</div>
-        <div className='set-row' onClick={()=>exportData(games,lang)}>
+        <div className='set-row' onClick={()=>exportData(games,lang,()=>flash(lang==='pl'?'✓ Backup zapisany':'✓ Backup saved'))}>
           <span className='set-row-ico'>⬆️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'exportData')}</div><div className='set-row-desc'>{t(lang,'exportDesc',{n:games.length})}</div></div><span className='set-row-arrow'>›</span>
         </div>
         <div className='set-row' onClick={()=>importRef.current?.click()}>
@@ -1114,7 +1148,11 @@ export default function App(){
   }
   function toggleNotify(id){setGames(prev=>prev.map(g=>g.id===id?{...g,notifyEnabled:!g.notifyEnabled}:g));}
 
-  if(!onboarded)return(<><style>{CSS}</style><Onboarding onDone={()=>{setOnboarded(true);setOnboard(true);}} lang={lang}/></>);
+  if(!onboarded)return(<><style>{CSS}</style><Onboarding
+    onAddFirst={()=>{setOnboarded(true);setOnboard(true);setModal('add');}}
+    onSkip={()=>{setOnboarded(true);setOnboard(true);}}
+    lang={lang}
+  /></>);
 
   const SM2=getSM(lang);
   const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).length;
@@ -1156,7 +1194,7 @@ export default function App(){
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
           <div className='toolbar'>
-            <button type='button' className='tbtn' onClick={()=>exportData(games,lang)}>{t(lang,'export')}</button>
+            <button type='button' className='tbtn' onClick={()=>exportData(games,lang,()=>flash(lang==='pl'?'✓ Backup zapisany':'✓ Backup saved'))}>{t(lang,'export')}</button>
             <label className='tbtn'>{t(lang,'import')}<input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importMerge(e.target.files[0],games,(merged,added,dupes)=>{setGames(merged);flash(lang==='pl'?`✓ Dodano ${added} gier (${dupes} duplikatów pominięto)`:`✓ Added ${added} games (${dupes} duplicates skipped)`);},err=>flash('❌ '+err));e.target.value='';}}/></label>
           </div>
           <div className='chips'>{chips.map(ch=><button type='button' key={ch.k} className={'chip'+(flt===ch.k?' on':'')} onClick={()=>setFlt(ch.k)}>{ch.l}</button>)}</div>
