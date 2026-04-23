@@ -1598,7 +1598,7 @@ function Finance({games,lang}){
   );
 }
 
-function Settings({games,setGames,flash,lang,setLang}){
+function Settings({games,setGames,flash,lang,setLang,openImport}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   return(
     <div className='scr'>
@@ -1775,7 +1775,7 @@ export default function App(){
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         {tab==='fin'&&<Finance games={games} lang={lang}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
-        {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang}/>
+        {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} openImport={openImport}/>
         {/* ── Budget ── */}
         <div style={{padding:'0 16px 8px'}}>
           <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
