@@ -268,7 +268,7 @@ function getSM(lang) {
 const GENRES_PL = ['Action','RPG','FPS','Horror','Sport','Racing','Platformer','Puzzle','Adventure','Strategia','Fighting','Indie','Inne'];
 const GENRES_EN = ['Action','RPG','FPS','Horror','Sports','Racing','Platformer','Puzzle','Adventure','Strategy','Fighting','Indie','Other'];
 const RMAP = {'action':'Action','role-playing-games-rpg':'RPG','shooter':'FPS','horror':'Horror','sports':'Sport','racing':'Racing','platformer':'Platformer','puzzle':'Puzzle','adventure':'Adventure','strategy':'Strategia','fighting':'Fighting','indie':'Indie'};
-const STORES = ['PSN','Disc','CDP','Media Expert','Allegro','OLX','Key','Other'];
+const STORES = ['PSN','PS Store','Steam','CDP','Allegro','OLX','Media Expert','Empik','Amazon','eBay','Disc','Key','Other'];
 const PLATFORMS = ['PS5','PS4','Xbox Series X/S','Xbox One','PC','Nintendo Switch','Mobile','Other'];
 const G = { bg:'#080B14', card:'#0D1120', card2:'#111827', bdr:'#1E2A42', txt:'#E8EDF8', dim:'#5A6A8A', blu:'#00D4FF', grn:'#39FF6E', pur:'#A78BFA', red:'#FF4D6D', gld:'#FFD166', org:'#FF9F1C' };
 
@@ -395,7 +395,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .hdr{overflow:hidden;padding-top:calc(env(safe-area-inset-top,0px) + 44px);padding-bottom:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .htop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
 .logo{display:flex;align-items:center;gap:10px;min-width:0}
-.lico{width:34px;height:34px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#fff;box-shadow:0 0 12px rgba(0,212,255,.35)}
+.lico{width:34px;height:34px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#fff;box-shadow:0 0 12px rgba(0,212,255,.35)}
 .lnm{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;letter-spacing:.1em;white-space:nowrap}
 .lsb{font-size:9px;color:${G.dim};letter-spacing:.2em;text-transform:uppercase}
 .abtn{height:44px;flex-shrink:0;border:none;border-radius:10px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0 14px;gap:6px;white-space:nowrap}
@@ -583,7 +583,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .confirm-yes{flex:1;padding:13px;border:none;border-radius:11px;background:${G.red};color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
 .confirm-no{flex:1;padding:13px;border:1px solid ${G.bdr};border-radius:11px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
 .onboard{position:fixed;inset:0;background:${G.bg};z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
-.ob-logo{width:80px;height:80px;border-radius:22px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#fff;margin:0 auto 24px;box-shadow:0 0 40px rgba(0,212,255,.4);animation:scaleIn .5s ease}
+.ob-logo{width:80px;height:80px;border-radius:22px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:48px;font-weight:900;color:#fff;margin:0 auto 24px;box-shadow:0 0 40px rgba(0,212,255,.4);animation:scaleIn .5s ease}
 .ob-title{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:${G.txt};margin-bottom:8px;letter-spacing:.06em}
 .ob-sub{font-size:14px;color:${G.dim};line-height:1.6;margin-bottom:24px;max-width:280px}
 .ob-features{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;width:100%;max-width:300px}
@@ -642,7 +642,7 @@ function Onboarding({onAddFirst,onSkip,lang}){
   ];
   return(
     <div className='onboard'>
-      <div className='ob-logo'>PS5</div>
+      <div className='ob-logo'>V</div>
       <div className='ob-title'>{t(lang,'obTitle')}</div>
       <div className='ob-sub'>{t(lang,'obSub')}</div>
       <div className='ob-features'>
@@ -1713,7 +1713,7 @@ export default function App(){
       <div className='app'>
         <div className='hdr'>
           <div className='htop'>
-            <div className='logo'><div className='lico'>PS5</div><div><div className='lnm'>VAULT</div><div className='lsb'>Game Tracker</div></div></div>
+            <div className='logo'><div className='lico'>V</div><div><div className='lnm'>VAULT</div><div className='lsb'>Game Tracker</div></div></div>
             <button type='button' className='abtn' onClick={()=>setModal('add')}>+ {lang==='pl'?'Dodaj grę':'Add game'}</button>
           </div>
           <div className='tabs'>
