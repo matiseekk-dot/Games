@@ -11,7 +11,7 @@ const LS_LANG    = 'ps5vault_lang';
 const TRANSLATIONS = {
   pl: {
     gram:"Gram", psplus:"PS Plus", ukonczone:"Ukończone", planuje:"Planuję", porzucone:"Porzucone",
-    home:"🏠 Home", collection:"🎮 Gry", releases:"📅 Premiery", stats:"📊 Statsy", settings:"⚙️ Opcje",
+    home:"🏠 Home", collection:"🎮 Gry", releases:"📅 Premiery", finance:"💰 Finanse", stats:"📊 Statsy", settings:"⚙️ Opcje",
     goodMorning:"🌅 Dzień dobry", goodAfternoon:"🎮 Cześć!", goodEvening:"🌆 Dobry wieczór", goodNight:"🌙 Dobranoc",
     gamesInCollection:"gier", active:"aktywnych", upcomingReleases:"premier",
     continuePlay:"Teraz gram", whatToPlay:"Co teraz grać", nextRelease:"Najbliższa premiera",
@@ -71,6 +71,17 @@ const TRANSLATIONS = {
     finSummaryDesc:"Wydałeś {spent}, odzyskałeś {earned}. Realny koszt to {net}.",
     data:"Dane", exportData:"Eksportuj dane", exportDesc:"Pobierz backup {n} gier jako JSON",
     importData:"Importuj dane", importDesc:"Wczytaj backup z pliku JSON",
+    // v1.2.0 — Import dual-mode
+    importTitle:"Importuj dane", importModeQ:"Jak połączyć dane z backupem?",
+    importMerge:"🔀 Scal z istniejącymi",
+    importMergeDesc:"Doda tylko nowe gry. Gry które już masz NIE zostaną zaktualizowane (ich sesje, godziny, oceny pozostają bez zmian).",
+    importReplace:"♻️ Zastąp wszystko",
+    importReplaceDesc:"Usunie obecną kolekcję i zastąpi ją z backupu. Twoje obecne dane na TYM urządzeniu zostaną UTRACONE.",
+    importReplaceConfirm:"Czy na pewno? Masz {n} gier które zostaną USUNIĘTE i zastąpione danymi z backupu. Tej operacji nie można cofnąć.",
+    importedMerge:"✓ Dodano {added} nowych gier. Pominięto {dupes} istniejących — użyj 'Zastąp wszystko' jeśli chcesz dane z backupu",
+    importedMergeNoSkip:"✓ Dodano {added} nowych gier",
+    importedReplace:"✓ Zastąpiono kolekcję — {n} gier z backupu",
+    cancel2:"Anuluj",
     info:"Informacje", privacyPolicy:"Polityka prywatności", privacyDesc:"Nie zbieramy żadnych danych osobowych",
     poweredBy:"Powered by RAWG.io", poweredByDesc:"Baza ponad 800 000 gier",
     appInfo:"PS5 Vault", appInfoDesc:"Wersja {ver} — Dane przechowywane lokalnie",
@@ -115,7 +126,7 @@ const TRANSLATIONS = {
   },
   en: {
     gram:"Playing", psplus:"PS Plus", ukonczone:"Completed", planuje:"Planning", porzucone:"Abandoned",
-    home:"🏠 Home", collection:"🎮 Games", releases:"📅 Releases", stats:"📊 Stats", settings:"⚙️ Settings",
+    home:"🏠 Home", collection:"🎮 Games", releases:"📅 Releases", finance:"💰 Finance", stats:"📊 Stats", settings:"⚙️ Settings",
     goodMorning:"🌅 Good morning", goodAfternoon:"🎮 Hey!", goodEvening:"🌆 Good evening", goodNight:"🌙 Good night",
     gamesInCollection:"games", active:"active", upcomingReleases:"releases",
     continuePlay:"Now playing", whatToPlay:"What to play next", nextRelease:"Upcoming release",
@@ -175,6 +186,17 @@ const TRANSLATIONS = {
     finSummaryDesc:"Spent {spent}, recovered {earned}. Real cost is {net}.",
     data:"Data", exportData:"Export data", exportDesc:"Download backup of {n} games as JSON",
     importData:"Import data", importDesc:"Load backup from JSON file",
+    // v1.2.0 — Import dual-mode
+    importTitle:"Import data", importModeQ:"How to combine backup data?",
+    importMerge:"🔀 Merge with existing",
+    importMergeDesc:"Adds only new games. Games you already have will NOT be updated (their sessions, hours, ratings stay unchanged).",
+    importReplace:"♻️ Replace everything",
+    importReplaceDesc:"Deletes current collection and replaces it with backup. Your current data on THIS device will be LOST.",
+    importReplaceConfirm:"Are you sure? You have {n} games that will be DELETED and replaced with backup data. This cannot be undone.",
+    importedMerge:"✓ Added {added} new games. Skipped {dupes} existing — use 'Replace everything' if you want backup data",
+    importedMergeNoSkip:"✓ Added {added} new games",
+    importedReplace:"✓ Collection replaced — {n} games from backup",
+    cancel2:"Cancel",
     info:"Info", privacyPolicy:"Privacy policy", privacyDesc:"We collect no personal data",
     poweredBy:"Powered by RAWG.io", poweredByDesc:"Database of 800,000+ games",
     appInfo:"PS5 Vault", appInfoDesc:"Version {ver} — Data stored locally",
@@ -306,6 +328,17 @@ function importMerge(file,existing,onOk,onErr){
     const existingIds=new Set(existing.map(g=>g.id));
     const newGames=imported.filter(g=>!existingIds.has(g.id));
     onOk([...existing,...newGames],newGames.length,imported.length-newGames.length);
+  }catch(err){onErr(err.message);}};
+  r.readAsText(file);
+}
+// v1.2.0: importReplace — nadpisuje całą kolekcję backupem (destructive)
+// Preserves all fields as-is, including sessions[], hours, ratings etc.
+function importReplace(file,onOk,onErr){
+  const r=new FileReader();
+  r.onload=e=>{try{
+    const d=JSON.parse(e.target.result);const imported=Array.isArray(d)?d:d.games;
+    if(!Array.isArray(imported))throw new Error('Invalid format');
+    onOk(imported,imported.length);
   }catch(err){onErr(err.message);}};
   r.readAsText(file);
 }
@@ -1170,6 +1203,60 @@ function computeLongestStreak(sessionsByDay){
   return longest;
 }
 
+// v1.2.0 — Import modal with dual-mode selection
+function ImportModal({onClose,onPickFile,mode,onPickMode,games,lang,pendingFile,onConfirmReplace}){
+  // Three phases: mode selection -> file picker -> confirm (replace only)
+  const [confirming,setConfirming]=useState(false);
+  useEffect(()=>{
+    if(pendingFile && mode==='replace' && !confirming) setConfirming(true);
+  },[pendingFile,mode,confirming]);
+  return (
+    <div className='mbg' onClick={onClose}>
+      <div className='mwr' onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
+        <div className='mhd'>
+          <span className='mtt'>📥 {t(lang,'importTitle')}</span>
+          <button type='button' className='mcb' onClick={onClose}>×</button>
+        </div>
+        <div className='mbd'>
+          {!mode && <>
+            <div style={{fontSize:12,color:G.dim,marginBottom:14,lineHeight:1.5}}>{t(lang,'importModeQ')}</div>
+            <button type='button' onClick={()=>onPickMode('merge')} style={{width:'100%',padding:'14px 14px',marginBottom:10,textAlign:'left',background:'rgba(0,212,255,.06)',border:`1px solid ${G.bdr}`,borderRadius:12,cursor:'pointer',color:G.txt}}>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,marginBottom:6,color:G.blu}}>{t(lang,'importMerge')}</div>
+              <div style={{fontSize:11,color:G.dim,lineHeight:1.45}}>{t(lang,'importMergeDesc')}</div>
+            </button>
+            <button type='button' onClick={()=>onPickMode('replace')} style={{width:'100%',padding:'14px 14px',textAlign:'left',background:'rgba(255,77,109,.06)',border:'1px solid rgba(255,77,109,.25)',borderRadius:12,cursor:'pointer',color:G.txt}}>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,marginBottom:6,color:G.red}}>{t(lang,'importReplace')}</div>
+              <div style={{fontSize:11,color:G.dim,lineHeight:1.45}}>{t(lang,'importReplaceDesc')}</div>
+            </button>
+          </>}
+          {mode && !pendingFile && <>
+            <div style={{padding:'14px',background:'rgba(0,212,255,.06)',border:`1px solid ${G.bdr}`,borderRadius:12,marginBottom:12,fontSize:12,color:G.dim,textAlign:'center'}}>
+              {mode==='merge'?t(lang,'importMerge'):t(lang,'importReplace')}
+            </div>
+            <label style={{display:'block',width:'100%',padding:'14px',background:G.blu,color:'#000',borderRadius:10,textAlign:'center',cursor:'pointer',fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700}}>
+              {lang==='pl'?'📁 Wybierz plik JSON':'📁 Choose JSON file'}
+              <input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(e.target.files[0])onPickFile(e.target.files[0]);}}/>
+            </label>
+          </>}
+          {mode==='replace' && pendingFile && confirming && <>
+            <div style={{padding:'14px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:12,marginBottom:12,fontSize:12,color:G.txt,lineHeight:1.5}}>
+              ⚠️ {t(lang,'importReplaceConfirm',{n:games.length})}
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button type='button' onClick={onClose} style={{flex:1,padding:'12px',background:'transparent',border:`1px solid ${G.bdr}`,borderRadius:10,color:G.txt,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,cursor:'pointer'}}>
+                {t(lang,'cancel2')}
+              </button>
+              <button type='button' onClick={onConfirmReplace} style={{flex:1,padding:'12px',background:G.red,border:'none',borderRadius:10,color:'#fff',fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                {t(lang,'importReplace')}
+              </button>
+            </div>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Stats({games,lang}){
   const [tab,setTab]=useState('general');
   if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>📈</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
@@ -1216,7 +1303,7 @@ function Stats({games,lang}){
     if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:(+bCph.priceBought/bCph.hours).toFixed(1)}),val:(+bCph.priceBought/bCph.hours).toFixed(1)+' zł/h'});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
-  const subTabs=[[' general',t(lang,'general')],[' time',t(lang,'time')],[' finance',t(lang,'finance')],[' insights',t(lang,'analysis')]];
+  const subTabs=[[' general',t(lang,'general')],[' time',t(lang,'time')]];
   return(
     <div className='scr'>
       <div style={{display:'flex',gap:3,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:11,padding:4,marginBottom:14}}>
@@ -1427,7 +1514,72 @@ function Stats({games,lang}){
           )}
         </>;
       })()}
-      {tab==='finance'&&<>
+      {/* Finance (tab==='finance') and Insights (tab==='insights') moved to Finance top-level component in v1.2.0 */}
+    </div>
+  );
+}
+
+// v1.2.0 — Finance as standalone main-tab component
+// Combines former Stats→Finance and Stats→Analysis subtabs
+function Finance({games,lang}){
+  const [tab,setTab]=useState('overview');
+  if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
+
+  // === Computed values (copied from Stats) ===
+  const bought=games.filter(g=>!!+g.priceBought);
+  const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
+  const totalBase=bought.reduce((s,g)=>s+ +g.priceBought,0);
+  const totalDLC=games.filter(g=>!!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
+  const totalSpent=totalBase+totalDLC;
+  const totalEarned=sold.reduce((s,g)=>s+ +g.priceSold,0);
+  const netCost=totalSpent-totalEarned;
+  const withHrs=bought.filter(g=>g.hours>0);
+  const cph=withHrs.length?(withHrs.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0)/withHrs.reduce((s,g)=>s+g.hours,0)):null;
+  const storeMap={}; bought.forEach(g=>{const s=g.storeBought||'Other';storeMap[s]=(storeMap[s]||0)+ +g.priceBought;});
+  const storeData=Object.entries(storeMap).sort((a,b)=>b[1]-a[1]).map(([n,v])=>({n,v:+v.toFixed(0)}));
+  const gcMap={}; bought.forEach(g=>{if(g.genre)gcMap[g.genre]=(gcMap[g.genre]||0)+ +g.priceBought;});
+  const gcData=Object.entries(gcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v:+v.toFixed(0)}));
+  const soldG=sold.map(g=>({...g,roi:+g.priceSold - +g.priceBought})).sort((a,b)=>b.roi-a.roi);
+
+  const fkpis=[
+    {l:t(lang,'spent'),        v:pln(totalBase,lang),   c:G.red, bg:'rgba(255,77,109,.07)'},
+    {l:t(lang,'spentDLC'),     v:pln(totalDLC,lang),    c:'#FF6B9D', bg:'rgba(255,107,157,.07)'},
+    {l:t(lang,'earnedBack'),   v:pln(totalEarned,lang), c:G.grn, bg:'rgba(57,255,110,.07)'},
+    {l:t(lang,'realCostShort'),v:pln(netCost,lang),     c:G.org, bg:'rgba(255,159,64,.07)'},
+  ];
+  if(cph!==null){fkpis.push({l:t(lang,'costPerHour'),v:cph.toFixed(1)+' zł/h',c:G.blu,bg:'rgba(0,212,255,.07)'});}
+
+  // === Insights (copied from Stats) ===
+  const insights=[];
+  if(games.length){
+    const abandoned=games.filter(g=>g.status==='porzucone'&&+g.priceBought>0&&!g.priceSold);
+    const totalAbandonedLoss=abandoned.reduce((s,g)=>s+ +g.priceBought,0);
+    const sellableAbandoned=abandoned.map(g=>({...g,estimatedSell:Math.round(+g.priceBought*0.6)}));
+    const potentialRecovery=sellableAbandoned.reduce((s,g)=>s+g.estimatedSell,0);
+    const biggestLossGame=abandoned.sort((a,b)=>+b.priceBought - +a.priceBought)[0];
+    const completedROI=sold.map(g=>({...g,roi:+g.priceSold - +g.priceBought})).filter(g=>g.roi>0).sort((a,b)=>b.roi-a.roi);
+    const bestInvestGame=completedROI[0];
+    const expensiveHours=withHrs.filter(g=>+g.priceBought/g.hours>10).sort((a,b)=>(+b.priceBought/b.hours)-(+a.priceBought/a.hours));
+    const mostExpHour=expensiveHours[0];
+    const bestValGame=[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours))[0];
+    const savingsFromAvoidance=biggestLossGame?Math.round(+biggestLossGame.priceBought*0.3):0;
+    const totalPotentialSavings=savingsFromAvoidance+potentialRecovery;
+    if(totalPotentialSavings>0)insights.push({ico:'💡',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'potentialSaving'),body:t(lang,'savingsDesc',{amount:pln(totalPotentialSavings,lang)}),val:pln(totalPotentialSavings,lang),big:true});
+    if(biggestLossGame)insights.push({ico:'🚨',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:biggestLossGame.title,amount:pln(+biggestLossGame.priceBought,lang)}),val:'-'+pln(+biggestLossGame.priceBought,lang),actionKey:'avoidLoss'});
+    if(bestInvestGame)insights.push({ico:'✅',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestmentDesc',{title:bestInvestGame.title,amount:pln(bestInvestGame.roi,lang)}),val:'+'+pln(bestInvestGame.roi,lang),actionKey:'buyBetter'});
+    if(mostExpHour)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,64,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:mostExpHour.title,cph:(+mostExpHour.priceBought/mostExpHour.hours).toFixed(1)}),val:(+mostExpHour.priceBought/mostExpHour.hours).toFixed(1)+' zł/h',actionKey:'optimizeBacklog'});
+    if(bestValGame)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValueDesc',{title:bestValGame.title,cph:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)}),val:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)+' zł/h',actionKey:'findSimilar'});
+    if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
+  }
+
+  const subTabs=[[' overview',lang==='pl'?'📊 Przegląd':'📊 Overview'],[' insights',t(lang,'analysis')]];
+
+  return(
+    <div className='scr'>
+      <div style={{display:'flex',gap:3,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:11,padding:4,marginBottom:14}}>
+        {subTabs.map(([k,l])=><button key={k} type='button' onClick={()=>setTab(k.trim())} style={{flex:1,minHeight:40,padding:'7px 2px',border:'none',borderRadius:8,background:tab===k.trim()?'rgba(0,212,255,.15)':'transparent',color:tab===k.trim()?G.blu:G.dim,fontFamily:"'Syne',sans-serif",fontSize:10,fontWeight:600,cursor:'pointer'}}>{l}</button>)}
+      </div>
+      {tab==='overview'&&<>
         <div style={{display:'flex',alignItems:'flex-start',gap:8,marginBottom:12,padding:'10px 12px',background:'rgba(0,212,255,.06)',border:`1px solid ${G.bdr}`,borderRadius:10,fontSize:11,color:G.dim,lineHeight:1.4}}>
           <span style={{fontSize:14,flexShrink:0}}>ℹ️</span>
           <span>{t(lang,'financeInfoHint')}</span>
@@ -1447,7 +1599,7 @@ function Stats({games,lang}){
 }
 
 function Settings({games,setGames,flash,lang,setLang}){
-  const importRef=useRef(null);
+  // importRef removed in v1.2.0 — import now opens via ImportModal
   return(
     <div className='scr'>
       <div className='set-section'>
@@ -1462,10 +1614,10 @@ function Settings({games,setGames,flash,lang,setLang}){
         <div className='set-row' onClick={()=>exportData(games,lang,()=>flash(lang==='pl'?'✓ Backup zapisany':'✓ Backup saved'))}>
           <span className='set-row-ico'>⬆️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'exportData')}</div><div className='set-row-desc'>{t(lang,'exportDesc',{n:games.length})}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        <div className='set-row' onClick={()=>importRef.current?.click()}>
+        <div className='set-row' onClick={openImport}>
           <span className='set-row-ico'>⬇️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'importData')}</div><div className='set-row-desc'>{t(lang,'importDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        <input ref={importRef} type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importMerge(e.target.files[0],games,(merged,added,dupes)=>{setGames(merged);flash(lang==='pl'?`✓ Dodano ${added} gier (${dupes} duplikatów pominięto)`:`✓ Added ${added} games (${dupes} duplicates skipped)`);},err=>flash('❌ '+err));e.target.value='';}}/>
+        {/* importRef input removed in v1.2.0 — replaced by ImportModal */}
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'info')}</div>
@@ -1499,6 +1651,10 @@ export default function App(){
   const [sortBy,setSortBy]     = useState('added');
   const [platFilter,setPlatFilter]= useState('all');
   const [rateModal,setRateModal]= useState(null);
+  // v1.2.0 — Import modal state
+  const [importModal,setImportModal]=useState(null);  // null | {mode:null|'merge'|'replace', file:null|File}
+  const openImport=()=>setImportModal({mode:null,file:null});
+  const closeImport=()=>setImportModal(null);
   const [budget,setBudgetRaw]      = useState(()=>budgetRead());
   const setBudget=useCallback(val=>{setBudgetRaw(prev=>{const next=typeof val==='function'?val(prev):val;budgetWrite(next);return next;});},[]);
   const [modal,setModal]       = useState(null);
@@ -1564,6 +1720,7 @@ export default function App(){
             <button type='button' className={'tab'+(tab==='home'?' on':'')} onClick={()=>setTab('home')}>{t(lang,'home')}</button>
             <button type='button' className={'tab'+(tab==='col'?' on':'')} onClick={()=>setTab('col')}>{t(lang,'collection')}</button>
             <button type='button' className={'tab'+(tab==='upc'?' on':'')} onClick={()=>setTab('upc')} style={{position:'relative'}}>{t(lang,'releases')}{upcomingCount>0&&<span className='tab-dot'/>}</button>
+            <button type='button' className={'tab'+(tab==='fin'?' on':'')} onClick={()=>setTab('fin')}>{t(lang,'finance')}</button>
             <button type='button' className={'tab'+(tab==='st'?' on':'')} onClick={()=>setTab('st')}>{t(lang,'stats')}</button>
             <button type='button' className={'tab'+(tab==='cfg'?' on':'')} onClick={()=>setTab('cfg')}>{t(lang,'settings')}</button>
           </div>
@@ -1575,7 +1732,7 @@ export default function App(){
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
           <div className='toolbar'>
             <button type='button' className='tbtn' onClick={()=>exportData(games,lang,()=>flash(lang==='pl'?'✓ Backup zapisany':'✓ Backup saved'))}>{t(lang,'export')}</button>
-            <label className='tbtn'>{t(lang,'import')}<input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(!e.target.files[0])return;importMerge(e.target.files[0],games,(merged,added,dupes)=>{setGames(merged);flash(lang==='pl'?`✓ Dodano ${added} gier (${dupes} duplikatów pominięto)`:`✓ Added ${added} games (${dupes} duplicates skipped)`);},err=>flash('❌ '+err));e.target.value='';}}/></label>
+            <button type='button' className='tbtn' onClick={openImport}>{t(lang,'import')}</button>
           </div>
           <div className='chips'>{chips.map(ch=><button type='button' key={ch.k} className={'chip'+(flt===ch.k?' on':'')} onClick={()=>setFlt(ch.k)}>{ch.l}</button>)}</div>
           {[...new Set(games.map(g=>g.platform||'PS5'))].filter(p=>p!=='PS5').length>0&&<div className='sort-row'>
@@ -1616,6 +1773,7 @@ export default function App(){
         </>}
 
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
+        {tab==='fin'&&<Finance games={games} lang={lang}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
         {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang}/>
         {/* ── Budget ── */}
@@ -1645,6 +1803,51 @@ export default function App(){
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         <Toast msg={toast}/>
+
+        {importModal && (
+          <ImportModal
+            onClose={closeImport}
+            mode={importModal.mode}
+            onPickMode={(m)=>{
+              if(m==='merge'){
+                // Merge mode — open file picker directly, no confirmation needed
+                setImportModal({mode:'merge',file:null});
+              } else {
+                // Replace mode — open file picker, then show confirmation
+                setImportModal({mode:'replace',file:null});
+              }
+            }}
+            pendingFile={importModal.file}
+            onPickFile={(file)=>{
+              if(importModal.mode==='merge'){
+                // Execute merge immediately
+                importMerge(file,games,(merged,added,dupes)=>{
+                  setGames(merged);
+                  closeImport();
+                  if(dupes===0){
+                    flash(t(lang,'importedMergeNoSkip',{added}));
+                  } else {
+                    flash(t(lang,'importedMerge',{added,dupes}));
+                  }
+                },err=>{closeImport();flash('❌ '+err);});
+              } else {
+                // Replace — stash file, show confirmation
+                setImportModal(prev=>({...prev,file}));
+              }
+            }}
+            onConfirmReplace={()=>{
+              const file=importModal.file;
+              if(!file)return;
+              importReplace(file,(games2,n)=>{
+                setGames(games2);
+                closeImport();
+                flash(t(lang,'importedReplace',{n}));
+              },err=>{closeImport();flash('❌ '+err);});
+            }}
+            games={games}
+            lang={lang}
+          />
+        )}
 
         {rateModal&&(
           <div className='rate-modal' onClick={()=>setRateModal(null)}>
