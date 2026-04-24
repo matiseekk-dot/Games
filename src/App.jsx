@@ -71,6 +71,10 @@ const TRANSLATIONS = {
     finSummaryDesc:"Wydałeś {spent}, odzyskałeś {earned}. Realny koszt to {net}.",
     data:"Dane", exportData:"Eksportuj dane", exportDesc:"Pobierz backup {n} gier jako JSON",
     importData:"Importuj dane", importDesc:"Wczytaj backup z pliku JSON",
+    // v1.2.3 — Tip jar
+    support:"Wsparcie",
+    buyCoffee:"☕ Postaw kawę",
+    buyCoffeeDesc:"Darmowa apka bez reklam — jeśli chcesz, wesprzyj rozwój",
     // v1.2.0 — Import dual-mode
     importTitle:"Importuj dane", importModeQ:"Jak połączyć dane z backupem?",
     importMerge:"🔀 Scal z istniejącymi",
@@ -83,7 +87,7 @@ const TRANSLATIONS = {
     importedReplace:"✓ Zastąpiono kolekcję — {n} gier z backupu",
     cancel2:"Anuluj",
     info:"Informacje", privacyPolicy:"Polityka prywatności", privacyDesc:"Nie zbieramy żadnych danych osobowych",
-    poweredBy:"Powered by RAWG.io", poweredByDesc:"Baza ponad 800 000 gier",
+    poweredBy:"Powered by RAWG.io", poweredByDesc:"Baza ponad 500 000 gier",
     appInfo:"PS5 Vault", appInfoDesc:"Wersja {ver} — Dane przechowywane lokalnie",
     language:"Język / Language", dangerZone:"Niebezpieczna strefa",
     clearCollection:"Wyczyść kolekcję", clearDesc:"Usuń wszystkie {n} gier",
@@ -186,6 +190,10 @@ const TRANSLATIONS = {
     finSummaryDesc:"Spent {spent}, recovered {earned}. Real cost is {net}.",
     data:"Data", exportData:"Export data", exportDesc:"Download backup of {n} games as JSON",
     importData:"Import data", importDesc:"Load backup from JSON file",
+    // v1.2.3 — Tip jar
+    support:"Support",
+    buyCoffee:"☕ Buy me a coffee",
+    buyCoffeeDesc:"Free, ad-free app — if you'd like, support development",
     // v1.2.0 — Import dual-mode
     importTitle:"Import data", importModeQ:"How to combine backup data?",
     importMerge:"🔀 Merge with existing",
@@ -198,7 +206,7 @@ const TRANSLATIONS = {
     importedReplace:"✓ Collection replaced — {n} games from backup",
     cancel2:"Cancel",
     info:"Info", privacyPolicy:"Privacy policy", privacyDesc:"We collect no personal data",
-    poweredBy:"Powered by RAWG.io", poweredByDesc:"Database of 800,000+ games",
+    poweredBy:"Powered by RAWG.io", poweredByDesc:"Database of 500,000+ games",
     appInfo:"PS5 Vault", appInfoDesc:"Version {ver} — Data stored locally",
     language:"Język / Language", dangerZone:"Danger zone",
     clearCollection:"Clear collection", clearDesc:"Delete all {n} games",
@@ -1568,7 +1576,7 @@ function Finance({games,lang}){
     if(biggestLossGame)insights.push({ico:'🚨',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:biggestLossGame.title,amount:pln(+biggestLossGame.priceBought,lang)}),val:'-'+pln(+biggestLossGame.priceBought,lang),actionKey:'avoidLoss'});
     if(bestInvestGame)insights.push({ico:'✅',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestmentDesc',{title:bestInvestGame.title,amount:pln(bestInvestGame.roi,lang)}),val:'+'+pln(bestInvestGame.roi,lang),actionKey:'buyBetter'});
     if(mostExpHour)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,64,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:mostExpHour.title,cph:(+mostExpHour.priceBought/mostExpHour.hours).toFixed(1)}),val:(+mostExpHour.priceBought/mostExpHour.hours).toFixed(1)+' zł/h',actionKey:'optimizeBacklog'});
-    if(bestValGame)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValueDesc',{title:bestValGame.title,cph:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)}),val:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)+' zł/h',actionKey:'findSimilar'});
+    if(bestValGame)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bestValGame.title,cph:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)}),val:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)+' zł/h',actionKey:'findSimilar'});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
 
@@ -1618,6 +1626,12 @@ function Settings({games,setGames,flash,lang,setLang,openImport}){
           <span className='set-row-ico'>⬇️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'importData')}</div><div className='set-row-desc'>{t(lang,'importDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
         {/* importRef input removed in v1.2.0 — replaced by ImportModal */}
+      </div>
+      <div className='set-section'>
+        <div className='set-section-title'>{t(lang,'support')}</div>
+        <div className='set-row' onClick={()=>window.open('https://buycoffee.to/skudev','_blank','noopener,noreferrer')}>
+          <span className='set-row-ico'>☕</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'buyCoffee')}</div><div className='set-row-desc'>{t(lang,'buyCoffeeDesc')}</div></div><span className='set-row-arrow'>›</span>
+        </div>
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'info')}</div>
