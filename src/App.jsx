@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
 const RAWG_KEY   = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
-const APP_VER    = '1.0.0';
+const APP_VER    = '1.2.4';
 const LS_KEY     = 'ps5vault_v1';
 const LS_ONBOARD = 'ps5vault_onboarded';
 const LS_LANG    = 'ps5vault_lang';
@@ -87,6 +87,7 @@ const TRANSLATIONS = {
     importedReplace:"✓ Zastąpiono kolekcję — {n} gier z backupu",
     cancel2:"Anuluj",
     info:"Informacje", privacyPolicy:"Polityka prywatności", privacyDesc:"Nie zbieramy żadnych danych osobowych",
+    reportProblem:"Zgłoś problem", reportProblemDesc:"Napisz do mnie — odpowiadam osobiście",
     poweredBy:"Powered by RAWG.io", poweredByDesc:"Baza ponad 500 000 gier",
     appInfo:"PS5 Vault", appInfoDesc:"Wersja {ver} — Dane przechowywane lokalnie",
     language:"Język / Language", dangerZone:"Niebezpieczna strefa",
@@ -206,6 +207,7 @@ const TRANSLATIONS = {
     importedReplace:"✓ Collection replaced — {n} games from backup",
     cancel2:"Cancel",
     info:"Info", privacyPolicy:"Privacy policy", privacyDesc:"We collect no personal data",
+    reportProblem:"Report a problem", reportProblemDesc:"Write to me — I reply personally",
     poweredBy:"Powered by RAWG.io", poweredByDesc:"Database of 500,000+ games",
     appInfo:"PS5 Vault", appInfoDesc:"Version {ver} — Data stored locally",
     language:"Język / Language", dangerZone:"Danger zone",
@@ -1640,6 +1642,13 @@ function Settings({games,setGames,flash,lang,setLang,openImport}){
         </div>
         <div className='set-row' onClick={()=>window.open('https://rawg.io','_blank')}>
           <span className='set-row-ico'>🎮</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'poweredBy')}</div><div className='set-row-desc'>{t(lang,'poweredByDesc')}</div></div><span className='set-row-arrow'>›</span>
+        </div>
+        <div className='set-row' onClick={()=>{
+          const subject=encodeURIComponent(`PS5 Vault v${APP_VER} — feedback`);
+          const body=encodeURIComponent(`\n\n---\nDevice: ${navigator.userAgent}\nApp: v${APP_VER}\nLang: ${lang}\nGames: ${games.length}`);
+          window.location.href=`mailto:skudev6@gmail.com?subject=${subject}&body=${body}`;
+        }}>
+          <span className='set-row-ico'>📧</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'reportProblem')}</div><div className='set-row-desc'>{t(lang,'reportProblemDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
         <div className='set-row' style={{cursor:'default'}}>
           <span className='set-row-ico'>ℹ️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'appInfo')}</div><div className='set-row-desc'>{t(lang,'appInfoDesc',{ver:APP_VER})}</div></div><span className='set-badge'>v{APP_VER}</span>
