@@ -87,6 +87,25 @@ const TRANSLATIONS = {
     importedReplace:"✓ Zastąpiono kolekcję — {n} gier z backupu",
     cancel2:"Anuluj",
     info:"Informacje", privacyPolicy:"Polityka prywatności", privacyDesc:"Nie zbieramy żadnych danych osobowych",
+    privacyTitle:"Polityka prywatności",
+    privacyBadge:"✓ Twoje dane zostają u Ciebie",
+    privacyS1Title:"Co przechowujemy",
+    privacyS1Body:"Wszystkie dane (gry, statusy, oceny, finanse, sesje) są w pamięci Twojego urządzenia (localStorage). Nigdy nie trafiają na żaden serwer.",
+    privacyS2Title:"Czego NIE zbieramy",
+    privacyS2Body:"Imię, email, telefon, lokalizacja, identyfikatory urządzenia. Brak Google Analytics, brak trackingu, brak ciasteczek.",
+    privacyS3Title:"RAWG.io API",
+    privacyS3Body:"Wyszukiwanie gier wysyła do serwerów RAWG (Litwa/UE) tylko tekst wpisany w pole + klucz API. Twoja kolekcja nigdy tam nie trafia.",
+    privacyS4Title:"Tip jar (buycoffee.to)",
+    privacyS4Body:"Sekcja \"Wsparcie\" otwiera buycoffee.to/skudev jako link zewnętrzny. Apka nie wysyła żadnych Twoich danych do tej platformy.",
+    privacyS5Title:"Powiadomienia",
+    privacyS5Body:"Generowane lokalnie przez Service Worker. Brak push z serwera, brak danych wysyłanych w celu powiadomień.",
+    privacyS6Title:"Zgłoś problem",
+    privacyS6Body:"Funkcja \"Zgłoś problem\" otwiera Twojego klienta poczty z autoszablonem (model urządzenia, wersja apki). Wysłanie jest dobrowolne — możesz edytować lub skasować dane.",
+    privacyS7Title:"Twoje prawa (RODO)",
+    privacyS7Body:"Pełna kontrola: \"Eksportuj dane\" daje Ci JSON z całą kolekcją, \"Wyczyść kolekcję\" usuwa wszystko. Można też po prostu odinstalować apkę.",
+    privacyFullLink:"Pełna polityka prywatności (online)",
+    privacyClose:"Zamknij",
+    privacyUpdated:"Aktualizacja: 24 kwietnia 2026",
     reportProblem:"Zgłoś problem", reportProblemDesc:"Napisz do mnie — odpowiadam osobiście",
     storageQuotaErr:"⚠ Pamięć pełna — eksportuj backup i wyczyść stare gry",
     storageGenericErr:"⚠ Nie udało się zapisać — odśwież apkę",
@@ -114,7 +133,7 @@ const TRANSLATIONS = {
     obStart:"+ DODAJ PIERWSZĄ GRĘ",
     obSkip:"Pominę, dodam później",
     obF1Title:"Kolekcja gier", obF1Desc:"Dodaj grę ręcznie lub wyszukaj przez bazę RAWG z okładkami",
-    obF2Title:"Śledzenie premier", obF2Desc:"Countdown do premiery + powiadomienia 3 dni wcześniej",
+    obF2Title:"Śledzenie premier", obF2Desc:"Countdown do premiery + powiadomienia 30/7/3 dni i w dniu",
     obF3Title:"Analiza finansowa", obF3Desc:"Ile wydajesz, ile odzyskujesz — realny koszt kolekcji",
     obF4Title:"Statystyki", obF4Desc:"Wykresy, oceny, koszt/godzinę i inteligentna analiza",
     saved:"✓ Zapisano", added:"✓ Dodano", deleted:"✓ Usunięto {title}",
@@ -210,6 +229,25 @@ const TRANSLATIONS = {
     importedReplace:"✓ Collection replaced — {n} games from backup",
     cancel2:"Cancel",
     info:"Info", privacyPolicy:"Privacy policy", privacyDesc:"We collect no personal data",
+    privacyTitle:"Privacy policy",
+    privacyBadge:"✓ Your data stays with you",
+    privacyS1Title:"What we store",
+    privacyS1Body:"All data (games, statuses, ratings, finances, sessions) lives in your device storage (localStorage). It never reaches any server.",
+    privacyS2Title:"What we DON'T collect",
+    privacyS2Body:"Name, email, phone, location, device identifiers. No Google Analytics, no tracking, no cookies.",
+    privacyS3Title:"RAWG.io API",
+    privacyS3Body:"Game search sends to RAWG servers (Lithuania/EU) only the text you type + API key. Your collection never goes there.",
+    privacyS4Title:"Tip jar (buycoffee.to)",
+    privacyS4Body:"The \"Support\" section opens buycoffee.to/skudev as an external link. The app does not send any of your data to that platform.",
+    privacyS5Title:"Notifications",
+    privacyS5Body:"Generated locally by a Service Worker. No server push, no data sent for notifications.",
+    privacyS6Title:"Report a problem",
+    privacyS6Body:"The \"Report a problem\" feature opens your email client with an auto-template (device model, app version). Sending is voluntary — you can edit or delete the data.",
+    privacyS7Title:"Your rights (GDPR)",
+    privacyS7Body:"Full control: \"Export data\" gives you a JSON with the full collection, \"Clear collection\" deletes everything. You can also just uninstall the app.",
+    privacyFullLink:"Full privacy policy (online)",
+    privacyClose:"Close",
+    privacyUpdated:"Updated: April 24, 2026",
     reportProblem:"Report a problem", reportProblemDesc:"Write to me — I reply personally",
     storageQuotaErr:"⚠ Storage full — export backup and clear old games",
     storageGenericErr:"⚠ Failed to save — please refresh the app",
@@ -237,7 +275,7 @@ const TRANSLATIONS = {
     obStart:"+ ADD FIRST GAME",
     obSkip:"Skip, I'll add later",
     obF1Title:"Game collection", obF1Desc:"Add manually or search RAWG database with cover art",
-    obF2Title:"Release tracking", obF2Desc:"Countdown + notifications 3 days before release",
+    obF2Title:"Release tracking", obF2Desc:"Countdown + notifications 30/7/3 days and on release day",
     obF3Title:"Financial analysis", obF3Desc:"Track spending, recovery — real collection cost",
     obF4Title:"Statistics", obF4Desc:"Charts, ratings, cost/hour and smart insights",
     saved:"✓ Saved", added:"✓ Added", deleted:"✓ Deleted {title}",
@@ -378,25 +416,43 @@ function importData(file,onOk,onErr){
   r.onload=e=>{try{const d=JSON.parse(e.target.result);const g=Array.isArray(d)?d:d.games;if(!Array.isArray(g))throw new Error('Invalid format');onOk(g);}catch(e){onErr(e.message);}};
   r.readAsText(file);
 }
+// Maximum import file size — protects against memory exhaustion from accidental
+// or malicious large JSONs. Realistic backup with 1000 games + sessions ~ 2MB.
+const IMPORT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+
+// Validate that an imported game has the minimum fields needed to render safely
+function isValidGameShape(g){
+  if(!g || typeof g !== 'object') return false;
+  if(typeof g.title !== 'string' || !g.title.trim()) return false;
+  return true;
+}
+
 function importMerge(file,existing,onOk,onErr){
+  if(file.size > IMPORT_MAX_BYTES){ onErr('File too large (>10MB)'); return; }
   const r=new FileReader();
+  r.onerror=()=>onErr('Read failed');
   r.onload=e=>{try{
     const d=JSON.parse(e.target.result);const imported=Array.isArray(d)?d:d.games;
     if(!Array.isArray(imported))throw new Error('Invalid format');
+    // Filter out malformed entries and ensure each has an id (assign new if missing)
+    const cleaned=imported.filter(isValidGameShape).map(g=>g.id?g:{...g,id:uid()});
     const existingIds=new Set(existing.map(g=>g.id));
-    const newGames=imported.filter(g=>!existingIds.has(g.id));
-    onOk([...existing,...newGames],newGames.length,imported.length-newGames.length);
+    const newGames=cleaned.filter(g=>!existingIds.has(g.id));
+    onOk([...existing,...newGames],newGames.length,cleaned.length-newGames.length);
   }catch(err){onErr(err.message);}};
   r.readAsText(file);
 }
 // v1.2.0: importReplace — nadpisuje całą kolekcję backupem (destructive)
 // Preserves all fields as-is, including sessions[], hours, ratings etc.
 function importReplace(file,onOk,onErr){
+  if(file.size > IMPORT_MAX_BYTES){ onErr('File too large (>10MB)'); return; }
   const r=new FileReader();
+  r.onerror=()=>onErr('Read failed');
   r.onload=e=>{try{
     const d=JSON.parse(e.target.result);const imported=Array.isArray(d)?d:d.games;
     if(!Array.isArray(imported))throw new Error('Invalid format');
-    onOk(imported,imported.length);
+    const cleaned=imported.filter(isValidGameShape).map(g=>g.id?g:{...g,id:uid()});
+    onOk(cleaned,cleaned.length);
   }catch(err){onErr(err.message);}};
   r.readAsText(file);
 }
@@ -726,7 +782,7 @@ function Toast({msg}){
   return<div className={`toast toast-${type}`}>{msg}</div>;
 }
 
-function Confirm({title,body,onYes,onNo}){
+function Confirm({title,body,onYes,onNo,lang}){
   return(
     <div className='confirm-ovr' onClick={onNo}>
       <div className='confirm-box' onClick={e=>e.stopPropagation()}>
@@ -734,8 +790,8 @@ function Confirm({title,body,onYes,onNo}){
         <div className='confirm-title'>{title}</div>
         <div className='confirm-body'>{body}</div>
         <div className='confirm-btns'>
-          <button type='button' className='confirm-no' onClick={onNo}>{t('pl','cancel')}</button>
-          <button type='button' className='confirm-yes' onClick={onYes}>{t('pl','delete')}</button>
+          <button type='button' className='confirm-no' onClick={onNo}>{t(lang||'pl','cancel')}</button>
+          <button type='button' className='confirm-yes' onClick={onYes}>{t(lang||'pl','delete')}</button>
         </div>
       </div>
     </div>
@@ -901,7 +957,7 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
           </div>
         </div>
       </div>
-      {confirmDel&&<Confirm title={t(lang,'confirmDelete')} body={t(lang,'confirmDeleteBody',{title:game.title})} onYes={()=>onDel(game.id)} onNo={()=>setConfirmDel(false)}/>}
+      {confirmDel&&<Confirm title={t(lang,'confirmDelete')} body={t(lang,'confirmDeleteBody',{title:game.title})} onYes={()=>onDel(game.id)} onNo={()=>setConfirmDel(false)} lang={lang}/>}
     </>
   );
 }
@@ -1021,7 +1077,7 @@ function SessionTimer({game, onSave, lang}) {
   );
 }
 
-function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
   const backlog=games.filter(g=>g.status==='planuje'&&!g.releaseDate);
@@ -1094,7 +1150,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,lang}){
           </div>
           {days>0&&<><div className='cnt-big'>{days}</div><div className='cnt-label'>{days===1?t(lang,'dayToRelease'):t(lang,'daysToRelease')}</div></>}
           <div className='cnt-actions'>
-            {days>0?<><button type='button' className='cnt-btn' onClick={()=>onOpen(nextUp)}>{t(lang,'details')}</button><button type='button' className='cnt-btn cnt-btn-primary'>{t(lang,'remind')}</button></>
+            {days>0?<><button type='button' className='cnt-btn' onClick={()=>onOpen(nextUp)}>{t(lang,'details')}</button><button type='button' className={'cnt-btn '+(nextUp.notifyEnabled?'cnt-btn-success':'cnt-btn-primary')} onClick={()=>onToggleNotify&&onToggleNotify(nextUp.id)}>{nextUp.notifyEnabled?'✓ '+t(lang,'remind'):t(lang,'remind')}</button></>
                    :<><button type='button' className='cnt-btn cnt-btn-success' onClick={()=>onStatusChange(nextUp.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='cnt-btn cnt-btn-primary' onClick={()=>onOpen(nextUp)}>{t(lang,'addToCollection')}</button></>}
           </div>
         </div>
@@ -1130,7 +1186,7 @@ function Upcoming({games,onOpen,onToggleNotify,onStatusChange,notifPerm,onReques
             <div className='upc-banner' style={g.cover?{backgroundImage:`url(${g.cover})`}:{}}><div className='upc-ov'/><div className='upc-bt'>{g.title}</div>{d===0?<div className='upc-bd' style={{color:G.grn,background:'rgba(57,255,110,.2)',borderColor:'rgba(57,255,110,.4)'}}>{t(lang,'today')}</div>:<div className='upc-bd'>{d}d</div>}</div>
             <div className='upc-body'>
               <div className='upc-date'>{fmtDate(g.releaseDate,lang)}{g.genre?' · '+g.genre:''}</div>
-              <div className='upc-acts'>{d===0?(<><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></>):(<><button type='button' className='upc-btn upc-btn-plan' onClick={()=>onOpen(g)}>{t(lang,'edit')}</button><button type='button' className='upc-btn upc-btn-watch'>{t(lang,'watch')}</button><button type='button' className='upc-btn' style={{borderColor:'rgba(0,212,255,.3)',color:G.blu,background:'rgba(0,212,255,.07)'}} onClick={()=>window.open(`https://store.playstation.com/search/${encodeURIComponent(g.title)}`,'_blank')}>{t(lang,'buy')}</button></>)}</div>
+              <div className='upc-acts'>{d===0?(<><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></>):(<><button type='button' className='upc-btn upc-btn-plan' onClick={()=>onOpen(g)}>{t(lang,'edit')}</button><button type='button' className={'upc-btn upc-btn-watch'+(g.notifyEnabled?' on':'')} onClick={async()=>{if(!g.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();onToggleNotify(g.id);}}>{g.notifyEnabled?'✓ '+t(lang,'watch'):t(lang,'watch')}</button><button type='button' className='upc-btn' style={{borderColor:'rgba(0,212,255,.3)',color:G.blu,background:'rgba(0,212,255,.07)'}} onClick={()=>window.open(`https://store.playstation.com/search/${encodeURIComponent(g.title)}`,'_blank','noopener,noreferrer')}>{t(lang,'buy')}</button></>)}</div>
               <div className='ntgl-row'><span className='ntgl-lbl'>{t(lang,'notifyToggle')}</span><div className={'ntgl-sw'+(g.notifyEnabled?' on':'')} onClick={async()=>{if(!g.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();onToggleNotify(g.id);}}><div className='ntgl-knob'/></div></div>
             </div>
           </div>
@@ -1231,15 +1287,24 @@ function collectSessions(games){
         startedAt: s.startedAt,
         endedAt: s.endedAt,
         hours: s.hours,
-        // Use startedAt date as the "session date" (YYYY-MM-DD in local time)
-        dateKey: new Date(s.startedAt).toISOString().slice(0,10),
+        // Use startedAt date as the "session date" (YYYY-MM-DD in LOCAL time).
+        // Critical for heatmap/streak correctness — see dayKey() comment.
+        dateKey: dayKey(s.startedAt),
       });
     });
   });
   return out.sort((a,b)=>b.startedAt-a.startedAt);  // newest first
 }
-// Get YYYY-MM-DD for a Date (local time)
-function dayKey(d){ return new Date(d).toISOString().slice(0,10); }
+// Convert a Date to a YYYY-MM-DD string in LOCAL timezone.
+// Must NOT use toISOString — that converts to UTC and breaks aggregation
+// for any non-UTC user (e.g. Polish player at 00:30 local = previous day in UTC).
+function dayKey(d){
+  const x=new Date(d);
+  const y=x.getFullYear();
+  const m=String(x.getMonth()+1).padStart(2,'0');
+  const day=String(x.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 // Monday of week containing date (ISO week)
 function weekStart(d){
   const x=new Date(d); x.setHours(0,0,0,0);
@@ -1673,7 +1738,7 @@ function Finance({games,lang}){
   );
 }
 
-function Settings({games,setGames,flash,lang,setLang,openImport}){
+function Settings({games,setGames,flash,lang,setLang,openImport,openPrivacy}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   return(
     <div className='scr'>
@@ -1702,7 +1767,7 @@ function Settings({games,setGames,flash,lang,setLang,openImport}){
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'info')}</div>
-        <div className='set-row' onClick={()=>window.open('https://matiseekk-dot.github.io/Games/privacy.html','_blank','noopener,noreferrer')}>
+        <div className='set-row' onClick={openPrivacy}>
           <span className='set-row-ico'>🔒</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'privacyPolicy')}</div><div className='set-row-desc'>{t(lang,'privacyDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
         <div className='set-row' onClick={()=>window.open('https://rawg.io','_blank','noopener,noreferrer')}>
@@ -1747,6 +1812,7 @@ export default function App(){
   const [sortBy,setSortBy]     = useState('added');
   const [platFilter,setPlatFilter]= useState('all');
   const [rateModal,setRateModal]= useState(null);
+  const [privacyOpen,setPrivacyOpen]=useState(false);
   // v1.2.0 — Import modal state
   const [importModal,setImportModal]=useState(null);  // null | {mode:null|'merge'|'replace', file:null|File}
   const openImport=()=>setImportModal({mode:null,file:null});
@@ -1796,7 +1862,17 @@ export default function App(){
     if(extra.hours!==undefined)flash(lang==='pl'?`✓ Sesja zapisana`:t(lang,'sessionSaved',{h:Math.floor(extra.hours),m:Math.round((extra.hours%1)*60)}));
     else flash(t(lang,'statusChanged',{status:SM2[status]?.label}));
   }
-  function toggleNotify(id){setGames(prev=>prev.map(g=>g.id===id?{...g,notifyEnabled:!g.notifyEnabled}:g));}
+  function toggleNotify(id){
+    const g=games.find(g=>g.id===id);
+    if(!g)return;
+    const next=!g.notifyEnabled;
+    // If enabling and permission not granted, request it first
+    if(next && typeof Notification!=='undefined' && Notification.permission==='default'){
+      requestNotif();  // best-effort — user may decline; we still toggle the flag
+    }
+    setGames(prev=>prev.map(g=>g.id===id?{...g,notifyEnabled:next}:g));
+    flash(next?(lang==='pl'?'🔔 Powiadomienia włączone':'🔔 Notifications enabled'):(lang==='pl'?'🔕 Powiadomienia wyłączone':'🔕 Notifications disabled'));
+  }
 
   if(!onboarded)return(<><style>{CSS}</style><Onboarding
     onAddFirst={()=>{setOnboarded(true);setOnboard(true);setModal('add');}}
@@ -1840,7 +1916,7 @@ export default function App(){
           </div>
         </div>
 
-        {tab==='home'&&<Home games={games} onOpen={setModal} onStatusChange={handleStatusChange} onAddFirst={()=>setModal('add')} lang={lang}/>}
+        {tab==='home'&&<Home games={games} onOpen={setModal} onStatusChange={handleStatusChange} onAddFirst={()=>setModal('add')} onToggleNotify={toggleNotify} lang={lang}/>}
 
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
@@ -1889,7 +1965,7 @@ export default function App(){
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         {tab==='fin'&&<Finance games={games} lang={lang}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
-        {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} openImport={openImport}/>
+        {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)}/>
         {/* ── Budget ── */}
         <div style={{padding:'0 16px 8px'}}>
           <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
@@ -1987,6 +2063,28 @@ export default function App(){
                     setRateModal(null);
                   }}>{t(lang,'rateSave')}</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {privacyOpen&&(
+          <div className='rate-modal' onClick={()=>setPrivacyOpen(false)}>
+            <div onClick={e=>e.stopPropagation()} style={{background:G.card2,border:`1px solid ${G.bdr}`,borderRadius:18,padding:'20px 18px 16px',maxWidth:520,width:'100%',maxHeight:'85vh',display:'flex',flexDirection:'column',animation:'scaleIn .2s ease'}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:14,fontWeight:700,color:G.blu,marginBottom:8,textAlign:'center'}}>{t(lang,'privacyTitle')}</div>
+              <div style={{display:'inline-block',alignSelf:'center',background:'rgba(57,255,110,.1)',border:'1px solid rgba(57,255,110,.3)',color:'#39FF6E',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,marginBottom:14}}>{t(lang,'privacyBadge')}</div>
+              <div style={{flex:1,overflowY:'auto',paddingRight:6,WebkitOverflowScrolling:'touch'}}>
+                {[1,2,3,4,5,6,7].map(n=>(
+                  <div key={n} style={{marginBottom:14}}>
+                    <div style={{fontSize:11,fontWeight:700,color:G.pur,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:5}}>{n}. {t(lang,'privacyS'+n+'Title')}</div>
+                    <div style={{fontSize:13,color:G.dim,lineHeight:1.55}}>{t(lang,'privacyS'+n+'Body')}</div>
+                  </div>
+                ))}
+                <div style={{marginTop:18,paddingTop:14,borderTop:`1px solid ${G.bdr}`}}>
+                  <a href='https://matiseekk-dot.github.io/Games/privacy.html' target='_blank' rel='noopener noreferrer' style={{fontSize:12,color:G.blu,textDecoration:'none'}}>{t(lang,'privacyFullLink')} →</a>
+                  <div style={{fontSize:10,color:G.dim,marginTop:6}}>{t(lang,'privacyUpdated')}</div>
+                </div>
+              </div>
+              <button type='button' onClick={()=>setPrivacyOpen(false)} style={{marginTop:14,padding:'12px',background:G.blu,color:'#000',border:'none',borderRadius:10,fontWeight:700,fontSize:14,cursor:'pointer'}}>{t(lang,'privacyClose')}</button>
             </div>
           </div>
         )}
