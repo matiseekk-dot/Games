@@ -6,6 +6,7 @@ const APP_VER    = '1.2.4';
 const LS_KEY     = 'ps5vault_v1';
 const LS_ONBOARD = 'ps5vault_onboarded';
 const LS_LANG    = 'ps5vault_lang';
+const LS_CURRENCY = 'ps5vault_currency';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
@@ -47,7 +48,7 @@ const TRANSLATIONS = {
     financeInfoHint:"Dane finansowe pochodzą z cen które wpisałeś ręcznie przy grach — nie z API.",
     spent:"Gry (cena bazowa)", earnedBack:"Odzyskano", realCostShort:"Realny koszt", costPerHour:"Koszt/godzinę", spentDLC:"DLC / Mikrotransakcje", spentTotal2:"Łącznie wydano",
     byStore:"🏪 Wydatki wg sklepu", byGenre:"🎮 Wydatki wg gatunku",
-    roi:"📈 ROI sprzedanych", mostExpensive:"💸 Najdroższe gry", bestValue:"⏱ Najlepsza wartość (zł/h)",
+    roi:"📈 ROI sprzedanych", mostExpensive:"💸 Najdroższe gry", bestValue:"⏱ Najlepsza wartość (na godzinę)",
     noInsights:"Za mało danych", addPricesAndHours:"Dodaj ceny i godziny do gier",
     // F07 — Time tracking views
     time:"⏱ Czas", noSessions:"Brak sesji", noSessionsHint:"Zacznij sesję na zakładce Home żeby śledzić czas grania",
@@ -66,8 +67,8 @@ const TRANSLATIONS = {
     financeSummary:"Podsumowanie finansowe",
     biggestLossDesc:"Sprzedając {title} straciłeś {amount}",
     bestInvestDesc:"{title} przyniosło {amount} zysku",
-    expHoursDesc:"{title} — {cph} zł/h. Powyżej 10 zł/h to słaba wartość.",
-    bestValDesc:"{title} — tylko {cph} zł/h. Twoja najlepsza inwestycja.",
+    expHoursDesc:"{title} — {cph}/h. Powyżej 10/h to słaba wartość.",
+    bestValDesc:"{title} — tylko {cph}/h. Twoja najlepsza inwestycja.",
     finSummaryDesc:"Wydałeś {spent}, odzyskałeś {earned}. Realny koszt to {net}.",
     data:"Dane", exportData:"Eksportuj dane", exportDesc:"Pobierz backup {n} gier jako JSON",
     importData:"Importuj dane", importDesc:"Wczytaj backup z pliku JSON",
@@ -123,8 +124,8 @@ const TRANSLATIONS = {
     statusField:"Status", genreField:"Gatunek", hoursField:"Godziny",
     ratingField:"Ocena (1–10)", targetHoursField:"Cel (godz.)", notesField:"Notatki",
     notesPh:"Twoje przemyślenia...", genrePh:"— wybierz —", targetPh:"np. 40",
-    finances:"💰 Finanse", priceBoughtField:"Zapłacono (PLN)", storeField:"Sklep", extraSpendField:"DLC / Mikrotransakcje (PLN)", extraSpendHint:"Dodatkowe zakupy w grze", platformField:"Platforma",
-    storePh:"—", soldToggle:"Sprzedałem tę grę", soldPriceField:"Sprzedano za (PLN)",
+    finances:"💰 Finanse", priceBoughtField:"Zapłacono ({cur})", storeField:"Sklep", extraSpendField:"DLC / Mikrotransakcje ({cur})", extraSpendHint:"Dodatkowe zakupy w grze", platformField:"Platforma",
+    storePh:"—", soldToggle:"Sprzedałem tę grę", soldPriceField:"Sprzedano za ({cur})",
     notifications:"Powiadomienia", notifyOn:"🔔 Powiadamiaj o premierze",
     notifyDesc:"3 dni przed i w dniu premiery", notifyBlocked:"⛔ Zablokowane w ustawieniach przeglądarki",
     cancel:"Anuluj", save:"ZAPISZ", enterTitle:"Wpisz tytuł",
@@ -165,7 +166,7 @@ const TRANSLATIONS = {
     yearVsLastDirLess:"mniej",
     yearProjectionNoData:"Za mało danych — wróć tu za miesiąc",
     perGenreValue:"💎 Wartość wg gatunku",
-    perGenreValueHint:"Najlepszy zwrot zł/h",
+    perGenreValueHint:"Najlepszy zwrot za godzinę",
     perGenreNoData:"Dodaj godziny grania do gier żeby zobaczyć analizę",
     perGenreCol:"{n} {gamesWord} · {hours}",
     yearROI:"📊 Rok do roku",
@@ -178,6 +179,13 @@ const TRANSLATIONS = {
     activeDaysVs:"W zeszłym miesiącu: {n}",
     sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", filterSold:"Sprzedane", filterPlatinum:"🏆 Platyna", platinum:"Platyna",
     rateGame:"⭐ Oceń grę", ratingQuick:"Twoja ocena (1–10):", rateSkip:"Pomiń", rateSave:"Zapisz ocenę",
+    // ── Currency (single-currency, no conversion) ───────────────────────────────
+    currencyLabel:"Waluta", currencyDesc:"Apka wyświetla wszystkie kwoty w wybranej walucie. Bez konwersji — wpisuj ceny natywnie.",
+    currencyChanged:"✓ Waluta zmieniona na {name}",
+    obCurrencyTitle:"Wybierz walutę", obCurrencySub:"Wszystkie kwoty będą wyświetlane w wybranej walucie. Bez konwersji — w razie potrzeby zmienisz w Opcjach.",
+    obContinue:"Dalej",
+    budgetPlaceholder:"Budżet ({cur})",
+    budgetMaxErr:"⚠ Maksymalnie 99 999 {cur}",
   },
   en: {
     gram:"Playing", psplus:"PS Plus", ukonczone:"Completed", planuje:"Planning", porzucone:"Abandoned",
@@ -217,7 +225,7 @@ const TRANSLATIONS = {
     financeInfoHint:"Financial data comes from prices you entered manually — not from an API.",
     spent:"Games (base price)", earnedBack:"Recovered", realCostShort:"Real cost", costPerHour:"Cost/hour", spentDLC:"DLC / Microtransactions", spentTotal2:"Total spent",
     byStore:"🏪 Spending by store", byGenre:"🎮 Spending by genre",
-    roi:"📈 ROI on sold games", mostExpensive:"💸 Most expensive", bestValue:"⏱ Best value (zł/h)",
+    roi:"📈 ROI on sold games", mostExpensive:"💸 Most expensive", bestValue:"⏱ Best value (per hour)",
     noInsights:"Not enough data", addPricesAndHours:"Add prices and hours to games",
     // F07 — Time tracking views
     time:"⏱ Time", noSessions:"No sessions", noSessionsHint:"Start a session on Home tab to track play time",
@@ -236,7 +244,7 @@ const TRANSLATIONS = {
     financeSummary:"Financial summary",
     biggestLossDesc:"Selling {title} lost you {amount}",
     bestInvestDesc:"{title} earned {amount} profit",
-    expHoursDesc:"{title} — {cph} zł/h. Above 10 zł/h is poor value.",
+    expHoursDesc:"{title} — {cph}/h. Above 10/h is poor value.",
     bestValDesc:"{title} — only {cph}/h. Your best investment.",
     finSummaryDesc:"Spent {spent}, recovered {earned}. Real cost is {net}.",
     data:"Data", exportData:"Export data", exportDesc:"Download backup of {n} games as JSON",
@@ -293,8 +301,8 @@ const TRANSLATIONS = {
     statusField:"Status", genreField:"Genre", hoursField:"Hours",
     ratingField:"Rating (1–10)", targetHoursField:"Target (hrs)", notesField:"Notes",
     notesPh:"Your thoughts...", genrePh:"— select —", targetPh:"e.g. 40",
-    finances:"💰 Finances", priceBoughtField:"Price paid", storeField:"Store", extraSpendField:"DLC / Microtransactions", extraSpendHint:"Additional in-game purchases", platformField:"Platform",
-    storePh:"—", soldToggle:"I sold this game", soldPriceField:"Sold for",
+    finances:"💰 Finances", priceBoughtField:"Price paid ({cur})", storeField:"Store", extraSpendField:"DLC / Microtransactions ({cur})", extraSpendHint:"Additional in-game purchases", platformField:"Platform",
+    storePh:"—", soldToggle:"I sold this game", soldPriceField:"Sold for ({cur})",
     notifications:"Notifications", notifyOn:"🔔 Notify on release",
     notifyDesc:"3 days before and on release day", notifyBlocked:"⛔ Blocked in browser settings",
     cancel:"Cancel", save:"SAVE", enterTitle:"Enter title",
@@ -335,7 +343,7 @@ const TRANSLATIONS = {
     yearVsLastDirLess:"less",
     yearProjectionNoData:"Not enough data — check back in a month",
     perGenreValue:"💎 Value by genre",
-    perGenreValueHint:"Best return on PLN/hour",
+    perGenreValueHint:"Best return per hour",
     perGenreNoData:"Add play hours to your games to see this analysis",
     perGenreCol:"{n} {gamesWord} · {hours}",
     yearROI:"📊 Year over year",
@@ -348,12 +356,27 @@ const TRANSLATIONS = {
     activeDaysVs:"Last month: {n}",
     sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", filterSold:"Sold", filterPlatinum:"🏆 Platinum", platinum:"Platinum",
     rateGame:"⭐ Rate game", ratingQuick:"Your rating (1–10):", rateSkip:"Skip", rateSave:"Save rating",
+    // ── Currency (single-currency, no conversion) ───────────────────────────────
+    currencyLabel:"Currency", currencyDesc:"App displays all amounts in the chosen currency. No conversion — enter prices natively.",
+    currencyChanged:"✓ Currency changed to {name}",
+    obCurrencyTitle:"Pick your currency", obCurrencySub:"All amounts will display in this currency. No conversion — you can change it later in Settings.",
+    obContinue:"Continue",
+    budgetPlaceholder:"Budget ({cur})",
+    budgetMaxErr:"⚠ Max 99,999 {cur}",
   }
 };
 
 // ─── TRANSLATION HELPER ───────────────────────────────────────────────────────
 function t(lang, key, vars={}) {
   let str = TRANSLATIONS[lang]?.[key] || TRANSLATIONS.pl[key] || key;
+  // Auto-inject {cur} from active currency symbol when caller didn't supply it.
+  // typeof guard: t() is hoisted above CURRENCIES const — protects edge case where
+  // t() somehow runs before module finished initializing (shouldn't happen, defense in depth).
+  if (str.indexOf('{cur}') !== -1 && vars.cur === undefined && typeof CURRENCIES !== 'undefined') {
+    const c = (typeof getCurrency === 'function') ? getCurrency() : 'PLN';
+    const def = CURRENCIES[c] || CURRENCIES.PLN;
+    vars = { ...vars, cur: def.symbol };
+  }
   Object.entries(vars).forEach(([k,v]) => { str = str.replace(`{${k}}`, v); });
   return str;
 }
@@ -399,7 +422,14 @@ function fmtShort(d,lang){
   const months=lang==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
   return `${day} ${months[dt.getMonth()]}`;
 }
-function pln(v,lang){ return `${(+v||0).toFixed(0)} zł`; }
+function pln(v,lang){
+  const num=(+v||0).toFixed(0);
+  // typeof guard: pln() is hoisted above CURRENCIES const declaration —
+  // the guard keeps render safe even if pln were ever called before module init completes.
+  if (typeof CURRENCIES === 'undefined') return `${num} zł`;
+  const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
+  return def.after ? `${num} ${def.symbol}` : `${def.symbol}${num}`;
+}
 
 // Polish has 3-form plural: 1 gra, 2-4 gry, 5+ gier (also 12-14 → "gier", 22-24 → "gry")
 // English uses simpler 1 game / 2+ games
@@ -410,6 +440,44 @@ function gamesWord(n,lang){
   const last=abs%10, lastTwo=abs%100;
   if(last>=2 && last<=4 && (lastTwo<10 || lastTwo>=20)) return 'gry';
   return 'gier';
+}
+
+// ─── CURRENCY ─────────────────────────────────────────────────────────────────
+// Single-currency per user — NO conversion. User enters raw numbers, app swaps symbol.
+// after:true  → "100 zł"  (PLN/CZK/SEK/NOK)
+// after:false → "$100"    (EUR/USD/GBP)
+const CURRENCIES = {
+  PLN: { code:'PLN', symbol:'zł', after:true,  name:{pl:'Polski złoty',      en:'Polish złoty'} },
+  EUR: { code:'EUR', symbol:'€',  after:false, name:{pl:'Euro',              en:'Euro'} },
+  USD: { code:'USD', symbol:'$',  after:false, name:{pl:'Dolar amerykański', en:'US dollar'} },
+  GBP: { code:'GBP', symbol:'£',  after:false, name:{pl:'Funt brytyjski',    en:'British pound'} },
+  CZK: { code:'CZK', symbol:'Kč', after:true,  name:{pl:'Korona czeska',     en:'Czech koruna'} },
+  SEK: { code:'SEK', symbol:'kr', after:true,  name:{pl:'Korona szwedzka',   en:'Swedish krona'} },
+  NOK: { code:'NOK', symbol:'kr', after:true,  name:{pl:'Korona norweska',   en:'Norwegian krone'} },
+};
+function getCurrency(){
+  try { const c=localStorage.getItem(LS_CURRENCY); if(c && CURRENCIES[c]) return c; } catch{}
+  return 'PLN';
+}
+function getCurSymbol(){ return (CURRENCIES[getCurrency()]||CURRENCIES.PLN).symbol; }
+// Default for Onboarding picker — based on navigator.language at first render.
+function getDefaultCurrency(){
+  try {
+    const l=(navigator.language||'').toLowerCase();
+    if(l.startsWith('pl')) return 'PLN';
+    if(/^(de|fr|es|it)/.test(l)) return 'EUR';
+    if(l==='en-us') return 'USD';
+    if(l==='en-gb') return 'GBP';
+  } catch{}
+  return 'PLN';
+}
+// Cost-per-hour with dynamic symbol. Format always "1.9 sym/h" regardless of before/after.
+// Named fmtCph (NOT cph) to avoid collision with local `const cph` inside Stats/Finance.
+function fmtCph(v){
+  const num=(+v||0).toFixed(1);
+  if (typeof CURRENCIES === 'undefined') return `${num} zł/h`;
+  const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
+  return `${num} ${def.symbol}/h`;
 }
 // Format hours as "2h 54min" / "30min" / "5h" — replaces ugly "2.9h"
 // minStr: "min" in both PL/EN (common, no need to translate)
@@ -776,6 +844,15 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .ob-feat-title{font-size:13px;font-weight:700;margin-bottom:1px}
 .ob-feat-desc{font-size:11px;color:${G.dim}}
 .ob-start{width:100%;max-width:300px;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:.08em;cursor:pointer;box-shadow:0 0 24px rgba(0,212,255,.4)}
+.cur-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:320px;margin-bottom:18px}
+.cur-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:12px 8px;border-radius:11px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;min-height:64px}
+.cur-btn:active{transform:scale(.98)}
+.cur-btn.on{border-color:${G.blu};background:rgba(0,212,255,.1);color:${G.txt}}
+.cur-btn-sym{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:${G.txt}}
+.cur-btn-code{font-size:11px;font-weight:700;letter-spacing:.08em}
+.cur-btn-name{font-size:9px;color:${G.dim};line-height:1.2;text-align:center}
+.cur-btn.on .cur-btn-code{color:${G.blu}}
+.cur-select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,${G.dim} 50%),linear-gradient(135deg,${G.dim} 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
 .set-section{margin-bottom:20px}
 .set-section-title{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.12em;text-transform:uppercase;padding:0 4px;margin-bottom:8px}
 .set-row{display:flex;align-items:center;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;padding:14px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
@@ -819,26 +896,63 @@ function ReleaseBadge({releaseDate,lang}){
   return<span className='rbdg-upcoming'>📅 {fmtShort(releaseDate,lang)}</span>;
 }
 
-function Onboarding({onAddFirst,onSkip,lang}){
+function Onboarding({onAddFirst,onSkip,onCurrencyPick,lang}){
   const features=[
     {ico:'🎮',tk:'obF1Title',dk:'obF1Desc'},{ico:'📅',tk:'obF2Title',dk:'obF2Desc'},
     {ico:'💰',tk:'obF3Title',dk:'obF3Desc'},{ico:'📊',tk:'obF4Title',dk:'obF4Desc'},
   ];
+  // Two-step flow: 1=welcome+features, 2=currency picker.
+  // Per spec #4: default highlighted button derived from navigator.language at first render.
+  const [step,setStep]=useState(1);
+  const [pickedCur,setPickedCur]=useState(()=>{
+    try { const s=localStorage.getItem(LS_CURRENCY); if(s && CURRENCIES[s]) return s; } catch{}
+    return getDefaultCurrency();
+  });
+  // Persist + propagate immediately when user taps a currency tile
+  function selectCur(code){
+    setPickedCur(code);
+    if(typeof onCurrencyPick==='function') onCurrencyPick(code);
+  }
+
+  if(step===1){
+    return(
+      <div className='onboard'>
+        <div className='ob-logo'>V</div>
+        <div className='ob-title'>{t(lang,'obTitle')}</div>
+        <div className='ob-sub'>{t(lang,'obSub')}</div>
+        <div className='ob-features'>
+          {features.map(f=>(
+            <div key={f.tk} className='ob-feat'>
+              <span className='ob-feat-ico'>{f.ico}</span>
+              <div><div className='ob-feat-title'>{t(lang,f.tk)}</div><div className='ob-feat-desc'>{t(lang,f.dk)}</div></div>
+            </div>
+          ))}
+        </div>
+        <button type='button' className='ob-start' onClick={()=>setStep(2)}>{t(lang,'obContinue')}</button>
+        <button type='button' onClick={onSkip} style={{marginTop:10,padding:'10px',background:'transparent',border:'none',color:'#8B93A7',fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obSkip')}</button>
+      </div>
+    );
+  }
+
+  // step 2: currency picker
   return(
     <div className='onboard'>
-      <div className='ob-logo'>V</div>
-      <div className='ob-title'>{t(lang,'obTitle')}</div>
-      <div className='ob-sub'>{t(lang,'obSub')}</div>
-      <div className='ob-features'>
-        {features.map(f=>(
-          <div key={f.tk} className='ob-feat'>
-            <span className='ob-feat-ico'>{f.ico}</span>
-            <div><div className='ob-feat-title'>{t(lang,f.tk)}</div><div className='ob-feat-desc'>{t(lang,f.dk)}</div></div>
-          </div>
+      <div className='ob-logo' style={{fontSize:36}}>💰</div>
+      <div className='ob-title'>{t(lang,'obCurrencyTitle')}</div>
+      <div className='ob-sub'>{t(lang,'obCurrencySub')}</div>
+      <div className='cur-grid'>
+        {Object.values(CURRENCIES).map(def=>(
+          <button key={def.code} type='button'
+            className={'cur-btn'+(pickedCur===def.code?' on':'')}
+            onClick={()=>selectCur(def.code)}>
+            <span className='cur-btn-sym'>{def.symbol}</span>
+            <span className='cur-btn-code'>{def.code}</span>
+            <span className='cur-btn-name'>{def.name[lang]||def.name.en}</span>
+          </button>
         ))}
       </div>
-      <button type='button' className='ob-start' onClick={onAddFirst}>{t(lang,'obStart')}</button>
-      <button type='button' onClick={onSkip} style={{marginTop:10,padding:'10px',background:'transparent',border:'none',color:'#8B93A7',fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obSkip')}</button>
+      <button type='button' className='ob-start' onClick={()=>{selectCur(pickedCur);onAddFirst();}}>{t(lang,'obStart')}</button>
+      <button type='button' onClick={()=>{selectCur(pickedCur);onSkip();}} style={{marginTop:10,padding:'10px',background:'transparent',border:'none',color:'#8B93A7',fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obSkip')}</button>
     </div>
   );
 }
@@ -1543,7 +1657,7 @@ function Stats({games,lang}){
     {l:t(lang,'spentTotal2'),  v:pln(totalSpent,lang),  c:G.org, bg:'rgba(255,159,28,.07)'},
     {l:t(lang,'earnedBack'),   v:pln(totalEarned,lang), c:G.grn, bg:'rgba(57,255,110,.07)'},
     {l:t(lang,'realCostShort'),v:pln(netCost,lang),     c:netCost>0?G.org:G.grn, bg:'rgba(255,159,28,.05)'},
-    {l:t(lang,'costPerHour'),  v:cph?cph.toFixed(1)+' zł/h':'—', c:G.blu, bg:'rgba(0,212,255,.07)'},
+    {l:t(lang,'costPerHour'),  v:cph?fmtCph(cph):'—', c:G.blu, bg:'rgba(0,212,255,.07)'},
   ];
   const insights=[];
   if(bought.length){
@@ -1553,8 +1667,8 @@ function Stats({games,lang}){
     const bCph=[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours))[0];
     if(worst)insights.push({ico:'📉',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:worst.title,amount:pln(Math.abs(worst.roi),lang)}),val:'-'+pln(Math.abs(worst.roi),lang)});
     if(best)insights.push({ico:'📈',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestDesc',{title:best.title,amount:pln(best.roi,lang)}),val:'+'+pln(best.roi,lang)});
-    if(wCph&&wCph.hours>0)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,28,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:wCph.title,cph:(+wCph.priceBought/wCph.hours).toFixed(1)}),val:(+wCph.priceBought/wCph.hours).toFixed(1)+' zł/h'});
-    if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:(+bCph.priceBought/bCph.hours).toFixed(1)}),val:(+bCph.priceBought/bCph.hours).toFixed(1)+' zł/h'});
+    if(wCph&&wCph.hours>0)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,28,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:wCph.title,cph:(+wCph.priceBought/wCph.hours).toFixed(1)}),val:fmtCph(+wCph.priceBought/wCph.hours)});
+    if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:(+bCph.priceBought/bCph.hours).toFixed(1)}),val:fmtCph(+bCph.priceBought/bCph.hours)});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
   const subTabs=[[' general',t(lang,'general')],[' time',t(lang,'time')]];
@@ -1918,7 +2032,7 @@ function Finance({games,lang}){
     {l:t(lang,'earnedBack'),   v:pln(totalEarned,lang), c:G.grn, bg:'rgba(57,255,110,.07)'},
     {l:t(lang,'realCostShort'),v:pln(netCost,lang),     c:G.org, bg:'rgba(255,159,64,.07)'},
   ];
-  if(cph!==null){fkpis.push({l:t(lang,'costPerHour'),v:cph.toFixed(1)+' zł/h',c:G.blu,bg:'rgba(0,212,255,.07)'});}
+  if(cph!==null){fkpis.push({l:t(lang,'costPerHour'),v:fmtCph(cph),c:G.blu,bg:'rgba(0,212,255,.07)'});}
 
   // === Insights (copied from Stats) ===
   const insights=[];
@@ -1938,8 +2052,8 @@ function Finance({games,lang}){
     if(totalPotentialSavings>0)insights.push({ico:'💡',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'potentialSaving'),body:t(lang,'savingsDesc',{amount:pln(totalPotentialSavings,lang)}),val:pln(totalPotentialSavings,lang),big:true});
     if(biggestLossGame)insights.push({ico:'🚨',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:biggestLossGame.title,amount:pln(+biggestLossGame.priceBought,lang)}),val:'-'+pln(+biggestLossGame.priceBought,lang),actionKey:'avoidLoss'});
     if(bestInvestGame)insights.push({ico:'✅',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestmentDesc',{title:bestInvestGame.title,amount:pln(bestInvestGame.roi,lang)}),val:'+'+pln(bestInvestGame.roi,lang),actionKey:'buyBetter'});
-    if(mostExpHour)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,64,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:mostExpHour.title,cph:(+mostExpHour.priceBought/mostExpHour.hours).toFixed(1)}),val:(+mostExpHour.priceBought/mostExpHour.hours).toFixed(1)+' zł/h',actionKey:'optimizeBacklog'});
-    if(bestValGame)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bestValGame.title,cph:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)}),val:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)+' zł/h',actionKey:'findSimilar'});
+    if(mostExpHour)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,64,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:mostExpHour.title,cph:(+mostExpHour.priceBought/mostExpHour.hours).toFixed(1)}),val:fmtCph(+mostExpHour.priceBought/mostExpHour.hours),actionKey:'optimizeBacklog'});
+    if(bestValGame)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bestValGame.title,cph:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)}),val:fmtCph(+bestValGame.priceBought/bestValGame.hours),actionKey:'findSimilar'});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
 
@@ -1968,8 +2082,8 @@ function Finance({games,lang}){
           {monthlyHasData&&<div className='ccd'>
             <div className='ctl'>{t(lang,'spendingByMonth')}</div>
             <ResponsiveContainer width='100%' height={140}>
-              <BarChart data={monthlyData} barSize={16} margin={{top:4,left:0,right:0,bottom:4}}>
-                <XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={1} padding={{left:8,right:8}}/>
+              <BarChart data={monthlyData} barSize={14} margin={{top:4,left:4,right:14,bottom:4}}>
+                <XAxis dataKey='n' tick={{fill:G.dim,fontSize:8}} axisLine={false} tickLine={false} interval='preserveStartEnd' minTickGap={4} padding={{left:6,right:6}}/>
                 <YAxis hide/>
                 <Tooltip content={<CTip/>}/>
                 <Bar dataKey='v' radius={[4,4,0,0]}>
@@ -2005,7 +2119,7 @@ function Finance({games,lang}){
             <ul className='top-list'>{perGenreData.map((d,i)=><li key={i} className='top-item'>
               <span className='top-title'>{d.n}</span>
               <span style={{fontSize:10,color:G.dim,flexShrink:0}}>{t(lang,'perGenreCol',{n:d.count,gamesWord:gamesWord(d.count,lang),hours:fmtHours(d.hours,{compact:true})})}</span>
-              <span className='top-val' style={{color:i===0?G.grn:G.blu}}>{d.cph.toFixed(1)} zł/h</span>
+              <span className='top-val' style={{color:i===0?G.grn:G.blu}}>{fmtCph(d.cph)}</span>
             </li>)}</ul>
           </div>}
           {soldG.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'roi')}</div><ul className='top-list'>{soldG.map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{pln(+g.priceBought,lang)}→{pln(+g.priceSold,lang)}</span><span className={'top-val '+(g.roi>=0?'roi-pos':'roi-neg')}>{g.roi>=0?'+':''}{pln(g.roi,lang)}</span></li>)}</ul></div>}
@@ -2018,7 +2132,7 @@ function Finance({games,lang}){
             </li>)}</ul>
           </div>}
           <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{pln(+g.priceBought,lang)}</span></li>)}</ul></div>
-          {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{fmtHours(g.hours,{compact:true})}</span><span className='top-val' style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)} zł/h</span></li>)}</ul></div>}
+          {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{fmtHours(g.hours,{compact:true})}</span><span className='top-val' style={{color:G.grn}}>{fmtCph(+g.priceBought/g.hours)}</span></li>)}</ul></div>}
         </>}
       </>}
       {tab==='insights'&&<>{!insights.length?<div className='empty'><div className='eic'>💡</div><div className='ett'>{t(lang,'noInsights')}</div><div className='ess'>{t(lang,'addPricesAndHours')}</div></div>:<InsightsTab insights={insights} games={games} lang={lang}/>}</>}
@@ -2026,7 +2140,7 @@ function Finance({games,lang}){
   );
 }
 
-function Settings({games,setGames,flash,lang,setLang,openImport,openPrivacy}){
+function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPrivacy}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   return(
     <div className='scr'>
@@ -2036,6 +2150,17 @@ function Settings({games,setGames,flash,lang,setLang,openImport,openPrivacy}){
           <button type='button' className={'lang-btn'+(lang==='pl'?' on':'')} onClick={()=>{setLang('pl');localStorage.setItem(LS_LANG,'pl');}}>🇵🇱 Polski</button>
           <button type='button' className={'lang-btn'+(lang==='en'?' on':'')} onClick={()=>{setLang('en');localStorage.setItem(LS_LANG,'en');}}>🇬🇧 English</button>
         </div>
+      </div>
+      <div className='set-section'>
+        <div className='set-section-title'>{t(lang,'currencyLabel')}</div>
+        <select className='cur-select'
+          value={currency}
+          onChange={e=>setCurrency(e.target.value)}>
+          {Object.values(CURRENCIES).map(def=>(
+            <option key={def.code} value={def.code}>{def.symbol} — {def.code} · {def.name[lang]||def.name.en}</option>
+          ))}
+        </select>
+        <div style={{fontSize:11,color:G.dim,marginTop:8,padding:'0 4px',lineHeight:1.5}}>{t(lang,'currencyDesc')}</div>
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'data')}</div>
@@ -2111,7 +2236,7 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
       flash(t(lang,'budgetInvalidAmount'));
       return;
     }
-    if(v>99999){ flash(lang==='pl'?'⚠ Maksymalnie 99 999 zł':'⚠ Max 99,999'); return; }
+    if(v>99999){ flash(t(lang,'budgetMaxErr')); return; }
     setBudget(p=>({...p,amount:String(Math.round(v)),month:monthKey}));
     flash(t(lang,'budgetSaved',{amount:pln(v,lang)}));
     setEditing(false);
@@ -2136,7 +2261,7 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
       <>
         <div style={{display:'flex',gap:8,marginBottom:budget.amount?6:0}}>
           <input className='fi' style={{flex:1}} inputMode='decimal'
-            placeholder={lang==='pl'?'Budżet (PLN)':'Budget'}
+            placeholder={t(lang,'budgetPlaceholder')}
             value={draft}
             onChange={e=>setDraft(e.target.value.replace(/[^\d.]/g,''))}
             onKeyDown={e=>{if(e.key==='Enter')commit();}}
@@ -2192,6 +2317,7 @@ export default function App(){
   const [games,setGamesRaw]    = useState(()=>lsRead());
   const [onboarded,setOnboard] = useState(()=>isOnboarded());
   const [lang,setLang]         = useState(()=>getLang());
+  const [currency,setCurrencyState] = useState(()=>getCurrency());
   const [tab,setTab]           = useState('home');
   const [flt,setFlt]           = useState('all');
   const [q,setQ]               = useState('');
@@ -2260,9 +2386,25 @@ export default function App(){
     flash(next?(lang==='pl'?'🔔 Powiadomienia włączone':'🔔 Notifications enabled'):(lang==='pl'?'🔕 Powiadomienia wyłączone':'🔕 Notifications disabled'));
   }
 
+  // Currency: silent persist (used by Onboarding initial pick — no toast on first-time setup)
+  const setCurrencyPersist=useCallback((code)=>{
+    if(!CURRENCIES[code]) return;
+    try { localStorage.setItem(LS_CURRENCY,code); } catch{}
+    setCurrencyState(code);
+  },[]);
+  // Currency: change from Settings — persists + emits toast
+  const changeCurrency=useCallback((code)=>{
+    if(!CURRENCIES[code]) return;
+    try { localStorage.setItem(LS_CURRENCY,code); } catch{}
+    setCurrencyState(code);
+    const def=CURRENCIES[code];
+    flash(t(lang,'currencyChanged',{name:(def.name[lang]||def.name.en)}));
+  },[lang,flash]);
+
   if(!onboarded)return(<><style>{CSS}</style><Onboarding
     onAddFirst={()=>{setOnboarded(true);setOnboard(true);setModal('add');}}
     onSkip={()=>{setOnboarded(true);setOnboard(true);}}
+    onCurrencyPick={setCurrencyPersist}
     lang={lang}
   /></>);
 
@@ -2351,7 +2493,7 @@ export default function App(){
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         {tab==='fin'&&<Finance games={games} lang={lang}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
-        {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)}/>
+        {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)}/>
         {/* ── Budget ── */}
         <div style={{padding:'0 16px 8px'}}>
           <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
