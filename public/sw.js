@@ -1,6 +1,29 @@
-// PS5 Vault — Service Worker v1.4 (NETWORK-FIRST)
-const CACHE = "ps5vault-v12";
+// PS5 Vault — Service Worker v1.5 (NETWORK-FIRST + i18n notifications)
+const CACHE = "ps5vault-v13";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
+
+const NOTIF_I18N = {
+  pl: {
+    todayTitle: "🎮 Premiera dzisiaj!",
+    todayBody: t => `${t} jest już dostępne!`,
+    weekTitle: "⏳ Tydzień do premiery!",
+    weekBody: t => `${t} — za 7 dni!`,
+    monthTitle: "📅 Miesiąc do premiery",
+    monthBody: t => `${t} — za miesiąc!`,
+    daysTitle: d => `⏳ ${d} dni do premiery`,
+    daysBody: t => `${t}`
+  },
+  en: {
+    todayTitle: "🎮 Released today!",
+    todayBody: t => `${t} is now available!`,
+    weekTitle: "⏳ One week to release!",
+    weekBody: t => `${t} — in 7 days!`,
+    monthTitle: "📅 One month to release",
+    monthBody: t => `${t} — in one month!`,
+    daysTitle: d => `⏳ ${d} days to release`,
+    daysBody: t => `${t}`
+  }
+};
 
 self.addEventListener("install", e => {
   self.skipWaiting();
@@ -25,7 +48,7 @@ self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   if (!e.request.url.startsWith("https://")) return;
   if (e.request.url.includes("api.rawg.io")) return;
-  
+
   e.respondWith(
     fetch(e.request)
       .then(res => {
@@ -44,23 +67,27 @@ self.addEventListener("message", async event => {
   if (event.data?.type === "SKIP_WAITING") { self.skipWaiting(); return; }
   if (event.data?.type !== "CHECK_RELEASES") return;
   const games = event.data.games || [];
+  const lang = event.data.lang === "en" ? "en" : "pl";
+  const i18n = NOTIF_I18N[lang];
   const today = new Date(); today.setHours(0,0,0,0);
   for (const game of games) {
     if (!game.releaseDate || !game.notifyEnabled) continue;
     const rel = new Date(game.releaseDate); rel.setHours(0,0,0,0);
+    if (isNaN(rel)) continue;
     const diff = Math.round((rel - today) / 86400000);
     const key = `${game.id}_${game.releaseDate}_${diff}`;
     let shown = false;
     try { const c = await caches.open("ps5vault-notifs"); shown = !!(await c.match("/"+key)); } catch {}
     if (shown) continue;
+    const opts = base => ({ body: base, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
     if (diff === 0) {
-      await self.registration.showNotification("🎮 Premiera dzisiaj!", { body:`${game.title} jest już dostępne!`, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
+      await self.registration.showNotification(i18n.todayTitle, opts(i18n.todayBody(game.title)));
     } else if (diff === 7) {
-      await self.registration.showNotification("⏳ Tydzień do premiery!", { body:`${game.title} — za 7 dni!`, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
+      await self.registration.showNotification(i18n.weekTitle, opts(i18n.weekBody(game.title)));
     } else if (diff === 30) {
-      await self.registration.showNotification("📅 Miesiąc do premiery", { body:`${game.title} — za miesiąc!`, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
+      await self.registration.showNotification(i18n.monthTitle, opts(i18n.monthBody(game.title)));
     } else if (diff > 0 && diff <= 3) {
-      await self.registration.showNotification(`⏳ ${diff} dni do premiery`, { body:`${game.title}`, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
+      await self.registration.showNotification(i18n.daysTitle(diff), opts(i18n.daysBody(game.title)));
     }
     try { const c = await caches.open("ps5vault-notifs"); await c.put("/"+key, new Response("1")); } catch {}
   }

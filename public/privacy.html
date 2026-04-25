@@ -11,6 +11,8 @@
     h2 { font-size:15px; font-weight:700; margin:28px 0 8px; color:#A78BFA; text-transform:uppercase; letter-spacing:.06em; }
     p  { font-size:14px; color:#B0B8CC; margin-bottom:10px; }
     .badge { display:inline-block; background:rgba(57,255,110,.1); border:1px solid rgba(57,255,110,.3); color:#39FF6E; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-bottom:24px; }
+    .lang-switch { font-size:11px; color:#5A6A8A; margin-bottom:16px; }
+    .lang-switch a { color:#00D4FF; text-decoration:none; }
     .updated { font-size:11px; color:#5A6A8A; margin-top:40px; }
     a { color:#00D4FF; }
   </style>
@@ -18,40 +20,95 @@
 <body>
   <h1>PS5 Vault</h1>
   <div class="badge">✓ Nie zbieramy Twoich danych</div>
+  <div class="lang-switch">PL · <a href="#en">English</a></div>
 
   <h2>1. Informacje ogólne</h2>
-  <p>PS5 Vault ("Aplikacja") to osobisty tracker gier na PlayStation 5. Aplikacja jest dostępna bezpłatnie i nie wymaga rejestracji ani logowania.</p>
+  <p>PS5 Vault ("Aplikacja") to osobisty tracker gier na PlayStation 5. Aplikacja jest dostępna bezpłatnie i nie wymaga rejestracji ani logowania. Twórca aplikacji: SkuDev (Polska).</p>
 
   <h2>2. Jakie dane przechowujemy</h2>
-  <p>Wszystkie dane (lista gier, statusy, oceny, notatki, dane finansowe) są przechowywane <strong>wyłącznie lokalnie</strong> na Twoim urządzeniu w pamięci przeglądarki (localStorage). Dane te nigdy nie są przesyłane na żadne serwery.</p>
+  <p>Wszystkie dane (lista gier, statusy, oceny, notatki, dane finansowe, sesje grania, budżet) są przechowywane <strong>wyłącznie lokalnie</strong> na Twoim urządzeniu w pamięci przeglądarki (localStorage). Dane te nigdy nie są przesyłane na żadne serwery zewnętrzne.</p>
 
   <h2>3. Dane które NIE są zbierane</h2>
-  <p>Aplikacja nie zbiera, nie przechowuje ani nie przekazuje żadnych danych osobowych, w tym: imienia i nazwiska, adresu e-mail, numeru telefonu, lokalizacji, danych finansowych, danych urządzenia ani identyfikatorów reklamowych.</p>
+  <p>Aplikacja nie zbiera, nie przechowuje ani nie przekazuje żadnych danych osobowych, w tym: imienia i nazwiska, adresu e-mail, numeru telefonu, lokalizacji, danych finansowych, identyfikatorów urządzenia ani identyfikatorów reklamowych. Aplikacja nie używa Google Analytics, Facebook Pixel ani żadnych innych narzędzi analitycznych.</p>
 
-  <h2>4. Zewnętrzne API</h2>
-  <p>Aplikacja korzysta z RAWG.io API (rawg.io) w celu wyszukiwania informacji o grach (tytuły, okładki, daty premier). Podczas wyszukiwania zapytanie trafia do serwerów RAWG. Nie są przesyłane żadne dane osobowe — jedynie tekst wpisany w pole wyszukiwania. Polityka prywatności RAWG: <a href="https://rawg.io/privacy">rawg.io/privacy</a>.</p>
+  <h2>4. Zewnętrzne API — RAWG.io</h2>
+  <p>Aplikacja korzysta z RAWG.io API (operatora: Behind the Games, UAB, Litwa/UE) w celu wyszukiwania informacji o grach (tytuły, okładki, daty premier, gatunki). Podczas wyszukiwania zapytanie tekstowe wpisane w polu wyszukiwania trafia do serwerów RAWG. <strong>Nie są przesyłane żadne dane osobowe</strong> — jedynie tekst wyszukiwania oraz klucz API. Twoje dane (kolekcja gier) nigdy nie są przesyłane do RAWG. Polityka prywatności RAWG: <a href="https://rawg.io/privacy_policy" target="_blank" rel="noopener noreferrer">rawg.io/privacy_policy</a>.</p>
 
-  <h2>5. Powiadomienia push</h2>
-  <p>Jeśli włączysz powiadomienia o premierach gier, Twoja przeglądarka/system operacyjny może wymagać przyznania odpowiedniego uprawnienia. Powiadomienia są generowane lokalnie na urządzeniu — żadne dane nie są przesyłane na zewnętrzne serwery w tym celu.</p>
+  <h2>5. Linki do stron trzecich</h2>
+  <p>Sekcja "Wsparcie" w aplikacji zawiera link do platformy <a href="https://buycoffee.to/skudev" target="_blank" rel="noopener noreferrer">buycoffee.to/skudev</a> umożliwiającej dobrowolne wsparcie finansowe twórcy. Kliknięcie linku otwiera stronę zewnętrzną w przeglądarce. Aplikacja nie przekazuje żadnych Twoich danych do tej platformy. Jeśli zdecydujesz się dokonać wpłaty, podlegasz polityce prywatności buycoffee.to.</p>
 
-  <h2>6. Pliki cookie i śledzenie</h2>
-  <p>Aplikacja nie używa plików cookie ani żadnych technologii śledzących. Nie korzystamy z Google Analytics, Facebook Pixel ani żadnych innych narzędzi analitycznych.</p>
+  <h2>6. Powiadomienia push</h2>
+  <p>Jeśli włączysz powiadomienia o premierach gier, system operacyjny może wymagać przyznania odpowiedniego uprawnienia. Powiadomienia są generowane <strong>lokalnie na urządzeniu</strong> przez Service Worker — żadne dane nie są przesyłane na zewnętrzne serwery w tym celu.</p>
 
-  <h2>7. Prawa użytkownika</h2>
-  <p>Ponieważ nie przechowujemy żadnych Twoich danych poza Twoim urządzeniem, masz pełną kontrolę nad swoimi danymi. Możesz je eksportować (przycisk "Eksportuj dane" w ustawieniach aplikacji) lub usunąć poprzez wyczyszczenie danych przeglądarki/aplikacji.</p>
+  <h2>7. Kontakt z twórcą (opcjonalny)</h2>
+  <p>Aplikacja zawiera funkcję "Zgłoś problem" (Opcje → Informacje), która otwiera klienta poczty e-mail z gotowym szablonem zawierającym: model urządzenia (z `navigator.userAgent`), wersję aplikacji, język i liczbę gier w kolekcji. Te informacje są dołączane jedynie po to, aby pomóc w diagnozie problemów. <strong>Wysłanie wiadomości jest dobrowolne</strong> — możesz edytować lub usunąć te dane przed wysłaniem. Adres odbiorcy: skudev6@gmail.com.</p>
 
-  <h2>8. Bezpieczeństwo</h2>
-  <p>Dane są przechowywane w localStorage przeglądarki na Twoim urządzeniu. Bezpieczeństwo tych danych zależy od zabezpieczenia Twojego urządzenia.</p>
+  <h2>8. Pliki cookie i śledzenie</h2>
+  <p>Aplikacja nie używa plików cookie ani żadnych technologii śledzących.</p>
 
-  <h2>9. Dzieci</h2>
-  <p>Aplikacja nie jest skierowana do dzieci poniżej 13 roku życia i świadomie nie zbieramy danych od takich osób.</p>
+  <h2>9. Prawa użytkownika (RODO)</h2>
+  <p>Ponieważ nie przechowujemy żadnych Twoich danych poza Twoim urządzeniem, masz pełną kontrolę nad swoimi danymi. Masz prawo do:</p>
+  <p>• <strong>dostępu</strong> — dane są widoczne w aplikacji;<br/>• <strong>przenoszenia</strong> — przycisk "Eksportuj dane" tworzy plik JSON z całą Twoją kolekcją;<br/>• <strong>usunięcia</strong> — przycisk "Wyczyść kolekcję" w sekcji Niebezpieczna strefa, lub odinstalowanie aplikacji.</p>
 
-  <h2>10. Zmiany polityki</h2>
+  <h2>10. Bezpieczeństwo</h2>
+  <p>Dane są przechowywane w localStorage przeglądarki na Twoim urządzeniu. Bezpieczeństwo tych danych zależy od zabezpieczenia Twojego urządzenia (PIN, biometria, szyfrowanie systemu).</p>
+
+  <h2>11. Dzieci</h2>
+  <p>Aplikacja nie jest skierowana do dzieci poniżej 13 roku życia i świadomie nie zbieramy danych od takich osób. Treść aplikacji (informacje o grach z RAWG) może zawierać tytuły dla dorosłych — odpowiedzialność za dostęp dziecka spoczywa na rodzicu/opiekunie.</p>
+
+  <h2>12. Zmiany polityki</h2>
   <p>O wszelkich istotnych zmianach w polityce prywatności poinformujemy poprzez aktualizację tej strony. Data ostatniej aktualizacji jest widoczna poniżej.</p>
 
-  <h2>11. Kontakt</h2>
-  <p>W razie pytań dotyczących prywatności skontaktuj się przez profil aplikacji w Google Play.</p>
+  <h2>13. Kontakt</h2>
+  <p>W razie pytań dotyczących prywatności skontaktuj się: <a href="mailto:skudev6@gmail.com">skudev6@gmail.com</a> lub przez funkcję "Zgłoś problem" w aplikacji.</p>
 
-  <p class="updated">Ostatnia aktualizacja: Kwiecień 2025</p>
+  <p class="updated">Ostatnia aktualizacja: 24 kwietnia 2026 · Wersja aplikacji: 1.2.4</p>
+
+  <hr style="margin:60px 0 40px; border:none; border-top:1px solid #1F2937;"/>
+
+  <h1 id="en">PS5 Vault — Privacy Policy</h1>
+  <div class="badge">✓ We don't collect your data</div>
+
+  <h2>1. General information</h2>
+  <p>PS5 Vault ("Application") is a personal game tracker for PlayStation 5. The application is free of charge and requires no registration or login. Application creator: SkuDev (Poland).</p>
+
+  <h2>2. What data we store</h2>
+  <p>All data (games list, statuses, ratings, notes, financial data, play sessions, budget) is stored <strong>locally only</strong> on your device in browser localStorage. This data is never transmitted to any external servers.</p>
+
+  <h2>3. Data we do NOT collect</h2>
+  <p>The application does not collect, store or transmit any personal data, including: name, email address, phone number, location, financial data, device identifiers, or advertising IDs. The application does not use Google Analytics, Facebook Pixel or any other analytics tools.</p>
+
+  <h2>4. External API — RAWG.io</h2>
+  <p>The application uses the RAWG.io API (operator: Behind the Games, UAB, Lithuania/EU) to search for game information (titles, covers, release dates, genres). When searching, the text query you enter is sent to RAWG servers. <strong>No personal data is transmitted</strong> — only the search text and API key. Your data (game collection) is never sent to RAWG. RAWG privacy policy: <a href="https://rawg.io/privacy_policy" target="_blank" rel="noopener noreferrer">rawg.io/privacy_policy</a>.</p>
+
+  <h2>5. Third-party links</h2>
+  <p>The "Support" section in the application contains a link to <a href="https://buycoffee.to/skudev" target="_blank" rel="noopener noreferrer">buycoffee.to/skudev</a>, a platform allowing voluntary financial support for the creator. Clicking the link opens an external page in your browser. The application does not transmit any of your data to this platform. If you choose to make a donation, you become subject to buycoffee.to's privacy policy.</p>
+
+  <h2>6. Push notifications</h2>
+  <p>If you enable game release notifications, the operating system may require granting appropriate permission. Notifications are generated <strong>locally on the device</strong> by a Service Worker — no data is transmitted to external servers for this purpose.</p>
+
+  <h2>7. Contact with creator (optional)</h2>
+  <p>The application includes a "Report a problem" feature (Settings → Info), which opens your email client with a pre-filled template containing: device model (from `navigator.userAgent`), application version, language and number of games in the collection. This information is attached solely to help diagnose issues. <strong>Sending the message is voluntary</strong> — you can edit or remove this data before sending. Recipient address: skudev6@gmail.com.</p>
+
+  <h2>8. Cookies and tracking</h2>
+  <p>The application does not use cookies or any tracking technologies.</p>
+
+  <h2>9. User rights (GDPR)</h2>
+  <p>Since we don't store any of your data outside your device, you have full control over your data. You have the right to:</p>
+  <p>• <strong>access</strong> — data is visible in the application;<br/>• <strong>portability</strong> — the "Export data" button creates a JSON file with your entire collection;<br/>• <strong>deletion</strong> — the "Clear collection" button in the Danger zone, or by uninstalling the application.</p>
+
+  <h2>10. Security</h2>
+  <p>Data is stored in browser localStorage on your device. The security of this data depends on the security of your device (PIN, biometrics, system encryption).</p>
+
+  <h2>11. Children</h2>
+  <p>The application is not directed at children under 13 years of age and we do not knowingly collect data from such individuals. Application content (game information from RAWG) may include adult titles — responsibility for child access rests with the parent/guardian.</p>
+
+  <h2>12. Policy changes</h2>
+  <p>We will inform about any material changes to the privacy policy by updating this page. The last update date is shown below.</p>
+
+  <h2>13. Contact</h2>
+  <p>For privacy questions, please contact: <a href="mailto:skudev6@gmail.com">skudev6@gmail.com</a> or use the "Report a problem" feature in the application.</p>
+
+  <p class="updated">Last updated: April 24, 2026 · App version: 1.2.4</p>
 </body>
 </html>

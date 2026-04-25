@@ -88,6 +88,8 @@ const TRANSLATIONS = {
     cancel2:"Anuluj",
     info:"Informacje", privacyPolicy:"Polityka prywatności", privacyDesc:"Nie zbieramy żadnych danych osobowych",
     reportProblem:"Zgłoś problem", reportProblemDesc:"Napisz do mnie — odpowiadam osobiście",
+    storageQuotaErr:"⚠ Pamięć pełna — eksportuj backup i wyczyść stare gry",
+    storageGenericErr:"⚠ Nie udało się zapisać — odśwież apkę",
     poweredBy:"Powered by RAWG.io", poweredByDesc:"Baza ponad 500 000 gier",
     appInfo:"PS5 Vault", appInfoDesc:"Wersja {ver} — Dane przechowywane lokalnie",
     language:"Język / Language", dangerZone:"Niebezpieczna strefa",
@@ -96,6 +98,7 @@ const TRANSLATIONS = {
     addGameTitle:"+ DODAJ GRĘ", editGameTitle:"✎ EDYTUJ GRĘ",
     searchRawg:"🔍 Szukaj w RAWG", rawgPlaceholder:"Wpisz nazwę gry...",
     rawgHint:"Wybierz grę żeby auto-uzupełnić pola + datę premiery",
+    rawgNotFound:"Nie znaleziono", rawgNotFoundHint:"Sprawdź pisownię albo dodaj grę ręcznie w formularzu poniżej",
     titleField:"Tytuł *", abbrField:"Skrót (2 lit.)", yearField:"Rok",
     releaseDateField:"Data premiery", releaseDateHint:"Zostaw puste jeśli nieznana (TBA)",
     statusField:"Status", genreField:"Gatunek", hoursField:"Godziny",
@@ -208,6 +211,8 @@ const TRANSLATIONS = {
     cancel2:"Cancel",
     info:"Info", privacyPolicy:"Privacy policy", privacyDesc:"We collect no personal data",
     reportProblem:"Report a problem", reportProblemDesc:"Write to me — I reply personally",
+    storageQuotaErr:"⚠ Storage full — export backup and clear old games",
+    storageGenericErr:"⚠ Failed to save — please refresh the app",
     poweredBy:"Powered by RAWG.io", poweredByDesc:"Database of 500,000+ games",
     appInfo:"PS5 Vault", appInfoDesc:"Version {ver} — Data stored locally",
     language:"Język / Language", dangerZone:"Danger zone",
@@ -216,6 +221,7 @@ const TRANSLATIONS = {
     addGameTitle:"+ ADD GAME", editGameTitle:"✎ EDIT GAME",
     searchRawg:"🔍 Search RAWG", rawgPlaceholder:"Type game name...",
     rawgHint:"Select a game to auto-fill fields + release date",
+    rawgNotFound:"Not found", rawgNotFoundHint:"Check spelling or add the game manually in the form below",
     titleField:"Title *", abbrField:"Abbr (2 chars)", yearField:"Year",
     releaseDateField:"Release date", releaseDateHint:"Leave empty if unknown (TBA)",
     statusField:"Status", genreField:"Genre", hoursField:"Hours",
@@ -285,8 +291,20 @@ const G = { bg:'#080B14', card:'#0D1120', card2:'#111827', bdr:'#1E2A42', txt:'#
 function uid()    { return 'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 function mkAbbr(s){ const w=s.trim().split(/\s+/).filter(Boolean); return !w.length?'??':(w.length===1?w[0].slice(0,2):w[0][0]+w[1][0]).toUpperCase(); }
 function daysUntil(d){ if(!d)return null; const a=new Date();a.setHours(0,0,0,0);const b=new Date(d);b.setHours(0,0,0,0);return Math.round((b-a)/86400000); }
-function fmtDate(d,lang){ if(!d)return''; return new Date(d).toLocaleDateString(lang==='en'?'en-GB':'pl-PL',{day:'numeric',month:'short',year:'numeric'}); }
-function fmtShort(d,lang){ if(!d)return''; return new Date(d).toLocaleDateString(lang==='en'?'en-GB':'pl-PL',{day:'numeric',month:'short'}); }
+function fmtDate(d,lang){
+  if(!d)return'';
+  const dt=new Date(d); if(isNaN(dt))return'';
+  const day=dt.getDate();
+  const months=lang==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+  return `${day} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+function fmtShort(d,lang){
+  if(!d)return'';
+  const dt=new Date(d); if(isNaN(dt))return'';
+  const day=dt.getDate();
+  const months=lang==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+  return `${day} ${months[dt.getMonth()]}`;
+}
 function pln(v,lang){ return `${(+v||0).toFixed(0)} zł`; }
 // Format hours as "2h 54min" / "30min" / "5h" — replaces ugly "2.9h"
 // minStr: "min" in both PL/EN (common, no need to translate)
@@ -302,10 +320,40 @@ function fmtHours(v,opts){
   return `${hh}h ${mm}min`;
 }
 
-const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),genre:'',hours:'',rating:'',notes:'',cover:'',releaseDate:'',notifyEnabled:false,priceBought:'',priceSold:'',storeBought:'',targetHours:'',extraSpend:'',platform:'PS5',platinum:false,lastPlayed:null,sessions:[] };
+const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),genre:'',hours:'',rating:'',notes:'',cover:'',releaseDate:'',notifyEnabled:false,priceBought:'',priceSold:null,storeBought:'',targetHours:'',extraSpend:'',platform:'PS5',platinum:false,lastPlayed:null,sessions:[] };
 
-function lsRead()  { try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
-function lsWrite(g){ try{ localStorage.setItem(LS_KEY,JSON.stringify(g)); }catch{} }
+function lsRead()  {
+  try{
+    const games=JSON.parse(localStorage.getItem(LS_KEY)||'[]');
+    // Migration (v1.2.4+): legacy games may have priceSold:'' from v1.2.3 bug,
+    // which rendered as "sold toggle ON" + ROI +0 zł on cards.
+    // Normalize to null on read so every load is consistent.
+    // Idempotent — running twice is safe.
+    let dirty=false;
+    const migrated=games.map(g=>{
+      if(g.priceSold===''){ dirty=true; return {...g,priceSold:null}; }
+      return g;
+    });
+    if(dirty){ try{ localStorage.setItem(LS_KEY,JSON.stringify(migrated)); }catch{} }
+    return migrated;
+  }catch{ return []; }
+}
+function lsWrite(g){
+  try{
+    localStorage.setItem(LS_KEY,JSON.stringify(g));
+    return true;
+  }catch(e){
+    // localStorage quota exceeded (5MB ~ 300+ games with session history) or storage disabled.
+    // Surface to user via global hook set by App; fall back to console if not registered yet.
+    const isQuota = e && (e.name==='QuotaExceededError' || e.code===22 || e.code===1014);
+    if(typeof window!=='undefined' && window.__ps5v_storageError){
+      window.__ps5v_storageError(isQuota?'quota':'unknown', e);
+    } else {
+      console.error('[ps5vault] lsWrite failed:', e);
+    }
+    return false;
+  }
+}
 function budgetRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_budget')||'{}'); }catch{ return {}; } }
 function budgetWrite(d){ try{ localStorage.setItem('ps5vault_budget',JSON.stringify(d)); }catch{} }
 function timerRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_timer')); }catch{ return null; } }
@@ -375,13 +423,16 @@ async function registerSW(){
   }catch(e){console.log('SW register error:',e);}
 }
 async function requestNotifPerm(){ if(!('Notification'in window))return'denied';if(Notification.permission!=='default')return Notification.permission;return await Notification.requestPermission(); }
-async function checkReleases(games){ if(!('serviceWorker'in navigator))return;try{const reg=await navigator.serviceWorker.ready;reg.active?.postMessage({type:'CHECK_RELEASES',games});}catch{} }
+async function checkReleases(games,lang){ if(!('serviceWorker'in navigator))return;try{const reg=await navigator.serviceWorker.ready;reg.active?.postMessage({type:'CHECK_RELEASES',games,lang:lang||'pl'});}catch{} }
 async function rawgSearch(q){
+  const ctrl=new AbortController();
+  const tm=setTimeout(()=>ctrl.abort(),8000);
   try{
-    const r=await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(q)}&page_size=6&key=${RAWG_KEY}`);
+    const r=await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(q)}&page_size=10&key=${RAWG_KEY}`,{signal:ctrl.signal});
     if(!r.ok)return[];
     return(await r.json()).results.map(g=>({id:g.id,title:g.name,year:g.released?+g.released.slice(0,4):new Date().getFullYear(),releaseDate:g.released||'',genre:(g.genres||[]).map(x=>RMAP[x.slug]).filter(Boolean)[0]||g.genres?.[0]?.name||'',cover:g.background_image||'',abbr:mkAbbr(g.name)}));
   }catch{return[];}
+  finally{clearTimeout(tm);}
 }
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -707,7 +758,8 @@ function RawgSearch({onSelect,lang}){
       const r=await rawgSearch(val);
       if(myReq!==reqId.current)return;
       setRes(r);
-      setOpen(r.length>0);
+      // Keep dropdown open even when 0 results — show "not found" hint instead of silently closing
+      setOpen(true);
       setBusy(false);
     },450);
   };
@@ -722,6 +774,11 @@ function RawgSearch({onSelect,lang}){
       <div className='rhnt'>{t(lang,'rawgHint')}</div>
       {open&&<div className='rdd'>
         {busy&&res.length===0&&<div style={{padding:'14px',textAlign:'center',color:'#8B93A7',fontSize:11}}>{lang==='pl'?'Szukam...':'Searching...'}</div>}
+        {!busy&&res.length===0&&q.trim()&&<div style={{padding:'14px 12px',textAlign:'center'}}>
+          <div style={{fontSize:22,marginBottom:6}}>🔍</div>
+          <div style={{fontSize:12,fontWeight:700,color:G.txt,marginBottom:3}}>{t(lang,'rawgNotFound')}</div>
+          <div style={{fontSize:10,color:G.dim,lineHeight:1.4}}>{t(lang,'rawgNotFoundHint')}</div>
+        </div>}
         {res.map(r=>(
         <div key={r.id} className='rit' onClick={()=>pick(r)}>
           {r.cover?<img className='rthm' src={r.cover} alt='' loading='lazy'/>:<div className='rph'>🎮</div>}
@@ -750,8 +807,16 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
       return;
     }
     const abbr=(f.abbr||'').trim().slice(0,2).toUpperCase()||mkAbbr(f.title);
-    const rating=f.rating!==''&&!isNaN(+f.rating)?Math.min(10,Math.max(1,+f.rating)):null;
-    onSave({...f,abbr,year:+f.year||new Date().getFullYear(),hours:+f.hours||0,rating,targetHours:+f.targetHours||0});
+    // Rating: only clamp if user actually typed something. Previously `+null = 0` coerced to 1
+    // via Math.max(1,0), which magically assigned rating=1 every time an unrated game was saved
+    // (e.g. after a status change). Guard against null/undefined/empty/non-finite before clamping.
+    const rRaw=f.rating;
+    const rNum=(rRaw===null||rRaw===undefined||rRaw==='')?NaN:+rRaw;
+    const rating=Number.isFinite(rNum)&&rNum>0?Math.min(10,Math.max(1,rNum)):null;
+    // Normalize priceSold: if toggle is on but value is empty string, treat as null (not sold)
+    // Prevents zombie "sold" state where priceSold='' leaks into filters/ROI as 0
+    const priceSold = (f.priceSold===null||f.priceSold==='') ? null : f.priceSold;
+    onSave({...f,abbr,year:+f.year||new Date().getFullYear(),hours:+f.hours||0,rating,targetHours:+f.targetHours||0,priceSold});
   }
   const days=daysUntil(f.releaseDate);
   return(
@@ -1637,15 +1702,23 @@ function Settings({games,setGames,flash,lang,setLang,openImport}){
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'info')}</div>
-        <div className='set-row' onClick={()=>window.open('https://matiseekk-dot.github.io/Games/privacy.html','_blank')}>
+        <div className='set-row' onClick={()=>window.open('https://matiseekk-dot.github.io/Games/privacy.html','_blank','noopener,noreferrer')}>
           <span className='set-row-ico'>🔒</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'privacyPolicy')}</div><div className='set-row-desc'>{t(lang,'privacyDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        <div className='set-row' onClick={()=>window.open('https://rawg.io','_blank')}>
+        <div className='set-row' onClick={()=>window.open('https://rawg.io','_blank','noopener,noreferrer')}>
           <span className='set-row-ico'>🎮</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'poweredBy')}</div><div className='set-row-desc'>{t(lang,'poweredByDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
         <div className='set-row' onClick={()=>{
           const subject=encodeURIComponent(`PS5 Vault v${APP_VER} — feedback`);
-          const body=encodeURIComponent(`\n\n---\nDevice: ${navigator.userAgent}\nApp: v${APP_VER}\nLang: ${lang}\nGames: ${games.length}`);
+          // Pull last error from ErrorBoundary log (main.jsx). Helps diagnose crashes that
+          // user couldn't describe — they just hit "Report" and we get the stack.
+          let lastErr='';
+          try{
+            const log=JSON.parse(localStorage.getItem('ps5vault_error_log')||'[]');
+            const last=log[log.length-1];
+            if(last) lastErr=`\nLast error (${last.time||'?'}): ${last.message||''}`;
+          }catch{}
+          const body=encodeURIComponent(`\n\n---\nDevice: ${navigator.userAgent}\nApp: v${APP_VER}\nLang: ${lang}\nGames: ${games.length}${lastErr}`);
           window.location.href=`mailto:skudev6@gmail.com?subject=${subject}&body=${body}`;
         }}>
           <span className='set-row-ico'>📧</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'reportProblem')}</div><div className='set-row-desc'>{t(lang,'reportProblemDesc')}</div></div><span className='set-row-arrow'>›</span>
@@ -1685,22 +1758,40 @@ export default function App(){
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
 
   const setGames=useCallback(val=>{setGamesRaw(prev=>{const next=typeof val==='function'?val(prev):val;lsWrite(next);return next;});},[]);
-  useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&Notification.permission==='granted')checkReleases(g);});},[]);// eslint-disable-line
+  useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&Notification.permission==='granted')checkReleases(g,lang);});},[]);// eslint-disable-line
   const flash=useCallback(msg=>{setToast(msg);setTimeout(()=>setToast(null),2200);},[]);
+  // Register a global callback so top-level lsWrite/timerWrite can signal storage failures
+  // (quota exceeded, storage disabled) and surface them as a toast — instead of silent loss.
+  useEffect(()=>{
+    window.__ps5v_storageError=(kind)=>{
+      flash(t(lang, kind==='quota'?'storageQuotaErr':'storageGenericErr'));
+    };
+    return ()=>{ delete window.__ps5v_storageError; };
+  },[lang,flash]);
   const requestNotif=async()=>{const p=await requestNotifPerm();setNotifP(p);return p;};
 
   function handleSave(form){
     const isEdit=!!form.id;const id=isEdit?form.id:uid();const game={...form,id,addedAt:form.addedAt||new Date().toISOString()};
+    // Fix zombie timer: if edit sets status away from 'gram' while this game's timer is active, clean it up
+    if(isEdit && game.status!=='gram'){
+      const t=timerRead(); if(t&&t.gameId===id) timerWrite(null);
+    }
     setGames(prev=>isEdit?prev.map(g=>g.id===id?game:g):[...prev,game]);
     setModal(null);flash(isEdit?t(lang,'saved'):t(lang,'added'));
   }
   function handleDel(id){
     const title=games.find(g=>g.id===id)?.title||'';
+    // Clean up timer if the deleted game had an active session
+    const tmr=timerRead(); if(tmr&&tmr.gameId===id) timerWrite(null);
     setGames(prev=>prev.filter(g=>g.id!==id));
     setModal(null);flash(t(lang,'deleted',{title}));
   }
   function handleStatusChange(id,status,extra={}){
     const SM2=getSM(lang);
+    // Clean up timer if status moves away from 'gram' (prevents zombie timer on status swap)
+    if(status!=='gram'){
+      const tmr=timerRead(); if(tmr&&tmr.gameId===id) timerWrite(null);
+    }
     setGames(prev=>prev.map(g=>g.id===id?{...g,status,...extra}:g));
     if(extra.hours!==undefined)flash(lang==='pl'?`✓ Sesja zapisana`:t(lang,'sessionSaved',{h:Math.floor(extra.hours),m:Math.round((extra.hours%1)*60)}));
     else flash(t(lang,'statusChanged',{status:SM2[status]?.label}));
