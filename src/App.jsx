@@ -148,6 +148,10 @@ const TRANSLATIONS = {
     hoursPlayed:"{h} zagranych",
     progComplete:"{n}% ukończone",
     timerStart:"▶ Zacznij sesję", timerStop:"⏹ Zakończ sesję", timerToday:"Dziś: {h}h {m}min", sessionSaved:"✓ Sesja zapisana ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Dodaj do wishlisty", wishlistEmpty:"Wishlist jest pusta", targetPrice:"Docelowa cena", addedToWishlist:"✓ Dodano do wishlisty", removedFromWishlist:"✓ Usunięto z wishlisty", forgotten:"🕰 Zapomniane gry", forgottenSub:"Kupione dawno, nigdy nieuruchomione", budget:"💳 Budżet miesięczny", budgetSet:"Ustaw budżet", budgetSpent:"Wydano w tym miesiącu", budgetLeft:"Pozostało", budgetOver:"⚠️ Przekroczono budżet!",
+    budgetEdit:"Edytuj", budgetSetBtn:"Ustaw", budgetSaved:"✓ Budżet ustawiony: {amount}", budgetCleared:"✓ Budżet wyłączony",
+    budgetInvalidAmount:"⚠ Wpisz kwotę większą od 0",
+    monthPurchases:"📅 W tym miesiącu", monthPurchasesNone:"Brak zakupów w tym miesiącu",
+    monthPurchasesSummary:"{n} {gamesWord}, {amount}", gamesWord1:"gra", gamesWord234:"gry", gamesWord5:"gier",
     sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", filterSold:"Sprzedane", filterPlatinum:"🏆 Platyna", platinum:"Platyna",
     rateGame:"⭐ Oceń grę", ratingQuick:"Twoja ocena (1–10):", rateSkip:"Pomiń", rateSave:"Zapisz ocenę",
   },
@@ -290,6 +294,10 @@ const TRANSLATIONS = {
     hoursPlayed:"{h} played",
     progComplete:"{n}% complete",
     timerStart:"▶ Start session", timerStop:"⏹ Stop session", timerToday:"Today: {h}h {m}min", sessionSaved:"✓ Session saved ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Add to wishlist", wishlistEmpty:"Wishlist is empty", targetPrice:"Target price", addedToWishlist:"✓ Added to wishlist", removedFromWishlist:"✓ Removed from wishlist", forgotten:"🕰 Forgotten games", forgottenSub:"Bought long ago, never played", budget:"💳 Monthly budget", budgetSet:"Set budget", budgetSpent:"Spent this month", budgetLeft:"Remaining", budgetOver:"⚠️ Budget exceeded!",
+    budgetEdit:"Edit", budgetSetBtn:"Set", budgetSaved:"✓ Budget set: {amount}", budgetCleared:"✓ Budget disabled",
+    budgetInvalidAmount:"⚠ Enter an amount greater than 0",
+    monthPurchases:"📅 This month", monthPurchasesNone:"No purchases this month",
+    monthPurchasesSummary:"{n} {gamesWord}, {amount}", gamesWord1:"game", gamesWord234:"games", gamesWord5:"games",
     sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", filterSold:"Sold", filterPlatinum:"🏆 Platinum", platinum:"Platinum",
     rateGame:"⭐ Rate game", ratingQuick:"Your rating (1–10):", rateSkip:"Skip", rateSave:"Save rating",
   }
@@ -344,6 +352,17 @@ function fmtShort(d,lang){
   return `${day} ${months[dt.getMonth()]}`;
 }
 function pln(v,lang){ return `${(+v||0).toFixed(0)} zł`; }
+
+// Polish has 3-form plural: 1 gra, 2-4 gry, 5+ gier (also 12-14 → "gier", 22-24 → "gry")
+// English uses simpler 1 game / 2+ games
+function gamesWord(n,lang){
+  const abs=Math.abs(n);
+  if(lang==='en') return abs===1?'game':'games';
+  if(abs===1) return 'gra';
+  const last=abs%10, lastTwo=abs%100;
+  if(last>=2 && last<=4 && (lastTwo<10 || lastTwo>=20)) return 'gry';
+  return 'gier';
+}
 // Format hours as "2h 54min" / "30min" / "5h" — replaces ugly "2.9h"
 // minStr: "min" in both PL/EN (common, no need to translate)
 function fmtHours(v,opts){
@@ -1078,6 +1097,7 @@ function SessionTimer({game, onSave, lang}) {
 }
 
 function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
+  const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
   const backlog=games.filter(g=>g.status==='planuje'&&!g.releaseDate);
@@ -1094,6 +1114,13 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
   const totalSpent=totalBase+totalDLC;
   const totalEarned=sold.reduce((s,g)=>s+ +g.priceSold,0);
   const sellable=games.filter(g=>g.status==='porzucone'&&!!+g.priceBought&&(g.priceSold==null||!+g.priceSold)).sort((a,b)=>+b.priceBought - +a.priceBought);
+  // Monthly purchases — games added in the current local month with a price.
+  // Shown as expandable card on Home when purchases exist this month.
+  const monthKey=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})();
+  const monthPurchasesList=games
+    .filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought)
+    .sort((a,b)=>(b.addedAt||'').localeCompare(a.addedAt||''));
+  const monthSpent=monthPurchasesList.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
   if(!games.length)return(<div className='scr'><div className='empty' style={{paddingTop:60}}><div className='eic'>🎮</div><div className='ett'>{t(lang,'obTitle')}</div><div className='ess'>{t(lang,'obSub')}</div><button className='empty-cta' onClick={onAddFirst}>{t(lang,'addGame')}</button></div></div>);
   const hour=new Date().getHours();
   const greet=hour<6?t(lang,'goodNight'):hour<12?t(lang,'goodMorning'):hour<18?t(lang,'goodAfternoon'):t(lang,'goodEvening');
@@ -1166,6 +1193,45 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
             <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}><span style={{fontWeight:600}}>{t(lang,'realCost')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.org}}>{pln(totalSpent-totalEarned,lang)}</span></div>
             {sellable.length>0&&<div style={{marginTop:6,padding:'10px 12px',background:'rgba(57,255,110,.07)',border:'1px solid rgba(57,255,110,.2)',borderRadius:10,fontSize:11,color:G.txt,lineHeight:1.5}}>{t(lang,'sellSuggestion',{title:sellable[0].title,amount:pln(+sellable[0].priceBought*0.6,lang)})}{sellable.length>1&&` (+${sellable.length-1})`}</div>}
           </div>
+        </div>
+      )}
+      {monthPurchasesList.length>0 && (
+        <div className='hcard' style={{cursor:'pointer'}} onClick={()=>setMonthOpen(o=>!o)}>
+          <div className='hcard-hdr'>
+            <span className='hcard-title'>{t(lang,'monthPurchases')}</span>
+            <span className='hcard-badge' style={{background:'rgba(167,139,250,.12)',color:G.pur}}>
+              {monthPurchasesList.length} {gamesWord(monthPurchasesList.length,lang)} · {pln(monthSpent,lang)}
+            </span>
+          </div>
+          {monthOpen && (
+            <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>
+              {monthPurchasesList.slice(0,8).map(g=>(
+                <div key={g.id} onClick={e=>{e.stopPropagation();onOpen(g);}}
+                  style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',background:G.card2,borderRadius:8,cursor:'pointer'}}>
+                  {g.cover
+                    ? <div style={{width:32,height:32,borderRadius:6,backgroundImage:`url(${g.cover})`,backgroundSize:'cover',backgroundPosition:'center',flexShrink:0}}/>
+                    : <div style={{width:32,height:32,borderRadius:6,background:G.card,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.pur,flexShrink:0}}>{g.abbr||'??'}</div>}
+                  <div style={{flex:1,overflow:'hidden'}}>
+                    <div style={{fontSize:12,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{g.title}</div>
+                    {g.storeBought && <div style={{fontSize:10,color:G.dim}}>{g.storeBought}</div>}
+                  </div>
+                  <div style={{fontSize:11,fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.org,flexShrink:0}}>
+                    {pln(+g.priceBought + +(g.extraSpend||0),lang)}
+                  </div>
+                </div>
+              ))}
+              {monthPurchasesList.length>8 && (
+                <div style={{fontSize:10,color:G.dim,textAlign:'center',marginTop:4}}>
+                  +{monthPurchasesList.length-8} {gamesWord(monthPurchasesList.length-8,lang)}
+                </div>
+              )}
+            </div>
+          )}
+          {!monthOpen && (
+            <div style={{fontSize:11,color:G.dim,marginTop:6}}>
+              {lang==='pl'?'Stuknij żeby zobaczyć szczegóły':'Tap to see details'}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1802,6 +1868,104 @@ function Settings({games,setGames,flash,lang,setLang,openImport,openPrivacy}){
   );
 }
 
+// v1.3: BudgetEditor — proper save/edit pattern instead of "phantom Set button"
+// State machine: editing=true (input + Set/Cancel) ←→ editing=false (display + Edit + Clear)
+function BudgetEditor({budget,setBudget,games,flash,lang}){
+  // editing=true on first paint when no amount yet (so user sees an input, not empty)
+  const [editing,setEditing]=useState(()=>!budget.amount);
+  const [draft,setDraft]=useState(()=>budget.amount||'');
+  // Local-time month key (YYYY-MM) — see dayKey() comment about UTC bug
+  const monthKey=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})();
+  // Spent this month: games added in current local month with priceBought, plus extraSpend
+  // Note: g.addedAt is stored as toISOString() (UTC), so for users near midnight a game added
+  // 1 maja 00:30 local time may slot into "April" budget. Documented limitation, not fixed
+  // because g.addedAt schema would need a refactor.
+  const spent=games.filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought)
+    .reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
+
+  function commit(){
+    const v=+draft;
+    if(!Number.isFinite(v) || v<=0){
+      flash(t(lang,'budgetInvalidAmount'));
+      return;
+    }
+    if(v>99999){ flash(lang==='pl'?'⚠ Maksymalnie 99 999 zł':'⚠ Max 99,999'); return; }
+    setBudget(p=>({...p,amount:String(Math.round(v)),month:monthKey}));
+    flash(t(lang,'budgetSaved',{amount:pln(v,lang)}));
+    setEditing(false);
+  }
+  function clear(){
+    setBudget(p=>({...p,amount:''}));
+    setDraft('');
+    setEditing(true);
+    flash(t(lang,'budgetCleared'));
+  }
+  function startEdit(){
+    setDraft(budget.amount||'');
+    setEditing(true);
+  }
+  function cancelEdit(){
+    setDraft(budget.amount||'');
+    setEditing(false);
+  }
+
+  if(editing){
+    return (
+      <>
+        <div style={{display:'flex',gap:8,marginBottom:budget.amount?6:0}}>
+          <input className='fi' style={{flex:1}} inputMode='decimal'
+            placeholder={lang==='pl'?'Budżet (PLN)':'Budget'}
+            value={draft}
+            onChange={e=>setDraft(e.target.value.replace(/[^\d.]/g,''))}
+            onKeyDown={e=>{if(e.key==='Enter')commit();}}
+            autoFocus={!budget.amount}/>
+          <button type='button' onClick={commit}
+            style={{padding:'8px 14px',border:'none',borderRadius:9,background:G.blu,color:'#000',fontWeight:700,fontSize:12,cursor:'pointer'}}>
+            {t(lang,'budgetSetBtn')}
+          </button>
+        </div>
+        {budget.amount && <button type='button' onClick={cancelEdit}
+          style={{background:'transparent',border:'none',color:G.dim,fontSize:11,cursor:'pointer',padding:'4px 0'}}>
+          {t(lang,'cancel2')}
+        </button>}
+      </>
+    );
+  }
+
+  // Display mode (saved)
+  const left=+budget.amount-spent;
+  const pct=Math.min(100,(spent/+budget.amount)*100);
+  return (
+    <>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:18,fontWeight:900,color:G.txt}}>{pln(+budget.amount,lang)}</div>
+        <div style={{display:'flex',gap:6}}>
+          <button type='button' onClick={startEdit}
+            style={{padding:'6px 12px',border:`1px solid ${G.bdr}`,borderRadius:8,background:'transparent',color:G.blu,fontSize:11,fontWeight:700,cursor:'pointer'}}>
+            ✏ {t(lang,'budgetEdit')}
+          </button>
+          <button type='button' onClick={clear}
+            style={{padding:'6px 10px',border:`1px solid rgba(255,77,109,.2)`,borderRadius:8,background:'transparent',color:G.red,fontSize:11,fontWeight:700,cursor:'pointer'}}>
+            ✕
+          </button>
+        </div>
+      </div>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
+        <span style={{color:G.dim}}>{t(lang,'budgetSpent')}</span>
+        <span style={{fontWeight:700,color:G.org}}>{pln(spent,lang)}</span>
+      </div>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:8}}>
+        <span style={{color:G.dim}}>{t(lang,'budgetLeft')}</span>
+        <span style={{fontWeight:700,color:left>=0?G.grn:G.red}}>{pln(Math.abs(left),lang)}</span>
+      </div>
+      <div style={{height:8,borderRadius:4,background:G.bdr,overflow:'hidden'}}>
+        <div style={{height:'100%',borderRadius:4,background:left>=0?G.grn:G.red,width:pct+'%',transition:'width .3s'}}/>
+      </div>
+      {left<0 && <div style={{fontSize:11,color:G.red,marginTop:6,fontWeight:700}}>⚠️ {t(lang,'budgetOver')}</div>}
+    </>
+  );
+}
+
 export default function App(){
   const [games,setGamesRaw]    = useState(()=>lsRead());
   const [onboarded,setOnboard] = useState(()=>isOnboarded());
@@ -1970,23 +2134,7 @@ export default function App(){
         <div style={{padding:'0 16px 8px'}}>
           <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
           <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>
-            <div style={{display:'flex',gap:8,marginBottom:8}}>
-              <input className='fi' style={{flex:1}} inputMode='decimal' placeholder={lang==='pl'?'Budżet (PLN)':'Budget'} 
-                value={budget.amount||''} onChange={e=>setBudget(p=>({...p,amount:e.target.value}))}/>
-              <button type='button' onClick={()=>setBudget(p=>({...p,month:new Date().toISOString().slice(0,7)}))} 
-                style={{padding:'8px 14px',border:'none',borderRadius:9,background:G.blu,color:'#000',fontWeight:700,fontSize:12,cursor:'pointer'}}>
-                {lang==='pl'?'Ustaw':'Set'}
-              </button>
-            </div>
-            {budget.amount&&(()=>{
-              const thisMonth=new Date().toISOString().slice(0,7);
-              const spent=games.filter(g=>g.addedAt&&g.addedAt.slice(0,7)===thisMonth&&!!+g.priceBought).reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
-              const left=+budget.amount-spent;
-              return <><div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}><span style={{color:G.dim}}>{t(lang,'budgetSpent')}</span><span style={{fontWeight:700,color:G.org}}>{pln(spent,lang)}</span></div>
-              <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:8}}><span style={{color:G.dim}}>{t(lang,'budgetLeft')}</span><span style={{fontWeight:700,color:left>=0?G.grn:G.red}}>{pln(Math.abs(left),lang)}</span></div>
-              <div style={{height:8,borderRadius:4,background:G.bdr,overflow:'hidden'}}><div style={{height:'100%',borderRadius:4,background:left>=0?G.grn:G.red,width:Math.min(100,(spent/+budget.amount)*100)+'%',transition:'width .3s'}}/></div>
-              {left<0&&<div style={{fontSize:11,color:G.red,marginTop:6,fontWeight:700}}>⚠️ {t(lang,'budgetOver')}</div>}</>
-            })()}
+            <BudgetEditor budget={budget} setBudget={setBudget} games={games} flash={flash} lang={lang}/>
           </div>
         </div>
 </> }
