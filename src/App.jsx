@@ -150,8 +150,32 @@ const TRANSLATIONS = {
     timerStart:"▶ Zacznij sesję", timerStop:"⏹ Zakończ sesję", timerToday:"Dziś: {h}h {m}min", sessionSaved:"✓ Sesja zapisana ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Dodaj do wishlisty", wishlistEmpty:"Wishlist jest pusta", targetPrice:"Docelowa cena", addedToWishlist:"✓ Dodano do wishlisty", removedFromWishlist:"✓ Usunięto z wishlisty", forgotten:"🕰 Zapomniane gry", forgottenSub:"Kupione dawno, nigdy nieuruchomione", budget:"💳 Budżet miesięczny", budgetSet:"Ustaw budżet", budgetSpent:"Wydano w tym miesiącu", budgetLeft:"Pozostało", budgetOver:"⚠️ Przekroczono budżet!",
     budgetEdit:"Edytuj", budgetSetBtn:"Ustaw", budgetSaved:"✓ Budżet ustawiony: {amount}", budgetCleared:"✓ Budżet wyłączony",
     budgetInvalidAmount:"⚠ Wpisz kwotę większą od 0",
+    budgetOverflow:"Przekroczono o",
     monthPurchases:"📅 W tym miesiącu", monthPurchasesNone:"Brak zakupów w tym miesiącu",
     monthPurchasesSummary:"{n} {gamesWord}, {amount}", gamesWord1:"gra", gamesWord234:"gry", gamesWord5:"gier",
+    spendingByMonth:"Wydatki w czasie", topMonth:"Najdroższy miesiąc",
+    // v1.3 — finance/stats insights
+    backlogCost:"🎮 Niezagrane gry", backlogCostDesc:"{n} {gamesWord} bez ani jednej godziny grania",
+    backlogCostBadge:"Zamrożone w półce",
+    yearProjection:"📈 Projekcja roczna",
+    yearProjectionDesc:"Średnio wydajesz {avg}/mies przez ostatnie {months}.",
+    yearProjectionEnd:"Do końca {year}: ~{total}",
+    yearVsLast:"To {ratio} razy {dir} niż w {year}",
+    yearVsLastDirMore:"więcej",
+    yearVsLastDirLess:"mniej",
+    yearProjectionNoData:"Za mało danych — wróć tu za miesiąc",
+    perGenreValue:"💎 Wartość wg gatunku",
+    perGenreValueHint:"Najlepszy zwrot zł/h",
+    perGenreNoData:"Dodaj godziny grania do gier żeby zobaczyć analizę",
+    perGenreCol:"{n} {gamesWord} · {hours}",
+    yearROI:"📊 Rok do roku",
+    yearROIBought:"Wydane",
+    yearROIRecovered:"Odzyskane",
+    yearROIRatio:"{pct}%",
+    yearROINoData:"Sprzedaj jakieś gry żeby zobaczyć trend",
+    activeDays:"🎯 Aktywne dni",
+    activeDaysDesc:"{played} z {total} dni miesiąca",
+    activeDaysVs:"W zeszłym miesiącu: {n}",
     sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", filterSold:"Sprzedane", filterPlatinum:"🏆 Platyna", platinum:"Platyna",
     rateGame:"⭐ Oceń grę", ratingQuick:"Twoja ocena (1–10):", rateSkip:"Pomiń", rateSave:"Zapisz ocenę",
   },
@@ -296,8 +320,32 @@ const TRANSLATIONS = {
     timerStart:"▶ Start session", timerStop:"⏹ Stop session", timerToday:"Today: {h}h {m}min", sessionSaved:"✓ Session saved ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Add to wishlist", wishlistEmpty:"Wishlist is empty", targetPrice:"Target price", addedToWishlist:"✓ Added to wishlist", removedFromWishlist:"✓ Removed from wishlist", forgotten:"🕰 Forgotten games", forgottenSub:"Bought long ago, never played", budget:"💳 Monthly budget", budgetSet:"Set budget", budgetSpent:"Spent this month", budgetLeft:"Remaining", budgetOver:"⚠️ Budget exceeded!",
     budgetEdit:"Edit", budgetSetBtn:"Set", budgetSaved:"✓ Budget set: {amount}", budgetCleared:"✓ Budget disabled",
     budgetInvalidAmount:"⚠ Enter an amount greater than 0",
+    budgetOverflow:"Over by",
     monthPurchases:"📅 This month", monthPurchasesNone:"No purchases this month",
     monthPurchasesSummary:"{n} {gamesWord}, {amount}", gamesWord1:"game", gamesWord234:"games", gamesWord5:"games",
+    spendingByMonth:"Spending over time", topMonth:"Biggest month",
+    // v1.3 — finance/stats insights
+    backlogCost:"🎮 Unplayed games", backlogCostDesc:"{n} {gamesWord} with zero hours played",
+    backlogCostBadge:"Frozen on the shelf",
+    yearProjection:"📈 Yearly projection",
+    yearProjectionDesc:"You spend {avg}/month on average over the last {months}.",
+    yearProjectionEnd:"By end of {year}: ~{total}",
+    yearVsLast:"That's {ratio}× {dir} than {year}",
+    yearVsLastDirMore:"more",
+    yearVsLastDirLess:"less",
+    yearProjectionNoData:"Not enough data — check back in a month",
+    perGenreValue:"💎 Value by genre",
+    perGenreValueHint:"Best return on PLN/hour",
+    perGenreNoData:"Add play hours to your games to see this analysis",
+    perGenreCol:"{n} {gamesWord} · {hours}",
+    yearROI:"📊 Year over year",
+    yearROIBought:"Spent",
+    yearROIRecovered:"Recovered",
+    yearROIRatio:"{pct}%",
+    yearROINoData:"Mark some games as sold to see the trend",
+    activeDays:"🎯 Active days",
+    activeDaysDesc:"{played} of {total} days this month",
+    activeDaysVs:"Last month: {n}",
     sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", filterSold:"Sold", filterPlatinum:"🏆 Platinum", platinum:"Platinum",
     rateGame:"⭐ Rate game", ratingQuick:"Your rating (1–10):", rateSkip:"Skip", rateSave:"Save rating",
   }
@@ -1580,6 +1628,14 @@ function Stats({games,lang}){
         // Session stats
         const avgSessionHours=sessions.reduce((a,s)=>a+s.hours,0)/sessions.length;
         const longestSessionHours=sessions.reduce((m,s)=>Math.max(m,s.hours),0);
+        // v1.3 #5 — Active gaming days this month vs last month
+        const activeDaysThisMonth=monthDays.filter(d=>d.hours>0&&!d.isFuture).length;
+        const daysElapsedThisMonth=monthDays.filter(d=>!d.isFuture).length;
+        let activeDaysPrevMonth=0;
+        for(let d=new Date(prevMStart); d<=prevMEnd; d.setDate(d.getDate()+1)){
+          const k=dayKey(d);
+          if((byDay.get(k)||[]).length>0)activeDaysPrevMonth++;
+        }
         // Top games by total session hours (this month scope)
         const monthSessions=sessions.filter(s=>{
           const d=new Date(s.startedAt);
@@ -1609,6 +1665,18 @@ function Stats({games,lang}){
             <div className='kcd' style={{'--c':G.gld}}><div className='kvl'>{longestStreak}</div><div className='klb'>{t(lang,'longestStreak')} ({t(lang,'daysStreak')})</div></div>
             <div className='kcd' style={{'--c':G.blu}}><div className='kvl' style={{fontSize:18}}>{fmtHours(avgSessionHours,{compact:true})}</div><div className='klb'>{t(lang,'avgSession')}</div></div>
             <div className='kcd' style={{'--c':G.pur}}><div className='kvl' style={{fontSize:18}}>{fmtHours(longestSessionHours,{compact:true})}</div><div className='klb'>{t(lang,'longestSession')}</div></div>
+          </div>
+          <div className='ccd' style={{borderColor:'rgba(167,139,250,.3)',background:'linear-gradient(135deg,rgba(167,139,250,.06),rgba(0,212,255,.04))'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:6}}>
+              <div style={{fontSize:11,fontWeight:700,color:G.pur,letterSpacing:'.05em'}}>{t(lang,'activeDays')}</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.pur,lineHeight:1}}>
+                {activeDaysThisMonth}<span style={{fontSize:14,color:G.dim,fontWeight:500}}>/{daysElapsedThisMonth}</span>
+              </div>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11,color:G.dim}}>
+              <span>{t(lang,'activeDaysDesc',{played:activeDaysThisMonth,total:daysElapsedThisMonth})}</span>
+              {activeDaysPrevMonth>0&&<span>{t(lang,'activeDaysVs',{n:activeDaysPrevMonth})}</span>}
+            </div>
           </div>
 
           {/* Today */}
@@ -1746,6 +1814,103 @@ function Finance({games,lang}){
   const gcMap={}; bought.forEach(g=>{if(g.genre)gcMap[g.genre]=(gcMap[g.genre]||0)+ +g.priceBought;});
   const gcData=Object.entries(gcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v:+v.toFixed(0)}));
   const soldG=sold.map(g=>({...g,roi:+g.priceSold - +g.priceBought})).sort((a,b)=>b.roi-a.roi);
+  // Monthly spending — last 12 months, oldest first for chart left-to-right
+  // Aggregates priceBought + extraSpend per month based on g.addedAt (UTC ok for trend visualization)
+  const monthlyMap={};
+  bought.forEach(g=>{
+    if(!g.addedAt)return;
+    const k=g.addedAt.slice(0,7);  // YYYY-MM
+    monthlyMap[k]=(monthlyMap[k]||0)+ +g.priceBought + +(g.extraSpend||0);
+  });
+  // Build last 12 months series — fill gaps with 0 so chart shows continuous timeline
+  const monthlyData=[];
+  const _now=new Date();
+  for(let i=11;i>=0;i--){
+    const d=new Date(_now.getFullYear(),_now.getMonth()-i,1);
+    const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const months=lang==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+    const label=`${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+    monthlyData.push({n:label,v:Math.round(monthlyMap[k]||0),k});
+  }
+  // Find max month (highest spend) for highlight + caption
+  const maxMonth=monthlyData.reduce((m,d)=>d.v>m.v?d:m,{v:0});
+  const monthlyHasData=monthlyData.some(d=>d.v>0);
+
+  // v1.3 #3 — Backlog cost: games with priceBought but zero hours played
+  const backlogGames=games.filter(g=>!!+g.priceBought && (!g.hours || +g.hours===0) && g.status!=='ukonczone' && g.status!=='porzucone');
+  const backlogCost=backlogGames.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
+
+  // v1.3 #1 — Year projection: avg from last 3-6 months × remaining months in year
+  // Requires at least 1 month of data (excluding current incomplete month)
+  // Compare with same period prior year
+  const _curMonth=_now.getMonth();  // 0-indexed
+  const _curYear=_now.getFullYear();
+  // Avg of last 3 fully complete months (skip current incomplete month)
+  const recent3=[];
+  for(let i=1;i<=3;i++){
+    const d=new Date(_curYear,_curMonth-i,1);
+    const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(monthlyMap[k]!==undefined)recent3.push(monthlyMap[k]||0);
+  }
+  const avgRecent=recent3.length>0?recent3.reduce((s,v)=>s+v,0)/recent3.length:0;
+  // Already spent this year
+  const ytdSpent=Object.entries(monthlyMap)
+    .filter(([k])=>k.startsWith(_curYear+'-'))
+    .reduce((s,[,v])=>s+v,0);
+  // Project remainder of year
+  const monthsRemaining=11-_curMonth;  // months after current (e.g. April = 7 remaining)
+  const projectedTotal=Math.round(ytdSpent + avgRecent * monthsRemaining);
+  // Prior year same period total (Jan-current month last year)
+  const prevYear=_curYear-1;
+  const prevYearSamePeriod=Object.entries(monthlyMap)
+    .filter(([k])=>{
+      if(!k.startsWith(prevYear+'-'))return false;
+      const m=parseInt(k.slice(5,7),10);
+      return m<=_curMonth+1;
+    })
+    .reduce((s,[,v])=>s+v,0);
+  const prevYearFull=Object.entries(monthlyMap)
+    .filter(([k])=>k.startsWith(prevYear+'-'))
+    .reduce((s,[,v])=>s+v,0);
+  const projectionHasData=avgRecent>0 && recent3.length>=2;
+  const ratioVsLast=prevYearFull>0?(projectedTotal/prevYearFull):null;
+
+  // v1.3 #2 — Per-genre $/h aggregate
+  const genreAgg={};
+  bought.filter(g=>g.genre && +g.hours>0).forEach(g=>{
+    const ge=g.genre;
+    if(!genreAgg[ge])genreAgg[ge]={hours:0,cost:0,count:0};
+    genreAgg[ge].hours+=+g.hours;
+    genreAgg[ge].cost+=+g.priceBought + +(g.extraSpend||0);
+    genreAgg[ge].count++;
+  });
+  const perGenreData=Object.entries(genreAgg)
+    .map(([n,v])=>({n,cph:v.cost/v.hours,hours:v.hours,count:v.count}))
+    .filter(d=>d.count>=1)  // at least 1 game with hours
+    .sort((a,b)=>a.cph-b.cph)  // best (lowest) first
+    .slice(0,5);
+  const perGenreHasData=perGenreData.length>0;
+
+  // v1.3 #4 — Year over year ROI: bought vs recovered ratio per calendar year
+  const yearAgg={};
+  games.forEach(g=>{
+    if(g.addedAt && +g.priceBought){
+      const y=g.addedAt.slice(0,4);
+      yearAgg[y]=yearAgg[y]||{bought:0,recovered:0};
+      yearAgg[y].bought+=+g.priceBought + +(g.extraSpend||0);
+    }
+    // Use addedAt year for sold tracking too — sale year would need separate field
+    if(g.addedAt && g.priceSold!=null && +g.priceSold>0){
+      const y=g.addedAt.slice(0,4);
+      yearAgg[y]=yearAgg[y]||{bought:0,recovered:0};
+      yearAgg[y].recovered+=+g.priceSold;
+    }
+  });
+  const yearROIData=Object.entries(yearAgg)
+    .map(([y,v])=>({year:y,bought:v.bought,recovered:v.recovered,pct:v.bought>0?Math.round(v.recovered/v.bought*100):0}))
+    .sort((a,b)=>b.year.localeCompare(a.year))  // newest first
+    .slice(0,3);
+  const yearROIHasData=yearROIData.some(d=>d.recovered>0);
 
   const fkpis=[
     {l:t(lang,'spent'),        v:pln(totalBase,lang),   c:G.red, bg:'rgba(255,77,109,.07)'},
@@ -1792,9 +1957,66 @@ function Finance({games,lang}){
         </div>
         {!bought.length?<div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noFinanceData')}</div><div className='ess'>{t(lang,'addPricesHint')}</div></div>:<>
           <div className='fkgd'>{fkpis.map(k=><div key={k.l} className='fkcd' style={{'--c':k.c,background:k.bg}}><div className='fkv'>{k.v}</div><div className='fkl'>{k.l}</div></div>)}</div>
+          {backlogGames.length>0&&<div className='ccd' style={{borderColor:'rgba(255,159,28,.3)',background:'linear-gradient(135deg,rgba(255,159,28,.06),rgba(255,77,109,.04))'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
+              <div style={{fontSize:11,fontWeight:700,color:G.org,letterSpacing:'.05em'}}>{t(lang,'backlogCost')}</div>
+              <div style={{fontSize:9,color:G.dim,textTransform:'uppercase',letterSpacing:'.08em'}}>{t(lang,'backlogCostBadge')}</div>
+            </div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:30,fontWeight:900,color:G.org,lineHeight:1,marginTop:6,marginBottom:4}}>{pln(backlogCost,lang)}</div>
+            <div style={{fontSize:11,color:G.dim}}>{t(lang,'backlogCostDesc',{n:backlogGames.length,gamesWord:gamesWord(backlogGames.length,lang)})}</div>
+          </div>}
+          {monthlyHasData&&<div className='ccd'>
+            <div className='ctl'>{t(lang,'spendingByMonth')}</div>
+            <ResponsiveContainer width='100%' height={140}>
+              <BarChart data={monthlyData} barSize={16} margin={{top:4,left:0,right:0,bottom:4}}>
+                <XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={1} padding={{left:8,right:8}}/>
+                <YAxis hide/>
+                <Tooltip content={<CTip/>}/>
+                <Bar dataKey='v' radius={[4,4,0,0]}>
+                  {monthlyData.map((d,i)=><Cell key={i} fill={d.k===maxMonth.k&&d.v>0?G.red:G.blu} fillOpacity={d.v>0?(d.k===maxMonth.k?0.95:0.7):0.15}/>)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            {maxMonth.v>0&&<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11,color:G.dim,marginTop:4}}>
+              <span>{t(lang,'topMonth')}: <span style={{color:G.red,fontWeight:700}}>{maxMonth.n}</span></span>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.red}}>{pln(maxMonth.v,lang)}</span>
+            </div>}
+          </div>}
+          {projectionHasData&&<div className='ccd' style={{borderColor:'rgba(0,212,255,.3)'}}>
+            <div className='ctl'>{t(lang,'yearProjection')}</div>
+            <div style={{fontSize:12,color:G.dim,lineHeight:1.5,marginBottom:8}}>
+              {t(lang,'yearProjectionDesc',{avg:pln(Math.round(avgRecent),lang),months:recent3.length})}
+            </div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.blu,lineHeight:1,marginBottom:6}}>
+              ~{pln(projectedTotal,lang)}
+            </div>
+            <div style={{fontSize:11,color:G.dim}}>
+              {t(lang,'yearProjectionEnd',{year:_curYear,total:pln(projectedTotal,lang)}).replace(': ~'+pln(projectedTotal,lang),'')}
+            </div>
+            {ratioVsLast!==null && Math.abs(ratioVsLast-1)>0.05 && <div style={{fontSize:11,marginTop:8,padding:'8px 10px',background:ratioVsLast>1?'rgba(255,77,109,.07)':'rgba(57,255,110,.07)',border:`1px solid ${ratioVsLast>1?'rgba(255,77,109,.2)':'rgba(57,255,110,.2)'}`,borderRadius:8,color:ratioVsLast>1?G.red:G.grn,fontWeight:600}}>
+              {t(lang,'yearVsLast',{ratio:ratioVsLast.toFixed(1),dir:t(lang,ratioVsLast>1?'yearVsLastDirMore':'yearVsLastDirLess'),year:prevYear})}
+            </div>}
+          </div>}
           {storeData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byStore')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={storeData} barSize={28} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:28,right:28}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.org} fillOpacity={0.85}/></BarChart></ResponsiveContainer></div>}
           {gcData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'byGenre')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gcData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
+          {perGenreHasData&&<div className='ccd'>
+            <div className='ctl'>{t(lang,'perGenreValue')}</div>
+            <div style={{fontSize:11,color:G.dim,marginBottom:8}}>{t(lang,'perGenreValueHint')}</div>
+            <ul className='top-list'>{perGenreData.map((d,i)=><li key={i} className='top-item'>
+              <span className='top-title'>{d.n}</span>
+              <span style={{fontSize:10,color:G.dim,flexShrink:0}}>{t(lang,'perGenreCol',{n:d.count,gamesWord:gamesWord(d.count,lang),hours:fmtHours(d.hours,{compact:true})})}</span>
+              <span className='top-val' style={{color:i===0?G.grn:G.blu}}>{d.cph.toFixed(1)} zł/h</span>
+            </li>)}</ul>
+          </div>}
           {soldG.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'roi')}</div><ul className='top-list'>{soldG.map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{pln(+g.priceBought,lang)}→{pln(+g.priceSold,lang)}</span><span className={'top-val '+(g.roi>=0?'roi-pos':'roi-neg')}>{g.roi>=0?'+':''}{pln(g.roi,lang)}</span></li>)}</ul></div>}
+          {yearROIHasData&&<div className='ccd'>
+            <div className='ctl'>{t(lang,'yearROI')}</div>
+            <ul className='top-list'>{yearROIData.map((d,i)=><li key={i} className='top-item' style={{display:'grid',gridTemplateColumns:'48px 1fr auto',gap:8,alignItems:'baseline'}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.txt}}>{d.year}</span>
+              <span style={{fontSize:11,color:G.dim,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{t(lang,'yearROIBought')}: {pln(d.bought,lang)} · {t(lang,'yearROIRecovered')}: {pln(d.recovered,lang)}</span>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:d.pct>=60?G.grn:d.pct>=40?G.org:G.red}}>{d.pct}%</span>
+            </li>)}</ul>
+          </div>}
           <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{pln(+g.priceBought,lang)}</span></li>)}</ul></div>
           {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{fmtHours(g.hours,{compact:true})}</span><span className='top-val' style={{color:G.grn}}>{(+g.priceBought/g.hours).toFixed(1)} zł/h</span></li>)}</ul></div>}
         </>}
@@ -1955,8 +2177,8 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
         <span style={{fontWeight:700,color:G.org}}>{pln(spent,lang)}</span>
       </div>
       <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:8}}>
-        <span style={{color:G.dim}}>{t(lang,'budgetLeft')}</span>
-        <span style={{fontWeight:700,color:left>=0?G.grn:G.red}}>{pln(Math.abs(left),lang)}</span>
+        <span style={{color:G.dim}}>{left>=0?t(lang,'budgetLeft'):t(lang,'budgetOverflow')}</span>
+        <span style={{fontWeight:700,color:left>=0?G.grn:G.red}}>{left>=0?pln(left,lang):'-'+pln(Math.abs(left),lang)}</span>
       </div>
       <div style={{height:8,borderRadius:4,background:G.bdr,overflow:'hidden'}}>
         <div style={{height:'100%',borderRadius:4,background:left>=0?G.grn:G.red,width:pct+'%',transition:'width .3s'}}/>
