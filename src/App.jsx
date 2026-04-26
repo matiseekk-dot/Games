@@ -2,12 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
 const RAWG_KEY   = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
-const APP_VER    = '1.3.0';
+const APP_VER    = '1.5.0';
 const LS_KEY     = 'ps5vault_v1';
 const LS_ONBOARD = 'ps5vault_onboarded';
 const LS_LANG    = 'ps5vault_lang';
 const LS_CURRENCY = 'ps5vault_currency';
 const LS_EAN_CACHE = 'ps5vault_ean_cache';
+const LS_GOALS = 'ps5vault_goals';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
@@ -152,6 +153,75 @@ const TRANSLATIONS = {
     notesPh:"Twoje przemyślenia...", genrePh:"— wybierz —", targetPh:"np. 40",
     finances:"💰 Finanse", priceBoughtField:"Zapłacono ({cur})", storeField:"Sklep", extraSpendField:"DLC / Mikrotransakcje ({cur})", extraSpendHint:"Dodatkowe zakupy w grze", platformField:"Platforma",
     storePh:"—", soldToggle:"Sprzedałem tę grę", soldPriceField:"Sprzedano za ({cur})",
+    // v1.4.0 — Quick add UX
+    moreDetails:"+ Więcej szczegółów", lessDetails:"− Mniej szczegółów",
+    soldField:"Sprzedane za ({cur})", soldFieldHint:"puste = nie sprzedane",
+    targetFromRawg:"szacunek z RAWG — możesz zmienić",
+    // v1.5.0 — Menu, achievements, goals, wrapped, privacy mini
+    menuAria:"Menu",
+    menuTitle:"Menu",
+    menuWrapped:"🎁 Rok w grach",
+    menuWrappedDesc:"Twoje podsumowanie roku — Spotify Wrapped style",
+    menuAchievements:"🏆 Osiągnięcia",
+    menuAchievementsDesc:"{unlocked} / {total} odblokowanych",
+    menuGoals:"🎯 Cele",
+    menuGoalsDesc:"{active} aktywne · {done} ukończone",
+    menuSettings:"⚙️ Ustawienia",
+    menuSettingsDesc:"Język, waluta, dane, polityka prywatności",
+    // Achievements (id → title/desc inline w tablicy ACHIEVEMENTS)
+    achievementsTitle:"🏆 Osiągnięcia",
+    achievementsSub:"{unlocked} / {total} odblokowanych · {pct}%",
+    achLocked:"Zablokowane",
+    achUnlocked:"Odblokowane",
+    achProgress:"{cur} / {tgt}",
+    achEmpty:"Zacznij dodawać gry żeby odblokować osiągnięcia",
+    // Goals
+    goalsTitle:"🎯 Cele",
+    goalsSub:"Wyznacz cel na ten miesiąc — przyzwyczajaj się do śledzenia",
+    goalsActive:"Aktywne ({n})",
+    goalsDone:"Ukończone ({n})",
+    goalsAdd:"+ Dodaj cel",
+    goalsAddTitle:"Wybierz cel",
+    goalsEmpty:"Brak aktywnych celów",
+    goalsEmptyHint:"Stuknij \"Dodaj cel\" żeby zacząć",
+    goalCardTitle:"🎯 Cele tego miesiąca",
+    goalCardEmpty:"Wyznacz cel — np. 3 gry do ukończenia",
+    goalCardCta:"+ Dodaj",
+    goalDelete:"Usuń",
+    goalRemoved:"✓ Cel usunięty",
+    goalAdded:"✓ Cel dodany",
+    goalDone:"🎉 Cel osiągnięty: {title}",
+    goalRemainingDays:"{n} dni do końca miesiąca",
+    goalLastDay:"Ostatni dzień!",
+    // Goal templates (label + variants by N)
+    goalTplCompleteTitle:"Ukończ {n} gier w tym miesiącu",
+    goalTplHoursTitle:"Zagraj {n} godzin w tym miesiącu",
+    goalTplAddTitle:"Dodaj {n} gier do kolekcji",
+    goalTplPlatinumTitle:"Zdobądź {n} platyn w tym miesiącu",
+    // Year-in-Review
+    wrappedTitle:"Rok w grach {year}",
+    wrappedSub:"Twoje granie w {year} w liczbach",
+    wrappedEmpty:"Za mało danych dla {year}",
+    wrappedEmptyHint:"Dodaj gry, ratingi i sesje żeby zobaczyć podsumowanie",
+    wrappedTotalHours:"Godzin grania",
+    wrappedGamesAdded:"Gier dodanych",
+    wrappedGamesCompleted:"Gier ukończonych",
+    wrappedPlatinums:"Platyn",
+    wrappedTopPlayed:"🏆 Najczęściej grane",
+    wrappedHighestRated:"⭐ Najwyżej oceniona",
+    wrappedTopGenre:"🎮 Ulubiony gatunek",
+    wrappedTopGenreDesc:"{n} godzin · {games} gier",
+    wrappedSpent:"Wydano",
+    wrappedRecovered:"Odzyskano",
+    wrappedActiveDays:"Dni z grą",
+    wrappedActiveDaysDesc:"z {total} dni w roku",
+    wrappedLongestStreak:"Najdłuższa passa",
+    wrappedLongestSession:"Najdłuższa sesja",
+    wrappedShareHint:"Zrób screenshot żeby się pochwalić 📸",
+    wrappedYearPicker:"Rok:",
+    // Privacy mini
+    privacyMiniBody:"Wszystkie dane są przechowywane lokalnie na Twoim urządzeniu — nic nie wysyłamy na serwery, brak trackerów, brak danych osobowych. Jedyne zewnętrzne API to RAWG (wyszukiwanie gier) i UPCitemdb (rozpoznanie EAN podczas skanu) — wysyłany jest tylko tekst zapytania lub kod EAN, nigdy Twoja kolekcja.",
+    privacyMiniLink:"Pełna polityka prywatności →",
     notifications:"Powiadomienia", notifyOn:"🔔 Powiadamiaj o premierze",
     notifyDesc:"3 dni przed i w dniu premiery", notifyBlocked:"⛔ Zablokowane w ustawieniach przeglądarki",
     cancel:"Anuluj", save:"ZAPISZ", enterTitle:"Wpisz tytuł",
@@ -163,7 +233,7 @@ const TRANSLATIONS = {
     obF2Title:"Śledzenie premier", obF2Desc:"Countdown do premiery + powiadomienia 30/7/3 dni i w dniu",
     obF3Title:"Analiza finansowa", obF3Desc:"Ile wydajesz, ile odzyskujesz — realny koszt kolekcji",
     obF4Title:"Statystyki", obF4Desc:"Wykresy, oceny, koszt/godzinę i inteligentna analiza",
-    saved:"✓ Zapisano", added:"✓ Dodano", deleted:"✓ Usunięto {title}",
+    saved:"✓ Zapisano", added:"✓ Dodano. Stuknij grę żeby uzupełnić ceny i godziny", deleted:"✓ Usunięto {title}",
     imported:"✓ Zaimportowano {n} gier", cleared:"ℹ Kolekcja wyczyszczona",
     statusChanged:"✓ Status → {status}",
     avoidLoss:"🔍 Unikaj takich strat", buyBetter:"📋 Kup podobne gry",
@@ -354,6 +424,70 @@ const TRANSLATIONS = {
     notesPh:"Your thoughts...", genrePh:"— select —", targetPh:"e.g. 40",
     finances:"💰 Finances", priceBoughtField:"Price paid ({cur})", storeField:"Store", extraSpendField:"DLC / Microtransactions ({cur})", extraSpendHint:"Additional in-game purchases", platformField:"Platform",
     storePh:"—", soldToggle:"I sold this game", soldPriceField:"Sold for ({cur})",
+    // v1.4.0 — Quick add UX
+    moreDetails:"+ More details", lessDetails:"− Less details",
+    soldField:"Sold for ({cur})", soldFieldHint:"empty = not sold",
+    targetFromRawg:"estimate from RAWG — you can change it",
+    // v1.5.0 — Menu, achievements, goals, wrapped, privacy mini
+    menuAria:"Menu",
+    menuTitle:"Menu",
+    menuWrapped:"🎁 Year in games",
+    menuWrappedDesc:"Your year recap — Spotify Wrapped style",
+    menuAchievements:"🏆 Achievements",
+    menuAchievementsDesc:"{unlocked} / {total} unlocked",
+    menuGoals:"🎯 Goals",
+    menuGoalsDesc:"{active} active · {done} done",
+    menuSettings:"⚙️ Settings",
+    menuSettingsDesc:"Language, currency, data, privacy",
+    achievementsTitle:"🏆 Achievements",
+    achievementsSub:"{unlocked} / {total} unlocked · {pct}%",
+    achLocked:"Locked",
+    achUnlocked:"Unlocked",
+    achProgress:"{cur} / {tgt}",
+    achEmpty:"Start adding games to unlock achievements",
+    goalsTitle:"🎯 Goals",
+    goalsSub:"Set a goal for this month — build the tracking habit",
+    goalsActive:"Active ({n})",
+    goalsDone:"Completed ({n})",
+    goalsAdd:"+ Add goal",
+    goalsAddTitle:"Pick a goal",
+    goalsEmpty:"No active goals",
+    goalsEmptyHint:"Tap \"Add goal\" to get started",
+    goalCardTitle:"🎯 This month's goals",
+    goalCardEmpty:"Set a goal — like complete 3 games",
+    goalCardCta:"+ Add",
+    goalDelete:"Delete",
+    goalRemoved:"✓ Goal deleted",
+    goalAdded:"✓ Goal added",
+    goalDone:"🎉 Goal reached: {title}",
+    goalRemainingDays:"{n} days left this month",
+    goalLastDay:"Last day!",
+    goalTplCompleteTitle:"Complete {n} games this month",
+    goalTplHoursTitle:"Play {n} hours this month",
+    goalTplAddTitle:"Add {n} games to collection",
+    goalTplPlatinumTitle:"Earn {n} platinums this month",
+    wrappedTitle:"Year in games {year}",
+    wrappedSub:"Your gaming in {year} by the numbers",
+    wrappedEmpty:"Not enough data for {year}",
+    wrappedEmptyHint:"Add games, ratings and sessions to see your recap",
+    wrappedTotalHours:"Hours played",
+    wrappedGamesAdded:"Games added",
+    wrappedGamesCompleted:"Games completed",
+    wrappedPlatinums:"Platinums",
+    wrappedTopPlayed:"🏆 Most played",
+    wrappedHighestRated:"⭐ Highest rated",
+    wrappedTopGenre:"🎮 Favorite genre",
+    wrappedTopGenreDesc:"{n} hours · {games} games",
+    wrappedSpent:"Spent",
+    wrappedRecovered:"Recovered",
+    wrappedActiveDays:"Active days",
+    wrappedActiveDaysDesc:"of {total} days in the year",
+    wrappedLongestStreak:"Longest streak",
+    wrappedLongestSession:"Longest session",
+    wrappedShareHint:"Take a screenshot to share 📸",
+    wrappedYearPicker:"Year:",
+    privacyMiniBody:"All data is stored locally on your device — we send nothing to servers, no trackers, no personal data. The only external APIs are RAWG (game search) and UPCitemdb (EAN identification during scanning) — only the query text or EAN code is sent, never your collection.",
+    privacyMiniLink:"Full privacy policy →",
     notifications:"Notifications", notifyOn:"🔔 Notify on release",
     notifyDesc:"3 days before and on release day", notifyBlocked:"⛔ Blocked in browser settings",
     cancel:"Cancel", save:"SAVE", enterTitle:"Enter title",
@@ -365,7 +499,7 @@ const TRANSLATIONS = {
     obF2Title:"Release tracking", obF2Desc:"Countdown + notifications 30/7/3 days and on release day",
     obF3Title:"Financial analysis", obF3Desc:"Track spending, recovery — real collection cost",
     obF4Title:"Statistics", obF4Desc:"Charts, ratings, cost/hour and smart insights",
-    saved:"✓ Saved", added:"✓ Added", deleted:"✓ Deleted {title}",
+    saved:"✓ Saved", added:"✓ Added. Tap the game to fill in prices and hours", deleted:"✓ Deleted {title}",
     imported:"✓ Imported {n} games", cleared:"ℹ Collection cleared",
     statusChanged:"✓ Status → {status}",
     avoidLoss:"🔍 Avoid such losses", buyBetter:"📋 Find similar games",
@@ -672,7 +806,7 @@ async function rawgSearch(q){
   try{
     const r=await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(q)}&page_size=10&key=${RAWG_KEY}`,{signal:ctrl.signal});
     if(!r.ok)return[];
-    return(await r.json()).results.map(g=>({id:g.id,title:g.name,year:g.released?+g.released.slice(0,4):new Date().getFullYear(),releaseDate:g.released||'',genre:(g.genres||[]).map(x=>RMAP[x.slug]).filter(Boolean)[0]||g.genres?.[0]?.name||'',cover:g.background_image||'',abbr:mkAbbr(g.name)}));
+    return(await r.json()).results.map(g=>({id:g.id,title:g.name,year:g.released?+g.released.slice(0,4):new Date().getFullYear(),releaseDate:g.released||'',genre:(g.genres||[]).map(x=>RMAP[x.slug]).filter(Boolean)[0]||g.genres?.[0]?.name||'',cover:g.background_image||'',abbr:mkAbbr(g.name),playtime:Number.isFinite(+g.playtime)?+g.playtime:0}));
   }catch{return[];}
   finally{clearTimeout(tm);}
 }
@@ -941,7 +1075,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .bpr:active{opacity:.75}
 .bcn{min-height:50px;padding:13px 14px;border:1px solid ${G.bdr};border-radius:11px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .bdl{min-height:50px;padding:13px 14px;border:1px solid rgba(255,77,109,.3);border-radius:11px;background:rgba(255,77,109,.1);color:${G.red};font-size:16px;cursor:pointer}
-.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:9px 20px;border-radius:20px;z-index:99999;white-space:nowrap;pointer-events:none;animation:toastIn .25s ease;display:flex;align-items:center;gap:6px}
+.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:10px 18px;border-radius:14px;z-index:99999;max-width:calc(100vw - 32px);white-space:normal;text-align:center;line-height:1.45;pointer-events:none;animation:toastIn .25s ease;display:flex;align-items:center;gap:6px}
 .toast-ok{background:${G.grn};color:#000}
 .toast-err{background:${G.red};color:#fff}
 .toast-info{background:${G.blu};color:#000}
@@ -997,6 +1131,11 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 /* v1.3.0 — Barcode scanner */
 .rscan{flex-shrink:0;width:38px;height:38px;border:1px solid ${G.blu};border-radius:9px;background:rgba(0,212,255,.08);color:${G.blu};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .12s,background .12s}
 .rscan:active{transform:scale(.92);background:rgba(0,212,255,.2)}
+/* v1.4.0 — Quick add accordion */
+.acc-btn{width:100%;padding:11px 14px;margin:6px 0 12px;border:1px dashed ${G.bdr};border-radius:10px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:color .15s,border-color .15s,background .15s}
+.acc-btn:hover,.acc-btn:active{color:${G.blu};border-color:${G.blu};background:rgba(0,212,255,.04)}
+.acc-body{animation:fadeIn .2s ease}
+.fhnt{font-size:10px;color:${G.dim};margin-top:4px;line-height:1.4}
 .bs-ovr{position:fixed;inset:0;background:#000;z-index:199999;display:flex;flex-direction:column;animation:fadeIn .18s ease}
 .bs-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(12px,env(safe-area-inset-top,0px)) 14px 10px;background:${G.bg};border-bottom:1px solid ${G.bdr};padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
 .bs-ttl{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:${G.blu};letter-spacing:.06em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1035,6 +1174,101 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .bs-retry{border:1px solid ${G.blu};background:rgba(0,212,255,.1);color:${G.blu}}
 .bs-retry:active{opacity:.7}
 .bs-results-h{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px}
+
+/* v1.5.0 — Hamburger button */
+.hmb{flex-shrink:0;width:44px;height:44px;border:1px solid ${G.bdr};border-radius:10px;background:${G.card};color:${G.txt};font-size:22px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:background .15s}
+.hmb:active{background:${G.card2};opacity:.8}
+
+/* v1.5.0 — Hamburger menu drawer (bottom sheet style) */
+.menu-ovr{align-items:flex-end}
+.menu-pn{width:100%;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .22s ease}
+.menu-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.menu-row{width:100%;display:flex;align-items:center;gap:14px;padding:14px 14px;background:${G.bg};border:1px solid ${G.bdr};border-radius:12px;cursor:pointer;font-family:'Syne',sans-serif;text-align:left;margin-bottom:8px;transition:border-color .15s,background .15s}
+.menu-row:hover,.menu-row:active{border-color:${G.blu};background:rgba(0,212,255,.04)}
+.menu-ico{font-size:24px;flex-shrink:0;width:32px;text-align:center;line-height:1}
+.menu-body{flex:1;min-width:0}
+.menu-title{font-size:14px;font-weight:700;color:${G.txt};margin-bottom:2px}
+.menu-desc{font-size:11px;color:${G.dim};line-height:1.4}
+.menu-badge{flex-shrink:0;font-size:11px;font-weight:700;color:${G.blu};padding:3px 8px;border-radius:10px;background:rgba(0,212,255,.12);font-family:'Orbitron',monospace;letter-spacing:.04em}
+.menu-arrow{flex-shrink:0;font-size:20px;color:${G.dim};margin-left:4px}
+
+/* v1.5.0 — Achievements grid */
+.ach-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.ach-sub{font-size:12px;color:${G.dim};margin-bottom:14px;padding:10px 12px;background:${G.bg};border:1px solid ${G.bdr};border-radius:10px;text-align:center;font-family:'Orbitron',monospace;letter-spacing:.04em}
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ach-card{padding:14px 12px;border:1px solid ${G.bdr};border-radius:12px;background:${G.bg};opacity:.55;transition:opacity .2s,border-color .2s}
+.ach-card.ach-on{opacity:1;border-color:${G.grn};background:rgba(57,255,110,.05)}
+.ach-card.ach-rare.ach-on{border-color:${G.gld};background:rgba(255,209,102,.06);box-shadow:0 0 0 1px rgba(255,209,102,.2)}
+.ach-ico{font-size:32px;text-align:center;margin-bottom:6px;filter:grayscale(.4)}
+.ach-card.ach-on .ach-ico{filter:none}
+.ach-title{font-size:12px;font-weight:700;color:${G.txt};text-align:center;margin-bottom:3px;line-height:1.25}
+.ach-desc{font-size:10px;color:${G.dim};text-align:center;line-height:1.35;min-height:28px}
+.ach-bar{height:4px;background:${G.bdr};border-radius:2px;overflow:hidden;margin:8px 0 4px}
+.ach-bar-fill{height:100%;background:${G.blu};transition:width .3s ease}
+.ach-progress{font-size:10px;font-weight:600;color:${G.dim};text-align:center;font-family:'Orbitron',monospace;letter-spacing:.04em}
+
+/* v1.5.0 — Goals manager + Home card */
+.goals-h{font-size:11px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin:8px 0 8px}
+.goals-empty{padding:24px 16px;text-align:center;color:${G.dim}}
+.goals-empty-t{font-size:13px;font-weight:700;color:${G.txt};margin-bottom:4px}
+.goals-empty-h{font-size:11px;color:${G.dim}}
+.goal-card{background:${G.bg};border:1px solid ${G.bdr};border-radius:11px;padding:11px 12px;margin-bottom:8px}
+.goal-card-done{opacity:.6;background:rgba(57,255,110,.04);border-color:rgba(57,255,110,.2)}
+.goal-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.goal-card-done .goal-row{margin-bottom:0}
+.goal-ico{font-size:22px;flex-shrink:0;width:28px;text-align:center;line-height:1}
+.goal-body{flex:1;min-width:0}
+.goal-title{font-size:13px;font-weight:600;color:${G.txt};line-height:1.3}
+.goal-meta{font-size:10px;color:${G.dim};margin-top:2px}
+.goal-del{flex-shrink:0;width:28px;height:28px;border:1px solid ${G.bdr};border-radius:7px;background:transparent;color:${G.dim};font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.goal-del:hover,.goal-del:active{color:${G.red};border-color:rgba(255,77,109,.4)}
+.goal-bar{height:5px;background:${G.bdr};border-radius:3px;overflow:hidden}
+.goal-bar-fill{height:100%;background:linear-gradient(90deg,${G.blu},${G.grn});transition:width .3s ease}
+.goal-tpl{display:flex;align-items:center;gap:11px;width:100%;padding:12px 14px;border:1px solid ${G.bdr};border-radius:10px;background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s}
+.goal-tpl:hover,.goal-tpl:active{border-color:${G.blu};background:rgba(0,212,255,.05)}
+/* Home card */
+.goal-home{padding:12px 14px;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:14px;cursor:pointer;transition:border-color .15s}
+.goal-home:hover,.goal-home:active{border-color:${G.blu}}
+.goal-home-h{font-size:11px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.goal-home-empty{display:flex;align-items:center;gap:11px;padding:14px;background:${G.card};border:1px dashed ${G.bdr};border-radius:14px;margin-bottom:14px;cursor:pointer;transition:border-color .15s}
+.goal-home-empty:hover,.goal-home-empty:active{border-color:${G.blu};border-style:solid}
+.goal-home-empty .goal-title{font-size:13px}
+.goal-home-empty .goal-meta{font-size:11px}
+.goal-mini{margin-bottom:8px}
+.goal-mini:last-child{margin-bottom:0}
+.goal-mini-row{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.goal-mini-title{font-size:12px;font-weight:600;color:${G.txt};line-height:1.3}
+.goal-mini-meta{font-size:10px;color:${G.dim};font-family:'Orbitron',monospace;letter-spacing:.04em}
+
+/* v1.5.0 — Year-in-Review */
+.wr-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.wr-years{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.wr-years-lbl{font-size:10px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
+.wr-year{padding:6px 12px;border:1px solid ${G.bdr};border-radius:16px;background:${G.card};color:${G.dim};font-family:'Orbitron',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.wr-year.on{background:${G.blu};color:#000;border-color:${G.blu}}
+.wr-sub{font-size:12px;color:${G.dim};text-align:center;margin-bottom:14px}
+.wr-hero{padding:24px 16px;border-radius:16px;background:linear-gradient(135deg,rgba(0,212,255,.18),rgba(167,139,250,.18));border:1px solid rgba(0,212,255,.3);text-align:center;margin-bottom:12px}
+.wr-hero-num{font-family:'Orbitron',monospace;font-size:56px;font-weight:900;color:${G.blu};line-height:1;letter-spacing:-.02em;text-shadow:0 0 28px rgba(0,212,255,.4)}
+.wr-hero-lbl{font-size:14px;color:${G.txt};margin-top:8px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.wr-hero-sub{font-size:11px;color:${G.dim};margin-top:4px}
+.wr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.wr-stat{padding:14px 12px;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;text-align:center}
+.wr-stat-num{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:${G.txt};line-height:1.1}
+.wr-stat-lbl{font-size:10px;color:${G.dim};margin-top:4px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;line-height:1.3}
+.wr-stat-sub{font-size:10px;color:${G.dim};margin-top:4px;font-family:'Orbitron',monospace;letter-spacing:.04em}
+.wr-card{padding:14px;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:12px}
+.wr-card-h{font-size:12px;font-weight:700;color:${G.pur};letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.wr-row{display:flex;align-items:center;gap:11px;padding:8px 0}
+.wr-row:not(:last-child){border-bottom:1px solid ${G.bdr}}
+.wr-rank{flex-shrink:0;width:24px;font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:${G.blu};letter-spacing:-.02em}
+.wr-cov{width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;background:${G.bg}}
+.wr-cov0{width:42px;height:42px;border-radius:8px;background:${G.bg};display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:${G.blu};flex-shrink:0}
+.wr-row-body{flex:1;min-width:0}
+.wr-row-title{font-size:13px;font-weight:600;color:${G.txt};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wr-row-meta{font-size:11px;color:${G.dim};margin-top:2px}
+.wr-genre-name{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:${G.gld};text-align:center;letter-spacing:-.02em}
+.wr-genre-meta{font-size:11px;color:${G.dim};text-align:center;margin-top:4px}
+.wr-share-hint{font-size:11px;color:${G.dim};text-align:center;margin-top:18px;padding:10px;border:1px dashed ${G.bdr};border-radius:10px}
 `;
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -1469,18 +1703,54 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
   const [f,setF]=useState(()=>game?{...EF,...game}:{...EF});
   const [confirmDel,setConfirmDel]=useState(false);
   const [shake,setShake]=useState(false);
+  // v1.4.0 — Quick add: collapsed by default for new games, expanded for edits.
+  // Edits typically need full visibility (user came to change something specific);
+  // adds want a friction-free "RAWG → pick → save" path.
+  const [showDetails,setShowDetails]=useState(isEdit);
+  // Track whether targetHours came from RAWG playtime so we can show the explanatory hint
+  // and clear it once the user manually overrides the value.
+  const [targetFromRawg,setTargetFromRawg]=useState(false);
   const titleRef=useRef(null);
   const SM=getSM(lang);
   const genres=lang==='en'?GENRES_EN:GENRES_PL;
-  const upd=(k,v)=>setF(p=>{const n={...p,[k]:v};if(k==='title'&&!isEdit)n.abbr=mkAbbr(v);return n;});
-  const fill=item=>setF(p=>({...p,title:item.title,abbr:item.abbr,year:item.year,genre:item.genre||p.genre,cover:item.cover,releaseDate:item.releaseDate||p.releaseDate}));
+  // upd auto-regenerates abbr from title on every keystroke (abbr field is hidden in UI now).
+  const upd=(k,v)=>setF(p=>{
+    const n={...p,[k]:v};
+    if(k==='title'&&!isEdit) n.abbr=mkAbbr(v);
+    if(k==='targetHours') setTargetFromRawg(false); // user-typed → drop the "from RAWG" badge
+    return n;
+  });
+  // RAWG/scanner pick: prefill title/year/genre/cover/release date AND target hours
+  // (only if currently empty — never overwrite a user-typed target).
+  const fill=item=>setF(p=>{
+    const next={
+      ...p,
+      title:item.title,
+      abbr:item.abbr || mkAbbr(item.title),
+      year:item.year,
+      genre:item.genre||p.genre,
+      cover:item.cover,
+      releaseDate:item.releaseDate||p.releaseDate,
+    };
+    const pt=+item.playtime||0;
+    const currentTarget=+p.targetHours||0;
+    if(pt>0 && currentTarget===0){
+      next.targetHours=pt;
+      setTargetFromRawg(true);
+    }
+    return next;
+  });
   function handleSave(){
     if(!f.title.trim()){
       setShake(true);
       setTimeout(()=>setShake(false),500);
       titleRef.current?.focus();
+      // Force the details accordion open if user hits Save without a title — but
+      // title lives in the quick-add view, so just shake. Nothing to expand here.
       return;
     }
+    // abbr is no longer user-editable; always derive from title at save time as the
+    // canonical fallback. Keeps existing-game abbr stable across edits.
     const abbr=(f.abbr||'').trim().slice(0,2).toUpperCase()||mkAbbr(f.title);
     // Rating: only clamp if user actually typed something. Previously `+null = 0` coerced to 1
     // via Math.max(1,0), which magically assigned rating=1 every time an unrated game was saved
@@ -1488,8 +1758,8 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
     const rRaw=f.rating;
     const rNum=(rRaw===null||rRaw===undefined||rRaw==='')?NaN:+rRaw;
     const rating=Number.isFinite(rNum)&&rNum>0?Math.min(10,Math.max(1,rNum)):null;
-    // Normalize priceSold: if toggle is on but value is empty string, treat as null (not sold)
-    // Prevents zombie "sold" state where priceSold='' leaks into filters/ROI as 0
+    // priceSold UX: single input where empty string = not sold (no toggle anymore).
+    // Anything else gets coerced to a number string at the storage layer.
     const priceSold = (f.priceSold===null||f.priceSold==='') ? null : f.priceSold;
     onSave({...f,abbr,year:+f.year||new Date().getFullYear(),hours:+f.hours||0,rating,targetHours:+f.targetHours||0,priceSold});
   }
@@ -1500,74 +1770,94 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
         <div className='mdl'>
           <div className='mhdl'/>
           <div className='mttl'>{isEdit?t(lang,'editGameTitle'):t(lang,'addGameTitle')}</div>
+          {/* ── Quick add core: search → cover → title → status ─────────────────── */}
           <RawgSearch onSelect={fill} lang={lang}/>
           {f.cover&&<img className='covp' src={f.cover} alt=''/>}
           <div className='fg'>
             <label className='fl'>{t(lang,'titleField')}</label>
             <input ref={titleRef} className={`fi${shake?' shake':''}`} value={f.title} onChange={e=>upd('title',e.target.value)} placeholder='God of War Ragnarök'/>
           </div>
-          <div className='f2'>
-            <div className='fg'><label className='fl'>{t(lang,'abbrField')}</label><input className='fi' value={f.abbr} maxLength={2} onChange={e=>upd('abbr',e.target.value.toUpperCase())} placeholder='GW'/></div>
-            <div className='fg'><label className='fl'>{t(lang,'yearField')}</label><input className='fi' inputMode='numeric' value={f.year} onChange={e=>upd('year',e.target.value)}/></div>
-          </div>
-          <div className='fg'><label className='fl'>{t(lang,'platformField')}</label>
-            <select className='fs' value={f.platform||'PS5'} onChange={e=>upd('platform',e.target.value)}>
-              {PLATFORMS.map(p=><option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-          <div className='fg'>
-            <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):`— ${lang==='en'?'in':'za'} ${days} ${lang==='en'?'days':'dni'}`}</span>}</label>
-            <input className='fi' type='date' value={f.releaseDate} onChange={e=>upd('releaseDate',e.target.value)} style={{colorScheme:'dark'}}/>
-            <div style={{fontSize:10,color:G.dim,marginTop:4}}>{t(lang,'releaseDateHint')}</div>
-          </div>
           <div className='fg'><label className='fl'>{t(lang,'statusField')}</label>
             <div className='ssg'>{Object.entries(SM).map(([k,m])=>(
               <button key={k} type='button' className={'sso'+(f.status===k?' on':'')} style={{'--c':m.c,'--bg':m.bg}} onClick={()=>upd('status',k)}>{m.label}</button>
             ))}</div>
           </div>
-          <div className='f2'>
-            <div className='fg'><label className='fl'>{t(lang,'genreField')}</label>
-              <select className='fs' value={f.genre} onChange={e=>upd('genre',e.target.value)}>
-                <option value=''>{t(lang,'genrePh')}</option>
-                {genres.map(g=><option key={g} value={g}>{g}</option>)}
-              </select>
-            </div>
-            <div className='fg'><label className='fl'>{t(lang,'hoursField')}</label><input className='fi' inputMode='decimal' value={f.hours} onChange={e=>upd('hours',e.target.value)} placeholder='0'/></div>
-          </div>
-          <div className='f2'>
-            <div className='fg'><label className='fl'>{t(lang,'ratingField')}</label><input className='fi' inputMode='decimal' value={f.rating??''} onChange={e=>upd('rating',e.target.value)} placeholder='—'/></div>
-            <div className='fg'><label className='fl'>{t(lang,'targetHoursField')}</label><input className='fi' inputMode='decimal' value={f.targetHours||''} onChange={e=>upd('targetHours',e.target.value)} placeholder={t(lang,'targetPh')}/></div>
-          </div>
-          <div className='fg'><label className='fl'>{t(lang,'notesField')}</label><textarea className='fta' value={f.notes} onChange={e=>upd('notes',e.target.value)} placeholder={t(lang,'notesPh')}/></div>
-          {f.status==='ukonczone'&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:f.platinum?'rgba(255,209,102,.08)':G.bg,border:f.platinum?'1px solid rgba(255,209,102,.4)':'1px solid '+G.bdr,borderRadius:9,cursor:'pointer',transition:'all .2s'}} onClick={()=>upd('platinum',!f.platinum)}>
-            <div><div style={{fontSize:14,color:f.platinum?G.gld:G.txt}}>🏆 {t(lang,'platinum')}</div><div style={{fontSize:10,color:G.dim,marginTop:2}}>{lang==='pl'?'Zdobyłem platynowe trofeum':'I earned the platinum trophy'}</div></div>
-            <div style={{width:44,height:26,borderRadius:13,background:f.platinum?G.gld:G.bdr,position:'relative',flexShrink:0,transition:'background .2s'}}>
-              <div style={{position:'absolute',top:3,left:f.platinum?21:3,width:20,height:20,borderRadius:'50%',background:'#fff',transition:'left .2s'}}/>
-            </div>
-          </div>}
-          <div className='fdiv'/><div className='fslbl'>{t(lang,'finances')}</div>
-          <div className='frow'>
-            <div className='fg'><label className='fl'>{t(lang,'priceBoughtField')}</label><input className='fi' inputMode='decimal' value={f.priceBought??''} onChange={e=>upd('priceBought',e.target.value)} placeholder='0'/></div>
-            <div className='fg'><label className='fl'>{t(lang,'storeField')}</label>
-              <select className='fs' value={f.storeBought||''} onChange={e=>upd('storeBought',e.target.value)}>
-                <option value=''>{t(lang,'storePh')}</option>
-                {STORES.map(s=><option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className='fg'><label className='fl'>{t(lang,'extraSpendField')}</label><input className='fi' inputMode='decimal' value={f.extraSpend||''} onChange={e=>upd('extraSpend',e.target.value)} placeholder='0'/><div style={{fontSize:10,color:G.dim,marginTop:3}}>{t(lang,'extraSpendHint')}</div></div>
-          <div className='sold-tgl' onClick={()=>upd('priceSold',f.priceSold==null?'':null)}>
-            <span style={{fontSize:14,color:G.txt}}>{t(lang,'soldToggle')}</span>
-            <div className={'sold-sw'+(f.priceSold!=null?' on':'')}><div className='sold-k'/></div>
-          </div>
-          {f.priceSold!=null&&<div className='fg'><label className='fl'>{t(lang,'soldPriceField')}</label><input className='fi' inputMode='decimal' value={f.priceSold??''} onChange={e=>upd('priceSold',e.target.value)} placeholder='0'/></div>}
-          {f.releaseDate&&<div className='fg'><label className='fl'>{t(lang,'notifications')}</label>
-            {notifPerm==='denied'?<div style={{fontSize:11,color:G.red,padding:'8px 0'}}>{t(lang,'notifyBlocked')}</div>:(
-              <div className='ntgl2' onClick={async()=>{if(!f.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();upd('notifyEnabled',!f.notifyEnabled);}}>
-                <div><div className='ntgl2-l'>{t(lang,'notifyOn')}</div><div className='ntgl2-s'>{t(lang,'notifyDesc')}</div></div>
-                <div className={'ntgl2-sw'+(f.notifyEnabled?' on':'')}><div className='ntgl2-knob'/></div>
+
+          {/* ── Accordion toggle ────────────────────────────────────────────────── */}
+          <button type='button' className='acc-btn' onClick={()=>setShowDetails(v=>!v)} aria-expanded={showDetails}>
+            {showDetails?t(lang,'lessDetails'):t(lang,'moreDetails')}
+          </button>
+
+          {/* ── Details body (year, platform, release, genre, hours, rating, target, notes, finance, notifications, platinum) ── */}
+          {showDetails && <div className='acc-body'>
+            <div className='f2'>
+              <div className='fg'><label className='fl'>{t(lang,'yearField')}</label><input className='fi' inputMode='numeric' value={f.year} onChange={e=>upd('year',e.target.value)}/></div>
+              <div className='fg'><label className='fl'>{t(lang,'platformField')}</label>
+                <select className='fs' value={f.platform||'PS5'} onChange={e=>upd('platform',e.target.value)}>
+                  {PLATFORMS.map(p=><option key={p} value={p}>{p}</option>)}
+                </select>
               </div>
-            )}
+            </div>
+            <div className='fg'>
+              <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):`— ${lang==='en'?'in':'za'} ${days} ${lang==='en'?'days':'dni'}`}</span>}</label>
+              <input className='fi' type='date' value={f.releaseDate} onChange={e=>upd('releaseDate',e.target.value)} style={{colorScheme:'dark'}}/>
+              <div className='fhnt'>{t(lang,'releaseDateHint')}</div>
+            </div>
+            <div className='f2'>
+              <div className='fg'><label className='fl'>{t(lang,'genreField')}</label>
+                <select className='fs' value={f.genre} onChange={e=>upd('genre',e.target.value)}>
+                  <option value=''>{t(lang,'genrePh')}</option>
+                  {genres.map(g=><option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+              <div className='fg'><label className='fl'>{t(lang,'hoursField')}</label><input className='fi' inputMode='decimal' value={f.hours} onChange={e=>upd('hours',e.target.value)} placeholder='0'/></div>
+            </div>
+            <div className='f2'>
+              <div className='fg'><label className='fl'>{t(lang,'ratingField')}</label><input className='fi' inputMode='decimal' value={f.rating??''} onChange={e=>upd('rating',e.target.value)} placeholder='—'/></div>
+              <div className='fg'>
+                <label className='fl'>{t(lang,'targetHoursField')}</label>
+                <input className='fi' inputMode='decimal' value={f.targetHours||''} onChange={e=>upd('targetHours',e.target.value)} placeholder={t(lang,'targetPh')}/>
+                {targetFromRawg && f.targetHours>0 && <div className='fhnt' style={{color:G.blu}}>⚡ {t(lang,'targetFromRawg')}</div>}
+              </div>
+            </div>
+            <div className='fg'><label className='fl'>{t(lang,'notesField')}</label><textarea className='fta' value={f.notes} onChange={e=>upd('notes',e.target.value)} placeholder={t(lang,'notesPh')}/></div>
+            {f.status==='ukonczone'&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:f.platinum?'rgba(255,209,102,.08)':G.bg,border:f.platinum?'1px solid rgba(255,209,102,.4)':'1px solid '+G.bdr,borderRadius:9,cursor:'pointer',transition:'all .2s'}} onClick={()=>upd('platinum',!f.platinum)}>
+              <div><div style={{fontSize:14,color:f.platinum?G.gld:G.txt}}>🏆 {t(lang,'platinum')}</div><div style={{fontSize:10,color:G.dim,marginTop:2}}>{lang==='pl'?'Zdobyłem platynowe trofeum':'I earned the platinum trophy'}</div></div>
+              <div style={{width:44,height:26,borderRadius:13,background:f.platinum?G.gld:G.bdr,position:'relative',flexShrink:0,transition:'background .2s'}}>
+                <div style={{position:'absolute',top:3,left:f.platinum?21:3,width:20,height:20,borderRadius:'50%',background:'#fff',transition:'left .2s'}}/>
+              </div>
+            </div>}
+            <div className='fdiv'/><div className='fslbl'>{t(lang,'finances')}</div>
+            <div className='frow'>
+              <div className='fg'><label className='fl'>{t(lang,'priceBoughtField')}</label><input className='fi' inputMode='decimal' value={f.priceBought??''} onChange={e=>upd('priceBought',e.target.value)} placeholder='0'/></div>
+              <div className='fg'><label className='fl'>{t(lang,'storeField')}</label>
+                <select className='fs' value={f.storeBought||''} onChange={e=>upd('storeBought',e.target.value)}>
+                  <option value=''>{t(lang,'storePh')}</option>
+                  {STORES.map(s=><option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className='fg'><label className='fl'>{t(lang,'extraSpendField')}</label><input className='fi' inputMode='decimal' value={f.extraSpend||''} onChange={e=>upd('extraSpend',e.target.value)} placeholder='0'/><div className='fhnt'>{t(lang,'extraSpendHint')}</div></div>
+            {/* Sold-for: single input replaces former toggle+input combo. Empty value = not sold. */}
+            <div className='fg'>
+              <label className='fl'>{t(lang,'soldField')}</label>
+              <input
+                className='fi'
+                inputMode='decimal'
+                value={f.priceSold==null?'':f.priceSold}
+                onChange={e=>upd('priceSold', e.target.value===''?null:e.target.value)}
+                placeholder='—'
+              />
+              <div className='fhnt'>{t(lang,'soldFieldHint')}</div>
+            </div>
+            {f.releaseDate&&<div className='fg'><label className='fl'>{t(lang,'notifications')}</label>
+              {notifPerm==='denied'?<div style={{fontSize:11,color:G.red,padding:'8px 0'}}>{t(lang,'notifyBlocked')}</div>:(
+                <div className='ntgl2' onClick={async()=>{if(!f.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();upd('notifyEnabled',!f.notifyEnabled);}}>
+                  <div><div className='ntgl2-l'>{t(lang,'notifyOn')}</div><div className='ntgl2-s'>{t(lang,'notifyDesc')}</div></div>
+                  <div className={'ntgl2-sw'+(f.notifyEnabled?' on':'')}><div className='ntgl2-knob'/></div>
+                </div>
+              )}
+            </div>}
           </div>}
           <div className='mac'>
             <button type='button' className='bcn' onClick={onClose}>{t(lang,'cancel')}</button>
@@ -1696,7 +1986,7 @@ function SessionTimer({game, onSave, lang}) {
   );
 }
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -1730,6 +2020,8 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
       </div>
+      {/* v1.5.0 — Goals card. Always rendered (empty state is itself a CTA). */}
+      <GoalsCard goals={goals||[]} games={games} sessions={collectSessions(games)} lang={lang} onOpen={onGoalsOpen}/>
       {current.length>0?(
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>▶️ {t(lang,'continuePlay')}</span><span className='hcard-badge' style={{background:'rgba(0,212,255,.12)',color:G.blu}}>{current.length}</span></div>
@@ -2007,6 +2299,291 @@ function computeLongestStreak(sessionsByDay){
     else current=1;
   }
   return longest;
+}
+
+// ─── v1.5.0 Achievements ─────────────────────────────────────────────────────
+// Pure derivation from games[] + sessionsByDay. No persistence needed — recomputed
+// fresh on every render. Each entry yields {progress, threshold, unlocked, pct}.
+// Multi-tier achievements (Collector I/II/III) are separate entries — keeps logic flat
+// and lets us show all tiers including locked ones in the grid.
+const ACHIEVEMENTS = [
+  // Collector tiers
+  { id:'collector_1',  ico:'🎮', tier:1, group:'collector',
+    title:{pl:'Pierwsza krew',           en:'First Blood'},
+    desc :{pl:'Dodaj pierwszą grę',      en:'Add your first game'},
+    threshold:1,    measure:({games})=>games.length },
+  { id:'collector_2',  ico:'🎮', tier:2, group:'collector',
+    title:{pl:'Kolekcjoner I',           en:'Collector I'},
+    desc :{pl:'10 gier w kolekcji',      en:'10 games in collection'},
+    threshold:10,   measure:({games})=>games.length },
+  { id:'collector_3',  ico:'🎮', tier:3, group:'collector',
+    title:{pl:'Kolekcjoner II',          en:'Collector II'},
+    desc :{pl:'25 gier w kolekcji',      en:'25 games in collection'},
+    threshold:25,   measure:({games})=>games.length },
+  { id:'collector_4',  ico:'🎮', tier:4, group:'collector', rare:true,
+    title:{pl:'Kolekcjoner III',         en:'Collector III'},
+    desc :{pl:'50 gier w kolekcji',      en:'50 games in collection'},
+    threshold:50,   measure:({games})=>games.length },
+  { id:'collector_5',  ico:'💎', tier:5, group:'collector', rare:true,
+    title:{pl:'Hoarder',                 en:'Hoarder'},
+    desc :{pl:'100 gier w kolekcji',     en:'100 games in collection'},
+    threshold:100,  measure:({games})=>games.length },
+
+  // Completionist tiers
+  { id:'finisher_1',   ico:'✅',
+    title:{pl:'Finiszer',                en:'Finisher'},
+    desc :{pl:'Ukończ pierwszą grę',     en:'Complete your first game'},
+    threshold:1,    measure:({games})=>games.filter(g=>g.status==='ukonczone').length },
+  { id:'finisher_2',   ico:'✅',
+    title:{pl:'Seryjny finiszer',        en:'Serial Finisher'},
+    desc :{pl:'Ukończ 10 gier',          en:'Complete 10 games'},
+    threshold:10,   measure:({games})=>games.filter(g=>g.status==='ukonczone').length },
+  { id:'finisher_3',   ico:'🏁', rare:true,
+    title:{pl:'Maraton',                 en:'Marathon'},
+    desc :{pl:'Ukończ 25 gier',          en:'Complete 25 games'},
+    threshold:25,   measure:({games})=>games.filter(g=>g.status==='ukonczone').length },
+
+  // Trophy hunting
+  { id:'trophy_1',     ico:'🏆',
+    title:{pl:'Łowca trofeów',           en:'Trophy Hunter'},
+    desc :{pl:'Pierwsza platyna',        en:'First platinum'},
+    threshold:1,    measure:({games})=>games.filter(g=>g.platinum).length },
+  { id:'trophy_2',     ico:'🏆',
+    title:{pl:'Łowca trofeów II',        en:'Trophy Hunter II'},
+    desc :{pl:'5 platyn',                en:'5 platinums'},
+    threshold:5,    measure:({games})=>games.filter(g=>g.platinum).length },
+  { id:'trophy_3',     ico:'👑', rare:true,
+    title:{pl:'Platynowy król',          en:'Platinum King'},
+    desc :{pl:'10 platyn',               en:'10 platinums'},
+    threshold:10,   measure:({games})=>games.filter(g=>g.platinum).length },
+
+  // Hours
+  { id:'marathoner',   ico:'⏱',
+    title:{pl:'Maratończyk',             en:'Marathoner'},
+    desc :{pl:'100h w jednej grze',      en:'100h on a single game'},
+    threshold:100,  measure:({games})=>Math.floor(Math.max(0,...games.map(g=>+g.hours||0))) },
+  { id:'sprinter',     ico:'💨',
+    title:{pl:'Sprinter',                en:'Sprinter'},
+    desc :{pl:'Ukończ grę w ≤10h',       en:'Complete a game in ≤10h'},
+    threshold:1,
+    measure:({games})=>games.some(g=>g.status==='ukonczone' && +g.hours>0 && +g.hours<=10)?1:0 },
+
+  // Critic
+  { id:'critic_1',     ico:'⭐',
+    title:{pl:'Krytyk',                  en:'Critic'},
+    desc :{pl:'Oceń 10 gier',            en:'Rate 10 games'},
+    threshold:10,   measure:({games})=>games.filter(g=>g.rating!=null && +g.rating>0).length },
+  { id:'critic_2',     ico:'⭐',
+    title:{pl:'Krytyk II',               en:'Critic II'},
+    desc :{pl:'Oceń 25 gier',            en:'Rate 25 games'},
+    threshold:25,   measure:({games})=>games.filter(g=>g.rating!=null && +g.rating>0).length },
+
+  // Streaks (from sessionsByDay)
+  { id:'streak_7',     ico:'🔥',
+    title:{pl:'Rozpędzony',              en:'On Fire'},
+    desc :{pl:'7-dniowa passa grania',   en:'7-day play streak'},
+    threshold:7,    measure:({longestStreak})=>longestStreak },
+  { id:'streak_30',    ico:'🔥', rare:true,
+    title:{pl:'Niezniszczalny',          en:'Unstoppable'},
+    desc :{pl:'30-dniowa passa grania',  en:'30-day play streak'},
+    threshold:30,   measure:({longestStreak})=>longestStreak },
+
+  // Variety
+  { id:'genre_hopper', ico:'🎨',
+    title:{pl:'Wszystkożerny',           en:'Genre Hopper'},
+    desc :{pl:'Gry w 5+ gatunkach',      en:'Games in 5+ genres'},
+    threshold:5,    measure:({games})=>new Set(games.map(g=>g.genre).filter(Boolean)).size },
+
+  // Money
+  { id:'reseller',     ico:'💰',
+    title:{pl:'Handlarz',                en:'Reseller'},
+    desc :{pl:'Sprzedaj 5 gier',         en:'Sell 5 games'},
+    threshold:5,    measure:({games})=>games.filter(g=>g.priceSold!=null && +g.priceSold>0).length },
+];
+
+// Computes per-achievement state. Returns array of { ...def, progress, unlocked, pct }.
+function computeAchievements(games, longestStreak){
+  return ACHIEVEMENTS.map(a=>{
+    const progress = Math.max(0, Math.floor(a.measure({games, longestStreak})));
+    const unlocked = progress >= a.threshold;
+    const pct = Math.min(100, Math.round((progress / a.threshold) * 100));
+    return { ...a, progress, unlocked, pct };
+  });
+}
+
+// ─── v1.5.0 Goals ────────────────────────────────────────────────────────────
+// Goals live in localStorage as { id, type, target, periodStart, periodEnd, doneAt }.
+// `periodStart` and `periodEnd` are ISO date strings (YYYY-MM-DD) bounding the active
+// month. Progress is recomputed live from games + sessions — never stored.
+function goalsRead(){ try{ return JSON.parse(localStorage.getItem(LS_GOALS)||'[]'); }catch{ return []; } }
+function goalsWrite(g){ try{ localStorage.setItem(LS_GOALS, JSON.stringify(g)); }catch{} }
+function monthBounds(d=new Date()){
+  const y=d.getFullYear(), m=d.getMonth();
+  const start=new Date(y,m,1); start.setHours(0,0,0,0);
+  const end=new Date(y,m+1,0); end.setHours(23,59,59,999);
+  return { start, end, startKey:dayKey(start), endKey:dayKey(end) };
+}
+function daysLeftInMonth(d=new Date()){
+  const { end } = monthBounds(d);
+  return Math.max(0, Math.ceil((end - d) / 86400000));
+}
+
+// Goal type catalog. Templates are picked from a UI list; once picked, a goal instance
+// captures `target` and the current month's bounds.
+const GOAL_TYPES = {
+  complete:  { ico:'✅', tk:'goalTplCompleteTitle' },
+  hours:     { ico:'⏱', tk:'goalTplHoursTitle' },
+  add:       { ico:'➕', tk:'goalTplAddTitle' },
+  platinum:  { ico:'🏆', tk:'goalTplPlatinumTitle' },
+};
+const GOAL_TEMPLATES = [
+  { type:'complete',  target:3 },
+  { type:'complete',  target:5 },
+  { type:'hours',     target:20 },
+  { type:'hours',     target:40 },
+  { type:'add',       target:3 },
+  { type:'platinum',  target:1 },
+];
+
+function goalCurrent(goal, games, sessions){
+  const start=new Date(goal.periodStart);
+  const end=new Date(goal.periodEnd);
+  switch(goal.type){
+    case 'complete': {
+      // Games whose status flipped to ukonczone during the goal period.
+      // We don't store status-change timestamps, so approximate via lastPlayed
+      // (or fallback to addedAt for very old data). Imperfect but useful.
+      return games.filter(g=>{
+        if(g.status!=='ukonczone') return false;
+        const ts = g.lastPlayed || g.addedAt;
+        if(!ts) return false;
+        const d=new Date(ts);
+        return d>=start && d<=end;
+      }).length;
+    }
+    case 'hours': {
+      return Math.round(sessions
+        .filter(s=>{const d=new Date(s.startedAt); return d>=start && d<=end;})
+        .reduce((sum,s)=>sum + (+s.hours||0), 0));
+    }
+    case 'add': {
+      return games.filter(g=>{
+        if(!g.addedAt) return false;
+        const d=new Date(g.addedAt);
+        return d>=start && d<=end;
+      }).length;
+    }
+    case 'platinum': {
+      // Same approximation as complete — use lastPlayed/addedAt as the platinum date proxy.
+      return games.filter(g=>{
+        if(!g.platinum) return false;
+        const ts = g.lastPlayed || g.addedAt;
+        if(!ts) return false;
+        const d=new Date(ts);
+        return d>=start && d<=end;
+      }).length;
+    }
+    default: return 0;
+  }
+}
+
+// ─── v1.5.0 Year-in-Review (Spotify Wrapped style) ───────────────────────────
+// Pure derivation of a year's worth of stats. Returns null if there's not enough data.
+// "Enough data" = at least 1 game added or 1 session in the year.
+function getYearsWithData(games){
+  const years=new Set();
+  games.forEach(g=>{
+    if(g.addedAt) years.add(+g.addedAt.slice(0,4));
+    (g.sessions||[]).forEach(s=>{
+      const ts=s.startedAt || s.endedAt;
+      if(ts) years.add(new Date(ts).getFullYear());
+    });
+  });
+  return [...years].filter(y=>y>=2000 && y<=2100).sort((a,b)=>b-a);
+}
+function computeYearReview(games, year){
+  const yStart=new Date(year, 0, 1); yStart.setHours(0,0,0,0);
+  const yEnd=new Date(year, 11, 31); yEnd.setHours(23,59,59,999);
+  const inYear = ts => { if(!ts) return false; const d=new Date(ts); return d>=yStart && d<=yEnd; };
+
+  // Sessions filtered to the year
+  const allSessions=[];
+  games.forEach(g=>{
+    (g.sessions||[]).forEach(s=>{
+      if(!inYear(s.startedAt)) return;
+      allSessions.push({ ...s, gameId:g.id, gameTitle:g.title, gameCover:g.cover, gameAbbr:g.abbr, gameGenre:g.genre });
+    });
+  });
+  if(!allSessions.length && !games.some(g=>inYear(g.addedAt))){
+    return null; // no data at all for this year
+  }
+
+  const totalHours = allSessions.reduce((s,x)=>s + (+x.hours||0), 0);
+  const gamesAdded = games.filter(g=>inYear(g.addedAt)).length;
+  // Completion proxy: status===ukonczone AND lastPlayed (or addedAt) in year
+  const gamesCompleted = games.filter(g=>g.status==='ukonczone' && inYear(g.lastPlayed || g.addedAt)).length;
+  const platinums = games.filter(g=>g.platinum && inYear(g.lastPlayed || g.addedAt)).length;
+
+  // Per-game hours in year
+  const hrsByGame=new Map();
+  allSessions.forEach(s=>{ hrsByGame.set(s.gameId, (hrsByGame.get(s.gameId)||0) + (+s.hours||0)); });
+  const topPlayed=[...hrsByGame.entries()]
+    .map(([gid,h])=>{const g=games.find(x=>x.id===gid); return g?{game:g, hours:h}:null;})
+    .filter(Boolean)
+    .sort((a,b)=>b.hours-a.hours)
+    .slice(0,3);
+
+  // Highest rated this year (games rated AND added or completed in year)
+  const ratedThisYear = games
+    .filter(g=>g.rating!=null && +g.rating>0 && (inYear(g.addedAt) || inYear(g.lastPlayed)))
+    .sort((a,b)=>(+b.rating||0)-(+a.rating||0));
+  const highestRated = ratedThisYear[0] || null;
+
+  // Genre hours
+  const hrsByGenre=new Map();
+  allSessions.forEach(s=>{ const g=s.gameGenre || '?'; hrsByGenre.set(g, (hrsByGenre.get(g)||0) + (+s.hours||0)); });
+  const topGenreEntry=[...hrsByGenre.entries()].filter(([k])=>k && k!=='?').sort((a,b)=>b[1]-a[1])[0];
+  const topGenre = topGenreEntry ? {
+    name: topGenreEntry[0],
+    hours: Math.round(topGenreEntry[1]),
+    gamesCount: new Set(allSessions.filter(s=>s.gameGenre===topGenreEntry[0]).map(s=>s.gameId)).size,
+  } : null;
+
+  // Money in year — use addedAt as proxy for "spent in year"
+  const totalSpent = games
+    .filter(g=>inYear(g.addedAt))
+    .reduce((s,g)=>s + (+g.priceBought||0) + (+g.extraSpend||0), 0);
+  const totalRecovered = games
+    .filter(g=>g.priceSold!=null && +g.priceSold>0 && inYear(g.lastPlayed || g.addedAt))
+    .reduce((s,g)=>s + (+g.priceSold||0), 0);
+
+  // Streak / active days inside the year
+  const sbd=new Map();
+  allSessions.forEach(s=>{ const k=dayKey(s.startedAt); if(!sbd.has(k)) sbd.set(k,[]); sbd.get(k).push(s); });
+  const activeDays = sbd.size;
+  const totalDaysInYear = ((year%4===0 && year%100!==0) || year%400===0) ? 366 : 365;
+  const longestStreak = computeLongestStreak(sbd);
+
+  // Longest single session
+  const longestSession = allSessions.reduce((m,s)=>Math.max(m, +s.hours||0), 0);
+
+  return {
+    year,
+    totalHours: Math.round(totalHours),
+    gamesAdded,
+    gamesCompleted,
+    platinums,
+    topPlayed,        // [{game, hours}]
+    highestRated,     // game or null
+    topGenre,         // { name, hours, gamesCount } or null
+    totalSpent,
+    totalRecovered,
+    activeDays,
+    totalDaysInYear,
+    longestStreak,
+    longestSession: Math.round(longestSession * 10) / 10,
+    sessionCount: allSessions.length,
+  };
 }
 
 // v1.2.0 — Import modal with dual-mode selection
@@ -2578,6 +3155,401 @@ function Finance({games,lang}){
   );
 }
 
+// ─── v1.5.0 Hamburger menu overlay ───────────────────────────────────────────
+// Fullscreen drawer triggered from the header ⋮ button. Lists secondary screens
+// (Wrapped, Achievements, Goals, Settings) — these used to either be a tab or a
+// modal. Centralizing them here freed a tab slot and gave each feature breathing
+// room behind a single entry point.
+function MenuOverlay({ onClose, onPick, lang, achStats, goalStats, currentYear }){
+  const items=[
+    { key:'wrapped',      ico:'🎁', tk:'menuWrapped',     dk:'menuWrappedDesc',
+      badge: currentYear ? String(currentYear) : null },
+    { key:'achievements', ico:'🏆', tk:'menuAchievements',dk:'menuAchievementsDesc',
+      vars:{ unlocked:achStats.unlocked, total:achStats.total },
+      badge: achStats.unlocked>0 ? `${achStats.unlocked}/${achStats.total}` : null },
+    { key:'goals',        ico:'🎯', tk:'menuGoals',       dk:'menuGoalsDesc',
+      vars:{ active:goalStats.active, done:goalStats.done },
+      badge: goalStats.active>0 ? String(goalStats.active) : null },
+    { key:'settings',     ico:'⚙️', tk:'menuSettings',    dk:'menuSettingsDesc' },
+  ];
+  return (
+    <div className='ovr menu-ovr' onClick={onClose}>
+      <div className='menu-pn' onClick={e=>e.stopPropagation()}>
+        <div className='mhdl'/>
+        <div className='menu-hdr'>
+          <div className='mttl'>{t(lang,'menuTitle')}</div>
+          <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+        </div>
+        {items.map(it=>(
+          <button key={it.key} type='button' className='menu-row' onClick={()=>onPick(it.key)}>
+            <span className='menu-ico'>{it.ico}</span>
+            <div className='menu-body'>
+              <div className='menu-title'>{t(lang, it.tk).replace(/^[^\s]+\s/, '')}</div>
+              <div className='menu-desc'>{t(lang, it.dk, it.vars||{})}</div>
+            </div>
+            {it.badge && <span className='menu-badge'>{it.badge}</span>}
+            <span className='menu-arrow'>›</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── v1.5.0 Achievements overlay ─────────────────────────────────────────────
+// Read-only grid. Locked achievements appear dimmed with a progress bar; unlocked
+// ones get a colored card. Multi-tier groups (collector_1..5) render as separate
+// tiles by design — players see "what's next" instead of just one badge that
+// silently leveled up.
+function Achievements({ games, longestStreak, lang, onClose }){
+  const list=computeAchievements(games, longestStreak);
+  const unlockedCount=list.filter(a=>a.unlocked).length;
+  const total=list.length;
+  const pct=total ? Math.round((unlockedCount/total)*100) : 0;
+  return (
+    <div className='bs-ovr'>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>{t(lang,'achievementsTitle')}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div className='ach-pn'>
+        <div className='ach-sub'>{t(lang,'achievementsSub',{unlocked:unlockedCount, total, pct})}</div>
+        {games.length===0 && <div className='empty' style={{padding:'40px 20px'}}>
+          <div className='eic'>🏆</div>
+          <div className='ett'>{t(lang,'achEmpty')}</div>
+        </div>}
+        {games.length>0 && <div className='ach-grid'>
+          {list.map(a=>{
+            const titleStr=a.title[lang]||a.title.en;
+            const descStr=a.desc[lang]||a.desc.en;
+            return (
+              <div key={a.id} className={'ach-card'+(a.unlocked?' ach-on':'')+(a.rare?' ach-rare':'')}>
+                <div className='ach-ico'>{a.ico}</div>
+                <div className='ach-title'>{titleStr}</div>
+                <div className='ach-desc'>{descStr}</div>
+                {!a.unlocked && (
+                  <div className='ach-bar'>
+                    <div className='ach-bar-fill' style={{width:`${a.pct}%`}}/>
+                  </div>
+                )}
+                <div className='ach-progress'>
+                  {a.unlocked
+                    ? <span style={{color:G.grn}}>✓ {t(lang,'achUnlocked')}</span>
+                    : t(lang,'achProgress',{cur:a.progress, tgt:a.threshold})}
+                </div>
+              </div>
+            );
+          })}
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+// ─── v1.5.0 Goals manager overlay ────────────────────────────────────────────
+// Full CRUD on goals list. Adding a goal picks from GOAL_TEMPLATES and snapshots
+// the current month bounds — so a "Complete 3 games this month" goal added on
+// Apr 26 ends Apr 30, and on May 1 a fresh goal needs to be added (or the user
+// re-adds one). Keeps logic dumb and avoids surprise auto-renew.
+function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }){
+  const [picking,setPicking]=useState(false);
+  const active=goals.filter(g=>!g.doneAt);
+  const done=goals.filter(g=>!!g.doneAt);
+  const daysLeft=daysLeftInMonth();
+  function addGoal(tpl){
+    const { startKey, endKey } = monthBounds();
+    const id='gl_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    const next=[...goals, { id, type:tpl.type, target:tpl.target, periodStart:startKey, periodEnd:endKey, doneAt:null }];
+    setGoals(next); goalsWrite(next);
+    setPicking(false);
+    flash(t(lang,'goalAdded'));
+  }
+  function delGoal(id){
+    const next=goals.filter(g=>g.id!==id);
+    setGoals(next); goalsWrite(next);
+    flash(t(lang,'goalRemoved'));
+  }
+  // Auto-mark goals done when current value reaches target. Persists doneAt.
+  // (App.jsx passes a setGoals that also writes to localStorage, so we don't
+  //  need a separate effect here for that — but we do need to detect crossings.)
+  useEffect(()=>{
+    let dirty=false;
+    const updated=goals.map(gl=>{
+      if(gl.doneAt) return gl;
+      const cur=goalCurrent(gl, games, sessions);
+      if(cur >= gl.target){
+        dirty=true;
+        return { ...gl, doneAt:new Date().toISOString() };
+      }
+      return gl;
+    });
+    if(dirty){
+      setGoals(updated); goalsWrite(updated);
+      const newlyDone = updated.filter((g,i)=>g.doneAt && !goals[i].doneAt);
+      if(newlyDone.length){
+        const gl=newlyDone[0];
+        const tpl=GOAL_TYPES[gl.type];
+        const titleStr=t(lang, tpl.tk, {n:gl.target});
+        flash(t(lang,'goalDone',{title:titleStr}));
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[games, sessions]);
+
+  return (
+    <div className='bs-ovr'>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>{t(lang,'goalsTitle')}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div className='ach-pn'>
+        <div className='ach-sub'>{t(lang,'goalsSub')}</div>
+
+        {/* Active goals */}
+        <div className='goals-h'>{t(lang,'goalsActive',{n:active.length})}</div>
+        {active.length===0 && <div className='goals-empty'>
+          <div style={{fontSize:32,marginBottom:6}}>🎯</div>
+          <div className='goals-empty-t'>{t(lang,'goalsEmpty')}</div>
+          <div className='goals-empty-h'>{t(lang,'goalsEmptyHint')}</div>
+        </div>}
+        {active.map(gl=>{
+          const tpl=GOAL_TYPES[gl.type];
+          const cur=goalCurrent(gl, games, sessions);
+          const pct=Math.min(100, Math.round((cur/gl.target)*100));
+          const titleStr=t(lang, tpl.tk, {n:gl.target});
+          return (
+            <div key={gl.id} className='goal-card'>
+              <div className='goal-row'>
+                <span className='goal-ico'>{tpl.ico}</span>
+                <div className='goal-body'>
+                  <div className='goal-title'>{titleStr}</div>
+                  <div className='goal-meta'>{cur} / {gl.target} · {daysLeft===0?t(lang,'goalLastDay'):t(lang,'goalRemainingDays',{n:daysLeft})}</div>
+                </div>
+                <button type='button' className='goal-del' onClick={()=>delGoal(gl.id)} aria-label={t(lang,'goalDelete')}>✕</button>
+              </div>
+              <div className='goal-bar'><div className='goal-bar-fill' style={{width:`${pct}%`}}/></div>
+            </div>
+          );
+        })}
+        <button type='button' className='acc-btn' style={{margin:'14px 0 6px'}} onClick={()=>setPicking(true)}>{t(lang,'goalsAdd')}</button>
+
+        {/* Done goals — collapsed list */}
+        {done.length>0 && <>
+          <div className='goals-h' style={{marginTop:14}}>{t(lang,'goalsDone',{n:done.length})}</div>
+          {done.map(gl=>{
+            const tpl=GOAL_TYPES[gl.type];
+            const titleStr=t(lang, tpl.tk, {n:gl.target});
+            return (
+              <div key={gl.id} className='goal-card goal-card-done'>
+                <div className='goal-row'>
+                  <span className='goal-ico'>✅</span>
+                  <div className='goal-body'>
+                    <div className='goal-title'>{titleStr}</div>
+                    <div className='goal-meta'>{fmtShort(gl.doneAt, lang)}</div>
+                  </div>
+                  <button type='button' className='goal-del' onClick={()=>delGoal(gl.id)} aria-label={t(lang,'goalDelete')}>✕</button>
+                </div>
+              </div>
+            );
+          })}
+        </>}
+      </div>
+
+      {/* Goal template picker */}
+      {picking && (
+        <div className='confirm-ovr' onClick={()=>setPicking(false)}>
+          <div className='confirm-box' onClick={e=>e.stopPropagation()} style={{maxWidth:380}}>
+            <div className='confirm-title'>{t(lang,'goalsAddTitle')}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:14}}>
+              {GOAL_TEMPLATES.map((tpl,i)=>{
+                const def=GOAL_TYPES[tpl.type];
+                return (
+                  <button key={i} type='button' className='goal-tpl' onClick={()=>addGoal(tpl)}>
+                    <span style={{fontSize:20}}>{def.ico}</span>
+                    <span style={{flex:1,textAlign:'left'}}>{t(lang, def.tk, {n:tpl.target})}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button type='button' className='bcn' style={{marginTop:14,width:'100%'}} onClick={()=>setPicking(false)}>{t(lang,'cancel')}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── v1.5.0 Goals card (Home) ────────────────────────────────────────────────
+// Compact view of active goals on the Home tab. Tap → opens GoalsManager.
+function GoalsCard({ goals, games, sessions, lang, onOpen }){
+  const active=goals.filter(g=>!g.doneAt);
+  if(!active.length){
+    return (
+      <div className='goal-home-empty' onClick={onOpen}>
+        <span className='goal-ico' style={{fontSize:24}}>🎯</span>
+        <div className='goal-body'>
+          <div className='goal-title'>{t(lang,'goalCardTitle')}</div>
+          <div className='goal-meta'>{t(lang,'goalCardEmpty')}</div>
+        </div>
+        <span className='menu-arrow'>{t(lang,'goalCardCta')}</span>
+      </div>
+    );
+  }
+  return (
+    <div className='goal-home' onClick={onOpen}>
+      <div className='goal-home-h'>{t(lang,'goalCardTitle')}</div>
+      {active.slice(0,3).map(gl=>{
+        const tpl=GOAL_TYPES[gl.type];
+        const cur=goalCurrent(gl, games, sessions);
+        const pct=Math.min(100, Math.round((cur/gl.target)*100));
+        const titleStr=t(lang, tpl.tk, {n:gl.target});
+        return (
+          <div key={gl.id} className='goal-mini'>
+            <div className='goal-mini-row'>
+              <span className='goal-ico'>{tpl.ico}</span>
+              <div className='goal-body'>
+                <div className='goal-mini-title'>{titleStr}</div>
+                <div className='goal-mini-meta'>{cur} / {gl.target}</div>
+              </div>
+            </div>
+            <div className='goal-bar'><div className='goal-bar-fill' style={{width:`${pct}%`}}/></div>
+          </div>
+        );
+      })}
+      {active.length>3 && <div className='goal-mini-meta' style={{textAlign:'center',marginTop:6}}>+ {active.length-3}</div>}
+    </div>
+  );
+}
+
+// ─── v1.5.0 Year-in-Review (Spotify Wrapped style) ───────────────────────────
+// Big-numbers card layout. Year picker at top defaults to current year, falls
+// back to most recent year with data. If selected year has no data → empty state.
+function YearInReview({ games, lang, onClose }){
+  const years=getYearsWithData(games);
+  const currentYear=new Date().getFullYear();
+  const defaultYear = years.includes(currentYear) ? currentYear : (years[0] || currentYear);
+  const [year,setYear]=useState(defaultYear);
+  const review=computeYearReview(games, year);
+  const sym=getCurSymbol();
+  return (
+    <div className='bs-ovr'>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>🎁 {t(lang,'wrappedTitle',{year})}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div className='wr-pn'>
+        {years.length>1 && (
+          <div className='wr-years'>
+            <span className='wr-years-lbl'>{t(lang,'wrappedYearPicker')}</span>
+            {years.slice(0,5).map(y=>(
+              <button key={y} type='button' className={'wr-year'+(y===year?' on':'')} onClick={()=>setYear(y)}>{y}</button>
+            ))}
+          </div>
+        )}
+
+        {!review && (
+          <div className='empty' style={{padding:'48px 20px'}}>
+            <div className='eic'>🎁</div>
+            <div className='ett'>{t(lang,'wrappedEmpty',{year})}</div>
+            <div className='ess'>{t(lang,'wrappedEmptyHint')}</div>
+          </div>
+        )}
+
+        {review && <>
+          <div className='wr-sub'>{t(lang,'wrappedSub',{year})}</div>
+
+          {/* Big-number hero card */}
+          <div className='wr-hero'>
+            <div className='wr-hero-num'>{review.totalHours}</div>
+            <div className='wr-hero-lbl'>{t(lang,'wrappedTotalHours')}</div>
+            <div className='wr-hero-sub'>{review.sessionCount} {lang==='pl'?'sesji':'sessions'}</div>
+          </div>
+
+          {/* Stats grid */}
+          <div className='wr-grid'>
+            <div className='wr-stat'>
+              <div className='wr-stat-num'>{review.gamesAdded}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedGamesAdded')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num'>{review.gamesCompleted}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedGamesCompleted')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num' style={{color:G.gld}}>{review.platinums}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedPlatinums')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num' style={{color:G.pur}}>{review.activeDays}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedActiveDays')}</div>
+              <div className='wr-stat-sub'>{t(lang,'wrappedActiveDaysDesc',{total:review.totalDaysInYear})}</div>
+            </div>
+          </div>
+
+          {/* Top played */}
+          {review.topPlayed.length>0 && <div className='wr-card'>
+            <div className='wr-card-h'>{t(lang,'wrappedTopPlayed')}</div>
+            {review.topPlayed.map((entry,i)=>{
+              const g=entry.game;
+              return (
+                <div key={g.id} className='wr-row'>
+                  <span className='wr-rank'>#{i+1}</span>
+                  {g.cover ? <img className='wr-cov' src={g.cover} alt='' loading='lazy'/> : <div className='wr-cov0'>{g.abbr||'??'}</div>}
+                  <div className='wr-row-body'>
+                    <div className='wr-row-title'>{g.title}</div>
+                    <div className='wr-row-meta'>{Math.round(entry.hours)}h{g.genre?' · '+g.genre:''}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>}
+
+          {/* Highest rated */}
+          {review.highestRated && <div className='wr-card'>
+            <div className='wr-card-h'>{t(lang,'wrappedHighestRated')}</div>
+            <div className='wr-row'>
+              {review.highestRated.cover ? <img className='wr-cov' src={review.highestRated.cover} alt='' loading='lazy'/> : <div className='wr-cov0'>{review.highestRated.abbr||'??'}</div>}
+              <div className='wr-row-body'>
+                <div className='wr-row-title'>{review.highestRated.title}</div>
+                <div className='wr-row-meta' style={{color:G.gld,fontWeight:700}}>★ {(+review.highestRated.rating).toFixed(1)} / 10</div>
+              </div>
+            </div>
+          </div>}
+
+          {/* Top genre */}
+          {review.topGenre && <div className='wr-card'>
+            <div className='wr-card-h'>{t(lang,'wrappedTopGenre')}</div>
+            <div className='wr-genre-name'>{review.topGenre.name}</div>
+            <div className='wr-genre-meta'>{t(lang,'wrappedTopGenreDesc',{n:review.topGenre.hours, games:review.topGenre.gamesCount})}</div>
+          </div>}
+
+          {/* Money + records */}
+          <div className='wr-grid'>
+            <div className='wr-stat'>
+              <div className='wr-stat-num' style={{color:G.org}}>{Math.round(review.totalSpent)}{sym}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedSpent')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num' style={{color:G.grn}}>{Math.round(review.totalRecovered)}{sym}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedRecovered')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num'>{review.longestStreak}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedLongestStreak')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num'>{review.longestSession}h</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedLongestSession')}</div>
+            </div>
+          </div>
+
+          <div className='wr-share-hint'>{t(lang,'wrappedShareHint')}</div>
+        </>}
+      </div>
+    </div>
+  );
+}
+
 function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPrivacy}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   return(
@@ -2763,6 +3735,10 @@ export default function App(){
   const [platFilter,setPlatFilter]= useState('all');
   const [rateModal,setRateModal]= useState(null);
   const [privacyOpen,setPrivacyOpen]=useState(false);
+  // v1.5.0 — Hamburger-driven secondary screens. Single 'overlay' enum keeps mutual
+  // exclusion trivial (you can't have Wrapped and Achievements open at once).
+  const [overlay,setOverlay]=useState(null); // 'menu' | 'wrapped' | 'achievements' | 'goals' | 'settings' | null
+  const [goals,setGoals]=useState(()=>goalsRead());
   // v1.2.0 — Import modal state
   const [importModal,setImportModal]=useState(null);  // null | {mode:null|'merge'|'replace', file:null|File}
   const openImport=()=>setImportModal({mode:null,file:null});
@@ -2870,7 +3846,10 @@ export default function App(){
         <div className='hdr'>
           <div className='htop'>
             <div className='logo'><div className='lico'>V</div><div><div className='lnm'>VAULT</div><div className='lsb'>Game Tracker</div></div></div>
-            <button type='button' className='abtn' onClick={()=>setModal('add')}>+ {lang==='pl'?'Dodaj grę':'Add game'}</button>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <button type='button' className='hmb' onClick={()=>setOverlay('menu')} aria-label={t(lang,'menuAria')} title={t(lang,'menuAria')}>≡</button>
+              <button type='button' className='abtn' onClick={()=>setModal('add')}>+ {lang==='pl'?'Dodaj grę':'Add game'}</button>
+            </div>
           </div>
           <div className='tabs'>
             <button type='button' className={'tab'+(tab==='home'?' on':'')} onClick={()=>setTab('home')}>{t(lang,'home')}</button>
@@ -2878,11 +3857,10 @@ export default function App(){
             <button type='button' className={'tab'+(tab==='upc'?' on':'')} onClick={()=>setTab('upc')} style={{position:'relative'}}>{t(lang,'releases')}{upcomingCount>0&&<span className='tab-dot'/>}</button>
             <button type='button' className={'tab'+(tab==='fin'?' on':'')} onClick={()=>setTab('fin')}>{t(lang,'finance')}</button>
             <button type='button' className={'tab'+(tab==='st'?' on':'')} onClick={()=>setTab('st')}>{t(lang,'stats')}</button>
-            <button type='button' className={'tab'+(tab==='cfg'?' on':'')} onClick={()=>setTab('cfg')}>{t(lang,'settings')}</button>
           </div>
         </div>
 
-        {tab==='home'&&<Home games={games} onOpen={setModal} onStatusChange={handleStatusChange} onAddFirst={()=>setModal('add')} onToggleNotify={toggleNotify} lang={lang}/>}
+        {tab==='home'&&<Home games={games} onOpen={setModal} onStatusChange={handleStatusChange} onAddFirst={()=>setModal('add')} onToggleNotify={toggleNotify} lang={lang} goals={goals} onGoalsOpen={()=>setOverlay('goals')}/>}
 
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
@@ -2931,15 +3909,7 @@ export default function App(){
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         {tab==='fin'&&<Finance games={games} lang={lang}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
-        {tab==='cfg'&&<><Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)}/>
-        {/* ── Budget ── */}
-        <div style={{padding:'0 16px 8px'}}>
-          <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
-          <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>
-            <BudgetEditor budget={budget} setBudget={setBudget} games={games} flash={flash} lang={lang}/>
-          </div>
-        </div>
-</> }
+        {/* v1.5.0 — Settings/Achievements/Goals/Wrapped now live behind hamburger menu (see overlays below) */}
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         <Toast msg={toast}/>
@@ -3019,22 +3989,66 @@ export default function App(){
 
         {privacyOpen&&(
           <div className='rate-modal' onClick={()=>setPrivacyOpen(false)}>
-            <div onClick={e=>e.stopPropagation()} style={{background:G.card2,border:`1px solid ${G.bdr}`,borderRadius:18,padding:'20px 18px 16px',maxWidth:520,width:'100%',maxHeight:'85vh',display:'flex',flexDirection:'column',animation:'scaleIn .2s ease'}}>
-              <div style={{fontFamily:"'Orbitron',monospace",fontSize:14,fontWeight:700,color:G.blu,marginBottom:8,textAlign:'center'}}>{t(lang,'privacyTitle')}</div>
-              <div style={{display:'inline-block',alignSelf:'center',background:'rgba(57,255,110,.1)',border:'1px solid rgba(57,255,110,.3)',color:'#39FF6E',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,marginBottom:14}}>{t(lang,'privacyBadge')}</div>
-              <div style={{flex:1,overflowY:'auto',paddingRight:6,WebkitOverflowScrolling:'touch'}}>
-                {[1,2,3,4,5,6,7,8].map(n=>(
-                  <div key={n} style={{marginBottom:14}}>
-                    <div style={{fontSize:11,fontWeight:700,color:G.pur,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:5}}>{n}. {t(lang,'privacyS'+n+'Title')}</div>
-                    <div style={{fontSize:13,color:G.dim,lineHeight:1.55}}>{t(lang,'privacyS'+n+'Body')}</div>
-                  </div>
-                ))}
-                <div style={{marginTop:18,paddingTop:14,borderTop:`1px solid ${G.bdr}`}}>
-                  <a href='https://matiseekk-dot.github.io/Games/privacy.html' target='_blank' rel='noopener noreferrer' style={{fontSize:12,color:G.blu,textDecoration:'none'}}>{t(lang,'privacyFullLink')} →</a>
-                  <div style={{fontSize:10,color:G.dim,marginTop:6}}>{t(lang,'privacyUpdated')}</div>
+            <div onClick={e=>e.stopPropagation()} style={{background:G.card2,border:`1px solid ${G.bdr}`,borderRadius:18,padding:'22px 20px 18px',maxWidth:480,width:'100%',animation:'scaleIn .2s ease'}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:14,fontWeight:700,color:G.blu,marginBottom:10,textAlign:'center'}}>{t(lang,'privacyTitle')}</div>
+              <div style={{display:'inline-block',alignSelf:'center',background:'rgba(57,255,110,.1)',border:'1px solid rgba(57,255,110,.3)',color:'#39FF6E',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,marginBottom:14,width:'fit-content',marginLeft:'auto',marginRight:'auto'}}>
+                <div style={{display:'flex',justifyContent:'center'}}>{t(lang,'privacyBadge')}</div>
+              </div>
+              {/* v1.5.0 — Single-paragraph privacy summary; full policy linked out to privacy.html */}
+              <div style={{fontSize:13,color:G.txt,lineHeight:1.6,marginBottom:16,textAlign:'left'}}>{t(lang,'privacyMiniBody')}</div>
+              <a href='https://matiseekk-dot.github.io/Games/privacy.html' target='_blank' rel='noopener noreferrer' style={{display:'block',fontSize:13,fontWeight:700,color:G.blu,textDecoration:'none',padding:'10px',background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.3)',borderRadius:10,textAlign:'center',marginBottom:10}}>{t(lang,'privacyMiniLink')}</a>
+              <div style={{fontSize:10,color:G.dim,textAlign:'center',marginBottom:14}}>{t(lang,'privacyUpdated')}</div>
+              <button type='button' onClick={()=>setPrivacyOpen(false)} style={{padding:'12px',background:G.blu,color:'#000',border:'none',borderRadius:10,fontWeight:700,fontSize:14,cursor:'pointer',width:'100%'}}>{t(lang,'privacyClose')}</button>
+            </div>
+          </div>
+        )}
+
+        {/* v1.5.0 — Hamburger menu + secondary screens */}
+        {overlay==='menu' && (
+          <MenuOverlay
+            onClose={()=>setOverlay(null)}
+            onPick={key=>setOverlay(key)}
+            lang={lang}
+            currentYear={new Date().getFullYear()}
+            achStats={(()=>{const sbd=new Map();collectSessions(games).forEach(s=>{const k=s.dateKey;if(!sbd.has(k))sbd.set(k,[]);sbd.get(k).push(s);});const ach=computeAchievements(games, computeLongestStreak(sbd));return {unlocked:ach.filter(a=>a.unlocked).length, total:ach.length};})()}
+            goalStats={{active:goals.filter(g=>!g.doneAt).length, done:goals.filter(g=>!!g.doneAt).length}}
+          />
+        )}
+        {overlay==='wrapped' && (
+          <YearInReview games={games} lang={lang} onClose={()=>setOverlay('menu')}/>
+        )}
+        {overlay==='achievements' && (() => {
+          // Compute longest streak from sessionsByDay for streak achievements
+          const sbd=new Map();
+          collectSessions(games).forEach(s=>{const k=s.dateKey;if(!sbd.has(k))sbd.set(k,[]);sbd.get(k).push(s);});
+          const longest=computeLongestStreak(sbd);
+          return <Achievements games={games} longestStreak={longest} lang={lang} onClose={()=>setOverlay('menu')}/>;
+        })()}
+        {overlay==='goals' && (
+          <GoalsManager
+            goals={goals}
+            setGoals={setGoals}
+            games={games}
+            sessions={collectSessions(games)}
+            lang={lang}
+            flash={flash}
+            onClose={()=>setOverlay(null)}
+          />
+        )}
+        {overlay==='settings' && (
+          <div className='bs-ovr'>
+            <div className='bs-hdr'>
+              <div className='bs-ttl'>⚙️ {t(lang,'settings').replace(/^[^\s]+\s/,'')}</div>
+              <button type='button' className='bs-x' onClick={()=>setOverlay('menu')} aria-label={t(lang,'cancel')}>✕</button>
+            </div>
+            <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
+              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)}/>
+              <div style={{padding:'0 16px 8px'}}>
+                <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
+                <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>
+                  <BudgetEditor budget={budget} setBudget={setBudget} games={games} flash={flash} lang={lang}/>
                 </div>
               </div>
-              <button type='button' onClick={()=>setPrivacyOpen(false)} style={{marginTop:14,padding:'12px',background:G.blu,color:'#000',border:'none',borderRadius:10,fontWeight:700,fontSize:14,cursor:'pointer'}}>{t(lang,'privacyClose')}</button>
             </div>
           </div>
         )}
