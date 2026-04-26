@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
 const RAWG_KEY   = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
-const APP_VER    = '1.2.4';
+const APP_VER    = '1.3.0';
 const LS_KEY     = 'ps5vault_v1';
 const LS_ONBOARD = 'ps5vault_onboarded';
 const LS_LANG    = 'ps5vault_lang';
 const LS_CURRENCY = 'ps5vault_currency';
+const LS_EAN_CACHE = 'ps5vault_ean_cache';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
@@ -96,14 +97,16 @@ const TRANSLATIONS = {
     privacyS2Body:"Imię, email, telefon, lokalizacja, identyfikatory urządzenia. Brak Google Analytics, brak trackingu, brak ciasteczek.",
     privacyS3Title:"RAWG.io API",
     privacyS3Body:"Wyszukiwanie gier wysyła do serwerów RAWG (Litwa/UE) tylko tekst wpisany w pole + klucz API. Twoja kolekcja nigdy tam nie trafia.",
-    privacyS4Title:"Tip jar (buycoffee.to)",
-    privacyS4Body:"Sekcja \"Wsparcie\" otwiera buycoffee.to/skudev jako link zewnętrzny. Apka nie wysyła żadnych Twoich danych do tej platformy.",
-    privacyS5Title:"Powiadomienia",
-    privacyS5Body:"Generowane lokalnie przez Service Worker. Brak push z serwera, brak danych wysyłanych w celu powiadomień.",
-    privacyS6Title:"Zgłoś problem",
-    privacyS6Body:"Funkcja \"Zgłoś problem\" otwiera Twojego klienta poczty z autoszablonem (model urządzenia, wersja apki). Wysłanie jest dobrowolne — możesz edytować lub skasować dane.",
-    privacyS7Title:"Twoje prawa (RODO)",
-    privacyS7Body:"Pełna kontrola: \"Eksportuj dane\" daje Ci JSON z całą kolekcją, \"Wyczyść kolekcję\" usuwa wszystko. Można też po prostu odinstalować apkę.",
+    privacyS4Title:"Skaner kodów kreskowych (UPCitemdb)",
+    privacyS4Body:"Jeśli używasz skanera kodów (📷), sam EAN/UPC z pudełka (np. 0711719541738) jest wysyłany do api.upcitemdb.com żeby rozpoznać nazwę gry. Wynik zapisuję w cache lokalnie żeby nie pytać dwa razy. Brak danych osobowych — tylko numer kodu.",
+    privacyS5Title:"Tip jar (buycoffee.to)",
+    privacyS5Body:"Sekcja \"Wsparcie\" otwiera buycoffee.to/skudev jako link zewnętrzny. Apka nie wysyła żadnych Twoich danych do tej platformy.",
+    privacyS6Title:"Powiadomienia",
+    privacyS6Body:"Generowane lokalnie przez Service Worker. Brak push z serwera, brak danych wysyłanych w celu powiadomień.",
+    privacyS7Title:"Zgłoś problem",
+    privacyS7Body:"Funkcja \"Zgłoś problem\" otwiera Twojego klienta poczty z autoszablonem (model urządzenia, wersja apki). Wysłanie jest dobrowolne — możesz edytować lub skasować dane.",
+    privacyS8Title:"Twoje prawa (RODO)",
+    privacyS8Body:"Pełna kontrola: \"Eksportuj dane\" daje Ci JSON z całą kolekcją, \"Wyczyść kolekcję\" usuwa wszystko. Można też po prostu odinstalować apkę.",
     privacyFullLink:"Pełna polityka prywatności (online)",
     privacyClose:"Zamknij",
     privacyUpdated:"Aktualizacja: 24 kwietnia 2026",
@@ -119,6 +122,29 @@ const TRANSLATIONS = {
     searchRawg:"🔍 Szukaj w RAWG", rawgPlaceholder:"Wpisz nazwę gry...",
     rawgHint:"Wybierz grę żeby auto-uzupełnić pola + datę premiery",
     rawgNotFound:"Nie znaleziono", rawgNotFoundHint:"Sprawdź pisownię albo dodaj grę ręcznie w formularzu poniżej",
+    // v1.3.0 — Barcode scanner
+    scanBarcodeAria:"Skanuj kod kreskowy",
+    scanTitle:"Skanuj kod gry", scanHint:"Wyceluj w EAN/UPC z tyłu pudełka",
+    scanInitializing:"Uruchamiam kamerę...",
+    scanScanning:"Szukam kodu...",
+    scanLookup:"Sprawdzam EAN {ean}...",
+    scanRawg:"Szukam w RAWG: {q}",
+    scanFoundAs:"Rozpoznano jako: {name}",
+    scanCachedHint:"⚡ z cache",
+    scanFound:"Wyniki RAWG",
+    scanNoMatch:"Brak dopasowań w RAWG",
+    scanNoMatchHint:"Spróbuj wyszukać ręcznie po nazwie w polu wyżej",
+    scanNoEAN:"Nie udało się rozpoznać EAN {ean}",
+    scanNoEANHint:"EAN nie ma w bazie UPCitemdb. Dodaj grę ręcznie albo wyszukaj po nazwie.",
+    scanUnsupported:"Skanowanie niedostępne",
+    scanUnsupportedHint:"Działa w Chrome i Edge na Androidzie. iOS jeszcze tego nie obsługuje — wpisz EAN ręcznie poniżej.",
+    scanDenied:"Brak dostępu do kamery",
+    scanDeniedHint:"Włącz uprawnienia kamery dla tej strony w ustawieniach przeglądarki",
+    scanError:"Błąd kamery",
+    scanRetry:"↻ Skanuj ponownie",
+    scanManualLabel:"...albo wpisz EAN ręcznie",
+    scanManualPh:"np. 0711719541738",
+    scanManualBtn:"Szukaj",
     titleField:"Tytuł *", abbrField:"Skrót (2 lit.)", yearField:"Rok",
     releaseDateField:"Data premiery", releaseDateHint:"Zostaw puste jeśli nieznana (TBA)",
     statusField:"Status", genreField:"Gatunek", hoursField:"Godziny",
@@ -273,14 +299,16 @@ const TRANSLATIONS = {
     privacyS2Body:"Name, email, phone, location, device identifiers. No Google Analytics, no tracking, no cookies.",
     privacyS3Title:"RAWG.io API",
     privacyS3Body:"Game search sends to RAWG servers (Lithuania/EU) only the text you type + API key. Your collection never goes there.",
-    privacyS4Title:"Tip jar (buycoffee.to)",
-    privacyS4Body:"The \"Support\" section opens buycoffee.to/skudev as an external link. The app does not send any of your data to that platform.",
-    privacyS5Title:"Notifications",
-    privacyS5Body:"Generated locally by a Service Worker. No server push, no data sent for notifications.",
-    privacyS6Title:"Report a problem",
-    privacyS6Body:"The \"Report a problem\" feature opens your email client with an auto-template (device model, app version). Sending is voluntary — you can edit or delete the data.",
-    privacyS7Title:"Your rights (GDPR)",
-    privacyS7Body:"Full control: \"Export data\" gives you a JSON with the full collection, \"Clear collection\" deletes everything. You can also just uninstall the app.",
+    privacyS4Title:"Barcode scanner (UPCitemdb)",
+    privacyS4Body:"When you use the scanner (📷), only the EAN/UPC from the box (e.g. 0711719541738) is sent to api.upcitemdb.com to resolve the game name. The result is cached locally so it isn't asked twice. No personal data — just the code number.",
+    privacyS5Title:"Tip jar (buycoffee.to)",
+    privacyS5Body:"The \"Support\" section opens buycoffee.to/skudev as an external link. The app does not send any of your data to that platform.",
+    privacyS6Title:"Notifications",
+    privacyS6Body:"Generated locally by a Service Worker. No server push, no data sent for notifications.",
+    privacyS7Title:"Report a problem",
+    privacyS7Body:"The \"Report a problem\" feature opens your email client with an auto-template (device model, app version). Sending is voluntary — you can edit or delete the data.",
+    privacyS8Title:"Your rights (GDPR)",
+    privacyS8Body:"Full control: \"Export data\" gives you a JSON with the full collection, \"Clear collection\" deletes everything. You can also just uninstall the app.",
     privacyFullLink:"Full privacy policy (online)",
     privacyClose:"Close",
     privacyUpdated:"Updated: April 24, 2026",
@@ -296,6 +324,29 @@ const TRANSLATIONS = {
     searchRawg:"🔍 Search RAWG", rawgPlaceholder:"Type game name...",
     rawgHint:"Select a game to auto-fill fields + release date",
     rawgNotFound:"Not found", rawgNotFoundHint:"Check spelling or add the game manually in the form below",
+    // v1.3.0 — Barcode scanner
+    scanBarcodeAria:"Scan barcode",
+    scanTitle:"Scan game barcode", scanHint:"Aim at the EAN/UPC on the back of the box",
+    scanInitializing:"Starting camera...",
+    scanScanning:"Searching for code...",
+    scanLookup:"Looking up EAN {ean}...",
+    scanRawg:"Searching RAWG: {q}",
+    scanFoundAs:"Identified as: {name}",
+    scanCachedHint:"⚡ cached",
+    scanFound:"RAWG results",
+    scanNoMatch:"No RAWG matches",
+    scanNoMatchHint:"Try searching by name manually in the field above",
+    scanNoEAN:"Couldn't identify EAN {ean}",
+    scanNoEANHint:"EAN not in UPCitemdb. Add the game manually or search by name.",
+    scanUnsupported:"Scanning unavailable",
+    scanUnsupportedHint:"Works in Chrome and Edge on Android. iOS doesn't support it yet — type the EAN manually below.",
+    scanDenied:"Camera access denied",
+    scanDeniedHint:"Enable camera permission for this site in browser settings",
+    scanError:"Camera error",
+    scanRetry:"↻ Scan again",
+    scanManualLabel:"...or type EAN manually",
+    scanManualPh:"e.g. 0711719541738",
+    scanManualBtn:"Search",
     titleField:"Title *", abbrField:"Abbr (2 chars)", yearField:"Year",
     releaseDateField:"Release date", releaseDateHint:"Leave empty if unknown (TBA)",
     statusField:"Status", genreField:"Genre", hoursField:"Hours",
@@ -626,6 +677,74 @@ async function rawgSearch(q){
   finally{clearTimeout(tm);}
 }
 
+// ─── Barcode / EAN lookup ────────────────────────────────────────────────────
+// Strategy: scan EAN with BarcodeDetector → resolve EAN→product name via UPCitemdb
+// trial endpoint (free, 100/day/IP, CORS-enabled, no key) → feed cleaned name into
+// existing rawgSearch(). RAWG itself has no EAN index, hence the name-resolution hop.
+function eanCacheRead(){ try{ return JSON.parse(localStorage.getItem(LS_EAN_CACHE)||'{}'); }catch{ return {}; } }
+function eanCacheWrite(c){ try{ localStorage.setItem(LS_EAN_CACHE,JSON.stringify(c)); }catch{} }
+
+// Strips console/edition noise so RAWG name search has a chance.
+// "Sony PS5 God of War Ragnarok Standard Edition (EU)" → "God of War Ragnarok"
+function cleanProductName(raw){
+  if(!raw)return'';
+  let s=' '+raw+' ';
+  // Region/edition tags inside parens
+  s=s.replace(/\([^)]*?(EU|PAL|NTSC|US|UK|JP|JAPAN|REGION\s*FREE|ENG|EUR|MULTI[^)]*)[^)]*\)/gi,' ');
+  // ORDER MATTERS: longest/most-specific patterns first, so "for PS5" matches
+  // before bare "PS5" gets ripped out and leaves an orphan "for".
+  const noise=[
+    /\bfor\s+PlayStation\s*[345]\b/gi, /\bfor\s+PS\s*[345]\b/gi,
+    /\bSony\s+Interactive\s+Entertainment\b/gi, /\bInteractive\s+Entertainment\b/gi,
+    /\bPlayStation\s*[345]\b/gi, /\bPS\s*[345]\b/gi, /\bSony\b/gi,
+    /\bXbox(\s+(One|Series\s*[XS]|360))?\b/gi, /\bMicrosoft\b/gi,
+    /\bNintendo\s+Switch\b/gi, /\bSwitch\b/gi,
+    /\bStandard\s+Edition\b/gi, /\bLaunch\s+Edition\b/gi, /\bDeluxe\s+Edition\b/gi,
+    /\bGold\s+Edition\b/gi, /\bSpecial\s+Edition\b/gi, /\bComplete\s+Edition\b/gi,
+    /\bUltimate\s+Edition\b/gi, /\bDefinitive\s+Edition\b/gi, /\bRemastered\s+Edition\b/gi,
+    /\bGame\s+Of\s+The\s+Year\s+Edition\b/gi, /\bGOTY(\s+Edition)?\b/gi,
+    /\bDisc\s+Version\b/gi, /\bPhysical\s+Edition\b/gi, /\bPhysical\s+Copy\b/gi,
+    /\bVideo\s+Game\b/gi,
+  ];
+  for(const n of noise) s=s.replace(n,' ');
+  // Punctuation cleanup: only collapse dashes/colons that have whitespace around them,
+  // so in-word hyphens like "Spider-Man" survive.
+  s=s.replace(/\s+[\-–—:|·,]+\s+/g,' ').replace(/\s{2,}/g,' ').trim();
+  // Drop empty parens left behind
+  s=s.replace(/\(\s*\)/g,'').trim();
+  // Orphan stop-words at the start/end after publisher/console strip ("...XVI for")
+  s=s.replace(/^(for|a|an)\s+/i,'').replace(/\s+(for|with)$/i,'').trim();
+  return s;
+}
+
+// Returns product title string, or null if not found / call failed.
+// Cached aggressively: a successful hit OR a confirmed miss (empty string) are both
+// stored so we don't rehit the trial quota for the same EAN.
+async function eanLookup(ean){
+  const cache=eanCacheRead();
+  if(Object.prototype.hasOwnProperty.call(cache,ean)){
+    return cache[ean]||null;
+  }
+  const ctrl=new AbortController();
+  const tm=setTimeout(()=>ctrl.abort(),7000);
+  try{
+    const r=await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(ean)}`,{signal:ctrl.signal});
+    if(!r.ok){
+      // 404 = not in DB → cache the miss. 429/other = transient → don't cache.
+      if(r.status===404){ cache[ean]=''; eanCacheWrite(cache); }
+      return null;
+    }
+    const j=await r.json();
+    const title=(j&&Array.isArray(j.items)&&j.items[0]&&j.items[0].title)||'';
+    cache[ean]=title;
+    eanCacheWrite(cache);
+    return title||null;
+  }catch{
+    // Network/abort/timeout — don't poison cache, allow retry next time
+    return null;
+  }finally{ clearTimeout(tm); }
+}
+
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Syne:wght@400;600;700&display=swap');
@@ -874,6 +993,48 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .flow-step{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid ${G.bdr}}
 .flow-step:last-child{border-bottom:none}
 .flow-ico{font-size:22px;flex-shrink:0;width:32px;text-align:center}
+
+/* v1.3.0 — Barcode scanner */
+.rscan{flex-shrink:0;width:38px;height:38px;border:1px solid ${G.blu};border-radius:9px;background:rgba(0,212,255,.08);color:${G.blu};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .12s,background .12s}
+.rscan:active{transform:scale(.92);background:rgba(0,212,255,.2)}
+.bs-ovr{position:fixed;inset:0;background:#000;z-index:199999;display:flex;flex-direction:column;animation:fadeIn .18s ease}
+.bs-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(12px,env(safe-area-inset-top,0px)) 14px 10px;background:${G.bg};border-bottom:1px solid ${G.bdr};padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.bs-ttl{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:${G.blu};letter-spacing:.06em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-x{flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.bs-x:active{opacity:.7}
+.bs-vid{flex:1;min-height:200px;position:relative;background:#000;overflow:hidden}
+.bs-vid video{width:100%;height:100%;object-fit:cover;display:block}
+.bs-frm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:78%;max-width:340px;aspect-ratio:16/8;border:2px solid ${G.blu};border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);pointer-events:none}
+.bs-frm::before,.bs-frm::after{content:'';position:absolute;width:22px;height:22px;border:3px solid ${G.blu};pointer-events:none}
+.bs-frm::before{top:-3px;left:-3px;border-right:none;border-bottom:none;border-radius:14px 0 0 0}
+.bs-frm::after{bottom:-3px;right:-3px;border-left:none;border-top:none;border-radius:0 0 14px 0}
+.bs-laser{position:absolute;left:6%;right:6%;top:50%;height:2px;background:linear-gradient(90deg,transparent,${G.blu},transparent);box-shadow:0 0 12px ${G.blu};animation:bsLaser 1.6s ease-in-out infinite;pointer-events:none}
+@keyframes bsLaser{0%,100%{transform:translateY(-32px);opacity:.3}50%{transform:translateY(32px);opacity:1}}
+.bs-hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:12px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.95);padding:0 18px;pointer-events:none;font-weight:600}
+.bs-pn{padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:${G.card2};border-top:1px solid ${G.bdr};max-height:60dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.bs-st{display:flex;align-items:center;gap:11px;padding:11px 12px;background:${G.bg};border:1px solid ${G.bdr};border-radius:10px;margin-bottom:10px}
+.bs-spin{flex-shrink:0;display:inline-block;font-size:18px;animation:spin .8s linear infinite}
+.bs-stxt{flex:1;min-width:0}
+.bs-stitle{font-size:13px;font-weight:700;color:${G.txt};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-sdesc{font-size:11px;color:${G.dim};margin-top:2px;word-break:break-all}
+.bs-cached{display:inline-block;font-size:9px;font-weight:700;color:${G.grn};margin-left:6px;padding:1px 5px;border-radius:4px;background:rgba(57,255,110,.1);vertical-align:middle}
+.bs-err{padding:13px 14px;background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.3);border-radius:10px;margin-bottom:10px}
+.bs-err.warn{background:rgba(255,159,28,.07);border-color:rgba(255,159,28,.3)}
+.bs-err-h{font-size:13px;font-weight:700;color:${G.red};margin-bottom:4px}
+.bs-err.warn .bs-err-h{color:${G.org}}
+.bs-err-d{font-size:11px;color:${G.dim};line-height:1.5}
+.bs-mlbl{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px}
+.bs-mrow{display:flex;gap:6px}
+.bs-mrow input{flex:1;min-width:0;background:${G.bg};border:1px solid ${G.bdr};border-radius:9px;padding:10px 11px;color:${G.txt};font-family:'Syne',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;letter-spacing:.05em}
+.bs-mrow input:focus{border-color:${G.blu}}
+.bs-mrow button{flex-shrink:0;padding:0 14px;border:1px solid ${G.blu};border-radius:9px;background:rgba(0,212,255,.1);color:${G.blu};font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.bs-mrow button:active{opacity:.7}
+.bs-mrow button:disabled{opacity:.4;cursor:not-allowed}
+.bs-actrow{display:flex;gap:8px;margin-top:8px}
+.bs-actrow button{flex:1;padding:10px;border-radius:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.bs-retry{border:1px solid ${G.blu};background:rgba(0,212,255,.1);color:${G.blu}}
+.bs-retry:active{opacity:.7}
+.bs-results-h{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px}
 `;
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -979,8 +1140,281 @@ function Confirm({title,body,onYes,onNo,lang}){
   );
 }
 
+function BarcodeScanner({ onPick, onClose, lang }){
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const detectorRef = useRef(null);
+  const intervalRef = useRef(null);
+  const handleEANRef = useRef(null);
+  // Phases:
+  //   'init'        — checking BarcodeDetector / requesting camera
+  //   'scanning'    — camera live, polling for codes
+  //   'lookup'      — got an EAN, asking UPCitemdb
+  //   'rawg'        — got a name, asking RAWG
+  //   'results'     — done, show RAWG hits (possibly 0) + scan-again
+  //   'unsupported' — no BarcodeDetector available (iOS Safari)
+  //   'denied'      — user denied camera
+  //   'error'       — getUserMedia threw something else
+  const [phase, setPhase] = useState('init');
+  const [ean, setEan] = useState('');
+  const [productName, setProductName] = useState('');
+  const [fromCache, setFromCache] = useState(false);
+  const [results, setResults] = useState([]);
+  const [errMsg, setErrMsg] = useState('');
+  const [manualEAN, setManualEAN] = useState('');
+
+  const stopCam = useCallback(()=>{
+    if(intervalRef.current){ clearInterval(intervalRef.current); intervalRef.current = null; }
+    const s = streamRef.current;
+    if(s){ s.getTracks().forEach(t=>{ try{ t.stop(); }catch{} }); streamRef.current = null; }
+    const v = videoRef.current;
+    if(v){ try{ v.srcObject = null; }catch{} }
+  },[]);
+
+  // Pure pipeline: EAN → UPCitemdb → name cleaning → rawgSearch → results
+  const handleEAN = useCallback(async (code)=>{
+    stopCam();
+    const clean = String(code).replace(/\D/g,'');
+    if(!clean){ return; }
+    setEan(clean);
+    setProductName('');
+    setResults([]);
+    setFromCache(Object.prototype.hasOwnProperty.call(eanCacheRead(), clean));
+    setPhase('lookup');
+    const name = await eanLookup(clean);
+    if(name){
+      setProductName(name);
+      const cleanedName = cleanProductName(name);
+      const query = cleanedName.length >= 3 ? cleanedName : name;
+      setPhase('rawg');
+      const r = await rawgSearch(query);
+      setResults(r);
+      setPhase('results');
+    } else {
+      // No name available — try the raw EAN against RAWG as a Hail Mary, but it'll
+      // almost always come back empty. The 'results' phase handles 0 hits gracefully.
+      setProductName('');
+      setPhase('rawg');
+      const r = await rawgSearch(clean);
+      setResults(r);
+      setPhase('results');
+    }
+  },[stopCam]);
+
+  // Keep the latest handleEAN reachable from the polling interval without re-creating it
+  handleEANRef.current = handleEAN;
+
+  const startCamera = useCallback(async ()=>{
+    setPhase('init');
+    setEan(''); setProductName(''); setResults([]); setErrMsg(''); setFromCache(false);
+
+    if(!('BarcodeDetector' in window)){
+      setPhase('unsupported');
+      return;
+    }
+    try{
+      const formats = await window.BarcodeDetector.getSupportedFormats();
+      const want = ['ean_13','ean_8','upc_a','upc_e'].filter(f=>formats.includes(f));
+      if(!want.length){ setPhase('unsupported'); return; }
+      detectorRef.current = new window.BarcodeDetector({ formats: want });
+    }catch{
+      setPhase('unsupported');
+      return;
+    }
+
+    if(!navigator.mediaDevices?.getUserMedia){
+      setPhase('unsupported');
+      return;
+    }
+
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      const v = videoRef.current;
+      if(!v){ stream.getTracks().forEach(t=>t.stop()); return; }
+      v.srcObject = stream;
+      v.setAttribute('playsinline','true');
+      v.muted = true;
+      try{ await v.play(); }catch{}
+      setPhase('scanning');
+
+      intervalRef.current = setInterval(async ()=>{
+        const det = detectorRef.current; const vid = videoRef.current;
+        if(!det || !vid || vid.readyState < 2) return;
+        try{
+          const codes = await det.detect(vid);
+          if(codes && codes.length){
+            const raw = codes[0].rawValue || '';
+            // EAN-13 is 13 digits, EAN-8 is 8, UPC-A is 12, UPC-E is 6-8. Accept 8–14 digits.
+            if(/^\d{8,14}$/.test(raw)){
+              handleEANRef.current?.(raw);
+            }
+          }
+        }catch{ /* one bad frame is fine, keep polling */ }
+      }, 280);
+    }catch(e){
+      const name = e && e.name;
+      if(name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError'){
+        setPhase('denied');
+      } else {
+        setErrMsg((e && e.message) || String(e || ''));
+        setPhase('error');
+      }
+    }
+  },[]);
+
+  // Boot once on mount; stop camera on unmount.
+  useEffect(()=>{
+    let alive = true;
+    (async()=>{ if(alive) await startCamera(); })();
+    return ()=>{ alive = false; stopCam(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
+  // Re-acquire camera when user taps "Scan again" after a result/no-match
+  const rescan = ()=>{ stopCam(); startCamera(); };
+
+  const submitManual = ()=>{
+    const code = manualEAN.replace(/\D/g,'');
+    if(code.length < 8) return;
+    setManualEAN('');
+    handleEAN(code);
+  };
+
+  const close = ()=>{ stopCam(); onClose(); };
+
+  // ── Render bits ──
+  const showVideo = phase === 'init' || phase === 'scanning';
+  const showStatus = phase === 'lookup' || phase === 'rawg';
+  const showResults = phase === 'results';
+  const showHardError = phase === 'unsupported' || phase === 'denied' || phase === 'error';
+
+  return (
+    <div className='bs-ovr' role='dialog' aria-label={t(lang,'scanTitle')}>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>📷 {t(lang,'scanTitle')}</div>
+        <button type='button' className='bs-x' onClick={close} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+
+      {showVideo && (
+        <div className='bs-vid'>
+          <video ref={videoRef} playsInline muted autoPlay/>
+          <div className='bs-frm'><div className='bs-laser'/></div>
+          <div className='bs-hint'>
+            {phase==='init' ? t(lang,'scanInitializing') : t(lang,'scanHint')}
+          </div>
+        </div>
+      )}
+
+      <div className='bs-pn'>
+        {showHardError && (
+          <>
+            <div className={'bs-err'+(phase==='unsupported'?' warn':'')}>
+              <div className='bs-err-h'>
+                {phase==='unsupported' && t(lang,'scanUnsupported')}
+                {phase==='denied'      && t(lang,'scanDenied')}
+                {phase==='error'       && t(lang,'scanError')}
+              </div>
+              <div className='bs-err-d'>
+                {phase==='unsupported' && t(lang,'scanUnsupportedHint')}
+                {phase==='denied'      && t(lang,'scanDeniedHint')}
+                {phase==='error'       && (errMsg || '—')}
+              </div>
+            </div>
+          </>
+        )}
+
+        {showStatus && (
+          <div className='bs-st'>
+            <span className='bs-spin'>⏳</span>
+            <div className='bs-stxt'>
+              <div className='bs-stitle'>
+                {phase==='lookup' && t(lang,'scanLookup',{ean})}
+                {phase==='rawg'   && t(lang,'scanRawg',{q: productName ? cleanProductName(productName) || productName : ean})}
+                {phase==='rawg' && fromCache && <span className='bs-cached'>{t(lang,'scanCachedHint')}</span>}
+              </div>
+              {phase==='rawg' && productName && (
+                <div className='bs-sdesc'>{t(lang,'scanFoundAs',{name: productName})}</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {showResults && results.length > 0 && (
+          <>
+            {productName && (
+              <div className='bs-st'>
+                <span style={{fontSize:18,flexShrink:0}}>🎯</span>
+                <div className='bs-stxt'>
+                  <div className='bs-stitle'>EAN {ean}{fromCache && <span className='bs-cached'>{t(lang,'scanCachedHint')}</span>}</div>
+                  <div className='bs-sdesc'>{t(lang,'scanFoundAs',{name: productName})}</div>
+                </div>
+              </div>
+            )}
+            <div className='bs-results-h'>{t(lang,'scanFound')||'Results'}</div>
+            <div className='rdd' style={{position:'relative',marginTop:0}}>
+              {results.map(r=>(
+                <div key={r.id} className='rit' onClick={()=>{ stopCam(); onPick(r); }}>
+                  {r.cover ? <img className='rthm' src={r.cover} alt='' loading='lazy'/> : <div className='rph'>🎮</div>}
+                  <div className='rinf'>
+                    <div className='rnm'>{r.title}</div>
+                    <div className='rmt'>{r.year}{r.genre?' · '+r.genre:''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className='bs-actrow'>
+              <button type='button' className='bs-retry' onClick={rescan}>{t(lang,'scanRetry')}</button>
+            </div>
+          </>
+        )}
+
+        {showResults && results.length === 0 && (
+          <>
+            <div className='bs-err warn'>
+              <div className='bs-err-h'>
+                {productName ? t(lang,'scanNoMatch') : t(lang,'scanNoEAN',{ean})}
+              </div>
+              <div className='bs-err-d'>
+                {productName ? <>EAN {ean} → "{productName}". {t(lang,'scanNoMatchHint')}</> : t(lang,'scanNoEANHint')}
+              </div>
+            </div>
+            <div className='bs-actrow'>
+              <button type='button' className='bs-retry' onClick={rescan}>{t(lang,'scanRetry')}</button>
+            </div>
+          </>
+        )}
+
+        {/* Manual EAN entry — always available as a fallback */}
+        <div className='bs-mlbl'>{t(lang,'scanManualLabel')}</div>
+        <div className='bs-mrow'>
+          <input
+            inputMode='numeric'
+            pattern='\d*'
+            maxLength={14}
+            value={manualEAN}
+            onChange={e=>setManualEAN(e.target.value.replace(/\D/g,''))}
+            placeholder={t(lang,'scanManualPh')}
+            onKeyDown={e=>{ if(e.key==='Enter') submitManual(); }}
+            disabled={phase==='lookup'||phase==='rawg'}
+          />
+          <button
+            type='button'
+            onClick={submitManual}
+            disabled={manualEAN.length < 8 || phase==='lookup' || phase==='rawg'}
+          >{t(lang,'scanManualBtn')}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RawgSearch({onSelect,lang}){
   const [q,setQ]=useState(''); const [res,setRes]=useState([]); const [busy,setBusy]=useState(false); const [open,setOpen]=useState(false);
+  const [scanOpen,setScanOpen]=useState(false);
   const timer=useRef(null);
   const reqId=useRef(0);
   const search=val=>{
@@ -1001,11 +1435,14 @@ function RawgSearch({onSelect,lang}){
     },450);
   };
   const pick=item=>{onSelect(item);setQ('');setRes([]);setOpen(false);reqId.current++;};
+  // Scanner pick goes through the same fill pipeline, then closes the scanner.
+  const pickFromScan=item=>{ pick(item); setScanOpen(false); };
   return(
     <div className='rwrp'>
       <label className='rlbl'>{t(lang,'searchRawg')}</label>
       <div className='rrow'>
         <input className='rin' value={q} onChange={e=>search(e.target.value)} placeholder={t(lang,'rawgPlaceholder')} autoComplete='off'/>
+        <button type='button' className='rscan' onClick={()=>setScanOpen(true)} aria-label={t(lang,'scanBarcodeAria')} title={t(lang,'scanBarcodeAria')}>📷</button>
         {busy?<span style={{flexShrink:0,display:'inline-block',animation:'spin .8s linear infinite'}}>⏳</span>:<span className='rbdg2'>RAWG</span>}
       </div>
       <div className='rhnt'>{t(lang,'rawgHint')}</div>
@@ -1022,6 +1459,7 @@ function RawgSearch({onSelect,lang}){
           <div className='rinf'><div className='rnm'>{r.title}</div><div className='rmt'>{r.year}{r.genre?' · '+r.genre:''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div></div>
         </div>
       ))}</div>}
+      {scanOpen && <BarcodeScanner onPick={pickFromScan} onClose={()=>setScanOpen(false)} lang={lang}/>}
     </div>
   );
 }
@@ -2585,7 +3023,7 @@ export default function App(){
               <div style={{fontFamily:"'Orbitron',monospace",fontSize:14,fontWeight:700,color:G.blu,marginBottom:8,textAlign:'center'}}>{t(lang,'privacyTitle')}</div>
               <div style={{display:'inline-block',alignSelf:'center',background:'rgba(57,255,110,.1)',border:'1px solid rgba(57,255,110,.3)',color:'#39FF6E',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,marginBottom:14}}>{t(lang,'privacyBadge')}</div>
               <div style={{flex:1,overflowY:'auto',paddingRight:6,WebkitOverflowScrolling:'touch'}}>
-                {[1,2,3,4,5,6,7].map(n=>(
+                {[1,2,3,4,5,6,7,8].map(n=>(
                   <div key={n} style={{marginBottom:14}}>
                     <div style={{fontSize:11,fontWeight:700,color:G.pur,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:5}}>{n}. {t(lang,'privacyS'+n+'Title')}</div>
                     <div style={{fontSize:13,color:G.dim,lineHeight:1.55}}>{t(lang,'privacyS'+n+'Body')}</div>
