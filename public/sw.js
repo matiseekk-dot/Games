@@ -1,5 +1,5 @@
-// PS5 Vault — Service Worker v1.10 (NETWORK-FIRST + i18n notifications + tab-aware click)
-const CACHE = "ps5vault-v14";
+// PS5 Vault — Service Worker v1.10.1 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v15";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -79,7 +79,7 @@ self.addEventListener("message", async event => {
     let shown = false;
     try { const c = await caches.open("ps5vault-notifs"); shown = !!(await c.match("/"+key)); } catch {}
     if (shown) continue;
-    const opts = base => ({ body: base, icon:"/Games/icon-192.png", badge:"/Games/icon-192.png", tag:key });
+    const opts = base => ({ body: base, icon:"/Games/icons/icon-192.png", badge:"/Games/icons/icon-192.png", tag:key });
     if (diff === 0) {
       await self.registration.showNotification(i18n.todayTitle, opts(i18n.todayBody(game.title)));
     } else if (diff === 7) {
