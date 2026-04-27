@@ -1,5 +1,5 @@
-// PS5 Vault — Service Worker v1.5 (NETWORK-FIRST + i18n notifications)
-const CACHE = "ps5vault-v13";
+// PS5 Vault — Service Worker v1.10 (NETWORK-FIRST + i18n notifications + tab-aware click)
+const CACHE = "ps5vault-v14";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -95,5 +95,20 @@ self.addEventListener("message", async event => {
 
 self.addEventListener("notificationclick", e => {
   e.notification.close();
-  e.waitUntil(self.clients.matchAll({type:"window"}).then(cls => { if(cls.length)return cls[0].focus(); return self.clients.openWindow("/Games/"); }));
+  // v1.10.0 — Honor data.tab from notification payload (weekly summary uses tab='st').
+  // The app reads ?tab=... from the URL on mount and switches accordingly.
+  const data = e.notification.data || {};
+  const tab = data.tab;
+  const targetUrl = tab ? `/Games/?tab=${encodeURIComponent(tab)}` : "/Games/";
+  e.waitUntil(self.clients.matchAll({type:"window"}).then(cls => {
+    if (cls.length) {
+      // Focus existing tab. If it has a tab-switch hook exposed, use postMessage; else just focus.
+      const c = cls[0];
+      if (tab) {
+        try { c.postMessage({ type: "SWITCH_TAB", tab }); } catch {}
+      }
+      return c.focus();
+    }
+    return self.clients.openWindow(targetUrl);
+  }));
 });

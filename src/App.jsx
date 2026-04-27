@@ -1,1275 +1,35 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
-const RAWG_KEY   = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
-const APP_VER    = '1.5.0';
-const LS_KEY     = 'ps5vault_v1';
-const LS_ONBOARD = 'ps5vault_onboarded';
-const LS_LANG    = 'ps5vault_lang';
-const LS_CURRENCY = 'ps5vault_currency';
-const LS_EAN_CACHE = 'ps5vault_ean_cache';
-const LS_GOALS = 'ps5vault_goals';
-
-// ─── i18n ────────────────────────────────────────────────────────────────────
-const TRANSLATIONS = {
-  pl: {
-    gram:"Gram", psplus:"PS Plus", ukonczone:"Ukończone", planuje:"Planuję", porzucone:"Porzucone",
-    home:"🏠 Home", collection:"🎮 Gry", releases:"📅 Premiery", finance:"💰 Finanse", stats:"📊 Statsy", settings:"⚙️ Opcje",
-    goodMorning:"🌅 Dzień dobry", goodAfternoon:"🎮 Cześć!", goodEvening:"🌆 Dobry wieczór", goodNight:"🌙 Dobranoc",
-    gamesInCollection:"gier", active:"aktywnych", upcomingReleases:"premier",
-    continuePlay:"Teraz gram", whatToPlay:"Co teraz grać", nextRelease:"Najbliższa premiera",
-    financeInsight:"Finansowy insight", backlog:"BACKLOG",
-    noActiveGame:"Nie grasz teraz w żadną grę.", changeStatusHint:"Zmień status gry na Gram",
-    startPlaying:"▶ Zacznij grać", completed:"ukończone", remaining:"pozostało",
-    addTargetHint:"Dodaj cel godzinowy żeby śledzić postęp",
-    moreActive:"+{n} innych aktywnych gier",
-    genreReason:"Lubisz {genre} — masz {n} ukończone w tym gatunku",
-    backlogReason:"Czeka najdłużej w backlogu",
-    releaseToday:"Premiera dzisiaj!", releaseTomorrow:"Jutro!",
-    daysToRelease:"dni do premiery", dayToRelease:"dzień do premiery",
-    details:"📋 Szczegóły", remind:"🔔 Przypomnij", addToCollection:"+ Edytuj",
-    spentTotal:"Wydano łącznie", recovered:"Odzyskano ze sprzedaży", realCost:"Realny koszt kolekcji",
-    sellSuggestion:"💡 Sprzedaj {title} i odzyskaj ~{amount}",
-    searchPlaceholder:"Szukaj gry...", allGames:"Wszystkie",
-    noGames:"Brak gier", noResults:"Brak wyników", addFirst:"Naciśnij + żeby dodać grę.",
-    noResultsFor:"Brak gier dla {q}",
-    addGame:"+ DODAJ GRĘ",
-    export:"⬆ Export", import:"⬇ Import",
-    upcoming:"Nadchodzące premiery", alreadyOut:"📦 Już dostępne", tba:"TBA — brak daty",
-    noReleases:"Brak nadchodzących premier",
-    noReleasesHint:"Dodaj datę premiery do gier ze statusem Planuję.",
-    today:"DZIŚ!", out:"✓ Wyszło", premiere:"Premiera:",
-    edit:"📋 Edytuj", watch:"👀 Obserwuj", buy:"🛒 Kup", addToColl:"+ Edytuj",
-    notifyToggle:"🔔 Powiadomienie o premierze", notifyMonth:"Miesiąc przed", notifyWeek:"Tydzień przed", notifyDay:"W dniu premiery",
-    enableNotif:"Włącz powiadomienia", enableNotifDesc:"Alert 3 dni przed premierą i w dniu wydania",
-    enable:"Włącz",
-    general:"🎮 Ogólne", finance:"💰 Finanse", analysis:"💡 Analiza",
-    gamesTotal:"Gier razem", completed2:"Ukończone", hoursTotal:"Godzin łącznie", avgRating:"Śr. ocena",
-    statusChart:"📊 Status kolekcji", genreChart:"🎮 Top gatunki", ratingChart:"⭐ Histogram ocen",
-    noFinanceData:"Brak danych finansowych", addPricesHint:"Dodaj ceny kupna do gier",
-    financeInfoHint:"Dane finansowe pochodzą z cen które wpisałeś ręcznie przy grach — nie z API.",
-    spent:"Gry (cena bazowa)", earnedBack:"Odzyskano", realCostShort:"Realny koszt", costPerHour:"Koszt/godzinę", spentDLC:"DLC / Mikrotransakcje", spentTotal2:"Łącznie wydano",
-    byStore:"🏪 Wydatki wg sklepu", byGenre:"🎮 Wydatki wg gatunku",
-    roi:"📈 ROI sprzedanych", mostExpensive:"💸 Najdroższe gry", bestValue:"⏱ Najlepsza wartość (na godzinę)",
-    noInsights:"Za mało danych", addPricesAndHours:"Dodaj ceny i godziny do gier",
-    // F07 — Time tracking views
-    time:"⏱ Czas", noSessions:"Brak sesji", noSessionsHint:"Zacznij sesję na zakładce Home żeby śledzić czas grania",
-    today2:"Dziś", thisWeek:"Ten tydzień", thisMonth:"Ten miesiąc",
-    vsLastWeek:"vs poprzedni tydzień", vsLastMonth:"vs poprzedni miesiąc",
-    currentStreak:"Passa", longestStreak:"Najdłuższa passa", avgSession:"Średnia sesja", longestSession:"Najdłuższa sesja",
-    daysStreak:"dni", sessionsCount:"{n} sesji", noSessionsToday:"Dziś brak sesji", noSessionsWeek:"W tym tygodniu brak sesji", noSessionsMonth:"W tym miesiącu brak sesji",
-    dayMon:"Pn", dayTue:"Wt", dayWed:"Śr", dayThu:"Cz", dayFri:"Pt", daySat:"Sb", daySun:"Nd",
-    topGames:"🎮 Najczęściej grane",
-    sessionsList:"Sesje",
-    potentialSaving:"💡 Potencjalna oszczędność",
-    savingsFrom:"z unikniętych strat", savingsFromSell:"z odsprzedaży porzuconych gier",
-    clickCards:"Kliknij karty poniżej żeby dowiedzieć się jak",
-    biggestLoss:"Największa strata", bestInvestment:"Najlepsza inwestycja",
-    mostExpensiveHours:"Najdroższe godziny", bestValueShort:"Najlepsza wartość",
-    financeSummary:"Podsumowanie finansowe",
-    biggestLossDesc:"Sprzedając {title} straciłeś {amount}",
-    bestInvestDesc:"{title} przyniosło {amount} zysku",
-    expHoursDesc:"{title} — {cph}/h. Powyżej 10/h to słaba wartość.",
-    bestValDesc:"{title} — tylko {cph}/h. Twoja najlepsza inwestycja.",
-    finSummaryDesc:"Wydałeś {spent}, odzyskałeś {earned}. Realny koszt to {net}.",
-    data:"Dane", exportData:"Eksportuj dane", exportDesc:"Pobierz backup {n} gier jako JSON",
-    importData:"Importuj dane", importDesc:"Wczytaj backup z pliku JSON",
-    // v1.2.3 — Tip jar
-    support:"Wsparcie",
-    buyCoffee:"☕ Postaw kawę",
-    buyCoffeeDesc:"Darmowa apka bez reklam — jeśli chcesz, wesprzyj rozwój",
-    // v1.2.0 — Import dual-mode
-    importTitle:"Importuj dane", importModeQ:"Jak połączyć dane z backupem?",
-    importMerge:"🔀 Scal z istniejącymi",
-    importMergeDesc:"Doda tylko nowe gry. Gry które już masz NIE zostaną zaktualizowane (ich sesje, godziny, oceny pozostają bez zmian).",
-    importReplace:"♻️ Zastąp wszystko",
-    importReplaceDesc:"Usunie obecną kolekcję i zastąpi ją z backupu. Twoje obecne dane na TYM urządzeniu zostaną UTRACONE.",
-    importReplaceConfirm:"Czy na pewno? Masz {n} gier które zostaną USUNIĘTE i zastąpione danymi z backupu. Tej operacji nie można cofnąć.",
-    importedMerge:"✓ Dodano {added} nowych gier. Pominięto {dupes} istniejących — użyj 'Zastąp wszystko' jeśli chcesz dane z backupu",
-    importedMergeNoSkip:"✓ Dodano {added} nowych gier",
-    importedReplace:"✓ Zastąpiono kolekcję — {n} gier z backupu",
-    cancel2:"Anuluj",
-    info:"Informacje", privacyPolicy:"Polityka prywatności", privacyDesc:"Nie zbieramy żadnych danych osobowych",
-    privacyTitle:"Polityka prywatności",
-    privacyBadge:"✓ Twoje dane zostają u Ciebie",
-    privacyS1Title:"Co przechowujemy",
-    privacyS1Body:"Wszystkie dane (gry, statusy, oceny, finanse, sesje) są w pamięci Twojego urządzenia (localStorage). Nigdy nie trafiają na żaden serwer.",
-    privacyS2Title:"Czego NIE zbieramy",
-    privacyS2Body:"Imię, email, telefon, lokalizacja, identyfikatory urządzenia. Brak Google Analytics, brak trackingu, brak ciasteczek.",
-    privacyS3Title:"RAWG.io API",
-    privacyS3Body:"Wyszukiwanie gier wysyła do serwerów RAWG (Litwa/UE) tylko tekst wpisany w pole + klucz API. Twoja kolekcja nigdy tam nie trafia.",
-    privacyS4Title:"Skaner kodów kreskowych (UPCitemdb)",
-    privacyS4Body:"Jeśli używasz skanera kodów (📷), sam EAN/UPC z pudełka (np. 0711719541738) jest wysyłany do api.upcitemdb.com żeby rozpoznać nazwę gry. Wynik zapisuję w cache lokalnie żeby nie pytać dwa razy. Brak danych osobowych — tylko numer kodu.",
-    privacyS5Title:"Tip jar (buycoffee.to)",
-    privacyS5Body:"Sekcja \"Wsparcie\" otwiera buycoffee.to/skudev jako link zewnętrzny. Apka nie wysyła żadnych Twoich danych do tej platformy.",
-    privacyS6Title:"Powiadomienia",
-    privacyS6Body:"Generowane lokalnie przez Service Worker. Brak push z serwera, brak danych wysyłanych w celu powiadomień.",
-    privacyS7Title:"Zgłoś problem",
-    privacyS7Body:"Funkcja \"Zgłoś problem\" otwiera Twojego klienta poczty z autoszablonem (model urządzenia, wersja apki). Wysłanie jest dobrowolne — możesz edytować lub skasować dane.",
-    privacyS8Title:"Twoje prawa (RODO)",
-    privacyS8Body:"Pełna kontrola: \"Eksportuj dane\" daje Ci JSON z całą kolekcją, \"Wyczyść kolekcję\" usuwa wszystko. Można też po prostu odinstalować apkę.",
-    privacyFullLink:"Pełna polityka prywatności (online)",
-    privacyClose:"Zamknij",
-    privacyUpdated:"Aktualizacja: 24 kwietnia 2026",
-    reportProblem:"Zgłoś problem", reportProblemDesc:"Napisz do mnie — odpowiadam osobiście",
-    storageQuotaErr:"⚠ Pamięć pełna — eksportuj backup i wyczyść stare gry",
-    storageGenericErr:"⚠ Nie udało się zapisać — odśwież apkę",
-    poweredBy:"Powered by RAWG.io", poweredByDesc:"Baza ponad 500 000 gier",
-    appInfo:"PS5 Vault", appInfoDesc:"Wersja {ver} — Dane przechowywane lokalnie",
-    language:"Język / Language", dangerZone:"Niebezpieczna strefa",
-    clearCollection:"Wyczyść kolekcję", clearDesc:"Usuń wszystkie {n} gier",
-    clearConfirm:"Usunąć wszystkie {n} gier? Tej operacji nie można cofnąć.",
-    addGameTitle:"+ DODAJ GRĘ", editGameTitle:"✎ EDYTUJ GRĘ",
-    searchRawg:"🔍 Szukaj w RAWG", rawgPlaceholder:"Wpisz nazwę gry...",
-    rawgHint:"Wybierz grę żeby auto-uzupełnić pola + datę premiery",
-    rawgNotFound:"Nie znaleziono", rawgNotFoundHint:"Sprawdź pisownię albo dodaj grę ręcznie w formularzu poniżej",
-    // v1.3.0 — Barcode scanner
-    scanBarcodeAria:"Skanuj kod kreskowy",
-    scanTitle:"Skanuj kod gry", scanHint:"Wyceluj w EAN/UPC z tyłu pudełka",
-    scanInitializing:"Uruchamiam kamerę...",
-    scanScanning:"Szukam kodu...",
-    scanLookup:"Sprawdzam EAN {ean}...",
-    scanRawg:"Szukam w RAWG: {q}",
-    scanFoundAs:"Rozpoznano jako: {name}",
-    scanCachedHint:"⚡ z cache",
-    scanFound:"Wyniki RAWG",
-    scanNoMatch:"Brak dopasowań w RAWG",
-    scanNoMatchHint:"Spróbuj wyszukać ręcznie po nazwie w polu wyżej",
-    scanNoEAN:"Nie udało się rozpoznać EAN {ean}",
-    scanNoEANHint:"EAN nie ma w bazie UPCitemdb. Dodaj grę ręcznie albo wyszukaj po nazwie.",
-    scanUnsupported:"Skanowanie niedostępne",
-    scanUnsupportedHint:"Działa w Chrome i Edge na Androidzie. iOS jeszcze tego nie obsługuje — wpisz EAN ręcznie poniżej.",
-    scanDenied:"Brak dostępu do kamery",
-    scanDeniedHint:"Włącz uprawnienia kamery dla tej strony w ustawieniach przeglądarki",
-    scanError:"Błąd kamery",
-    scanRetry:"↻ Skanuj ponownie",
-    scanManualLabel:"...albo wpisz EAN ręcznie",
-    scanManualPh:"np. 0711719541738",
-    scanManualBtn:"Szukaj",
-    titleField:"Tytuł *", abbrField:"Skrót (2 lit.)", yearField:"Rok",
-    releaseDateField:"Data premiery", releaseDateHint:"Zostaw puste jeśli nieznana (TBA)",
-    statusField:"Status", genreField:"Gatunek", hoursField:"Godziny",
-    ratingField:"Ocena (1–10)", targetHoursField:"Cel (godz.)", notesField:"Notatki",
-    notesPh:"Twoje przemyślenia...", genrePh:"— wybierz —", targetPh:"np. 40",
-    finances:"💰 Finanse", priceBoughtField:"Zapłacono ({cur})", storeField:"Sklep", extraSpendField:"DLC / Mikrotransakcje ({cur})", extraSpendHint:"Dodatkowe zakupy w grze", platformField:"Platforma",
-    storePh:"—", soldToggle:"Sprzedałem tę grę", soldPriceField:"Sprzedano za ({cur})",
-    // v1.4.0 — Quick add UX
-    moreDetails:"+ Więcej szczegółów", lessDetails:"− Mniej szczegółów",
-    soldField:"Sprzedane za ({cur})", soldFieldHint:"puste = nie sprzedane",
-    targetFromRawg:"szacunek z RAWG — możesz zmienić",
-    // v1.5.0 — Menu, achievements, goals, wrapped, privacy mini
-    menuAria:"Menu",
-    menuTitle:"Menu",
-    menuWrapped:"🎁 Rok w grach",
-    menuWrappedDesc:"Twoje podsumowanie roku — Spotify Wrapped style",
-    menuAchievements:"🏆 Osiągnięcia",
-    menuAchievementsDesc:"{unlocked} / {total} odblokowanych",
-    menuGoals:"🎯 Cele",
-    menuGoalsDesc:"{active} aktywne · {done} ukończone",
-    menuSettings:"⚙️ Ustawienia",
-    menuSettingsDesc:"Język, waluta, dane, polityka prywatności",
-    // Achievements (id → title/desc inline w tablicy ACHIEVEMENTS)
-    achievementsTitle:"🏆 Osiągnięcia",
-    achievementsSub:"{unlocked} / {total} odblokowanych · {pct}%",
-    achLocked:"Zablokowane",
-    achUnlocked:"Odblokowane",
-    achProgress:"{cur} / {tgt}",
-    achEmpty:"Zacznij dodawać gry żeby odblokować osiągnięcia",
-    // Goals
-    goalsTitle:"🎯 Cele",
-    goalsSub:"Wyznacz cel na ten miesiąc — przyzwyczajaj się do śledzenia",
-    goalsActive:"Aktywne ({n})",
-    goalsDone:"Ukończone ({n})",
-    goalsAdd:"+ Dodaj cel",
-    goalsAddTitle:"Wybierz cel",
-    goalsEmpty:"Brak aktywnych celów",
-    goalsEmptyHint:"Stuknij \"Dodaj cel\" żeby zacząć",
-    goalCardTitle:"🎯 Cele tego miesiąca",
-    goalCardEmpty:"Wyznacz cel — np. 3 gry do ukończenia",
-    goalCardCta:"+ Dodaj",
-    goalDelete:"Usuń",
-    goalRemoved:"✓ Cel usunięty",
-    goalAdded:"✓ Cel dodany",
-    goalDone:"🎉 Cel osiągnięty: {title}",
-    goalRemainingDays:"{n} dni do końca miesiąca",
-    goalLastDay:"Ostatni dzień!",
-    // Goal templates (label + variants by N)
-    goalTplCompleteTitle:"Ukończ {n} gier w tym miesiącu",
-    goalTplHoursTitle:"Zagraj {n} godzin w tym miesiącu",
-    goalTplAddTitle:"Dodaj {n} gier do kolekcji",
-    goalTplPlatinumTitle:"Zdobądź {n} platyn w tym miesiącu",
-    // Year-in-Review
-    wrappedTitle:"Rok w grach {year}",
-    wrappedSub:"Twoje granie w {year} w liczbach",
-    wrappedEmpty:"Za mało danych dla {year}",
-    wrappedEmptyHint:"Dodaj gry, ratingi i sesje żeby zobaczyć podsumowanie",
-    wrappedTotalHours:"Godzin grania",
-    wrappedGamesAdded:"Gier dodanych",
-    wrappedGamesCompleted:"Gier ukończonych",
-    wrappedPlatinums:"Platyn",
-    wrappedTopPlayed:"🏆 Najczęściej grane",
-    wrappedHighestRated:"⭐ Najwyżej oceniona",
-    wrappedTopGenre:"🎮 Ulubiony gatunek",
-    wrappedTopGenreDesc:"{n} godzin · {games} gier",
-    wrappedSpent:"Wydano",
-    wrappedRecovered:"Odzyskano",
-    wrappedActiveDays:"Dni z grą",
-    wrappedActiveDaysDesc:"z {total} dni w roku",
-    wrappedLongestStreak:"Najdłuższa passa",
-    wrappedLongestSession:"Najdłuższa sesja",
-    wrappedShareHint:"Zrób screenshot żeby się pochwalić 📸",
-    wrappedYearPicker:"Rok:",
-    // Privacy mini
-    privacyMiniBody:"Wszystkie dane są przechowywane lokalnie na Twoim urządzeniu — nic nie wysyłamy na serwery, brak trackerów, brak danych osobowych. Jedyne zewnętrzne API to RAWG (wyszukiwanie gier) i UPCitemdb (rozpoznanie EAN podczas skanu) — wysyłany jest tylko tekst zapytania lub kod EAN, nigdy Twoja kolekcja.",
-    privacyMiniLink:"Pełna polityka prywatności →",
-    notifications:"Powiadomienia", notifyOn:"🔔 Powiadamiaj o premierze",
-    notifyDesc:"3 dni przed i w dniu premiery", notifyBlocked:"⛔ Zablokowane w ustawieniach przeglądarki",
-    cancel:"Anuluj", save:"ZAPISZ", enterTitle:"Wpisz tytuł",
-    delete:"🗑", confirmDelete:"Usuń grę", confirmDeleteBody:"Czy na pewno chcesz usunąć {title} z kolekcji?",
-    obTitle:"PS5 VAULT", obSub:"Twój osobisty tracker gier PlayStation 5. Zero rejestracji — wszystko lokalnie na urządzeniu.",
-    obStart:"+ DODAJ PIERWSZĄ GRĘ",
-    obSkip:"Pominę, dodam później",
-    obF1Title:"Kolekcja gier", obF1Desc:"Dodaj grę ręcznie lub wyszukaj przez bazę RAWG z okładkami",
-    obF2Title:"Śledzenie premier", obF2Desc:"Countdown do premiery + powiadomienia 30/7/3 dni i w dniu",
-    obF3Title:"Analiza finansowa", obF3Desc:"Ile wydajesz, ile odzyskujesz — realny koszt kolekcji",
-    obF4Title:"Statystyki", obF4Desc:"Wykresy, oceny, koszt/godzinę i inteligentna analiza",
-    saved:"✓ Zapisano", added:"✓ Dodano. Stuknij grę żeby uzupełnić ceny i godziny", deleted:"✓ Usunięto {title}",
-    imported:"✓ Zaimportowano {n} gier", cleared:"ℹ Kolekcja wyczyszczona",
-    statusChanged:"✓ Status → {status}",
-    avoidLoss:"🔍 Unikaj takich strat", buyBetter:"📋 Kup podobne gry",
-    optimizeBacklog:"⚡ Zoptymalizuj backlog", findSimilar:"🎯 Znajdź podobne gry", saveMoney:"💡 Jak oszczędzić więcej",
-    flowAvoidTitle:"Jak uniknąć strat", flowInvestTitle:"Strategie dobrego zakupu",
-    flowOptimTitle:"Optymalizacja backlogu", flowSimilarTitle:"Jak znaleźć podobne gry",
-    flowSaveTitle:"Plan oszczędności",
-    iUnderstand:"ROZUMIEM",
-    hoursPlayed:"{h} zagranych",
-    progComplete:"{n}% ukończone",
-    timerStart:"▶ Zacznij sesję", timerStop:"⏹ Zakończ sesję", timerToday:"Dziś: {h}h {m}min", sessionSaved:"✓ Sesja zapisana ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Dodaj do wishlisty", wishlistEmpty:"Wishlist jest pusta", targetPrice:"Docelowa cena", addedToWishlist:"✓ Dodano do wishlisty", removedFromWishlist:"✓ Usunięto z wishlisty", forgotten:"🕰 Zapomniane gry", forgottenSub:"Kupione dawno, nigdy nieuruchomione", budget:"💳 Budżet miesięczny", budgetSet:"Ustaw budżet", budgetSpent:"Wydano w tym miesiącu", budgetLeft:"Pozostało", budgetOver:"⚠️ Przekroczono budżet!",
-    budgetEdit:"Edytuj", budgetSetBtn:"Ustaw", budgetSaved:"✓ Budżet ustawiony: {amount}", budgetCleared:"✓ Budżet wyłączony",
-    budgetInvalidAmount:"⚠ Wpisz kwotę większą od 0",
-    budgetOverflow:"Przekroczono o",
-    monthPurchases:"📅 W tym miesiącu", monthPurchasesNone:"Brak zakupów w tym miesiącu",
-    monthPurchasesSummary:"{n} {gamesWord}, {amount}", gamesWord1:"gra", gamesWord234:"gry", gamesWord5:"gier",
-    spendingByMonth:"Wydatki w czasie", topMonth:"Najdroższy miesiąc",
-    // v1.3 — finance/stats insights
-    backlogCost:"🎮 Niezagrane gry", backlogCostDesc:"{n} {gamesWord} bez ani jednej godziny grania",
-    backlogCostBadge:"Zamrożone w półce",
-    yearProjection:"📈 Projekcja roczna",
-    yearProjectionDesc:"Średnio wydajesz {avg}/mies przez ostatnie {months}.",
-    yearProjectionEnd:"Do końca {year}: ~{total}",
-    yearVsLast:"To {ratio} razy {dir} niż w {year}",
-    yearVsLastDirMore:"więcej",
-    yearVsLastDirLess:"mniej",
-    yearProjectionNoData:"Za mało danych — wróć tu za miesiąc",
-    perGenreValue:"💎 Wartość wg gatunku",
-    perGenreValueHint:"Najlepszy zwrot za godzinę",
-    perGenreNoData:"Dodaj godziny grania do gier żeby zobaczyć analizę",
-    perGenreCol:"{n} {gamesWord} · {hours}",
-    yearROI:"📊 Rok do roku",
-    yearROIBought:"Wydane",
-    yearROIRecovered:"Odzyskane",
-    yearROIRatio:"{pct}%",
-    yearROINoData:"Sprzedaj jakieś gry żeby zobaczyć trend",
-    activeDays:"🎯 Aktywne dni",
-    activeDaysDesc:"{played} z {total} dni miesiąca",
-    activeDaysVs:"W zeszłym miesiącu: {n}",
-    sortBy:"Sortuj:", sortAdded:"Dodane", sortTitle:"Tytuł", sortRating:"Ocena", sortHours:"Godziny", sortPrice:"Cena", filterSold:"Sprzedane", filterPlatinum:"🏆 Platyna", platinum:"Platyna",
-    rateGame:"⭐ Oceń grę", ratingQuick:"Twoja ocena (1–10):", rateSkip:"Pomiń", rateSave:"Zapisz ocenę",
-    // ── Currency (single-currency, no conversion) ───────────────────────────────
-    currencyLabel:"Waluta", currencyDesc:"Apka wyświetla wszystkie kwoty w wybranej walucie. Bez konwersji — wpisuj ceny natywnie.",
-    currencyChanged:"✓ Waluta zmieniona na {name}",
-    obCurrencyTitle:"Wybierz walutę", obCurrencySub:"Wszystkie kwoty będą wyświetlane w wybranej walucie. Bez konwersji — w razie potrzeby zmienisz w Opcjach.",
-    obContinue:"Dalej",
-    budgetPlaceholder:"Budżet ({cur})",
-    budgetMaxErr:"⚠ Maksymalnie 99 999 {cur}",
-  },
-  en: {
-    gram:"Playing", psplus:"PS Plus", ukonczone:"Completed", planuje:"Planning", porzucone:"Abandoned",
-    home:"🏠 Home", collection:"🎮 Games", releases:"📅 Releases", finance:"💰 Finance", stats:"📊 Stats", settings:"⚙️ Settings",
-    goodMorning:"🌅 Good morning", goodAfternoon:"🎮 Hey!", goodEvening:"🌆 Good evening", goodNight:"🌙 Good night",
-    gamesInCollection:"games", active:"active", upcomingReleases:"releases",
-    continuePlay:"Now playing", whatToPlay:"What to play next", nextRelease:"Upcoming release",
-    financeInsight:"Financial insight", backlog:"BACKLOG",
-    noActiveGame:"Not playing anything right now.", changeStatusHint:"Set a game status to Playing",
-    startPlaying:"▶ Start playing", completed:"complete", remaining:"left",
-    addTargetHint:"Add a target hours goal to track progress",
-    moreActive:"+{n} more active games",
-    genreReason:"You like {genre} — {n} completed in this genre",
-    backlogReason:"Waiting longest in backlog",
-    releaseToday:"Releases today!", releaseTomorrow:"Tomorrow!",
-    daysToRelease:"days to release", dayToRelease:"day to release",
-    details:"📋 Details", remind:"🔔 Remind me", addToCollection:"+ Edit",
-    spentTotal:"Total spent", recovered:"Recovered from sales", realCost:"Real collection cost",
-    sellSuggestion:"💡 Sell {title} and recover ~{amount}",
-    searchPlaceholder:"Search games...", allGames:"All",
-    noGames:"No games", noResults:"No results", addFirst:"Tap + to add your first game.",
-    noResultsFor:"No games for {q}",
-    addGame:"+ ADD GAME",
-    export:"⬆ Export", import:"⬇ Import",
-    upcoming:"Upcoming releases", alreadyOut:"📦 Already out", tba:"TBA — no date",
-    noReleases:"No upcoming releases",
-    noReleasesHint:"Add a release date to games with status Planning.",
-    today:"TODAY!", out:"✓ Out", premiere:"Released:",
-    edit:"📋 Edit", watch:"👀 Watch", buy:"🛒 Buy", addToColl:"+ Edit",
-    notifyToggle:"🔔 Notify on release", notifyMonth:"1 month before", notifyWeek:"1 week before", notifyDay:"On release day",
-    enableNotif:"Enable notifications", enableNotifDesc:"Alert 3 days before and on release day",
-    enable:"Enable",
-    general:"🎮 General", finance:"💰 Finance", analysis:"💡 Analysis",
-    gamesTotal:"Total games", completed2:"Completed", hoursTotal:"Total hours", avgRating:"Avg rating",
-    statusChart:"📊 Collection status", genreChart:"🎮 Top genres", ratingChart:"⭐ Rating histogram",
-    noFinanceData:"No financial data", addPricesHint:"Add purchase prices to games",
-    financeInfoHint:"Financial data comes from prices you entered manually — not from an API.",
-    spent:"Games (base price)", earnedBack:"Recovered", realCostShort:"Real cost", costPerHour:"Cost/hour", spentDLC:"DLC / Microtransactions", spentTotal2:"Total spent",
-    byStore:"🏪 Spending by store", byGenre:"🎮 Spending by genre",
-    roi:"📈 ROI on sold games", mostExpensive:"💸 Most expensive", bestValue:"⏱ Best value (per hour)",
-    noInsights:"Not enough data", addPricesAndHours:"Add prices and hours to games",
-    // F07 — Time tracking views
-    time:"⏱ Time", noSessions:"No sessions", noSessionsHint:"Start a session on Home tab to track play time",
-    today2:"Today", thisWeek:"This week", thisMonth:"This month",
-    vsLastWeek:"vs last week", vsLastMonth:"vs last month",
-    currentStreak:"Streak", longestStreak:"Longest streak", avgSession:"Avg session", longestSession:"Longest session",
-    daysStreak:"days", sessionsCount:"{n} sessions", noSessionsToday:"No sessions today", noSessionsWeek:"No sessions this week", noSessionsMonth:"No sessions this month",
-    dayMon:"Mon", dayTue:"Tue", dayWed:"Wed", dayThu:"Thu", dayFri:"Fri", daySat:"Sat", daySun:"Sun",
-    topGames:"🎮 Most played",
-    sessionsList:"Sessions",
-    potentialSaving:"💡 Potential savings",
-    savingsFrom:"from avoided losses", savingsFromSell:"from selling abandoned games",
-    clickCards:"Click cards below to learn how",
-    biggestLoss:"Biggest loss", bestInvestment:"Best investment",
-    mostExpensiveHours:"Most expensive hours", bestValueShort:"Best value",
-    financeSummary:"Financial summary",
-    biggestLossDesc:"Selling {title} lost you {amount}",
-    bestInvestDesc:"{title} earned {amount} profit",
-    expHoursDesc:"{title} — {cph}/h. Above 10/h is poor value.",
-    bestValDesc:"{title} — only {cph}/h. Your best investment.",
-    finSummaryDesc:"Spent {spent}, recovered {earned}. Real cost is {net}.",
-    data:"Data", exportData:"Export data", exportDesc:"Download backup of {n} games as JSON",
-    importData:"Import data", importDesc:"Load backup from JSON file",
-    // v1.2.3 — Tip jar
-    support:"Support",
-    buyCoffee:"☕ Buy me a coffee",
-    buyCoffeeDesc:"Free, ad-free app — if you'd like, support development",
-    // v1.2.0 — Import dual-mode
-    importTitle:"Import data", importModeQ:"How to combine backup data?",
-    importMerge:"🔀 Merge with existing",
-    importMergeDesc:"Adds only new games. Games you already have will NOT be updated (their sessions, hours, ratings stay unchanged).",
-    importReplace:"♻️ Replace everything",
-    importReplaceDesc:"Deletes current collection and replaces it with backup. Your current data on THIS device will be LOST.",
-    importReplaceConfirm:"Are you sure? You have {n} games that will be DELETED and replaced with backup data. This cannot be undone.",
-    importedMerge:"✓ Added {added} new games. Skipped {dupes} existing — use 'Replace everything' if you want backup data",
-    importedMergeNoSkip:"✓ Added {added} new games",
-    importedReplace:"✓ Collection replaced — {n} games from backup",
-    cancel2:"Cancel",
-    info:"Info", privacyPolicy:"Privacy policy", privacyDesc:"We collect no personal data",
-    privacyTitle:"Privacy policy",
-    privacyBadge:"✓ Your data stays with you",
-    privacyS1Title:"What we store",
-    privacyS1Body:"All data (games, statuses, ratings, finances, sessions) lives in your device storage (localStorage). It never reaches any server.",
-    privacyS2Title:"What we DON'T collect",
-    privacyS2Body:"Name, email, phone, location, device identifiers. No Google Analytics, no tracking, no cookies.",
-    privacyS3Title:"RAWG.io API",
-    privacyS3Body:"Game search sends to RAWG servers (Lithuania/EU) only the text you type + API key. Your collection never goes there.",
-    privacyS4Title:"Barcode scanner (UPCitemdb)",
-    privacyS4Body:"When you use the scanner (📷), only the EAN/UPC from the box (e.g. 0711719541738) is sent to api.upcitemdb.com to resolve the game name. The result is cached locally so it isn't asked twice. No personal data — just the code number.",
-    privacyS5Title:"Tip jar (buycoffee.to)",
-    privacyS5Body:"The \"Support\" section opens buycoffee.to/skudev as an external link. The app does not send any of your data to that platform.",
-    privacyS6Title:"Notifications",
-    privacyS6Body:"Generated locally by a Service Worker. No server push, no data sent for notifications.",
-    privacyS7Title:"Report a problem",
-    privacyS7Body:"The \"Report a problem\" feature opens your email client with an auto-template (device model, app version). Sending is voluntary — you can edit or delete the data.",
-    privacyS8Title:"Your rights (GDPR)",
-    privacyS8Body:"Full control: \"Export data\" gives you a JSON with the full collection, \"Clear collection\" deletes everything. You can also just uninstall the app.",
-    privacyFullLink:"Full privacy policy (online)",
-    privacyClose:"Close",
-    privacyUpdated:"Updated: April 24, 2026",
-    reportProblem:"Report a problem", reportProblemDesc:"Write to me — I reply personally",
-    storageQuotaErr:"⚠ Storage full — export backup and clear old games",
-    storageGenericErr:"⚠ Failed to save — please refresh the app",
-    poweredBy:"Powered by RAWG.io", poweredByDesc:"Database of 500,000+ games",
-    appInfo:"PS5 Vault", appInfoDesc:"Version {ver} — Data stored locally",
-    language:"Język / Language", dangerZone:"Danger zone",
-    clearCollection:"Clear collection", clearDesc:"Delete all {n} games",
-    clearConfirm:"Delete all {n} games? This cannot be undone.",
-    addGameTitle:"+ ADD GAME", editGameTitle:"✎ EDIT GAME",
-    searchRawg:"🔍 Search RAWG", rawgPlaceholder:"Type game name...",
-    rawgHint:"Select a game to auto-fill fields + release date",
-    rawgNotFound:"Not found", rawgNotFoundHint:"Check spelling or add the game manually in the form below",
-    // v1.3.0 — Barcode scanner
-    scanBarcodeAria:"Scan barcode",
-    scanTitle:"Scan game barcode", scanHint:"Aim at the EAN/UPC on the back of the box",
-    scanInitializing:"Starting camera...",
-    scanScanning:"Searching for code...",
-    scanLookup:"Looking up EAN {ean}...",
-    scanRawg:"Searching RAWG: {q}",
-    scanFoundAs:"Identified as: {name}",
-    scanCachedHint:"⚡ cached",
-    scanFound:"RAWG results",
-    scanNoMatch:"No RAWG matches",
-    scanNoMatchHint:"Try searching by name manually in the field above",
-    scanNoEAN:"Couldn't identify EAN {ean}",
-    scanNoEANHint:"EAN not in UPCitemdb. Add the game manually or search by name.",
-    scanUnsupported:"Scanning unavailable",
-    scanUnsupportedHint:"Works in Chrome and Edge on Android. iOS doesn't support it yet — type the EAN manually below.",
-    scanDenied:"Camera access denied",
-    scanDeniedHint:"Enable camera permission for this site in browser settings",
-    scanError:"Camera error",
-    scanRetry:"↻ Scan again",
-    scanManualLabel:"...or type EAN manually",
-    scanManualPh:"e.g. 0711719541738",
-    scanManualBtn:"Search",
-    titleField:"Title *", abbrField:"Abbr (2 chars)", yearField:"Year",
-    releaseDateField:"Release date", releaseDateHint:"Leave empty if unknown (TBA)",
-    statusField:"Status", genreField:"Genre", hoursField:"Hours",
-    ratingField:"Rating (1–10)", targetHoursField:"Target (hrs)", notesField:"Notes",
-    notesPh:"Your thoughts...", genrePh:"— select —", targetPh:"e.g. 40",
-    finances:"💰 Finances", priceBoughtField:"Price paid ({cur})", storeField:"Store", extraSpendField:"DLC / Microtransactions ({cur})", extraSpendHint:"Additional in-game purchases", platformField:"Platform",
-    storePh:"—", soldToggle:"I sold this game", soldPriceField:"Sold for ({cur})",
-    // v1.4.0 — Quick add UX
-    moreDetails:"+ More details", lessDetails:"− Less details",
-    soldField:"Sold for ({cur})", soldFieldHint:"empty = not sold",
-    targetFromRawg:"estimate from RAWG — you can change it",
-    // v1.5.0 — Menu, achievements, goals, wrapped, privacy mini
-    menuAria:"Menu",
-    menuTitle:"Menu",
-    menuWrapped:"🎁 Year in games",
-    menuWrappedDesc:"Your year recap — Spotify Wrapped style",
-    menuAchievements:"🏆 Achievements",
-    menuAchievementsDesc:"{unlocked} / {total} unlocked",
-    menuGoals:"🎯 Goals",
-    menuGoalsDesc:"{active} active · {done} done",
-    menuSettings:"⚙️ Settings",
-    menuSettingsDesc:"Language, currency, data, privacy",
-    achievementsTitle:"🏆 Achievements",
-    achievementsSub:"{unlocked} / {total} unlocked · {pct}%",
-    achLocked:"Locked",
-    achUnlocked:"Unlocked",
-    achProgress:"{cur} / {tgt}",
-    achEmpty:"Start adding games to unlock achievements",
-    goalsTitle:"🎯 Goals",
-    goalsSub:"Set a goal for this month — build the tracking habit",
-    goalsActive:"Active ({n})",
-    goalsDone:"Completed ({n})",
-    goalsAdd:"+ Add goal",
-    goalsAddTitle:"Pick a goal",
-    goalsEmpty:"No active goals",
-    goalsEmptyHint:"Tap \"Add goal\" to get started",
-    goalCardTitle:"🎯 This month's goals",
-    goalCardEmpty:"Set a goal — like complete 3 games",
-    goalCardCta:"+ Add",
-    goalDelete:"Delete",
-    goalRemoved:"✓ Goal deleted",
-    goalAdded:"✓ Goal added",
-    goalDone:"🎉 Goal reached: {title}",
-    goalRemainingDays:"{n} days left this month",
-    goalLastDay:"Last day!",
-    goalTplCompleteTitle:"Complete {n} games this month",
-    goalTplHoursTitle:"Play {n} hours this month",
-    goalTplAddTitle:"Add {n} games to collection",
-    goalTplPlatinumTitle:"Earn {n} platinums this month",
-    wrappedTitle:"Year in games {year}",
-    wrappedSub:"Your gaming in {year} by the numbers",
-    wrappedEmpty:"Not enough data for {year}",
-    wrappedEmptyHint:"Add games, ratings and sessions to see your recap",
-    wrappedTotalHours:"Hours played",
-    wrappedGamesAdded:"Games added",
-    wrappedGamesCompleted:"Games completed",
-    wrappedPlatinums:"Platinums",
-    wrappedTopPlayed:"🏆 Most played",
-    wrappedHighestRated:"⭐ Highest rated",
-    wrappedTopGenre:"🎮 Favorite genre",
-    wrappedTopGenreDesc:"{n} hours · {games} games",
-    wrappedSpent:"Spent",
-    wrappedRecovered:"Recovered",
-    wrappedActiveDays:"Active days",
-    wrappedActiveDaysDesc:"of {total} days in the year",
-    wrappedLongestStreak:"Longest streak",
-    wrappedLongestSession:"Longest session",
-    wrappedShareHint:"Take a screenshot to share 📸",
-    wrappedYearPicker:"Year:",
-    privacyMiniBody:"All data is stored locally on your device — we send nothing to servers, no trackers, no personal data. The only external APIs are RAWG (game search) and UPCitemdb (EAN identification during scanning) — only the query text or EAN code is sent, never your collection.",
-    privacyMiniLink:"Full privacy policy →",
-    notifications:"Notifications", notifyOn:"🔔 Notify on release",
-    notifyDesc:"3 days before and on release day", notifyBlocked:"⛔ Blocked in browser settings",
-    cancel:"Cancel", save:"SAVE", enterTitle:"Enter title",
-    delete:"🗑", confirmDelete:"Delete game", confirmDeleteBody:"Delete {title} from collection?",
-    obTitle:"PS5 VAULT", obSub:"Your personal PS5 game tracker. No registration — everything stored locally on device.",
-    obStart:"+ ADD FIRST GAME",
-    obSkip:"Skip, I'll add later",
-    obF1Title:"Game collection", obF1Desc:"Add manually or search RAWG database with cover art",
-    obF2Title:"Release tracking", obF2Desc:"Countdown + notifications 30/7/3 days and on release day",
-    obF3Title:"Financial analysis", obF3Desc:"Track spending, recovery — real collection cost",
-    obF4Title:"Statistics", obF4Desc:"Charts, ratings, cost/hour and smart insights",
-    saved:"✓ Saved", added:"✓ Added. Tap the game to fill in prices and hours", deleted:"✓ Deleted {title}",
-    imported:"✓ Imported {n} games", cleared:"ℹ Collection cleared",
-    statusChanged:"✓ Status → {status}",
-    avoidLoss:"🔍 Avoid such losses", buyBetter:"📋 Find similar games",
-    optimizeBacklog:"⚡ Optimize backlog", findSimilar:"🎯 Find similar games", saveMoney:"💡 How to save more",
-    flowAvoidTitle:"How to avoid losses", flowInvestTitle:"Smart buying strategies",
-    flowOptimTitle:"Optimize your backlog", flowSimilarTitle:"How to find similar games",
-    flowSaveTitle:"Savings plan",
-    iUnderstand:"GOT IT",
-    hoursPlayed:"{h} played",
-    progComplete:"{n}% complete",
-    timerStart:"▶ Start session", timerStop:"⏹ Stop session", timerToday:"Today: {h}h {m}min", sessionSaved:"✓ Session saved ({h}h {m}min)", wishlist:"💜 Wishlist", wishlistAdd:"+ Add to wishlist", wishlistEmpty:"Wishlist is empty", targetPrice:"Target price", addedToWishlist:"✓ Added to wishlist", removedFromWishlist:"✓ Removed from wishlist", forgotten:"🕰 Forgotten games", forgottenSub:"Bought long ago, never played", budget:"💳 Monthly budget", budgetSet:"Set budget", budgetSpent:"Spent this month", budgetLeft:"Remaining", budgetOver:"⚠️ Budget exceeded!",
-    budgetEdit:"Edit", budgetSetBtn:"Set", budgetSaved:"✓ Budget set: {amount}", budgetCleared:"✓ Budget disabled",
-    budgetInvalidAmount:"⚠ Enter an amount greater than 0",
-    budgetOverflow:"Over by",
-    monthPurchases:"📅 This month", monthPurchasesNone:"No purchases this month",
-    monthPurchasesSummary:"{n} {gamesWord}, {amount}", gamesWord1:"game", gamesWord234:"games", gamesWord5:"games",
-    spendingByMonth:"Spending over time", topMonth:"Biggest month",
-    // v1.3 — finance/stats insights
-    backlogCost:"🎮 Unplayed games", backlogCostDesc:"{n} {gamesWord} with zero hours played",
-    backlogCostBadge:"Frozen on the shelf",
-    yearProjection:"📈 Yearly projection",
-    yearProjectionDesc:"You spend {avg}/month on average over the last {months}.",
-    yearProjectionEnd:"By end of {year}: ~{total}",
-    yearVsLast:"That's {ratio}× {dir} than {year}",
-    yearVsLastDirMore:"more",
-    yearVsLastDirLess:"less",
-    yearProjectionNoData:"Not enough data — check back in a month",
-    perGenreValue:"💎 Value by genre",
-    perGenreValueHint:"Best return per hour",
-    perGenreNoData:"Add play hours to your games to see this analysis",
-    perGenreCol:"{n} {gamesWord} · {hours}",
-    yearROI:"📊 Year over year",
-    yearROIBought:"Spent",
-    yearROIRecovered:"Recovered",
-    yearROIRatio:"{pct}%",
-    yearROINoData:"Mark some games as sold to see the trend",
-    activeDays:"🎯 Active days",
-    activeDaysDesc:"{played} of {total} days this month",
-    activeDaysVs:"Last month: {n}",
-    sortBy:"Sort:", sortAdded:"Added", sortTitle:"Title", sortRating:"Rating", sortHours:"Hours", sortPrice:"Price", filterSold:"Sold", filterPlatinum:"🏆 Platinum", platinum:"Platinum",
-    rateGame:"⭐ Rate game", ratingQuick:"Your rating (1–10):", rateSkip:"Skip", rateSave:"Save rating",
-    // ── Currency (single-currency, no conversion) ───────────────────────────────
-    currencyLabel:"Currency", currencyDesc:"App displays all amounts in the chosen currency. No conversion — enter prices natively.",
-    currencyChanged:"✓ Currency changed to {name}",
-    obCurrencyTitle:"Pick your currency", obCurrencySub:"All amounts will display in this currency. No conversion — you can change it later in Settings.",
-    obContinue:"Continue",
-    budgetPlaceholder:"Budget ({cur})",
-    budgetMaxErr:"⚠ Max 99,999 {cur}",
-  }
-};
-
-// ─── TRANSLATION HELPER ───────────────────────────────────────────────────────
-function t(lang, key, vars={}) {
-  let str = TRANSLATIONS[lang]?.[key] || TRANSLATIONS.pl[key] || key;
-  // Auto-inject {cur} from active currency symbol when caller didn't supply it.
-  // typeof guard: t() is hoisted above CURRENCIES const — protects edge case where
-  // t() somehow runs before module finished initializing (shouldn't happen, defense in depth).
-  if (str.indexOf('{cur}') !== -1 && vars.cur === undefined && typeof CURRENCIES !== 'undefined') {
-    const c = (typeof getCurrency === 'function') ? getCurrency() : 'PLN';
-    const def = CURRENCIES[c] || CURRENCIES.PLN;
-    vars = { ...vars, cur: def.symbol };
-  }
-  Object.entries(vars).forEach(([k,v]) => { str = str.replace(`{${k}}`, v); });
-  return str;
-}
-
-function getLang() {
-  const saved = localStorage.getItem(LS_LANG);
-  if (saved) return saved;
-  return navigator.language?.startsWith('pl') ? 'pl' : 'en';
-}
-
-// ─── STATUS MAP (dynamic) ─────────────────────────────────────────────────────
-function getSM(lang) {
-  return {
-    gram:      { label:t(lang,'gram'),      c:'#00D4FF', bg:'rgba(0,212,255,.13)' },
-    psplus:    { label:t(lang,'psplus'),    c:'#FFD166', bg:'rgba(255,209,102,.13)' },
-    ukonczone: { label:t(lang,'ukonczone'), c:'#39FF6E', bg:'rgba(57,255,110,.13)' },
-    planuje:   { label:t(lang,'planuje'),   c:'#A78BFA', bg:'rgba(167,139,250,.13)' },
-    porzucone: { label:t(lang,'porzucone'), c:'#FF4D6D', bg:'rgba(255,77,109,.13)' },
-  };
-}
-
-const GENRES_PL = ['Action','RPG','FPS','Horror','Sport','Racing','Platformer','Puzzle','Adventure','Strategia','Fighting','Indie','Inne'];
-const GENRES_EN = ['Action','RPG','FPS','Horror','Sports','Racing','Platformer','Puzzle','Adventure','Strategy','Fighting','Indie','Other'];
-const RMAP = {'action':'Action','role-playing-games-rpg':'RPG','shooter':'FPS','horror':'Horror','sports':'Sport','racing':'Racing','platformer':'Platformer','puzzle':'Puzzle','adventure':'Adventure','strategy':'Strategia','fighting':'Fighting','indie':'Indie'};
-const STORES = ['PSN','PS Store','Steam','CDP','Allegro','OLX','Media Expert','Empik','Amazon','eBay','Disc','Key','Other'];
-const PLATFORMS = ['PS5','PS4','Xbox Series X/S','Xbox One','PC','Nintendo Switch','Mobile','Other'];
-const G = { bg:'#080B14', card:'#0D1120', card2:'#111827', bdr:'#1E2A42', txt:'#E8EDF8', dim:'#5A6A8A', blu:'#00D4FF', grn:'#39FF6E', pur:'#A78BFA', red:'#FF4D6D', gld:'#FFD166', org:'#FF9F1C' };
-
-function uid()    { return 'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
-function mkAbbr(s){ const w=s.trim().split(/\s+/).filter(Boolean); return !w.length?'??':(w.length===1?w[0].slice(0,2):w[0][0]+w[1][0]).toUpperCase(); }
-function daysUntil(d){ if(!d)return null; const a=new Date();a.setHours(0,0,0,0);const b=new Date(d);b.setHours(0,0,0,0);return Math.round((b-a)/86400000); }
-function fmtDate(d,lang){
-  if(!d)return'';
-  const dt=new Date(d); if(isNaN(dt))return'';
-  const day=dt.getDate();
-  const months=lang==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
-  return `${day} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
-}
-function fmtShort(d,lang){
-  if(!d)return'';
-  const dt=new Date(d); if(isNaN(dt))return'';
-  const day=dt.getDate();
-  const months=lang==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
-  return `${day} ${months[dt.getMonth()]}`;
-}
-function pln(v,lang){
-  const num=(+v||0).toFixed(0);
-  // typeof guard: pln() is hoisted above CURRENCIES const declaration —
-  // the guard keeps render safe even if pln were ever called before module init completes.
-  if (typeof CURRENCIES === 'undefined') return `${num} zł`;
-  const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
-  return def.after ? `${num} ${def.symbol}` : `${def.symbol}${num}`;
-}
-
-// Polish has 3-form plural: 1 gra, 2-4 gry, 5+ gier (also 12-14 → "gier", 22-24 → "gry")
-// English uses simpler 1 game / 2+ games
-function gamesWord(n,lang){
-  const abs=Math.abs(n);
-  if(lang==='en') return abs===1?'game':'games';
-  if(abs===1) return 'gra';
-  const last=abs%10, lastTwo=abs%100;
-  if(last>=2 && last<=4 && (lastTwo<10 || lastTwo>=20)) return 'gry';
-  return 'gier';
-}
-
-// ─── CURRENCY ─────────────────────────────────────────────────────────────────
-// Single-currency per user — NO conversion. User enters raw numbers, app swaps symbol.
-// after:true  → "100 zł"  (PLN/CZK/SEK/NOK)
-// after:false → "$100"    (EUR/USD/GBP)
-const CURRENCIES = {
-  PLN: { code:'PLN', symbol:'zł', after:true,  name:{pl:'Polski złoty',      en:'Polish złoty'} },
-  EUR: { code:'EUR', symbol:'€',  after:false, name:{pl:'Euro',              en:'Euro'} },
-  USD: { code:'USD', symbol:'$',  after:false, name:{pl:'Dolar amerykański', en:'US dollar'} },
-  GBP: { code:'GBP', symbol:'£',  after:false, name:{pl:'Funt brytyjski',    en:'British pound'} },
-  CZK: { code:'CZK', symbol:'Kč', after:true,  name:{pl:'Korona czeska',     en:'Czech koruna'} },
-  SEK: { code:'SEK', symbol:'kr', after:true,  name:{pl:'Korona szwedzka',   en:'Swedish krona'} },
-  NOK: { code:'NOK', symbol:'kr', after:true,  name:{pl:'Korona norweska',   en:'Norwegian krone'} },
-};
-function getCurrency(){
-  try { const c=localStorage.getItem(LS_CURRENCY); if(c && CURRENCIES[c]) return c; } catch{}
-  return 'PLN';
-}
-function getCurSymbol(){ return (CURRENCIES[getCurrency()]||CURRENCIES.PLN).symbol; }
-// Default for Onboarding picker — based on navigator.language at first render.
-function getDefaultCurrency(){
-  try {
-    const l=(navigator.language||'').toLowerCase();
-    if(l.startsWith('pl')) return 'PLN';
-    if(/^(de|fr|es|it)/.test(l)) return 'EUR';
-    if(l==='en-us') return 'USD';
-    if(l==='en-gb') return 'GBP';
-  } catch{}
-  return 'PLN';
-}
-// Cost-per-hour with dynamic symbol. Format always "1.9 sym/h" regardless of before/after.
-// Named fmtCph (NOT cph) to avoid collision with local `const cph` inside Stats/Finance.
-function fmtCph(v){
-  const num=(+v||0).toFixed(1);
-  if (typeof CURRENCIES === 'undefined') return `${num} zł/h`;
-  const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
-  return `${num} ${def.symbol}/h`;
-}
-// Format hours as "2h 54min" / "30min" / "5h" — replaces ugly "2.9h"
-// minStr: "min" in both PL/EN (common, no need to translate)
-function fmtHours(v,opts){
-  const h=+v||0;
-  if(h<=0)return '0h';
-  const hh=Math.floor(h);
-  const mm=Math.round((h-hh)*60);
-  if(mm===60){ return `${hh+1}h`; }  // rounding edge case: 2.995 -> 3h not "2h 60min"
-  if(hh===0)return `${mm}min`;
-  if(mm===0)return `${hh}h`;
-  if(opts&&opts.compact)return `${hh}h${mm}m`;  // for tight inline displays
-  return `${hh}h ${mm}min`;
-}
-
-const EF = { title:'',abbr:'',status:'planuje',year:new Date().getFullYear(),genre:'',hours:'',rating:'',notes:'',cover:'',releaseDate:'',notifyEnabled:false,priceBought:'',priceSold:null,storeBought:'',targetHours:'',extraSpend:'',platform:'PS5',platinum:false,lastPlayed:null,sessions:[] };
-
-function lsRead()  {
-  try{
-    const games=JSON.parse(localStorage.getItem(LS_KEY)||'[]');
-    // Migration (v1.2.4+): legacy games may have priceSold:'' from v1.2.3 bug,
-    // which rendered as "sold toggle ON" + ROI +0 zł on cards.
-    // Normalize to null on read so every load is consistent.
-    // Idempotent — running twice is safe.
-    let dirty=false;
-    const migrated=games.map(g=>{
-      if(g.priceSold===''){ dirty=true; return {...g,priceSold:null}; }
-      return g;
-    });
-    if(dirty){ try{ localStorage.setItem(LS_KEY,JSON.stringify(migrated)); }catch{} }
-    return migrated;
-  }catch{ return []; }
-}
-function lsWrite(g){
-  try{
-    localStorage.setItem(LS_KEY,JSON.stringify(g));
-    return true;
-  }catch(e){
-    // localStorage quota exceeded (5MB ~ 300+ games with session history) or storage disabled.
-    // Surface to user via global hook set by App; fall back to console if not registered yet.
-    const isQuota = e && (e.name==='QuotaExceededError' || e.code===22 || e.code===1014);
-    if(typeof window!=='undefined' && window.__ps5v_storageError){
-      window.__ps5v_storageError(isQuota?'quota':'unknown', e);
-    } else {
-      console.error('[ps5vault] lsWrite failed:', e);
-    }
-    return false;
-  }
-}
-function budgetRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_budget')||'{}'); }catch{ return {}; } }
-function budgetWrite(d){ try{ localStorage.setItem('ps5vault_budget',JSON.stringify(d)); }catch{} }
-function timerRead(){ try{ return JSON.parse(localStorage.getItem('ps5vault_timer')); }catch{ return null; } }
-function timerWrite(d){ try{ if(d===null)localStorage.removeItem('ps5vault_timer'); else localStorage.setItem('ps5vault_timer',JSON.stringify(d)); }catch{} }
-function isOnboarded(){ return !!localStorage.getItem(LS_ONBOARD); }
-function setOnboarded(){ localStorage.setItem(LS_ONBOARD,'1'); }
-
-function exportData(games,lang,onDone){
-  const blob=new Blob([JSON.stringify({version:1,exported:new Date().toISOString(),count:games.length,games},null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`PS5Vault_Backup_${new Date().toISOString().slice(0,10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),100);
-  if(typeof onDone==='function')onDone();
-}
-function importData(file,onOk,onErr){
-  const r=new FileReader();
-  r.onload=e=>{try{const d=JSON.parse(e.target.result);const g=Array.isArray(d)?d:d.games;if(!Array.isArray(g))throw new Error('Invalid format');onOk(g);}catch(e){onErr(e.message);}};
-  r.readAsText(file);
-}
-// Maximum import file size — protects against memory exhaustion from accidental
-// or malicious large JSONs. Realistic backup with 1000 games + sessions ~ 2MB.
-const IMPORT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
-
-// Validate that an imported game has the minimum fields needed to render safely
-function isValidGameShape(g){
-  if(!g || typeof g !== 'object') return false;
-  if(typeof g.title !== 'string' || !g.title.trim()) return false;
-  return true;
-}
-
-function importMerge(file,existing,onOk,onErr){
-  if(file.size > IMPORT_MAX_BYTES){ onErr('File too large (>10MB)'); return; }
-  const r=new FileReader();
-  r.onerror=()=>onErr('Read failed');
-  r.onload=e=>{try{
-    const d=JSON.parse(e.target.result);const imported=Array.isArray(d)?d:d.games;
-    if(!Array.isArray(imported))throw new Error('Invalid format');
-    // Filter out malformed entries and ensure each has an id (assign new if missing)
-    const cleaned=imported.filter(isValidGameShape).map(g=>g.id?g:{...g,id:uid()});
-    const existingIds=new Set(existing.map(g=>g.id));
-    const newGames=cleaned.filter(g=>!existingIds.has(g.id));
-    onOk([...existing,...newGames],newGames.length,cleaned.length-newGames.length);
-  }catch(err){onErr(err.message);}};
-  r.readAsText(file);
-}
-// v1.2.0: importReplace — nadpisuje całą kolekcję backupem (destructive)
-// Preserves all fields as-is, including sessions[], hours, ratings etc.
-function importReplace(file,onOk,onErr){
-  if(file.size > IMPORT_MAX_BYTES){ onErr('File too large (>10MB)'); return; }
-  const r=new FileReader();
-  r.onerror=()=>onErr('Read failed');
-  r.onload=e=>{try{
-    const d=JSON.parse(e.target.result);const imported=Array.isArray(d)?d:d.games;
-    if(!Array.isArray(imported))throw new Error('Invalid format');
-    const cleaned=imported.filter(isValidGameShape).map(g=>g.id?g:{...g,id:uid()});
-    onOk(cleaned,cleaned.length);
-  }catch(err){onErr(err.message);}};
-  r.readAsText(file);
-}
-async function registerSW(){
-  if(!('serviceWorker'in navigator))return;
-  try{
-    const reg=await navigator.serviceWorker.register('/Games/sw.js');
-    // Force update check on every load
-    reg.update();
-    // If new SW is waiting, activate immediately
-    if(reg.waiting){ reg.waiting.postMessage({type:'SKIP_WAITING'}); }
-    // Listen for updates
-    reg.addEventListener('updatefound',()=>{
-      const nw=reg.installing;
-      if(nw){
-        nw.addEventListener('statechange',()=>{
-          if(nw.state==='installed'&&navigator.serviceWorker.controller){
-            // New SW available — reload once to use it
-            window.location.reload();
-          }
-        });
-      }
-    });
-  }catch(e){console.log('SW register error:',e);}
-}
-async function requestNotifPerm(){ if(!('Notification'in window))return'denied';if(Notification.permission!=='default')return Notification.permission;return await Notification.requestPermission(); }
-async function checkReleases(games,lang){ if(!('serviceWorker'in navigator))return;try{const reg=await navigator.serviceWorker.ready;reg.active?.postMessage({type:'CHECK_RELEASES',games,lang:lang||'pl'});}catch{} }
-async function rawgSearch(q){
-  const ctrl=new AbortController();
-  const tm=setTimeout(()=>ctrl.abort(),8000);
-  try{
-    const r=await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(q)}&page_size=10&key=${RAWG_KEY}`,{signal:ctrl.signal});
-    if(!r.ok)return[];
-    return(await r.json()).results.map(g=>({id:g.id,title:g.name,year:g.released?+g.released.slice(0,4):new Date().getFullYear(),releaseDate:g.released||'',genre:(g.genres||[]).map(x=>RMAP[x.slug]).filter(Boolean)[0]||g.genres?.[0]?.name||'',cover:g.background_image||'',abbr:mkAbbr(g.name),playtime:Number.isFinite(+g.playtime)?+g.playtime:0}));
-  }catch{return[];}
-  finally{clearTimeout(tm);}
-}
-
-// ─── Barcode / EAN lookup ────────────────────────────────────────────────────
-// Strategy: scan EAN with BarcodeDetector → resolve EAN→product name via UPCitemdb
-// trial endpoint (free, 100/day/IP, CORS-enabled, no key) → feed cleaned name into
-// existing rawgSearch(). RAWG itself has no EAN index, hence the name-resolution hop.
-function eanCacheRead(){ try{ return JSON.parse(localStorage.getItem(LS_EAN_CACHE)||'{}'); }catch{ return {}; } }
-function eanCacheWrite(c){ try{ localStorage.setItem(LS_EAN_CACHE,JSON.stringify(c)); }catch{} }
-
-// Strips console/edition noise so RAWG name search has a chance.
-// "Sony PS5 God of War Ragnarok Standard Edition (EU)" → "God of War Ragnarok"
-function cleanProductName(raw){
-  if(!raw)return'';
-  let s=' '+raw+' ';
-  // Region/edition tags inside parens
-  s=s.replace(/\([^)]*?(EU|PAL|NTSC|US|UK|JP|JAPAN|REGION\s*FREE|ENG|EUR|MULTI[^)]*)[^)]*\)/gi,' ');
-  // ORDER MATTERS: longest/most-specific patterns first, so "for PS5" matches
-  // before bare "PS5" gets ripped out and leaves an orphan "for".
-  const noise=[
-    /\bfor\s+PlayStation\s*[345]\b/gi, /\bfor\s+PS\s*[345]\b/gi,
-    /\bSony\s+Interactive\s+Entertainment\b/gi, /\bInteractive\s+Entertainment\b/gi,
-    /\bPlayStation\s*[345]\b/gi, /\bPS\s*[345]\b/gi, /\bSony\b/gi,
-    /\bXbox(\s+(One|Series\s*[XS]|360))?\b/gi, /\bMicrosoft\b/gi,
-    /\bNintendo\s+Switch\b/gi, /\bSwitch\b/gi,
-    /\bStandard\s+Edition\b/gi, /\bLaunch\s+Edition\b/gi, /\bDeluxe\s+Edition\b/gi,
-    /\bGold\s+Edition\b/gi, /\bSpecial\s+Edition\b/gi, /\bComplete\s+Edition\b/gi,
-    /\bUltimate\s+Edition\b/gi, /\bDefinitive\s+Edition\b/gi, /\bRemastered\s+Edition\b/gi,
-    /\bGame\s+Of\s+The\s+Year\s+Edition\b/gi, /\bGOTY(\s+Edition)?\b/gi,
-    /\bDisc\s+Version\b/gi, /\bPhysical\s+Edition\b/gi, /\bPhysical\s+Copy\b/gi,
-    /\bVideo\s+Game\b/gi,
-  ];
-  for(const n of noise) s=s.replace(n,' ');
-  // Punctuation cleanup: only collapse dashes/colons that have whitespace around them,
-  // so in-word hyphens like "Spider-Man" survive.
-  s=s.replace(/\s+[\-–—:|·,]+\s+/g,' ').replace(/\s{2,}/g,' ').trim();
-  // Drop empty parens left behind
-  s=s.replace(/\(\s*\)/g,'').trim();
-  // Orphan stop-words at the start/end after publisher/console strip ("...XVI for")
-  s=s.replace(/^(for|a|an)\s+/i,'').replace(/\s+(for|with)$/i,'').trim();
-  return s;
-}
-
-// Returns product title string, or null if not found / call failed.
-// Cached aggressively: a successful hit OR a confirmed miss (empty string) are both
-// stored so we don't rehit the trial quota for the same EAN.
-async function eanLookup(ean){
-  const cache=eanCacheRead();
-  if(Object.prototype.hasOwnProperty.call(cache,ean)){
-    return cache[ean]||null;
-  }
-  const ctrl=new AbortController();
-  const tm=setTimeout(()=>ctrl.abort(),7000);
-  try{
-    const r=await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(ean)}`,{signal:ctrl.signal});
-    if(!r.ok){
-      // 404 = not in DB → cache the miss. 429/other = transient → don't cache.
-      if(r.status===404){ cache[ean]=''; eanCacheWrite(cache); }
-      return null;
-    }
-    const j=await r.json();
-    const title=(j&&Array.isArray(j.items)&&j.items[0]&&j.items[0].title)||'';
-    cache[ean]=title;
-    eanCacheWrite(cache);
-    return title||null;
-  }catch{
-    // Network/abort/timeout — don't poison cache, allow retry next time
-    return null;
-  }finally{ clearTimeout(tm); }
-}
-
-// ─── CSS ─────────────────────────────────────────────────────────────────────
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Syne:wght@400;600;700&display=swap');
-@keyframes spin    { to{transform:rotate(360deg)} }
-@keyframes pulse   { 0%,100%{opacity:1}50%{opacity:.4} }
-@keyframes slideUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
-@keyframes fadeIn  { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
-@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)} }
-@keyframes scaleIn { from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)} }
-@keyframes shake   { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
-@keyframes tabSlide{ from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)} }
-
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%;overflow-x:hidden;max-width:100%}
-body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased}
-#root{overflow-x:hidden;max-width:100%}
-.app{display:flex;flex-direction:column;min-height:100dvh;max-width:100%;overflow-x:hidden}
-
-.hdr{overflow:hidden;padding-top:calc(env(safe-area-inset-top,0px) + 44px);padding-bottom:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.htop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
-.logo{display:flex;align-items:center;gap:10px;min-width:0}
-.lico{width:34px;height:34px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#fff;box-shadow:0 0 12px rgba(0,212,255,.35)}
-.lnm{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;letter-spacing:.1em;white-space:nowrap}
-.lsb{font-size:9px;color:${G.dim};letter-spacing:.2em;text-transform:uppercase}
-.abtn{height:44px;flex-shrink:0;border:none;border-radius:10px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0 14px;gap:6px;white-space:nowrap}
-.abtn:active{opacity:.7;transform:scale(.95)}
-
-.tabs{display:flex;gap:2px;background:${G.card};border:1px solid ${G.bdr};border-radius:13px;padding:4px}
-.tab{flex:1;min-height:42px;padding:6px 2px;border:none;border-radius:9px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:9px;font-weight:600;cursor:pointer;white-space:nowrap;position:relative;line-height:1.3;transition:all .18s}
-.tab.on{background:rgba(0,212,255,.15);color:${G.blu}}
-.tab-dot{position:absolute;top:5px;right:4px;width:5px;height:5px;border-radius:50%;background:${G.org};animation:pulse 1.5s infinite}
-
-.scr{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-width:100%;animation:tabSlide .2s ease}
-
-.hcard{background:${G.card};border:1px solid ${G.bdr};border-radius:16px;padding:16px;margin-bottom:12px;overflow:hidden;max-width:100%;animation:fadeIn .3s ease}
-.hcard-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.hcard-title{font-size:10px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
-.hcard-badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px}
-.cont-game{display:flex;gap:12px;align-items:flex-start}
-.cont-cover{width:52px;height:52px;border-radius:10px;background-size:cover;background-position:center;background-color:${G.card2};flex-shrink:0}
-.cont-cover0{width:52px;height:52px;border-radius:10px;background:${G.card2};display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:${G.blu};flex-shrink:0}
-.cont-body{flex:1;min-width:0}
-.cont-title{font-size:15px;font-weight:700;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cont-meta{font-size:11px;color:${G.dim};margin-bottom:8px}
-.prog-bar{height:5px;background:${G.bdr};border-radius:3px;overflow:hidden;margin-bottom:4px}
-.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,${G.blu},${G.pur});transition:width .5s ease}
-.prog-label{font-size:10px;color:${G.dim};display:flex;justify-content:space-between}
-.rec-game{display:flex;gap:12px;align-items:center}
-.rec-cover{width:48px;height:48px;border-radius:9px;background-size:cover;background-position:center;background-color:${G.card2};flex-shrink:0}
-.rec-cover0{width:48px;height:48px;border-radius:9px;background:${G.card2};display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:${G.pur};flex-shrink:0}
-.rec-body{flex:1;min-width:0}
-.rec-title{font-size:14px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rec-reason{font-size:11px;color:${G.dim};line-height:1.4}
-.cnt-big{font-family:'Orbitron',monospace;font-size:34px;font-weight:900;color:${G.org};line-height:1;margin-bottom:3px}
-.cnt-label{font-size:11px;color:${G.dim};margin-bottom:10px}
-.cnt-game-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
-.cnt-cover{width:44px;height:44px;border-radius:8px;background-size:cover;background-position:center;background-color:${G.card2};flex-shrink:0}
-.cnt-actions{display:flex;gap:6px;flex-wrap:wrap}
-.cnt-btn{padding:8px 10px;border-radius:9px;border:1px solid ${G.bdr};background:${G.card2};color:${G.txt};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex:1;text-align:center}
-.cnt-btn-primary{background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;border-color:transparent}
-.cnt-btn-success{background:linear-gradient(135deg,${G.grn},#00a040);color:#000;border-color:transparent;font-weight:700}
-.sw{position:relative;padding:10px 16px 6px}
-.si{display:block;width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;padding:11px 12px 11px 36px;color:${G.txt};font-family:'Syne',sans-serif;font-size:16px;outline:none;-webkit-appearance:none}
-.si:focus{border-color:${G.blu}}
-.sx{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none}
-.chips{display:flex;gap:6px;padding:6px 16px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.chips::-webkit-scrollbar{display:none}
-.chip{padding:7px 14px;border-radius:20px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
-.chip.on{border-color:${G.blu};color:${G.blu};background:rgba(0,212,255,.1)}
-.chip.sold-on{border-color:${G.grn};color:${G.grn};background:rgba(57,255,110,.1)}
-.toolbar{display:flex;gap:8px;padding:0 16px 8px;justify-content:flex-end}
-.tbtn{padding:6px 12px;border:1px solid ${G.bdr};border-radius:8px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
-.sort-row{display:flex;gap:6px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:center}
-.sort-row::-webkit-scrollbar{display:none}
-.sort-lbl{font-size:10px;color:${G.dim};font-weight:600;white-space:nowrap;flex-shrink:0}
-.sort-btn{padding:5px 10px;border-radius:16px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
-.sort-btn.on{border-color:${G.pur};color:${G.pur};background:rgba(167,139,250,.1)}
-.rate-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.88);z-index:19999;display:flex;align-items:center;justify-content:center;padding:20px}
-.rate-box{background:${G.card2};border:1px solid ${G.bdr};border-radius:18px;padding:24px 20px;max-width:320px;width:100%;animation:scaleIn .2s ease}
-.rate-title{font-size:14px;color:${G.dim};margin-bottom:12px;text-align:center}
-.rate-stars{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
-.rate-star{width:42px;height:42px;border-radius:10px;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-family:'Orbitron',monospace;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
-.rate-star.on{border-color:${G.gld};background:rgba(255,209,102,.15);color:${G.gld}}
-.rate-btns{display:flex;gap:8px}
-.lst{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:4px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
-.gc{width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:9px;display:flex;align-items:stretch;cursor:pointer;position:relative;overflow:hidden;animation:fadeIn .25s ease;transition:border-color .15s}
-.gc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c);opacity:.75;z-index:1}
-.gc:active{opacity:.75;transform:scale(.99)}
-.gcov{width:56px;flex-shrink:0;background-size:cover;background-position:center;background-color:${G.card2}}
-.gcov0{width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${G.card2}}
-.gab{font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:var(--c)}
-.gcnt{flex:1;min-width:0;padding:10px 12px 10px 14px;display:flex;gap:8px;align-items:flex-start;overflow:hidden}
-.gbdy{flex:1;min-width:0;overflow:hidden}
-.gtt{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
-.gmt{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.gsb{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:var(--bg);color:var(--c)}
-.gmp{font-size:10px;color:${G.dim}}
-.grt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-.grn{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:${G.gld};line-height:1}
-.grd{font-size:9px;color:${G.dim}}
-.gprice{font-size:11px;font-weight:700;color:${G.org};white-space:nowrap}
-.gprice-roi{font-size:11px;font-weight:700;white-space:nowrap}
-.rbdg-today{padding:3px 8px;border-radius:6px;background:rgba(57,255,110,.15);color:${G.grn};font-size:10px;font-weight:700;white-space:nowrap;border:1px solid rgba(57,255,110,.3);animation:pulse 1s infinite}
-.rbdg-soon{padding:3px 8px;border-radius:6px;background:rgba(255,159,28,.15);color:${G.org};font-size:10px;font-weight:700;white-space:nowrap;border:1px solid rgba(255,159,28,.3)}
-.rbdg-upcoming{padding:3px 8px;border-radius:6px;background:rgba(167,139,250,.12);color:${G.pur};font-size:10px;font-weight:700;white-space:nowrap}
-.rbdg-tba{padding:3px 8px;border-radius:6px;background:rgba(90,106,138,.15);color:${G.dim};font-size:10px;font-weight:600;white-space:nowrap}
-.upc-card{width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:16px;margin-bottom:12px;overflow:hidden;animation:fadeIn .3s ease}
-.upc-banner{width:100%;height:80px;background-size:cover;background-position:center top;background-color:${G.card2};position:relative}
-.upc-ov{position:absolute;inset:0;background:linear-gradient(to right,rgba(8,11,20,.92) 0%,rgba(8,11,20,.3) 100%)}
-.upc-bt{position:absolute;bottom:8px;left:12px;font-size:14px;font-weight:700}
-.upc-bd{position:absolute;top:8px;right:10px;font-family:'Orbitron',monospace;font-size:10px;font-weight:900;padding:3px 9px;border-radius:7px;background:rgba(255,159,28,.2);color:${G.org};border:1px solid rgba(255,159,28,.35)}
-.upc-body{padding:10px 12px 12px}
-.upc-date{font-size:11px;color:${G.dim};margin-bottom:10px}
-.upc-acts{display:flex;gap:6px;flex-wrap:wrap}
-.upc-btn{padding:8px 10px;border-radius:9px;border:1px solid ${G.bdr};background:${G.card2};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex:1;text-align:center;min-height:36px}
-.upc-btn-watch{border-color:rgba(255,209,102,.3);color:${G.gld};background:rgba(255,209,102,.07)}
-.upc-btn-play{background:linear-gradient(135deg,${G.grn},#00a040);color:#000;border-color:transparent;font-weight:700}
-.upc-btn-add{background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;border-color:transparent;font-weight:700}
-.ntgl-row{display:flex;align-items:center;justify-content:space-between;padding-top:8px;margin-top:8px;border-top:1px solid ${G.bdr}}
-.ntgl-lbl{font-size:11px;color:${G.dim}}
-.ntgl-sw{width:38px;height:22px;border-radius:11px;background:${G.bdr};position:relative;flex-shrink:0;transition:background .2s;cursor:pointer}
-.ntgl-sw.on{background:${G.blu}}
-.ntgl-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
-.ntgl-sw.on .ntgl-knob{transform:translateX(16px)}
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
-.sec-title{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase}
-.sec-count{font-size:10px;color:${G.dim}}
-.notif-banner{margin-bottom:12px;padding:12px 14px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);border-radius:12px;display:flex;gap:10px;align-items:center}
-.notif-banner-txt{flex:1;font-size:12px;color:${G.txt};line-height:1.4}
-.notif-banner-btn{padding:7px 12px;border:none;border-radius:8px;background:${G.blu};color:#000;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
-.kgd{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
-.kcd{background:${G.card};border:1px solid ${G.bdr};border-radius:13px;padding:14px;overflow:hidden}
-.kvl{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--c);line-height:1;margin-bottom:4px}
-.klb{font-size:9px;color:${G.dim};font-weight:600;letter-spacing:.07em;text-transform:uppercase}
-.ccd{background:${G.card};border:1px solid ${G.bdr};border-radius:13px;padding:14px;margin-bottom:10px;overflow:hidden}
-.ctl{font-size:10px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px}
-.top-list{list-style:none}
-.top-item{display:flex;align-items:center;padding:9px 0;border-bottom:1px solid ${G.bdr};gap:8px}
-.top-item:last-child{border-bottom:none}
-.top-title{flex:1;min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.top-val{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;flex-shrink:0}
-.roi-pos{color:${G.grn}} .roi-neg{color:${G.red}}
-.fkgd{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
-.fkcd{border-radius:13px;padding:14px;overflow:hidden;border:1px solid ${G.bdr}}
-.fkv{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--c);line-height:1;margin-bottom:4px}
-.fkl{font-size:9px;color:${G.dim};font-weight:600;letter-spacing:.07em;text-transform:uppercase}
-.ins-card{border-radius:13px;padding:14px;margin-bottom:10px;border:1px solid transparent;animation:fadeIn .35s ease}
-.ovr{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.9);z-index:9999;display:flex;align-items:flex-end}
-.mdl{width:100%;overflow:visible;overflow-y:auto;-webkit-overflow-scrolling:touch;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-height:90dvh;animation:slideUp .22s ease}
-.mhdl{width:32px;height:4px;background:${G.bdr};border-radius:2px;margin:0 auto 16px}
-.mttl{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${G.blu};letter-spacing:.06em;margin-bottom:16px}
-.rwrp{position:relative;margin-bottom:12px}
-.rlbl{display:block;font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
-.rrow{display:flex;gap:6px;align-items:center;overflow:hidden}
-.rin{flex:1;min-width:0;display:block;background:${G.bg};border:1px solid ${G.blu};border-radius:9px;padding:10px 11px;color:${G.txt};font-family:'Syne',sans-serif;font-size:16px;outline:none;-webkit-appearance:none}
-.rin::placeholder{color:${G.dim}}
-.rbdg2{font-size:9px;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(0,212,255,.15);color:${G.blu};flex-shrink:0;white-space:nowrap}
-.rhnt{font-size:10px;color:${G.dim};margin-top:4px}
-.rdd{position:absolute;top:100%;left:0;right:0;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;z-index:99998;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.7);margin-top:4px}
-.rit{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-bottom:1px solid ${G.bdr};min-height:52px}
-.rit:last-child{border-bottom:none}
-.rit:active{background:rgba(0,212,255,.08)}
-.rthm{width:40px;height:40px;border-radius:7px;object-fit:cover;flex-shrink:0;background:${G.bg}}
-.rph{width:40px;height:40px;border-radius:7px;background:${G.bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.rinf{flex:1;min-width:0;overflow:hidden}
-.rnm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rmt{font-size:10px;color:${G.dim};margin-top:2px}
-.covp{display:block;width:100%;height:90px;border-radius:10px;object-fit:cover;margin-bottom:11px;border:1px solid ${G.bdr}}
-.fg{margin-bottom:11px}
-.fl{display:block;font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
-.fi,.fs,.fta{display:block;width:100%;background:${G.bg};border:1px solid ${G.bdr};border-radius:9px;padding:10px 11px;color:${G.txt};font-family:'Syne',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .15s}
-.fi:focus,.fs:focus,.fta:focus{border-color:${G.blu}}
-.fi.shake{animation:shake .4s ease}
-.fs option{background:${G.card2};color:${G.txt}}
-.fta{resize:none;height:68px}
-.f2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.ssg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.sso{width:100%;min-height:44px;padding:8px 4px;border-radius:8px;border:1px solid ${G.bdr};background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
-.sso.on{border-color:var(--c);color:var(--c);background:var(--bg)}
-.ntgl2{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:${G.bg};border:1px solid ${G.bdr};border-radius:9px;cursor:pointer}
-.ntgl2-l{font-size:14px;color:${G.txt}}.ntgl2-s{font-size:10px;color:${G.dim};margin-top:2px}
-.ntgl2-sw{width:44px;height:26px;border-radius:13px;background:${G.bdr};position:relative;flex-shrink:0;transition:background .2s}
-.ntgl2-sw.on{background:${G.blu}}.ntgl2-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
-.ntgl2-sw.on .ntgl2-knob{transform:translateX(18px)}
-.sold-tgl{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:${G.bg};border:1px solid ${G.bdr};border-radius:9px;cursor:pointer;margin-bottom:11px}
-.sold-sw{width:44px;height:26px;border-radius:13px;background:${G.bdr};position:relative;flex-shrink:0;transition:background .2s}
-.sold-sw.on{background:${G.grn}}.sold-k{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
-.sold-sw.on .sold-k{transform:translateX(18px)}
-.fdiv{height:1px;background:${G.bdr};margin:14px 0 12px}
-.fslbl{font-size:9px;font-weight:700;color:${G.org};letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.mac{display:flex;gap:8px;margin-top:16px}
-.bpr{flex:1;min-height:50px;padding:13px;border:none;border-radius:11px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:.07em;cursor:pointer;transition:opacity .15s}
-.bpr:active{opacity:.75}
-.bcn{min-height:50px;padding:13px 14px;border:1px solid ${G.bdr};border-radius:11px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
-.bdl{min-height:50px;padding:13px 14px;border:1px solid rgba(255,77,109,.3);border-radius:11px;background:rgba(255,77,109,.1);color:${G.red};font-size:16px;cursor:pointer}
-.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:10px 18px;border-radius:14px;z-index:99999;max-width:calc(100vw - 32px);white-space:normal;text-align:center;line-height:1.45;pointer-events:none;animation:toastIn .25s ease;display:flex;align-items:center;gap:6px}
-.toast-ok{background:${G.grn};color:#000}
-.toast-err{background:${G.red};color:#fff}
-.toast-info{background:${G.blu};color:#000}
-.confirm-ovr{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.88);z-index:19999;display:flex;align-items:center;justify-content:center;padding:20px}
-.confirm-box{background:${G.card2};border:1px solid ${G.bdr};border-radius:18px;padding:24px 20px;max-width:320px;width:100%;animation:scaleIn .2s ease}
-.confirm-ico{font-size:36px;text-align:center;margin-bottom:12px}
-.confirm-title{font-size:16px;font-weight:700;text-align:center;margin-bottom:8px}
-.confirm-body{font-size:13px;color:${G.dim};text-align:center;line-height:1.5;margin-bottom:20px}
-.confirm-btns{display:flex;gap:8px}
-.confirm-yes{flex:1;padding:13px;border:none;border-radius:11px;background:${G.red};color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
-.confirm-no{flex:1;padding:13px;border:1px solid ${G.bdr};border-radius:11px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
-.onboard{position:fixed;inset:0;background:${G.bg};z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
-.ob-logo{width:80px;height:80px;border-radius:22px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:48px;font-weight:900;color:#fff;margin:0 auto 24px;box-shadow:0 0 40px rgba(0,212,255,.4);animation:scaleIn .5s ease}
-.ob-title{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:${G.txt};margin-bottom:8px;letter-spacing:.06em}
-.ob-sub{font-size:14px;color:${G.dim};line-height:1.6;margin-bottom:24px;max-width:280px}
-.ob-features{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;width:100%;max-width:300px}
-.ob-feat{display:flex;align-items:center;gap:12px;text-align:left;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;padding:11px 14px}
-.ob-feat-ico{font-size:20px;flex-shrink:0;width:28px;text-align:center}
-.ob-feat-title{font-size:13px;font-weight:700;margin-bottom:1px}
-.ob-feat-desc{font-size:11px;color:${G.dim}}
-.ob-start{width:100%;max-width:300px;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:.08em;cursor:pointer;box-shadow:0 0 24px rgba(0,212,255,.4)}
-.cur-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:320px;margin-bottom:18px}
-.cur-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:12px 8px;border-radius:11px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;min-height:64px}
-.cur-btn:active{transform:scale(.98)}
-.cur-btn.on{border-color:${G.blu};background:rgba(0,212,255,.1);color:${G.txt}}
-.cur-btn-sym{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:${G.txt}}
-.cur-btn-code{font-size:11px;font-weight:700;letter-spacing:.08em}
-.cur-btn-name{font-size:9px;color:${G.dim};line-height:1.2;text-align:center}
-.cur-btn.on .cur-btn-code{color:${G.blu}}
-.cur-select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,${G.dim} 50%),linear-gradient(135deg,${G.dim} 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
-.set-section{margin-bottom:20px}
-.set-section-title{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.12em;text-transform:uppercase;padding:0 4px;margin-bottom:8px}
-.set-row{display:flex;align-items:center;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;padding:14px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
-.set-row:active{border-color:${G.blu}}
-.set-row-ico{font-size:20px;flex-shrink:0;margin-right:12px}
-.set-row-body{flex:1}
-.set-row-title{font-size:14px;font-weight:600}
-.set-row-desc{font-size:11px;color:${G.dim};margin-top:2px}
-.set-row-arrow{color:${G.dim};font-size:14px}
-.set-badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(0,212,255,.12);color:${G.blu}}
-.lang-row{display:flex;gap:6px;padding:0 4px;margin-bottom:20px}
-.lang-btn{flex:1;padding:10px;border-radius:10px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
-.lang-btn.on{border-color:${G.blu};color:${G.blu};background:rgba(0,212,255,.1)}
-.empty{text-align:center;padding:48px 16px;color:${G.dim};animation:fadeIn .3s ease}
-.eic{font-size:44px;margin-bottom:14px;opacity:.4}
-.ett{font-size:16px;font-weight:700;margin-bottom:8px;color:${G.txt}}
-.ess{font-size:12px;line-height:1.7;margin-bottom:20px}
-.empty-cta{padding:11px 24px;border:none;border-radius:11px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:.06em;cursor:pointer}
-.flow-step{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid ${G.bdr}}
-.flow-step:last-child{border-bottom:none}
-.flow-ico{font-size:22px;flex-shrink:0;width:32px;text-align:center}
-
-/* v1.3.0 — Barcode scanner */
-.rscan{flex-shrink:0;width:38px;height:38px;border:1px solid ${G.blu};border-radius:9px;background:rgba(0,212,255,.08);color:${G.blu};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .12s,background .12s}
-.rscan:active{transform:scale(.92);background:rgba(0,212,255,.2)}
-/* v1.4.0 — Quick add accordion */
-.acc-btn{width:100%;padding:11px 14px;margin:6px 0 12px;border:1px dashed ${G.bdr};border-radius:10px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:color .15s,border-color .15s,background .15s}
-.acc-btn:hover,.acc-btn:active{color:${G.blu};border-color:${G.blu};background:rgba(0,212,255,.04)}
-.acc-body{animation:fadeIn .2s ease}
-.fhnt{font-size:10px;color:${G.dim};margin-top:4px;line-height:1.4}
-.bs-ovr{position:fixed;inset:0;background:#000;z-index:199999;display:flex;flex-direction:column;animation:fadeIn .18s ease}
-.bs-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(12px,env(safe-area-inset-top,0px)) 14px 10px;background:${G.bg};border-bottom:1px solid ${G.bdr};padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
-.bs-ttl{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:${G.blu};letter-spacing:.06em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bs-x{flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.bs-x:active{opacity:.7}
-.bs-vid{flex:1;min-height:200px;position:relative;background:#000;overflow:hidden}
-.bs-vid video{width:100%;height:100%;object-fit:cover;display:block}
-.bs-frm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:78%;max-width:340px;aspect-ratio:16/8;border:2px solid ${G.blu};border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);pointer-events:none}
-.bs-frm::before,.bs-frm::after{content:'';position:absolute;width:22px;height:22px;border:3px solid ${G.blu};pointer-events:none}
-.bs-frm::before{top:-3px;left:-3px;border-right:none;border-bottom:none;border-radius:14px 0 0 0}
-.bs-frm::after{bottom:-3px;right:-3px;border-left:none;border-top:none;border-radius:0 0 14px 0}
-.bs-laser{position:absolute;left:6%;right:6%;top:50%;height:2px;background:linear-gradient(90deg,transparent,${G.blu},transparent);box-shadow:0 0 12px ${G.blu};animation:bsLaser 1.6s ease-in-out infinite;pointer-events:none}
-@keyframes bsLaser{0%,100%{transform:translateY(-32px);opacity:.3}50%{transform:translateY(32px);opacity:1}}
-.bs-hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:12px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.95);padding:0 18px;pointer-events:none;font-weight:600}
-.bs-pn{padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:${G.card2};border-top:1px solid ${G.bdr};max-height:60dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.bs-st{display:flex;align-items:center;gap:11px;padding:11px 12px;background:${G.bg};border:1px solid ${G.bdr};border-radius:10px;margin-bottom:10px}
-.bs-spin{flex-shrink:0;display:inline-block;font-size:18px;animation:spin .8s linear infinite}
-.bs-stxt{flex:1;min-width:0}
-.bs-stitle{font-size:13px;font-weight:700;color:${G.txt};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bs-sdesc{font-size:11px;color:${G.dim};margin-top:2px;word-break:break-all}
-.bs-cached{display:inline-block;font-size:9px;font-weight:700;color:${G.grn};margin-left:6px;padding:1px 5px;border-radius:4px;background:rgba(57,255,110,.1);vertical-align:middle}
-.bs-err{padding:13px 14px;background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.3);border-radius:10px;margin-bottom:10px}
-.bs-err.warn{background:rgba(255,159,28,.07);border-color:rgba(255,159,28,.3)}
-.bs-err-h{font-size:13px;font-weight:700;color:${G.red};margin-bottom:4px}
-.bs-err.warn .bs-err-h{color:${G.org}}
-.bs-err-d{font-size:11px;color:${G.dim};line-height:1.5}
-.bs-mlbl{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px}
-.bs-mrow{display:flex;gap:6px}
-.bs-mrow input{flex:1;min-width:0;background:${G.bg};border:1px solid ${G.bdr};border-radius:9px;padding:10px 11px;color:${G.txt};font-family:'Syne',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;letter-spacing:.05em}
-.bs-mrow input:focus{border-color:${G.blu}}
-.bs-mrow button{flex-shrink:0;padding:0 14px;border:1px solid ${G.blu};border-radius:9px;background:rgba(0,212,255,.1);color:${G.blu};font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
-.bs-mrow button:active{opacity:.7}
-.bs-mrow button:disabled{opacity:.4;cursor:not-allowed}
-.bs-actrow{display:flex;gap:8px;margin-top:8px}
-.bs-actrow button{flex:1;padding:10px;border-radius:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
-.bs-retry{border:1px solid ${G.blu};background:rgba(0,212,255,.1);color:${G.blu}}
-.bs-retry:active{opacity:.7}
-.bs-results-h{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px}
-
-/* v1.5.0 — Hamburger button */
-.hmb{flex-shrink:0;width:44px;height:44px;border:1px solid ${G.bdr};border-radius:10px;background:${G.card};color:${G.txt};font-size:22px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:background .15s}
-.hmb:active{background:${G.card2};opacity:.8}
-
-/* v1.5.0 — Hamburger menu drawer (bottom sheet style) */
-.menu-ovr{align-items:flex-end}
-.menu-pn{width:100%;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .22s ease}
-.menu-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
-.menu-row{width:100%;display:flex;align-items:center;gap:14px;padding:14px 14px;background:${G.bg};border:1px solid ${G.bdr};border-radius:12px;cursor:pointer;font-family:'Syne',sans-serif;text-align:left;margin-bottom:8px;transition:border-color .15s,background .15s}
-.menu-row:hover,.menu-row:active{border-color:${G.blu};background:rgba(0,212,255,.04)}
-.menu-ico{font-size:24px;flex-shrink:0;width:32px;text-align:center;line-height:1}
-.menu-body{flex:1;min-width:0}
-.menu-title{font-size:14px;font-weight:700;color:${G.txt};margin-bottom:2px}
-.menu-desc{font-size:11px;color:${G.dim};line-height:1.4}
-.menu-badge{flex-shrink:0;font-size:11px;font-weight:700;color:${G.blu};padding:3px 8px;border-radius:10px;background:rgba(0,212,255,.12);font-family:'Orbitron',monospace;letter-spacing:.04em}
-.menu-arrow{flex-shrink:0;font-size:20px;color:${G.dim};margin-left:4px}
-
-/* v1.5.0 — Achievements grid */
-.ach-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
-.ach-sub{font-size:12px;color:${G.dim};margin-bottom:14px;padding:10px 12px;background:${G.bg};border:1px solid ${G.bdr};border-radius:10px;text-align:center;font-family:'Orbitron',monospace;letter-spacing:.04em}
-.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ach-card{padding:14px 12px;border:1px solid ${G.bdr};border-radius:12px;background:${G.bg};opacity:.55;transition:opacity .2s,border-color .2s}
-.ach-card.ach-on{opacity:1;border-color:${G.grn};background:rgba(57,255,110,.05)}
-.ach-card.ach-rare.ach-on{border-color:${G.gld};background:rgba(255,209,102,.06);box-shadow:0 0 0 1px rgba(255,209,102,.2)}
-.ach-ico{font-size:32px;text-align:center;margin-bottom:6px;filter:grayscale(.4)}
-.ach-card.ach-on .ach-ico{filter:none}
-.ach-title{font-size:12px;font-weight:700;color:${G.txt};text-align:center;margin-bottom:3px;line-height:1.25}
-.ach-desc{font-size:10px;color:${G.dim};text-align:center;line-height:1.35;min-height:28px}
-.ach-bar{height:4px;background:${G.bdr};border-radius:2px;overflow:hidden;margin:8px 0 4px}
-.ach-bar-fill{height:100%;background:${G.blu};transition:width .3s ease}
-.ach-progress{font-size:10px;font-weight:600;color:${G.dim};text-align:center;font-family:'Orbitron',monospace;letter-spacing:.04em}
-
-/* v1.5.0 — Goals manager + Home card */
-.goals-h{font-size:11px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin:8px 0 8px}
-.goals-empty{padding:24px 16px;text-align:center;color:${G.dim}}
-.goals-empty-t{font-size:13px;font-weight:700;color:${G.txt};margin-bottom:4px}
-.goals-empty-h{font-size:11px;color:${G.dim}}
-.goal-card{background:${G.bg};border:1px solid ${G.bdr};border-radius:11px;padding:11px 12px;margin-bottom:8px}
-.goal-card-done{opacity:.6;background:rgba(57,255,110,.04);border-color:rgba(57,255,110,.2)}
-.goal-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.goal-card-done .goal-row{margin-bottom:0}
-.goal-ico{font-size:22px;flex-shrink:0;width:28px;text-align:center;line-height:1}
-.goal-body{flex:1;min-width:0}
-.goal-title{font-size:13px;font-weight:600;color:${G.txt};line-height:1.3}
-.goal-meta{font-size:10px;color:${G.dim};margin-top:2px}
-.goal-del{flex-shrink:0;width:28px;height:28px;border:1px solid ${G.bdr};border-radius:7px;background:transparent;color:${G.dim};font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.goal-del:hover,.goal-del:active{color:${G.red};border-color:rgba(255,77,109,.4)}
-.goal-bar{height:5px;background:${G.bdr};border-radius:3px;overflow:hidden}
-.goal-bar-fill{height:100%;background:linear-gradient(90deg,${G.blu},${G.grn});transition:width .3s ease}
-.goal-tpl{display:flex;align-items:center;gap:11px;width:100%;padding:12px 14px;border:1px solid ${G.bdr};border-radius:10px;background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s}
-.goal-tpl:hover,.goal-tpl:active{border-color:${G.blu};background:rgba(0,212,255,.05)}
-/* Home card */
-.goal-home{padding:12px 14px;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:14px;cursor:pointer;transition:border-color .15s}
-.goal-home:hover,.goal-home:active{border-color:${G.blu}}
-.goal-home-h{font-size:11px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
-.goal-home-empty{display:flex;align-items:center;gap:11px;padding:14px;background:${G.card};border:1px dashed ${G.bdr};border-radius:14px;margin-bottom:14px;cursor:pointer;transition:border-color .15s}
-.goal-home-empty:hover,.goal-home-empty:active{border-color:${G.blu};border-style:solid}
-.goal-home-empty .goal-title{font-size:13px}
-.goal-home-empty .goal-meta{font-size:11px}
-.goal-mini{margin-bottom:8px}
-.goal-mini:last-child{margin-bottom:0}
-.goal-mini-row{display:flex;align-items:center;gap:9px;margin-bottom:5px}
-.goal-mini-title{font-size:12px;font-weight:600;color:${G.txt};line-height:1.3}
-.goal-mini-meta{font-size:10px;color:${G.dim};font-family:'Orbitron',monospace;letter-spacing:.04em}
-
-/* v1.5.0 — Year-in-Review */
-.wr-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
-.wr-years{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.wr-years-lbl{font-size:10px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
-.wr-year{padding:6px 12px;border:1px solid ${G.bdr};border-radius:16px;background:${G.card};color:${G.dim};font-family:'Orbitron',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
-.wr-year.on{background:${G.blu};color:#000;border-color:${G.blu}}
-.wr-sub{font-size:12px;color:${G.dim};text-align:center;margin-bottom:14px}
-.wr-hero{padding:24px 16px;border-radius:16px;background:linear-gradient(135deg,rgba(0,212,255,.18),rgba(167,139,250,.18));border:1px solid rgba(0,212,255,.3);text-align:center;margin-bottom:12px}
-.wr-hero-num{font-family:'Orbitron',monospace;font-size:56px;font-weight:900;color:${G.blu};line-height:1;letter-spacing:-.02em;text-shadow:0 0 28px rgba(0,212,255,.4)}
-.wr-hero-lbl{font-size:14px;color:${G.txt};margin-top:8px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
-.wr-hero-sub{font-size:11px;color:${G.dim};margin-top:4px}
-.wr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.wr-stat{padding:14px 12px;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;text-align:center}
-.wr-stat-num{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:${G.txt};line-height:1.1}
-.wr-stat-lbl{font-size:10px;color:${G.dim};margin-top:4px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;line-height:1.3}
-.wr-stat-sub{font-size:10px;color:${G.dim};margin-top:4px;font-family:'Orbitron',monospace;letter-spacing:.04em}
-.wr-card{padding:14px;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:12px}
-.wr-card-h{font-size:12px;font-weight:700;color:${G.pur};letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
-.wr-row{display:flex;align-items:center;gap:11px;padding:8px 0}
-.wr-row:not(:last-child){border-bottom:1px solid ${G.bdr}}
-.wr-rank{flex-shrink:0;width:24px;font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:${G.blu};letter-spacing:-.02em}
-.wr-cov{width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;background:${G.bg}}
-.wr-cov0{width:42px;height:42px;border-radius:8px;background:${G.bg};display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:${G.blu};flex-shrink:0}
-.wr-row-body{flex:1;min-width:0}
-.wr-row-title{font-size:13px;font-weight:600;color:${G.txt};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wr-row-meta{font-size:11px;color:${G.dim};margin-top:2px}
-.wr-genre-name{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:${G.gld};text-align:center;letter-spacing:-.02em}
-.wr-genre-meta{font-size:11px;color:${G.dim};text-align:center;margin-top:4px}
-.wr-share-hint{font-size:11px;color:${G.dim};text-align:center;margin-top:18px;padding:10px;border:1px dashed ${G.bdr};border-radius:10px}
-`;
+// v1.6.0 — extracted modules. App.jsx is now a thin orchestrator + components shell.
+import {
+  APP_VER, RAWG_KEY,
+  LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_EAN_CACHE, LS_GOALS,
+  G, GENRES_PL, GENRES_EN, RMAP, STORES, PLATFORMS, CURRENCIES, EF,
+} from './constants.js';
+import { CSS } from './styles.js';
+import { t, getSM } from './i18n.js';
+import { uid, mkAbbr, daysUntil, dayKey, weekStart } from './lib/util.js';
+import { fmtDate, fmtShort, pln, gamesWord, fmtCph, fmtHours } from './lib/format.js';
+import {
+  lsRead, lsWrite,
+  budgetRead, budgetWrite, timerRead, timerWrite,
+  isOnboarded, setOnboarded,
+  getLang, getCurrency, getCurSymbol, getDefaultCurrency,
+  exportData, importData, importMerge, importReplace, isValidGameShape,
+  lastSeenAchRead, lastSeenAchWrite,
+  menuSeenRead, menuSeenUpdate,
+} from './lib/storage.js';
+import { registerSW, requestNotifPerm, checkReleases, shareText } from './lib/platform.js';
+import { rawgSearch } from './lib/rawg.js';
+import { eanCacheRead, eanCacheWrite, cleanProductName, eanLookup } from './lib/barcode.js';
+import { collectSessions, computeStreak, computeLongestStreak } from './lib/sessions.js';
+import { ACHIEVEMENTS, computeAchievements, unlockedAchievementIds, getAchievementById } from './lib/achievements.js';
+import { goalsRead, goalsWrite, monthBounds, daysLeftInMonth, GOAL_TYPES, GOAL_TEMPLATES, goalCurrent } from './lib/goals.js';
+import { getYearsWithData, computeYearReview } from './lib/wrapped.js';
+import { makeDemoGames, hasDemoGames, removeDemoGames } from './lib/demo.js';
+import { buildRecommendations, recsCacheStats, recsCacheClear } from './lib/recommend.js';
+import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const CTip = ({active,payload,label}) => {
@@ -1291,63 +51,128 @@ function ReleaseBadge({releaseDate,lang}){
   return<span className='rbdg-upcoming'>📅 {fmtShort(releaseDate,lang)}</span>;
 }
 
-function Onboarding({onAddFirst,onSkip,onCurrencyPick,lang}){
+function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
   const features=[
     {ico:'🎮',tk:'obF1Title',dk:'obF1Desc'},{ico:'📅',tk:'obF2Title',dk:'obF2Desc'},
     {ico:'💰',tk:'obF3Title',dk:'obF3Desc'},{ico:'📊',tk:'obF4Title',dk:'obF4Desc'},
   ];
-  // Two-step flow: 1=welcome+features, 2=currency picker.
-  // Per spec #4: default highlighted button derived from navigator.language at first render.
+  // v1.10.0 — Flipped onboarding flow: demo loads first, features animate in background,
+  // currency is a 1-tap confirmation derived from navigator.language. Three steps:
+  //   1 = welcome (single big CTA, hooks attention)
+  //   2 = features carousel (auto-advance ~1.5s/card, skippable, demo loads in bg on entry)
+  //   3 = currency confirm (preselected, 1-tap dismiss; secondary "change" link expands picker)
   const [step,setStep]=useState(1);
+  // Auto-advancing carousel index for step 2 (0..features.length-1, then +1 = "done").
+  const [carIdx,setCarIdx]=useState(0);
+  // Toggle: when user taps "change →" on step 3, expand the full grid picker.
+  const [expandedPicker,setExpandedPicker]=useState(false);
+  // Detected currency from navigator.language (already uses navigator.language internally).
+  // Shows as preselected in confirm step; user can override via expanded picker.
   const [pickedCur,setPickedCur]=useState(()=>{
     try { const s=localStorage.getItem(LS_CURRENCY); if(s && CURRENCIES[s]) return s; } catch{}
     return getDefaultCurrency();
   });
-  // Persist + propagate immediately when user taps a currency tile
   function selectCur(code){
     setPickedCur(code);
     if(typeof onCurrencyPick==='function') onCurrencyPick(code);
   }
 
+  // Step 1 → Step 2 transition: load demo silently in the background. By the time the
+  // user finishes the carousel (~6s) or skips it, demo data is already in localStorage and
+  // games[] is populated. The currency confirm step then just persists the locale-derived
+  // pick and exits to the populated Home — net latency: zero.
+  function startCarousel(){
+    if(typeof onLoadDemo==='function') onLoadDemo();
+    setStep(2);
+  }
+
+  // Auto-advance carousel: 1500ms per card, then advance to step 3. Cleanup timer on
+  // unmount or step change — important because skip/back would leave a stray timeout.
+  useEffect(()=>{
+    if(step!==2) return;
+    if(carIdx >= features.length){ setStep(3); return; }
+    const tm=setTimeout(()=>setCarIdx(i=>i+1), 1500);
+    return ()=>clearTimeout(tm);
+  },[step,carIdx,features.length]);
+
   if(step===1){
     return(
       <div className='onboard'>
         <div className='ob-logo'>V</div>
-        <div className='ob-title'>{t(lang,'obTitle')}</div>
-        <div className='ob-sub'>{t(lang,'obSub')}</div>
-        <div className='ob-features'>
-          {features.map(f=>(
-            <div key={f.tk} className='ob-feat'>
-              <span className='ob-feat-ico'>{f.ico}</span>
-              <div><div className='ob-feat-title'>{t(lang,f.tk)}</div><div className='ob-feat-desc'>{t(lang,f.dk)}</div></div>
-            </div>
-          ))}
-        </div>
-        <button type='button' className='ob-start' onClick={()=>setStep(2)}>{t(lang,'obContinue')}</button>
-        <button type='button' onClick={onSkip} style={{marginTop:10,padding:'10px',background:'transparent',border:'none',color:'#8B93A7',fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obSkip')}</button>
+        <div className='ob-title'>{t(lang,'obWelcomeTitle')}</div>
+        <div className='ob-sub'>{t(lang,'obWelcomeSub')}</div>
+        <button type='button' className='ob-start' onClick={startCarousel}>{t(lang,'obWelcomeStart')}</button>
       </div>
     );
   }
 
-  // step 2: currency picker
+  if(step===2){
+    // Features carousel — single card visible at a time, dot indicators below, skip link top-right.
+    const f = features[Math.min(carIdx, features.length-1)];
+    return(
+      <div className='onboard ob-carousel'>
+        <button type='button' className='ob-carousel-skip' onClick={()=>setStep(3)}>{t(lang,'obCarouselSkip')}</button>
+        <div className='ob-carousel-card' key={carIdx}>
+          <div className='ob-carousel-ico'>{f.ico}</div>
+          <div className='ob-carousel-title'>{t(lang,f.tk)}</div>
+          <div className='ob-carousel-desc'>{t(lang,f.dk)}</div>
+        </div>
+        <div className='ob-carousel-dots'>
+          {features.map((_,i)=>(
+            <span key={i} className={'ob-carousel-dot'+(i===carIdx?' on':'')}/>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Step 3: 1-tap currency confirm. The expanded picker is hidden behind "change →"
+  // so the default path is a single tap.
+  // Escape hatch: tapping "Zacznę od pustej kolekcji" clears the demo data that loaded
+  // in the background during step 1→2 — gives users who explicitly don't want demo a way
+  // out, at the cost of a slightly less prominent placement (below the change-currency link).
+  const def = CURRENCIES[pickedCur] || CURRENCIES.PLN;
+  const curName = def.name[lang] || def.name.en;
+  if(!expandedPicker){
+    return(
+      <div className='onboard'>
+        <div className='ob-logo' style={{fontSize:36}}>{def.symbol}</div>
+        <div className='ob-title'>{t(lang,'obCurConfirmTitle')}</div>
+        <div className='ob-sub'>{t(lang,'obCurConfirmSub',{curName,curCode:pickedCur})}</div>
+        <button type='button' className='ob-start' onClick={()=>{selectCur(pickedCur);onSkip();}}>{t(lang,'obCurConfirmOk')}</button>
+        <button type='button' onClick={()=>setExpandedPicker(true)} style={{marginTop:10,padding:'10px',background:'transparent',border:'none',color:'#8B93A7',fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obCurConfirmChange')}</button>
+        <button type='button' onClick={()=>{
+          // User explicitly opts out of demo. Caller's onSkip handler doesn't know about
+          // demo — we need to tell App to clear demo games. Done inline by re-using
+          // onLoadDemo's state with empty input (semantic abuse, but practical):
+          // we set onCurrencyPick to picked then call onSkip with an "empty" hint.
+          // Simpler approach: directly call window.__ps5v_clearDemo if exposed by App,
+          // else just call onSkip — user will see demo and can clear via Settings.
+          if(typeof window.__ps5v_clearDemo === 'function') window.__ps5v_clearDemo();
+          selectCur(pickedCur);
+          onSkip();
+        }} style={{marginTop:6,padding:'8px',background:'transparent',border:'none',color:'#6B7388',fontFamily:"'Syne',sans-serif",fontSize:11,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obDemoSkip')}</button>
+      </div>
+    );
+  }
+  // Expanded picker (legacy step 2 from v1.9 — same component, reached only if user taps "change →")
   return(
     <div className='onboard'>
       <div className='ob-logo' style={{fontSize:36}}>💰</div>
       <div className='ob-title'>{t(lang,'obCurrencyTitle')}</div>
       <div className='ob-sub'>{t(lang,'obCurrencySub')}</div>
       <div className='cur-grid'>
-        {Object.values(CURRENCIES).map(def=>(
-          <button key={def.code} type='button'
-            className={'cur-btn'+(pickedCur===def.code?' on':'')}
-            onClick={()=>selectCur(def.code)}>
-            <span className='cur-btn-sym'>{def.symbol}</span>
-            <span className='cur-btn-code'>{def.code}</span>
-            <span className='cur-btn-name'>{def.name[lang]||def.name.en}</span>
+        {Object.values(CURRENCIES).map(d=>(
+          <button key={d.code} type='button'
+            className={'cur-btn'+(pickedCur===d.code?' on':'')}
+            onClick={()=>selectCur(d.code)}>
+            <span className='cur-btn-sym'>{d.symbol}</span>
+            <span className='cur-btn-code'>{d.code}</span>
+            <span className='cur-btn-name'>{d.name[lang]||d.name.en}</span>
           </button>
         ))}
       </div>
-      <button type='button' className='ob-start' onClick={()=>{selectCur(pickedCur);onAddFirst();}}>{t(lang,'obStart')}</button>
-      <button type='button' onClick={()=>{selectCur(pickedCur);onSkip();}} style={{marginTop:10,padding:'10px',background:'transparent',border:'none',color:'#8B93A7',fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obSkip')}</button>
+      <button type='button' className='ob-start' onClick={()=>{selectCur(pickedCur);onSkip();}}>{t(lang,'obContinue')}</button>
     </div>
   );
 }
@@ -1370,6 +195,29 @@ function Confirm({title,body,onYes,onNo,lang}){
           <button type='button' className='confirm-yes' onClick={onYes}>{t(lang||'pl','delete')}</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// v1.7.0 — toast-style banner that surfaces freshly-unlocked achievements.
+// Renders at most ONE achievement at a time (the first newly-unlocked, by definition order
+// in ACHIEVEMENTS array). If multiple unlocked simultaneously, queue head shows + counter.
+// Tap → opens Achievements overlay. Auto-dismisses after 6s. Rare-tier gets gold accent.
+//
+// Important: we deliberately don't show the banner on first load after install/update —
+// the App-level useEffect handles the silent migration (sets lastSeenAch = current set).
+// This banner only fires for genuine NEW unlocks during the session.
+function AchievementBanner({ ach, queueLen, onTap, onDismiss, lang }){
+  if(!ach) return null;
+  const title = ach.title?.[lang] || ach.title?.pl || ach.id;
+  return (
+    <div className={'ach-banner'+(ach.rare?' rare':'')} onClick={onTap}>
+      <div className='ach-banner-ico'>{ach.ico||'🏆'}</div>
+      <div className='ach-banner-body'>
+        <div className='ach-banner-lbl'>{t(lang,'achNewUnlock')}</div>
+        <div className='ach-banner-ttl'>{title}{queueLen>1 && <span className='ach-banner-cnt'> +{queueLen-1}</span>}</div>
+      </div>
+      <button type='button' className='ach-banner-x' onClick={e=>{e.stopPropagation();onDismiss();}} aria-label={t(lang,'cancel')}>✕</button>
     </div>
   );
 }
@@ -1699,7 +547,10 @@ function RawgSearch({onSelect,lang}){
 }
 
 function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
-  const isEdit=!!game;
+  // v1.9.0: isEdit checks game.id specifically (not just truthy) so that pre-fill
+  // objects from Recommendations (which carry title/cover/rawgId but no id) are
+  // treated as NEW games with prefilled fields, not edits of nonexistent games.
+  const isEdit=!!(game && game.id);
   const [f,setF]=useState(()=>game?{...EF,...game}:{...EF});
   const [confirmDel,setConfirmDel]=useState(false);
   const [shake,setShake]=useState(false);
@@ -1722,6 +573,7 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
   });
   // RAWG/scanner pick: prefill title/year/genre/cover/release date AND target hours
   // (only if currently empty — never overwrite a user-typed target).
+  // v1.9.0: also stash the RAWG game id as `rawgId` for later use as a Recommendations seed.
   const fill=item=>setF(p=>{
     const next={
       ...p,
@@ -1731,6 +583,7 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
       genre:item.genre||p.genre,
       cover:item.cover,
       releaseDate:item.releaseDate||p.releaseDate,
+      rawgId:item.id || p.rawgId || null,
     };
     const pt=+item.playtime||0;
     const currentTarget=+p.targetHours||0;
@@ -1871,8 +724,6 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
   );
 }
 
-
-
 function SessionTimer({game, onSave, lang}) {
   // Timer state shape in localStorage: {gameId, start, pausedAt?, totalPause?}
   // - start: Unix ms when session began
@@ -1986,7 +837,7 @@ function SessionTimer({game, onSave, lang}) {
   );
 }
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen,onRecOpen}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -2126,6 +977,17 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
           )}
         </div>
       )}
+      {/* v1.9.0 — Recommendations CTA. Always renders; the overlay handles its own
+          empty/loading states. Tap → opens Recommendations overlay (if rawg-id seeds
+          exist, fetches and shows; otherwise empty CTA pointing at RAWG search). */}
+      <div className='rec-home-card' onClick={onRecOpen}>
+        <div className='rec-home-ico'>✨</div>
+        <div className='rec-home-body'>
+          <div className='rec-home-title'>{t(lang,'recHomeCardTitle')}</div>
+          <div className='rec-home-sub'>{t(lang,'recHomeCardSub')}</div>
+        </div>
+        <span className='rec-home-arrow'>›</span>
+      </div>
     </div>
   );
 }
@@ -2233,359 +1095,6 @@ function InsightsTab({insights,games,lang}){
 
 // F07 — Time tracking helpers
 // Collect all sessions from all games into flat array, normalized
-function collectSessions(games){
-  const out=[];
-  games.forEach(g=>{
-    (g.sessions||[]).forEach(s=>{
-      out.push({
-        gameId: g.id,
-        gameTitle: g.title,
-        gameAbbr: g.abbr,
-        gameCover: g.cover,
-        startedAt: s.startedAt,
-        endedAt: s.endedAt,
-        hours: s.hours,
-        // Use startedAt date as the "session date" (YYYY-MM-DD in LOCAL time).
-        // Critical for heatmap/streak correctness — see dayKey() comment.
-        dateKey: dayKey(s.startedAt),
-      });
-    });
-  });
-  return out.sort((a,b)=>b.startedAt-a.startedAt);  // newest first
-}
-// Convert a Date to a YYYY-MM-DD string in LOCAL timezone.
-// Must NOT use toISOString — that converts to UTC and breaks aggregation
-// for any non-UTC user (e.g. Polish player at 00:30 local = previous day in UTC).
-function dayKey(d){
-  const x=new Date(d);
-  const y=x.getFullYear();
-  const m=String(x.getMonth()+1).padStart(2,'0');
-  const day=String(x.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-// Monday of week containing date (ISO week)
-function weekStart(d){
-  const x=new Date(d); x.setHours(0,0,0,0);
-  const day=x.getDay(); // 0=Sun...6=Sat
-  const diff=day===0?-6:(1-day);  // Mon = -1, Sun = -6
-  x.setDate(x.getDate()+diff);
-  return x;
-}
-// Compute current streak: consecutive days ending today (or yesterday if no session today)
-function computeStreak(sessionsByDay){
-  if(!sessionsByDay.size)return 0;
-  let streak=0;
-  const today=new Date(); today.setHours(0,0,0,0);
-  let cursor=new Date(today);
-  // Allow streak to continue if today has no session but yesterday does
-  if(!sessionsByDay.has(dayKey(cursor))){
-    cursor.setDate(cursor.getDate()-1);
-    if(!sessionsByDay.has(dayKey(cursor)))return 0;
-  }
-  while(sessionsByDay.has(dayKey(cursor))){
-    streak++;
-    cursor.setDate(cursor.getDate()-1);
-  }
-  return streak;
-}
-// Compute longest streak ever
-function computeLongestStreak(sessionsByDay){
-  if(!sessionsByDay.size)return 0;
-  const days=[...sessionsByDay.keys()].sort();
-  let longest=1, current=1;
-  for(let i=1;i<days.length;i++){
-    const prev=new Date(days[i-1]); prev.setDate(prev.getDate()+1);
-    if(dayKey(prev)===days[i]){ current++; if(current>longest)longest=current; }
-    else current=1;
-  }
-  return longest;
-}
-
-// ─── v1.5.0 Achievements ─────────────────────────────────────────────────────
-// Pure derivation from games[] + sessionsByDay. No persistence needed — recomputed
-// fresh on every render. Each entry yields {progress, threshold, unlocked, pct}.
-// Multi-tier achievements (Collector I/II/III) are separate entries — keeps logic flat
-// and lets us show all tiers including locked ones in the grid.
-const ACHIEVEMENTS = [
-  // Collector tiers
-  { id:'collector_1',  ico:'🎮', tier:1, group:'collector',
-    title:{pl:'Pierwsza krew',           en:'First Blood'},
-    desc :{pl:'Dodaj pierwszą grę',      en:'Add your first game'},
-    threshold:1,    measure:({games})=>games.length },
-  { id:'collector_2',  ico:'🎮', tier:2, group:'collector',
-    title:{pl:'Kolekcjoner I',           en:'Collector I'},
-    desc :{pl:'10 gier w kolekcji',      en:'10 games in collection'},
-    threshold:10,   measure:({games})=>games.length },
-  { id:'collector_3',  ico:'🎮', tier:3, group:'collector',
-    title:{pl:'Kolekcjoner II',          en:'Collector II'},
-    desc :{pl:'25 gier w kolekcji',      en:'25 games in collection'},
-    threshold:25,   measure:({games})=>games.length },
-  { id:'collector_4',  ico:'🎮', tier:4, group:'collector', rare:true,
-    title:{pl:'Kolekcjoner III',         en:'Collector III'},
-    desc :{pl:'50 gier w kolekcji',      en:'50 games in collection'},
-    threshold:50,   measure:({games})=>games.length },
-  { id:'collector_5',  ico:'💎', tier:5, group:'collector', rare:true,
-    title:{pl:'Hoarder',                 en:'Hoarder'},
-    desc :{pl:'100 gier w kolekcji',     en:'100 games in collection'},
-    threshold:100,  measure:({games})=>games.length },
-
-  // Completionist tiers
-  { id:'finisher_1',   ico:'✅',
-    title:{pl:'Finiszer',                en:'Finisher'},
-    desc :{pl:'Ukończ pierwszą grę',     en:'Complete your first game'},
-    threshold:1,    measure:({games})=>games.filter(g=>g.status==='ukonczone').length },
-  { id:'finisher_2',   ico:'✅',
-    title:{pl:'Seryjny finiszer',        en:'Serial Finisher'},
-    desc :{pl:'Ukończ 10 gier',          en:'Complete 10 games'},
-    threshold:10,   measure:({games})=>games.filter(g=>g.status==='ukonczone').length },
-  { id:'finisher_3',   ico:'🏁', rare:true,
-    title:{pl:'Maraton',                 en:'Marathon'},
-    desc :{pl:'Ukończ 25 gier',          en:'Complete 25 games'},
-    threshold:25,   measure:({games})=>games.filter(g=>g.status==='ukonczone').length },
-
-  // Trophy hunting
-  { id:'trophy_1',     ico:'🏆',
-    title:{pl:'Łowca trofeów',           en:'Trophy Hunter'},
-    desc :{pl:'Pierwsza platyna',        en:'First platinum'},
-    threshold:1,    measure:({games})=>games.filter(g=>g.platinum).length },
-  { id:'trophy_2',     ico:'🏆',
-    title:{pl:'Łowca trofeów II',        en:'Trophy Hunter II'},
-    desc :{pl:'5 platyn',                en:'5 platinums'},
-    threshold:5,    measure:({games})=>games.filter(g=>g.platinum).length },
-  { id:'trophy_3',     ico:'👑', rare:true,
-    title:{pl:'Platynowy król',          en:'Platinum King'},
-    desc :{pl:'10 platyn',               en:'10 platinums'},
-    threshold:10,   measure:({games})=>games.filter(g=>g.platinum).length },
-
-  // Hours
-  { id:'marathoner',   ico:'⏱',
-    title:{pl:'Maratończyk',             en:'Marathoner'},
-    desc :{pl:'100h w jednej grze',      en:'100h on a single game'},
-    threshold:100,  measure:({games})=>Math.floor(Math.max(0,...games.map(g=>+g.hours||0))) },
-  { id:'sprinter',     ico:'💨',
-    title:{pl:'Sprinter',                en:'Sprinter'},
-    desc :{pl:'Ukończ grę w ≤10h',       en:'Complete a game in ≤10h'},
-    threshold:1,
-    measure:({games})=>games.some(g=>g.status==='ukonczone' && +g.hours>0 && +g.hours<=10)?1:0 },
-
-  // Critic
-  { id:'critic_1',     ico:'⭐',
-    title:{pl:'Krytyk',                  en:'Critic'},
-    desc :{pl:'Oceń 10 gier',            en:'Rate 10 games'},
-    threshold:10,   measure:({games})=>games.filter(g=>g.rating!=null && +g.rating>0).length },
-  { id:'critic_2',     ico:'⭐',
-    title:{pl:'Krytyk II',               en:'Critic II'},
-    desc :{pl:'Oceń 25 gier',            en:'Rate 25 games'},
-    threshold:25,   measure:({games})=>games.filter(g=>g.rating!=null && +g.rating>0).length },
-
-  // Streaks (from sessionsByDay)
-  { id:'streak_7',     ico:'🔥',
-    title:{pl:'Rozpędzony',              en:'On Fire'},
-    desc :{pl:'7-dniowa passa grania',   en:'7-day play streak'},
-    threshold:7,    measure:({longestStreak})=>longestStreak },
-  { id:'streak_30',    ico:'🔥', rare:true,
-    title:{pl:'Niezniszczalny',          en:'Unstoppable'},
-    desc :{pl:'30-dniowa passa grania',  en:'30-day play streak'},
-    threshold:30,   measure:({longestStreak})=>longestStreak },
-
-  // Variety
-  { id:'genre_hopper', ico:'🎨',
-    title:{pl:'Wszystkożerny',           en:'Genre Hopper'},
-    desc :{pl:'Gry w 5+ gatunkach',      en:'Games in 5+ genres'},
-    threshold:5,    measure:({games})=>new Set(games.map(g=>g.genre).filter(Boolean)).size },
-
-  // Money
-  { id:'reseller',     ico:'💰',
-    title:{pl:'Handlarz',                en:'Reseller'},
-    desc :{pl:'Sprzedaj 5 gier',         en:'Sell 5 games'},
-    threshold:5,    measure:({games})=>games.filter(g=>g.priceSold!=null && +g.priceSold>0).length },
-];
-
-// Computes per-achievement state. Returns array of { ...def, progress, unlocked, pct }.
-function computeAchievements(games, longestStreak){
-  return ACHIEVEMENTS.map(a=>{
-    const progress = Math.max(0, Math.floor(a.measure({games, longestStreak})));
-    const unlocked = progress >= a.threshold;
-    const pct = Math.min(100, Math.round((progress / a.threshold) * 100));
-    return { ...a, progress, unlocked, pct };
-  });
-}
-
-// ─── v1.5.0 Goals ────────────────────────────────────────────────────────────
-// Goals live in localStorage as { id, type, target, periodStart, periodEnd, doneAt }.
-// `periodStart` and `periodEnd` are ISO date strings (YYYY-MM-DD) bounding the active
-// month. Progress is recomputed live from games + sessions — never stored.
-function goalsRead(){ try{ return JSON.parse(localStorage.getItem(LS_GOALS)||'[]'); }catch{ return []; } }
-function goalsWrite(g){ try{ localStorage.setItem(LS_GOALS, JSON.stringify(g)); }catch{} }
-function monthBounds(d=new Date()){
-  const y=d.getFullYear(), m=d.getMonth();
-  const start=new Date(y,m,1); start.setHours(0,0,0,0);
-  const end=new Date(y,m+1,0); end.setHours(23,59,59,999);
-  return { start, end, startKey:dayKey(start), endKey:dayKey(end) };
-}
-function daysLeftInMonth(d=new Date()){
-  const { end } = monthBounds(d);
-  return Math.max(0, Math.ceil((end - d) / 86400000));
-}
-
-// Goal type catalog. Templates are picked from a UI list; once picked, a goal instance
-// captures `target` and the current month's bounds.
-const GOAL_TYPES = {
-  complete:  { ico:'✅', tk:'goalTplCompleteTitle' },
-  hours:     { ico:'⏱', tk:'goalTplHoursTitle' },
-  add:       { ico:'➕', tk:'goalTplAddTitle' },
-  platinum:  { ico:'🏆', tk:'goalTplPlatinumTitle' },
-};
-const GOAL_TEMPLATES = [
-  { type:'complete',  target:3 },
-  { type:'complete',  target:5 },
-  { type:'hours',     target:20 },
-  { type:'hours',     target:40 },
-  { type:'add',       target:3 },
-  { type:'platinum',  target:1 },
-];
-
-function goalCurrent(goal, games, sessions){
-  const start=new Date(goal.periodStart);
-  const end=new Date(goal.periodEnd);
-  switch(goal.type){
-    case 'complete': {
-      // Games whose status flipped to ukonczone during the goal period.
-      // We don't store status-change timestamps, so approximate via lastPlayed
-      // (or fallback to addedAt for very old data). Imperfect but useful.
-      return games.filter(g=>{
-        if(g.status!=='ukonczone') return false;
-        const ts = g.lastPlayed || g.addedAt;
-        if(!ts) return false;
-        const d=new Date(ts);
-        return d>=start && d<=end;
-      }).length;
-    }
-    case 'hours': {
-      return Math.round(sessions
-        .filter(s=>{const d=new Date(s.startedAt); return d>=start && d<=end;})
-        .reduce((sum,s)=>sum + (+s.hours||0), 0));
-    }
-    case 'add': {
-      return games.filter(g=>{
-        if(!g.addedAt) return false;
-        const d=new Date(g.addedAt);
-        return d>=start && d<=end;
-      }).length;
-    }
-    case 'platinum': {
-      // Same approximation as complete — use lastPlayed/addedAt as the platinum date proxy.
-      return games.filter(g=>{
-        if(!g.platinum) return false;
-        const ts = g.lastPlayed || g.addedAt;
-        if(!ts) return false;
-        const d=new Date(ts);
-        return d>=start && d<=end;
-      }).length;
-    }
-    default: return 0;
-  }
-}
-
-// ─── v1.5.0 Year-in-Review (Spotify Wrapped style) ───────────────────────────
-// Pure derivation of a year's worth of stats. Returns null if there's not enough data.
-// "Enough data" = at least 1 game added or 1 session in the year.
-function getYearsWithData(games){
-  const years=new Set();
-  games.forEach(g=>{
-    if(g.addedAt) years.add(+g.addedAt.slice(0,4));
-    (g.sessions||[]).forEach(s=>{
-      const ts=s.startedAt || s.endedAt;
-      if(ts) years.add(new Date(ts).getFullYear());
-    });
-  });
-  return [...years].filter(y=>y>=2000 && y<=2100).sort((a,b)=>b-a);
-}
-function computeYearReview(games, year){
-  const yStart=new Date(year, 0, 1); yStart.setHours(0,0,0,0);
-  const yEnd=new Date(year, 11, 31); yEnd.setHours(23,59,59,999);
-  const inYear = ts => { if(!ts) return false; const d=new Date(ts); return d>=yStart && d<=yEnd; };
-
-  // Sessions filtered to the year
-  const allSessions=[];
-  games.forEach(g=>{
-    (g.sessions||[]).forEach(s=>{
-      if(!inYear(s.startedAt)) return;
-      allSessions.push({ ...s, gameId:g.id, gameTitle:g.title, gameCover:g.cover, gameAbbr:g.abbr, gameGenre:g.genre });
-    });
-  });
-  if(!allSessions.length && !games.some(g=>inYear(g.addedAt))){
-    return null; // no data at all for this year
-  }
-
-  const totalHours = allSessions.reduce((s,x)=>s + (+x.hours||0), 0);
-  const gamesAdded = games.filter(g=>inYear(g.addedAt)).length;
-  // Completion proxy: status===ukonczone AND lastPlayed (or addedAt) in year
-  const gamesCompleted = games.filter(g=>g.status==='ukonczone' && inYear(g.lastPlayed || g.addedAt)).length;
-  const platinums = games.filter(g=>g.platinum && inYear(g.lastPlayed || g.addedAt)).length;
-
-  // Per-game hours in year
-  const hrsByGame=new Map();
-  allSessions.forEach(s=>{ hrsByGame.set(s.gameId, (hrsByGame.get(s.gameId)||0) + (+s.hours||0)); });
-  const topPlayed=[...hrsByGame.entries()]
-    .map(([gid,h])=>{const g=games.find(x=>x.id===gid); return g?{game:g, hours:h}:null;})
-    .filter(Boolean)
-    .sort((a,b)=>b.hours-a.hours)
-    .slice(0,3);
-
-  // Highest rated this year (games rated AND added or completed in year)
-  const ratedThisYear = games
-    .filter(g=>g.rating!=null && +g.rating>0 && (inYear(g.addedAt) || inYear(g.lastPlayed)))
-    .sort((a,b)=>(+b.rating||0)-(+a.rating||0));
-  const highestRated = ratedThisYear[0] || null;
-
-  // Genre hours
-  const hrsByGenre=new Map();
-  allSessions.forEach(s=>{ const g=s.gameGenre || '?'; hrsByGenre.set(g, (hrsByGenre.get(g)||0) + (+s.hours||0)); });
-  const topGenreEntry=[...hrsByGenre.entries()].filter(([k])=>k && k!=='?').sort((a,b)=>b[1]-a[1])[0];
-  const topGenre = topGenreEntry ? {
-    name: topGenreEntry[0],
-    hours: Math.round(topGenreEntry[1]),
-    gamesCount: new Set(allSessions.filter(s=>s.gameGenre===topGenreEntry[0]).map(s=>s.gameId)).size,
-  } : null;
-
-  // Money in year — use addedAt as proxy for "spent in year"
-  const totalSpent = games
-    .filter(g=>inYear(g.addedAt))
-    .reduce((s,g)=>s + (+g.priceBought||0) + (+g.extraSpend||0), 0);
-  const totalRecovered = games
-    .filter(g=>g.priceSold!=null && +g.priceSold>0 && inYear(g.lastPlayed || g.addedAt))
-    .reduce((s,g)=>s + (+g.priceSold||0), 0);
-
-  // Streak / active days inside the year
-  const sbd=new Map();
-  allSessions.forEach(s=>{ const k=dayKey(s.startedAt); if(!sbd.has(k)) sbd.set(k,[]); sbd.get(k).push(s); });
-  const activeDays = sbd.size;
-  const totalDaysInYear = ((year%4===0 && year%100!==0) || year%400===0) ? 366 : 365;
-  const longestStreak = computeLongestStreak(sbd);
-
-  // Longest single session
-  const longestSession = allSessions.reduce((m,s)=>Math.max(m, +s.hours||0), 0);
-
-  return {
-    year,
-    totalHours: Math.round(totalHours),
-    gamesAdded,
-    gamesCompleted,
-    platinums,
-    topPlayed,        // [{game, hours}]
-    highestRated,     // game or null
-    topGenre,         // { name, hours, gamesCount } or null
-    totalSpent,
-    totalRecovered,
-    activeDays,
-    totalDaysInYear,
-    longestStreak,
-    longestSession: Math.round(longestSession * 10) / 10,
-    sessionCount: allSessions.length,
-  };
-}
-
 // v1.2.0 — Import modal with dual-mode selection
 function ImportModal({onClose,onPickFile,mode,onPickMode,games,lang,pendingFile,onConfirmReplace}){
   // Three phases: mode selection -> file picker -> confirm (replace only)
@@ -3160,16 +1669,19 @@ function Finance({games,lang}){
 // (Wrapped, Achievements, Goals, Settings) — these used to either be a tab or a
 // modal. Centralizing them here freed a tab slot and gave each feature breathing
 // room behind a single entry point.
-function MenuOverlay({ onClose, onPick, lang, achStats, goalStats, currentYear }){
+function MenuOverlay({ onClose, onPick, lang, achStats, goalStats, currentYear, triggers }){
+  // v1.8.0: triggers={achievements, goals, wrapped, any} drive per-row red dots.
+  // Falls back to no-dots if not provided (defensive — older callsites still work).
+  const trig = triggers || { achievements:false, goals:false, wrapped:false };
   const items=[
     { key:'wrapped',      ico:'🎁', tk:'menuWrapped',     dk:'menuWrappedDesc',
-      badge: currentYear ? String(currentYear) : null },
+      badge: currentYear ? String(currentYear) : null, dot: trig.wrapped },
     { key:'achievements', ico:'🏆', tk:'menuAchievements',dk:'menuAchievementsDesc',
       vars:{ unlocked:achStats.unlocked, total:achStats.total },
-      badge: achStats.unlocked>0 ? `${achStats.unlocked}/${achStats.total}` : null },
+      badge: achStats.unlocked>0 ? `${achStats.unlocked}/${achStats.total}` : null, dot: trig.achievements },
     { key:'goals',        ico:'🎯', tk:'menuGoals',       dk:'menuGoalsDesc',
       vars:{ active:goalStats.active, done:goalStats.done },
-      badge: goalStats.active>0 ? String(goalStats.active) : null },
+      badge: goalStats.active>0 ? String(goalStats.active) : null, dot: trig.goals },
     { key:'settings',     ico:'⚙️', tk:'menuSettings',    dk:'menuSettingsDesc' },
   ];
   return (
@@ -3182,7 +1694,7 @@ function MenuOverlay({ onClose, onPick, lang, achStats, goalStats, currentYear }
         </div>
         {items.map(it=>(
           <button key={it.key} type='button' className='menu-row' onClick={()=>onPick(it.key)}>
-            <span className='menu-ico'>{it.ico}</span>
+            <span className='menu-ico'>{it.ico}{it.dot && <span className='menu-row-dot' aria-hidden='true'/>}</span>
             <div className='menu-body'>
               <div className='menu-title'>{t(lang, it.tk).replace(/^[^\s]+\s/, '')}</div>
               <div className='menu-desc'>{t(lang, it.dk, it.vars||{})}</div>
@@ -3424,13 +1936,35 @@ function GoalsCard({ goals, games, sessions, lang, onOpen }){
 // ─── v1.5.0 Year-in-Review (Spotify Wrapped style) ───────────────────────────
 // Big-numbers card layout. Year picker at top defaults to current year, falls
 // back to most recent year with data. If selected year has no data → empty state.
-function YearInReview({ games, lang, onClose }){
+function YearInReview({ games, lang, onClose, flash }){
   const years=getYearsWithData(games);
   const currentYear=new Date().getFullYear();
   const defaultYear = years.includes(currentYear) ? currentYear : (years[0] || currentYear);
   const [year,setYear]=useState(defaultYear);
   const review=computeYearReview(games, year);
   const sym=getCurSymbol();
+  // v1.7.0: native share sheet with clipboard fallback. Builds a short text recap
+  // that fits in a tweet/Slack message — title from i18n, body from review's headline numbers.
+  async function handleShare(){
+    if(!review) return;
+    const top = review.topPlayed[0]?.game?.title;
+    const lines = [
+      lang==='pl' ? `🎮 Mój ${year} w grach (PS5 Vault)` : `🎮 My ${year} in games (PS5 Vault)`,
+      lang==='pl' ? `${review.totalHours}h grania, ${review.gamesAdded} dodanych, ${review.gamesCompleted} ukończonych`
+                  : `${review.totalHours}h played, ${review.gamesAdded} added, ${review.gamesCompleted} completed`,
+    ];
+    if(top) lines.push(lang==='pl' ? `Najwięcej: ${top}` : `Most played: ${top}`);
+    const text = lines.join('\n');
+    const result = await shareText({
+      title: t(lang,'wrappedShareTitle',{year}),
+      text,
+      url: 'https://matiseekk-dot.github.io/Games/',
+    });
+    if(result==='shared')   { /* OS handled it — no toast needed */ }
+    else if(result==='copied')    { flash && flash(t(lang,'wrappedShareCopied')); }
+    else if(result==='cancelled') { /* user dismissed — silent */ }
+    else                          { flash && flash(t(lang,'wrappedShareFailed')); }
+  }
   return (
     <div className='bs-ovr'>
       <div className='bs-hdr'>
@@ -3543,8 +2077,137 @@ function YearInReview({ games, lang, onClose }){
             </div>
           </div>
 
-          <div className='wr-share-hint'>{t(lang,'wrappedShareHint')}</div>
+          <button type='button' className='wr-share-btn' onClick={handleShare}>
+            📤 {t(lang,'wrappedShare')}
+          </button>
         </>}
+      </div>
+    </div>
+  );
+}
+
+// v1.9.0 — Recommendations overlay.
+// Hybrid two-track UI ("Bo lubisz" / "Bo grałeś w") backed by lib/recommend.js.
+// Loading is async (fetch from RAWG with 30-day cache). Empty states are per-track
+// — if a user has rated games but never completed any, only the "Bo lubisz" track
+// has content; the "Bo grałeś w" tab shows a CTA telling them to mark a game completed.
+//
+// Tapping "+ Dodaj do kolekcji" on a recommendation opens the add-Modal pre-filled
+// with the title/cover/genre/year/rawgId/playtime so the user just picks a status
+// and saves. The pre-fill object has no `id`, so Modal's isEdit check correctly
+// treats it as a NEW game.
+function Recommendations({ games, lang, onClose, onAdd }){
+  const [tab,setTab]=useState('rated');  // 'rated' | 'completed'
+  const [data,setData]=useState(null);    // null while loading, then {topRated, completed, hasAnyData}
+  const [error,setError]=useState(false);
+
+  // Pre-check: does the user even have any rawg-id-bearing games to seed from?
+  // If not, skip the fetch entirely and show the bootstrap empty state.
+  const hasSeedableGames = games.some(g => g && g.rawgId);
+
+  useEffect(()=>{
+    if(!hasSeedableGames){ setData({ topRated:{recs:[],seeds:[]}, completed:{recs:[],seeds:[]}, hasAnyData:false }); return; }
+    let cancelled=false;
+    setError(false);
+    buildRecommendations(games)
+      .then(d => { if(!cancelled) setData(d); })
+      .catch(() => { if(!cancelled) setError(true); });
+    return () => { cancelled = true; };
+  },[hasSeedableGames]);// eslint-disable-line — only re-run if seed availability changes
+
+  const track = data ? (tab==='rated' ? data.topRated : data.completed) : null;
+
+  return (
+    <div className='bs-ovr'>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>✨ {t(lang,'recTitle')}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div className='rec-pn'>
+        {/* Intent picker tabs */}
+        <div className='rec-tabs'>
+          <button type='button' className={'rec-tab'+(tab==='rated'?' on':'')} onClick={()=>setTab('rated')}>
+            ❤️ {t(lang,'recTabRated')}
+          </button>
+          <button type='button' className={'rec-tab'+(tab==='completed'?' on':'')} onClick={()=>setTab('completed')}>
+            ✅ {t(lang,'recTabCompleted')}
+          </button>
+        </div>
+
+        {/* Bootstrap empty: no rawg-id games to seed from */}
+        {!hasSeedableGames && (
+          <div className='rec-empty'>
+            <div className='eic'>✨</div>
+            <div className='ett'>{t(lang,'recEmptyNoRawg')}</div>
+            <div className='ess'>{t(lang,'recEmptyNoRawgHint')}</div>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {hasSeedableGames && !data && !error && (
+          <div className='rec-loading'>
+            <div className='rec-spinner' aria-hidden='true'/>
+            <div>{t(lang,'recLoading')}</div>
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <div className='rec-empty'>
+            <div className='eic'>⚠️</div>
+            <div className='ett'>{t(lang,'recError')}</div>
+            <button type='button' className='rec-retry' onClick={()=>{ setError(false); setData(null); }}>{t(lang,'retry')}</button>
+          </div>
+        )}
+
+        {/* Per-track empty state */}
+        {data && track && track.recs.length===0 && (
+          <div className='rec-empty'>
+            <div className='eic'>{tab==='rated'?'❤️':'✅'}</div>
+            <div className='ett'>{tab==='rated'?t(lang,'recEmptyRated'):t(lang,'recEmptyCompleted')}</div>
+            <div className='ess'>{tab==='rated'?t(lang,'recEmptyRatedHint'):t(lang,'recEmptyCompletedHint')}</div>
+          </div>
+        )}
+
+        {/* Recommendations grid */}
+        {data && track && track.recs.length>0 && (
+          <>
+            <div className='rec-grid'>
+              {track.recs.map((rec,idx)=>{
+                // Build the "why recommended" line. Show the highest-rated reason first;
+                // if multiple seeds suggested this game, show the strongest one with a "+N" hint.
+                const reasons=[...rec.reasons].sort((a,b)=>(+b.rating||0)-(+a.rating||0));
+                const main=reasons[0];
+                const extras=reasons.length-1;
+                const reasonText = tab==='rated'
+                  ? t(lang,'recReason',{title:main.title, rating:main.rating ?? '?'})
+                  : t(lang,'recReasonCompleted',{title:main.title});
+                return (
+                  <div key={rec.id||idx} className='rec-card'>
+                    {rec.cover
+                      ? <div className='rec-cover' style={{backgroundImage:`url(${rec.cover})`}}/>
+                      : <div className='rec-cover0'>{rec.abbr||'??'}</div>}
+                    <div className='rec-body'>
+                      <div className='rec-title'>{rec.title}</div>
+                      <div className='rec-meta'>{[rec.genre, rec.year].filter(Boolean).join(' · ')}</div>
+                      <div className='rec-reason'>
+                        {reasonText}
+                        {extras>0 && <span className='rec-reason-more'> +{extras}</span>}
+                      </div>
+                      <button type='button' className='rec-add' onClick={()=>onAdd(rec)}>
+                        + {t(lang,'recAdd')}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* External link to explore more on RAWG */}
+            <a className='rec-explore' href='https://rawg.io' target='_blank' rel='noopener noreferrer'>
+              {t(lang,'recExploreMore')}
+            </a>
+          </>
+        )}
       </div>
     </div>
   );
@@ -3580,6 +2243,28 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='set-row' onClick={openImport}>
           <span className='set-row-ico'>⬇️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'importData')}</div><div className='set-row-desc'>{t(lang,'importDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
+        {hasDemoGames(games) && (
+          <div className='set-row' onClick={()=>{
+            const demoCount=games.filter(g=>g._demo).length;
+            if(window.confirm(t(lang,'demoClearConfirm',{n:demoCount}))){
+              setGames(removeDemoGames(games));
+              flash(t(lang,'demoCleared',{n:demoCount}));
+            }
+          }}>
+            <span className='set-row-ico'>🧹</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'demoClear')}</div><div className='set-row-desc'>{t(lang,'demoClearDesc',{n:games.filter(g=>g._demo).length})}</div></div><span className='set-row-arrow'>›</span>
+          </div>
+        )}
+        {/* v1.9.0 — Recommendations cache cleanup (only renders if cache has any entries) */}
+        {(()=>{const stats=recsCacheStats(); if(stats.entries===0) return null; return (
+          <div className='set-row' onClick={()=>{
+            if(window.confirm(t(lang,'recCacheClearConfirm',{n:stats.entries}))){
+              recsCacheClear();
+              flash(t(lang,'recCacheCleared'));
+            }
+          }}>
+            <span className='set-row-ico'>♻️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'recCacheClear')}</div><div className='set-row-desc'>{t(lang,'recCacheClearDesc',{n:stats.entries, kb:Math.round(stats.bytes/1024)})}</div></div><span className='set-row-arrow'>›</span>
+          </div>
+        );})()}
         {/* importRef input removed in v1.2.0 — replaced by ImportModal */}
       </div>
       <div className='set-section'>
@@ -3739,6 +2424,13 @@ export default function App(){
   // exclusion trivial (you can't have Wrapped and Achievements open at once).
   const [overlay,setOverlay]=useState(null); // 'menu' | 'wrapped' | 'achievements' | 'goals' | 'settings' | null
   const [goals,setGoals]=useState(()=>goalsRead());
+  // v1.7.0 — Queue of newly-unlocked achievement IDs not yet acknowledged by user.
+  // Render shows the first one as a banner; tap or dismiss pops the queue.
+  // Banner auto-dismisses after 6s (handled by useEffect below).
+  const [achQueue,setAchQueue]=useState([]);
+  // v1.8.0 — Hamburger badge trigger state. The full "seen" object lives in LS;
+  // we mirror it here so React re-renders when we mark sections as seen.
+  const [menuSeen,setMenuSeen]=useState(()=>menuSeenRead());
   // v1.2.0 — Import modal state
   const [importModal,setImportModal]=useState(null);  // null | {mode:null|'merge'|'replace', file:null|File}
   const openImport=()=>setImportModal({mode:null,file:null});
@@ -3751,6 +2443,43 @@ export default function App(){
 
   const setGames=useCallback(val=>{setGamesRaw(prev=>{const next=typeof val==='function'?val(prev):val;lsWrite(next);return next;});},[]);
   useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&Notification.permission==='granted')checkReleases(g,lang);});},[]);// eslint-disable-line
+
+  // v1.10.0 — Weekly summary push. Once-per-mount call; the helper internally throttles
+  // to ≥7 days between fires + checks permission + activity. We wait until games are
+  // hydrated (skip first render where games might still be empty during initial load)
+  // by gating on games.length > 0. Lang is also a dep so notification text matches the
+  // current UI language if user switches mid-week.
+  useEffect(()=>{
+    if(!games.length) return;
+    maybePushWeeklySummary(games, lang, t).catch(()=>{});
+  },[games.length, lang]);// eslint-disable-line — intentional: only re-run on count change, not on every games mutation
+
+  // v1.10.0 — URL-driven initial tab + SW message handler for weekly push clicks.
+  // SW's notificationclick may openWindow('/Games/?tab=st') OR postMessage to existing tab.
+  // We support both paths.
+  useEffect(()=>{
+    // Initial: read ?tab= from URL once on mount.
+    try {
+      const url = new URL(window.location.href);
+      const t0 = url.searchParams.get('tab');
+      if (t0 && ['home','col','upc','fin','st'].includes(t0)) {
+        setTab(t0);
+        // Strip the param so a manual reload doesn't keep forcing the same tab
+        url.searchParams.delete('tab');
+        window.history.replaceState({}, '', url.toString());
+      }
+    } catch {}
+    // Listen for SWITCH_TAB messages from SW (existing-tab focus path).
+    const handler = (event) => {
+      const d = event.data || {};
+      if (d.type === 'SWITCH_TAB' && ['home','col','upc','fin','st'].includes(d.tab)) {
+        setTab(d.tab);
+      }
+    };
+    if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', handler);
+    return () => { if ('serviceWorker' in navigator) navigator.serviceWorker.removeEventListener('message', handler); };
+  },[]);// eslint-disable-line — mount-only
+
   const flash=useCallback(msg=>{setToast(msg);setTimeout(()=>setToast(null),2200);},[]);
   // Register a global callback so top-level lsWrite/timerWrite can signal storage failures
   // (quota exceeded, storage disabled) and surface them as a toast — instead of silent loss.
@@ -3760,10 +2489,88 @@ export default function App(){
     };
     return ()=>{ delete window.__ps5v_storageError; };
   },[lang,flash]);
+
+  // v1.10.0 — Demo escape hatch for onboarding step 3. The Onboarding component loads
+  // demo games in the background during step 1→2; if the user explicitly opts out
+  // ("Zacznę od pustej kolekcji" link on currency confirm step), this hook clears them.
+  // Implemented as a global hook because Onboarding doesn't have a direct setGames ref.
+  useEffect(()=>{
+    window.__ps5v_clearDemo=()=>{
+      setGames(prev=>removeDemoGames(prev));
+    };
+    return ()=>{ delete window.__ps5v_clearDemo; };
+  },[setGames]);
+
+  // v1.7.0 — Achievement-unlock diff. Watches `games` and surfaces freshly-unlocked
+  // achievements as a banner. Two phases:
+  //   1. First-ever run (lastSeenAchRead returns null) → silent migration: persist
+  //      the current unlocked set as "already seen". This prevents 5+ banners stacking
+  //      up when a user upgrades from v1.6 with an existing collection that already
+  //      has things unlocked. They never asked for a banner, so we don't surprise them.
+  //   2. Steady state → diff current vs stored. New IDs append to achQueue.
+  // Updates to lastSeenAch always include the FULL current set so achievements that
+  // become re-locked (theoretically: e.g. user deletes the only platinum game) don't
+  // re-trigger when they later re-unlock.
+  useEffect(()=>{
+    // Recompute longestStreak from current games — it's an input to streak achievements.
+    const sbd=new Map();
+    games.forEach(g=>{
+      (g.sessions||[]).forEach(s=>{
+        const k=dayKey(s.startedAt);
+        if(!sbd.has(k))sbd.set(k,[]);
+        sbd.get(k).push(s);
+      });
+    });
+    const longest=computeLongestStreak(sbd);
+    const current=unlockedAchievementIds(games,longest);
+    const seen=lastSeenAchRead();
+    if(seen===null){
+      // First-ever run — silent sync, no banner. Includes upgrade from pre-v1.7.
+      lastSeenAchWrite(current);
+      return;
+    }
+    // Diff: anything in current that isn't in seen is newly unlocked.
+    const added=[...current].filter(id=>!seen.has(id));
+    if(added.length){
+      // Preserve the order in which achievements appear in the ACHIEVEMENTS array
+      // (Collector I before Collector II etc) — the unlockedAchievementIds Set
+      // doesn't promise insertion order across iterations, so re-sort by definition index.
+      const idx=new Map(ACHIEVEMENTS.map((a,i)=>[a.id,i]));
+      added.sort((a,b)=>(idx.get(a)??999)-(idx.get(b)??999));
+      setAchQueue(prev=>[...prev,...added]);
+      // Persist the full current set immediately. If the user dismisses the banner
+      // mid-session, the same achievements won't re-fire after a reload.
+      lastSeenAchWrite(current);
+    } else if(current.size!==seen.size){
+      // Set shrunk (rare — game deletion or status change). Keep storage in sync
+      // so that future re-unlocks fire the banner.
+      lastSeenAchWrite(current);
+    }
+  },[games]);
+
+  // Auto-dismiss the head of the achievement queue after 6 seconds. If user taps
+  // the banner during this window, the tap handler clears the queue immediately.
+  useEffect(()=>{
+    if(!achQueue.length)return;
+    const tm=setTimeout(()=>{
+      setAchQueue(prev=>prev.slice(1));
+    }, 6000);
+    return ()=>clearTimeout(tm);
+  },[achQueue]);
+
   const requestNotif=async()=>{const p=await requestNotifPerm();setNotifP(p);return p;};
 
   function handleSave(form){
-    const isEdit=!!form.id;const id=isEdit?form.id:uid();const game={...form,id,addedAt:form.addedAt||new Date().toISOString()};
+    const isEdit=!!form.id;const id=isEdit?form.id:uid();
+    // v1.7.0: stamp completedAt when modal saves with status='ukonczone' for the first time.
+    // For new games: only if user explicitly picked ukonczone in the picker.
+    // For edits: only if status changed FROM something else TO ukonczone (not on re-save).
+    const prevGame = isEdit ? games.find(g=>g.id===id) : null;
+    const wasCompleted = prevGame?.status === 'ukonczone';
+    const isCompleted  = form.status === 'ukonczone';
+    let completedAt = form.completedAt || null;
+    if(isCompleted && !wasCompleted && !completedAt){ completedAt = new Date().toISOString(); }
+    const game={...form,id,addedAt:form.addedAt||new Date().toISOString(),completedAt};
     // Fix zombie timer: if edit sets status away from 'gram' while this game's timer is active, clean it up
     if(isEdit && game.status!=='gram'){
       const t=timerRead(); if(t&&t.gameId===id) timerWrite(null);
@@ -3784,7 +2591,17 @@ export default function App(){
     if(status!=='gram'){
       const tmr=timerRead(); if(tmr&&tmr.gameId===id) timerWrite(null);
     }
-    setGames(prev=>prev.map(g=>g.id===id?{...g,status,...extra}:g));
+    setGames(prev=>prev.map(g=>{
+      if(g.id!==id) return g;
+      // v1.7.0: stamp completedAt on transition INTO 'ukonczone' (only if not already set —
+      // we don't reset it on toggle off→on, since a re-completion isn't really a new completion).
+      // This is what lets Goals/Wrapped count completions accurately by date.
+      const next={...g,status,...extra};
+      if(status==='ukonczone' && g.status!=='ukonczone' && !next.completedAt){
+        next.completedAt=new Date().toISOString();
+      }
+      return next;
+    }));
     if(extra.hours!==undefined)flash(lang==='pl'?`✓ Sesja zapisana`:t(lang,'sessionSaved',{h:Math.floor(extra.hours),m:Math.round((extra.hours%1)*60)}));
     else flash(t(lang,'statusChanged',{status:SM2[status]?.label}));
   }
@@ -3816,14 +2633,65 @@ export default function App(){
   },[lang,flash]);
 
   if(!onboarded)return(<><style>{CSS}</style><Onboarding
-    onAddFirst={()=>{setOnboarded(true);setOnboard(true);setModal('add');}}
     onSkip={()=>{setOnboarded(true);setOnboard(true);}}
     onCurrencyPick={setCurrencyPersist}
+    onLoadDemo={()=>{
+      // v1.10.0 — Demo loads silently in the background during step 1→2 transition.
+      // We do NOT finalize onboarding here — that happens on the currency confirm step.
+      // By the time the user finishes the carousel (~6s) or skips it, demo is already
+      // in localStorage and games[] is populated, so currency confirm exits to a fully
+      // populated Home with zero perceived latency.
+      const demos=makeDemoGames();
+      setGames(demos);
+      flash(t(lang,'demoLoaded',{n:demos.length}));
+    }}
     lang={lang}
   /></>);
 
   const SM2=getSM(lang);
   const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).length;
+
+  // v1.8.0 — Compute hamburger badge triggers (red dot on ⋮ + per-row dots in MenuOverlay).
+  // Three signals, each independent. UI shows a dot when ANY is true.
+  // Implementation note: this runs on every render but the work is O(games.length) bounded
+  // by Stats which already does the same — no perf concern.
+  const menuTriggers = (() => {
+    // Achievements: count current unlocked vs lastSeen count. Need longestStreak for streak achs.
+    const sbd2=new Map();
+    games.forEach(g=>{(g.sessions||[]).forEach(s=>{const k=dayKey(s.startedAt);if(!sbd2.has(k))sbd2.set(k,[]);sbd2.get(k).push(s);});});
+    const ach=computeAchievements(games, computeLongestStreak(sbd2));
+    const unlockedCount=ach.filter(a=>a.unlocked).length;
+    const achTrigger = unlockedCount > menuSeen.achievementsCount;
+    // Goals: any goal that completed (doneAt) OR expired (periodEnd in past, no doneAt)
+    // since user last opened the manager. Both deserve attention — a finished goal feels
+    // good to acknowledge, an expired one is feedback for next month.
+    const lastGoalsAt = menuSeen.goalsAt ? new Date(menuSeen.goalsAt) : new Date(0);
+    const now = new Date();
+    const goalsTrigger = goals.some(g => {
+      if (g.doneAt) return new Date(g.doneAt) > lastGoalsAt;
+      return g.periodEnd && new Date(g.periodEnd) < now;
+    });
+    // Year-in-Review: nudge in December (month 11 zero-indexed) if user hasn't opened
+    // Wrapped for the current year yet. Dot disappears the moment they tap it.
+    const wrappedTrigger = now.getMonth() === 11 && menuSeen.wrappedYear !== now.getFullYear();
+    return {
+      achievements: achTrigger,
+      goals: goalsTrigger,
+      wrapped: wrappedTrigger,
+      any: achTrigger || goalsTrigger || wrappedTrigger,
+      // Pass current unlocked count along so MenuOverlay's onPick can mark seen
+      _unlockedCount: unlockedCount,
+    };
+  })();
+  // Mark a section as seen when user opens it from MenuOverlay. Updates LS + state.
+  const markMenuSectionSeen = (section) => {
+    let patch;
+    if (section === 'achievements')      patch = { achievementsCount: menuTriggers._unlockedCount };
+    else if (section === 'goals')        patch = { goalsAt: new Date().toISOString() };
+    else if (section === 'wrapped')      patch = { wrappedYear: new Date().getFullYear() };
+    else return; // 'settings' has no trigger
+    setMenuSeen(menuSeenUpdate(patch));
+  };
   const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:'💰 '+t(lang,'filterSold')},{k:'platinum',l:t(lang,'filterPlatinum')}];
   const sortFn = {
     added:  (a,b) => 0,
@@ -3847,7 +2715,10 @@ export default function App(){
           <div className='htop'>
             <div className='logo'><div className='lico'>V</div><div><div className='lnm'>VAULT</div><div className='lsb'>Game Tracker</div></div></div>
             <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              <button type='button' className='hmb' onClick={()=>setOverlay('menu')} aria-label={t(lang,'menuAria')} title={t(lang,'menuAria')}>≡</button>
+              <button type='button' className={'hmb'+(menuTriggers.any?' hmb-pulse':'')} onClick={()=>setOverlay('menu')} aria-label={t(lang,'menuAria')} title={t(lang,'menuAria')}>
+                ≡
+                {menuTriggers.any && <span className='hmb-dot' aria-hidden='true'/>}
+              </button>
               <button type='button' className='abtn' onClick={()=>setModal('add')}>+ {lang==='pl'?'Dodaj grę':'Add game'}</button>
             </div>
           </div>
@@ -3860,7 +2731,7 @@ export default function App(){
           </div>
         </div>
 
-        {tab==='home'&&<Home games={games} onOpen={setModal} onStatusChange={handleStatusChange} onAddFirst={()=>setModal('add')} onToggleNotify={toggleNotify} lang={lang} goals={goals} onGoalsOpen={()=>setOverlay('goals')}/>}
+        {tab==='home'&&<Home games={games} onOpen={setModal} onStatusChange={handleStatusChange} onAddFirst={()=>setModal('add')} onToggleNotify={toggleNotify} lang={lang} goals={goals} onGoalsOpen={()=>setOverlay('goals')} onRecOpen={()=>setOverlay('recommendations')}/>}
 
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
@@ -3913,6 +2784,15 @@ export default function App(){
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         <Toast msg={toast}/>
+        {achQueue.length>0 && (
+          <AchievementBanner
+            ach={getAchievementById(achQueue[0])}
+            queueLen={achQueue.length}
+            onTap={()=>{ setAchQueue([]); setOverlay('achievements'); }}
+            onDismiss={()=>setAchQueue(prev=>prev.slice(1))}
+            lang={lang}
+          />
+        )}
 
         {importModal && (
           <ImportModal
@@ -4007,15 +2887,16 @@ export default function App(){
         {overlay==='menu' && (
           <MenuOverlay
             onClose={()=>setOverlay(null)}
-            onPick={key=>setOverlay(key)}
+            onPick={key=>{ markMenuSectionSeen(key); setOverlay(key); }}
             lang={lang}
             currentYear={new Date().getFullYear()}
             achStats={(()=>{const sbd=new Map();collectSessions(games).forEach(s=>{const k=s.dateKey;if(!sbd.has(k))sbd.set(k,[]);sbd.get(k).push(s);});const ach=computeAchievements(games, computeLongestStreak(sbd));return {unlocked:ach.filter(a=>a.unlocked).length, total:ach.length};})()}
             goalStats={{active:goals.filter(g=>!g.doneAt).length, done:goals.filter(g=>!!g.doneAt).length}}
+            triggers={menuTriggers}
           />
         )}
         {overlay==='wrapped' && (
-          <YearInReview games={games} lang={lang} onClose={()=>setOverlay('menu')}/>
+          <YearInReview games={games} lang={lang} onClose={()=>setOverlay('menu')} flash={flash}/>
         )}
         {overlay==='achievements' && (() => {
           // Compute longest streak from sessionsByDay for streak achievements
@@ -4033,6 +2914,30 @@ export default function App(){
             lang={lang}
             flash={flash}
             onClose={()=>setOverlay(null)}
+          />
+        )}
+        {overlay==='recommendations' && (
+          <Recommendations
+            games={games}
+            lang={lang}
+            onClose={()=>setOverlay(null)}
+            onAdd={rec=>{
+              // v1.9.0 — Pre-fill add modal from a recommendation. The pre-fill object
+              // intentionally omits `id` so Modal treats this as a NEW game (isEdit=false),
+              // but carries `rawgId` so the new game can itself become a Recommendations seed.
+              setOverlay(null);
+              setModal({
+                title: rec.title,
+                cover: rec.cover || '',
+                year: rec.year || new Date().getFullYear(),
+                genre: rec.genre || '',
+                releaseDate: rec.releaseDate || '',
+                abbr: rec.abbr || mkAbbr(rec.title),
+                rawgId: rec.id || null,
+                // pre-fill targetHours from RAWG playtime (same as fill() in Modal)
+                targetHours: +rec.playtime || '',
+              });
+            }}
           />
         )}
         {overlay==='settings' && (
