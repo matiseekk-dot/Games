@@ -21,7 +21,7 @@ import {
   menuSeenRead, menuSeenUpdate,
   wipeAllData,
 } from './lib/storage.js';
-import { registerSW, requestNotifPerm, checkReleases, shareText, diagnoseNotifications } from './lib/platform.js';
+import { registerSW, requestNotifPerm, checkReleases, shareText } from './lib/platform.js';
 import { rawgSearch } from './lib/rawg.js';
 import { eanCacheRead, eanCacheWrite, cleanProductName, eanLookup } from './lib/barcode.js';
 import { collectSessions, computeStreak, computeLongestStreak } from './lib/sessions.js';
@@ -2214,91 +2214,6 @@ function Recommendations({ games, lang, onClose, onAdd }){
   );
 }
 
-// v1.11.0 — Notification diagnostic overlay.
-// Walks the entire notification path step-by-step (via lib/platform.diagnoseNotifications)
-// and renders a step-by-step report. Used to triage "Android notifications don't work" /
-// "iOS notifications never appear" issues — the report tells the user exactly where the
-// chain breaks (no permission, no SW, no standalone mode, etc.).
-//
-// "Copy report" button copies a plain-text version to clipboard so the user can paste
-// it back to us when reporting issues.
-function NotificationDiagnostic({ onClose, lang }){
-  const [report,setReport] = useState(null);
-  const [copying,setCopying] = useState(false);
-
-  useEffect(()=>{
-    let cancelled=false;
-    diagnoseNotifications().then(r => { if(!cancelled) setReport(r); });
-    return () => { cancelled = true; };
-  },[]);
-
-  async function copyReport(){
-    if(!report) return;
-    setCopying(true);
-    const lines = [
-      `=== PS5 Vault — Notification Diagnostic ===`,
-      `Date: ${new Date().toISOString()}`,
-      `Platform: ${report.platform}`,
-      `Standalone (PWA installed): ${report.isStandalone}`,
-      `User Agent: ${report.userAgent}`,
-      ``,
-      `--- Steps ---`,
-      ...report.steps.map(s => {
-        const icon = s.status==='ok'?'✓':s.status==='warn'?'⚠':s.status==='fail'?'✗':'·';
-        return `${icon} ${s.label}: ${s.detail}`;
-      }),
-      ``,
-      `Overall: ${report.ok?'PASS':'FAIL'}`,
-    ].join('\n');
-    try {
-      await navigator.clipboard.writeText(lines);
-      setTimeout(()=>setCopying(false), 1200);
-    } catch {
-      setCopying(false);
-    }
-  }
-
-  return (
-    <div className='bs-ovr'>
-      <div className='bs-hdr'>
-        <div className='bs-ttl'>🔔 {t(lang,'notifDiagTitle')}</div>
-        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
-      </div>
-      <div className='ndiag-pn'>
-        {!report && <div className='ndiag-loading'><div className='rec-spinner'/><div>{t(lang,'notifDiagRunning')}</div></div>}
-        {report && (
-          <>
-            <div className='ndiag-summary'>
-              <div className={'ndiag-verdict '+(report.ok?'on':'off')}>
-                {report.ok ? '✓ '+t(lang,'notifDiagVerdictOk') : '✗ '+t(lang,'notifDiagVerdictFail')}
-              </div>
-              <div className='ndiag-meta'>
-                <div><b>{t(lang,'notifDiagPlatform')}:</b> {report.platform}</div>
-                <div><b>{t(lang,'notifDiagStandalone')}:</b> {report.isStandalone ? t(lang,'yes') : t(lang,'no')}</div>
-              </div>
-            </div>
-            <div className='ndiag-steps'>
-              {report.steps.map((s,i)=>(
-                <div key={i} className={'ndiag-step ndiag-'+s.status}>
-                  <div className='ndiag-step-head'>
-                    <span className='ndiag-step-ico'>{s.status==='ok'?'✓':s.status==='warn'?'⚠':s.status==='fail'?'✗':'·'}</span>
-                    <span className='ndiag-step-lbl'>{s.label}</span>
-                  </div>
-                  <div className='ndiag-step-detail'>{s.detail}</div>
-                </div>
-              ))}
-            </div>
-            <button type='button' className='ndiag-copy' onClick={copyReport}>
-              {copying ? '✓ '+t(lang,'copied') : '📋 '+t(lang,'notifDiagCopyReport')}
-            </button>
-            <div className='ndiag-hint'>{t(lang,'notifDiagHint')}</div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // v1.11.1 — Wipe-all-data confirmation modal.
 // GDPR right-to-deletion + Play Data Safety compliance: user must have an in-app way
 // to delete ALL their data. This is the gate before pulling that trigger.
@@ -2356,7 +2271,7 @@ function WipeConfirm({ games, lang, onClose, flash }){
   );
 }
 
-function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPrivacy,onNotifDiag,onWipeOpen}){
+function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPrivacy,onWipeOpen}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   return(
     <div className='scr'>
@@ -2423,9 +2338,6 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'info')}</div>
-        <div className='set-row' onClick={onNotifDiag}>
-          <span className='set-row-ico'>🔔</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'notifDiagRow')}</div><div className='set-row-desc'>{t(lang,'notifDiagRowDesc')}</div></div><span className='set-row-arrow'>›</span>
-        </div>
         <div className='set-row' onClick={openPrivacy}>
           <span className='set-row-ico'>🔒</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'privacyPolicy')}</div><div className='set-row-desc'>{t(lang,'privacyDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
@@ -3091,12 +3003,6 @@ export default function App(){
             }}
           />
         )}
-        {overlay==='notifDiag' && (
-          <NotificationDiagnostic
-            lang={lang}
-            onClose={()=>setOverlay('settings')}
-          />
-        )}
         {overlay==='wipe' && (
           <WipeConfirm
             games={games}
@@ -3112,7 +3018,7 @@ export default function App(){
               <button type='button' className='bs-x' onClick={()=>setOverlay('menu')} aria-label={t(lang,'cancel')}>✕</button>
             </div>
             <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
-              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)} onNotifDiag={()=>setOverlay('notifDiag')} onWipeOpen={()=>setOverlay('wipe')}/>
+              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
               <div style={{padding:'0 16px 8px'}}>
                 <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
                 <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>
