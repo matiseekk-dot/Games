@@ -105,7 +105,10 @@ async function getSuggestionsFor(seed) {
 //
 // Each result keeps a `reasons[]` list (array of {seedTitle, seedRating}) so the
 // UI can show "Bo lubisz X (ocena 9), Y (ocena 8)" tooltip.
-function aggregate(perSeedResults, alreadyOwnedNorms) {
+//
+// Exported (rather than module-private) for unit testing — see tests/aggregate.test.js.
+// Consumers should still go through buildRecommendations() in production code.
+export function aggregate(perSeedResults, alreadyOwnedNorms) {
   // perSeedResults: [{ seed, results }]
   const byKey = new Map(); // normalizedTitle → aggregated entry
   for (const { seed, results } of perSeedResults) {

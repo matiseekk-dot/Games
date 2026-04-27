@@ -29,10 +29,13 @@
   <p>Wszystkie dane (lista gier, statusy, oceny, notatki, dane finansowe, sesje grania, budżet) są przechowywane <strong>wyłącznie lokalnie</strong> na Twoim urządzeniu w pamięci przeglądarki (localStorage). Dane te nigdy nie są przesyłane na żadne serwery zewnętrzne.</p>
 
   <h2>3. Dane które NIE są zbierane</h2>
-  <p>Aplikacja nie zbiera, nie przechowuje ani nie przekazuje żadnych danych osobowych, w tym: imienia i nazwiska, adresu e-mail, numeru telefonu, lokalizacji, danych finansowych, identyfikatorów urządzenia ani identyfikatorów reklamowych. Aplikacja nie używa Google Analytics, Facebook Pixel ani żadnych innych narzędzi analitycznych.</p>
+  <p>Aplikacja nie zbiera, nie przechowuje ani nie przekazuje żadnych danych osobowych, w tym: imienia i nazwiska, adresu e-mail, numeru telefonu, lokalizacji, danych finansowych, identyfikatorów urządzenia ani identyfikatorów reklamowych. Aplikacja nie używa Google Analytics, Facebook Pixel ani żadnych innych identyfikujących narzędzi analitycznych. Strona hostująca aplikację (`matiseekk-dot.github.io/Games/`) korzysta z anonimowej statystyki ruchu — patrz sekcja 4b.</p>
 
   <h2>4. Zewnętrzne API — RAWG.io</h2>
   <p>Aplikacja korzysta z RAWG.io API (operatora: Behind the Games, UAB, Litwa/UE) w celu wyszukiwania informacji o grach (tytuły, okładki, daty premier, gatunki). Podczas wyszukiwania zapytanie tekstowe wpisane w polu wyszukiwania trafia do serwerów RAWG. <strong>Nie są przesyłane żadne dane osobowe</strong> — jedynie tekst wyszukiwania oraz klucz API. Twoje dane (kolekcja gier) nigdy nie są przesyłane do RAWG. Polityka prywatności RAWG: <a href="https://rawg.io/privacy_policy" target="_blank" rel="noopener noreferrer">rawg.io/privacy_policy</a>.</p>
+
+  <h2>4b. Cloudflare Web Analytics</h2>
+  <p>Strona hostująca aplikację korzysta z usługi Cloudflare Web Analytics (operator: Cloudflare, Inc., USA) w celu liczenia anonimowych odwiedzin. Cloudflare Web Analytics jest zaprojektowane jako prywatność-respektujące — <strong>nie używa plików cookie, nie tworzy profili użytkowników, nie identyfikuje osób, nie śledzi między stronami</strong>. Zbierane dane: liczba wizyt, kraj (przybliżony, na podstawie IP — IP nie jest przechowywane), przeglądarka, system operacyjny, źródło ruchu (np. Google), ścieżka strony. Te dane służą wyłącznie do oceny popularności apki i nie są łączone z Twoimi danymi w aplikacji (kolekcja gier pozostaje wyłącznie lokalna). Polityka Cloudflare: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">cloudflare.com/privacypolicy</a>. Możesz zablokować to śledzenie używając rozszerzeń typu uBlock Origin lub Privacy Badger — aplikacja nadal będzie działać normalnie.</p>
 
   <h2>5. Linki do stron trzecich</h2>
   <p>Sekcja "Wsparcie" w aplikacji zawiera link do platformy <a href="https://buycoffee.to/skudev" target="_blank" rel="noopener noreferrer">buycoffee.to/skudev</a> umożliwiającej dobrowolne wsparcie finansowe twórcy. Kliknięcie linku otwiera stronę zewnętrzną w przeglądarce. Aplikacja nie przekazuje żadnych Twoich danych do tej platformy. Jeśli zdecydujesz się dokonać wpłaty, podlegasz polityce prywatności buycoffee.to.</p>
@@ -44,11 +47,11 @@
   <p>Aplikacja zawiera funkcję "Zgłoś problem" (Opcje → Informacje), która otwiera klienta poczty e-mail z gotowym szablonem zawierającym: model urządzenia (z `navigator.userAgent`), wersję aplikacji, język i liczbę gier w kolekcji. Te informacje są dołączane jedynie po to, aby pomóc w diagnozie problemów. <strong>Wysłanie wiadomości jest dobrowolne</strong> — możesz edytować lub usunąć te dane przed wysłaniem. Adres odbiorcy: skudev6@gmail.com.</p>
 
   <h2>8. Pliki cookie i śledzenie</h2>
-  <p>Aplikacja nie używa plików cookie ani żadnych technologii śledzących.</p>
+  <p>Aplikacja sama w sobie nie używa plików cookie ani technologii śledzących. Statystyki Cloudflare Web Analytics (sekcja 4b) są <strong>cookieless z założenia</strong> — nie ustawiają żadnych ciasteczek ani identyfikatorów lokalnych.</p>
 
   <h2>9. Prawa użytkownika (RODO)</h2>
   <p>Ponieważ nie przechowujemy żadnych Twoich danych poza Twoim urządzeniem, masz pełną kontrolę nad swoimi danymi. Masz prawo do:</p>
-  <p>• <strong>dostępu</strong> — dane są widoczne w aplikacji;<br/>• <strong>przenoszenia</strong> — przycisk "Eksportuj dane" tworzy plik JSON z całą Twoją kolekcją;<br/>• <strong>usunięcia</strong> — przycisk "Wyczyść kolekcję" w sekcji Niebezpieczna strefa, lub odinstalowanie aplikacji.</p>
+  <p>• <strong>dostępu</strong> — dane są widoczne w aplikacji;<br/>• <strong>przenoszenia</strong> — przycisk "Eksportuj dane" tworzy plik JSON z całą Twoją kolekcją;<br/>• <strong>usunięcia</strong> — przycisk "🗑️ Usuń wszystkie dane" w Opcjach → Dane (wymaga wpisania słowa USUŃ aby potwierdzić), lub odinstalowanie aplikacji.</p>
 
   <h2>10. Bezpieczeństwo</h2>
   <p>Dane są przechowywane w localStorage przeglądarki na Twoim urządzeniu. Bezpieczeństwo tych danych zależy od zabezpieczenia Twojego urządzenia (PIN, biometria, szyfrowanie systemu).</p>
@@ -62,7 +65,7 @@
   <h2>13. Kontakt</h2>
   <p>W razie pytań dotyczących prywatności skontaktuj się: <a href="mailto:skudev6@gmail.com">skudev6@gmail.com</a> lub przez funkcję "Zgłoś problem" w aplikacji.</p>
 
-  <p class="updated">Ostatnia aktualizacja: 24 kwietnia 2026 · Wersja aplikacji: 1.2.4</p>
+  <p class="updated">Ostatnia aktualizacja: 27 kwietnia 2026 · Wersja aplikacji: 1.12.1</p>
 
   <hr style="margin:60px 0 40px; border:none; border-top:1px solid #1F2937;"/>
 
@@ -76,10 +79,13 @@
   <p>All data (games list, statuses, ratings, notes, financial data, play sessions, budget) is stored <strong>locally only</strong> on your device in browser localStorage. This data is never transmitted to any external servers.</p>
 
   <h2>3. Data we do NOT collect</h2>
-  <p>The application does not collect, store or transmit any personal data, including: name, email address, phone number, location, financial data, device identifiers, or advertising IDs. The application does not use Google Analytics, Facebook Pixel or any other analytics tools.</p>
+  <p>The application does not collect, store or transmit any personal data, including: name, email address, phone number, location, financial data, device identifiers, or advertising IDs. The application does not use Google Analytics, Facebook Pixel or any other identifying analytics tools. The hosting site (`matiseekk-dot.github.io/Games/`) uses anonymous traffic analytics — see section 4b.</p>
 
   <h2>4. External API — RAWG.io</h2>
   <p>The application uses the RAWG.io API (operator: Behind the Games, UAB, Lithuania/EU) to search for game information (titles, covers, release dates, genres). When searching, the text query you enter is sent to RAWG servers. <strong>No personal data is transmitted</strong> — only the search text and API key. Your data (game collection) is never sent to RAWG. RAWG privacy policy: <a href="https://rawg.io/privacy_policy" target="_blank" rel="noopener noreferrer">rawg.io/privacy_policy</a>.</p>
+
+  <h2>4b. Cloudflare Web Analytics</h2>
+  <p>The hosting site uses Cloudflare Web Analytics (operator: Cloudflare, Inc., USA) to count anonymous visits. Cloudflare Web Analytics is privacy-respecting by design — <strong>no cookies, no user profiles, no personal identification, no cross-site tracking</strong>. Data collected: visit count, country (approximate, based on IP — IP is not stored), browser, OS, traffic source (e.g. Google), page path. This data is used solely to assess app popularity and is never combined with your in-app data (your game collection stays strictly local). Cloudflare privacy policy: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">cloudflare.com/privacypolicy</a>. You can block this tracking with extensions like uBlock Origin or Privacy Badger — the application will continue to work normally.</p>
 
   <h2>5. Third-party links</h2>
   <p>The "Support" section in the application contains a link to <a href="https://buycoffee.to/skudev" target="_blank" rel="noopener noreferrer">buycoffee.to/skudev</a>, a platform allowing voluntary financial support for the creator. Clicking the link opens an external page in your browser. The application does not transmit any of your data to this platform. If you choose to make a donation, you become subject to buycoffee.to's privacy policy.</p>
@@ -91,11 +97,11 @@
   <p>The application includes a "Report a problem" feature (Settings → Info), which opens your email client with a pre-filled template containing: device model (from `navigator.userAgent`), application version, language and number of games in the collection. This information is attached solely to help diagnose issues. <strong>Sending the message is voluntary</strong> — you can edit or remove this data before sending. Recipient address: skudev6@gmail.com.</p>
 
   <h2>8. Cookies and tracking</h2>
-  <p>The application does not use cookies or any tracking technologies.</p>
+  <p>The application itself does not use cookies or any tracking technologies. Cloudflare Web Analytics statistics (section 4b) are <strong>cookieless by design</strong> — they set no cookies or local identifiers.</p>
 
   <h2>9. User rights (GDPR)</h2>
   <p>Since we don't store any of your data outside your device, you have full control over your data. You have the right to:</p>
-  <p>• <strong>access</strong> — data is visible in the application;<br/>• <strong>portability</strong> — the "Export data" button creates a JSON file with your entire collection;<br/>• <strong>deletion</strong> — the "Clear collection" button in the Danger zone, or by uninstalling the application.</p>
+  <p>• <strong>access</strong> — data is visible in the application;<br/>• <strong>portability</strong> — the "Export data" button creates a JSON file with your entire collection;<br/>• <strong>deletion</strong> — the "🗑️ Delete all data" button in Settings → Data (requires typing DELETE to confirm), or by uninstalling the application.</p>
 
   <h2>10. Security</h2>
   <p>Data is stored in browser localStorage on your device. The security of this data depends on the security of your device (PIN, biometrics, system encryption).</p>
@@ -109,6 +115,6 @@
   <h2>13. Contact</h2>
   <p>For privacy questions, please contact: <a href="mailto:skudev6@gmail.com">skudev6@gmail.com</a> or use the "Report a problem" feature in the application.</p>
 
-  <p class="updated">Last updated: April 24, 2026 · App version: 1.2.4</p>
+  <p class="updated">Last updated: April 27, 2026 · App version: 1.12.1</p>
 </body>
 </html>

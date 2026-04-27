@@ -190,3 +190,37 @@ export function importReplace(file, onOk, onErr) {
   } catch (err) { onErr(err.message); } };
   r.readAsText(file);
 }
+
+// v1.11.1 — Right-to-deletion / Play Data Safety compliance.
+// Removes EVERY ps5vault_* key from localStorage. After this call the app behaves like
+// a fresh install — next mount triggers the welcome screen, all caches gone, all
+// preferences reset. There is no "soft delete" — this is the nuclear option.
+//
+// Returns { wiped: number, errors: string[] } so caller can flash a toast with the count.
+// Errors come from individual removeItem failures (rare — usually only when storage is
+// disabled or quota exceeded mid-iteration).
+//
+// Caller MUST trigger a hard reload after this returns — clearing state in-memory only
+// would leave React refs and useState pointing at deleted underlying data, causing
+// inconsistent UI. window.location.reload() is the right exit path.
+export function wipeAllData() {
+  const errors = [];
+  let wiped = 0;
+  // Snapshot keys first — modifying localStorage during iteration is unsafe in some browsers.
+  const keys = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('ps5vault_')) keys.push(k);
+    }
+  } catch (e) { errors.push(`enumerate: ${e.message || e}`); }
+
+  for (const k of keys) {
+    try {
+      localStorage.removeItem(k);
+      wiped++;
+    } catch (e) { errors.push(`${k}: ${e.message || e}`); }
+  }
+
+  return { wiped, errors };
+}

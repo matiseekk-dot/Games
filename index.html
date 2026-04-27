@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl-PL">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="PS5 Vault" />
-    <meta name="description" content="Personal PS5 game tracker — collection, releases, finances and stats" />
+    <meta name="description" content="Spotify Wrapped dla Twoich gier + finansowy audyt + skanowanie EAN" />
     <meta name="theme-color" content="#080B14" />
     <link rel="manifest" href="/Games/manifest.json" />
-    <link rel="apple-touch-icon" href="/Games/icon-192.png" />
+    <link rel="apple-touch-icon" href="/Games/icons/icon-192.png" />
     <title>PS5 Vault</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
@@ -21,5 +21,13 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <!--
+      v1.12.1 — Cloudflare Web Analytics (cookieless, no PII, free).
+      Token is PUBLIC by design — it identifies the site to CF, not the account.
+      Live token wired 2026-04-27. To rotate: dashboard.cloudflare.com → Web Analytics
+      → site → Settings → Reset token → paste new value below. See ANALYTICS_SETUP.md.
+    -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon='{"token": "b9401196b0b240789d62a1cee9c4aa77", "spa": true}'></script>
   </body>
 </html>

@@ -31,8 +31,24 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Run tests
+        # v1.11.2 — Pure-function test suite (Vitest, 5 files, 64 tests, ~4s).
+        # Failure here blocks the build — broken tests cannot deploy. This is conservative
+        # by design: we'd rather block a deploy than ship broken Recommendations,
+        # Year-in-Review, achievements, or weekly summary computation.
+        # If you need to ship a hotfix bypassing tests, comment this step out temporarily;
+        # don't disable test runs as default.
+        run: npm test
+
       - name: Build
         run: npm run build
+        env:
+          # v1.11.0 — RAWG API key injected at build time from GitHub repository secret.
+          # If the secret is unset, the build falls back to the hardcoded key in src/constants.js
+          # (kept for backwards compatibility). To rotate: revoke old key on rawg.io,
+          # generate new key, update the GH secret RAWG_KEY, push to main → auto-redeploy.
+          # See RAWG_KEY_SETUP.md for step-by-step.
+          VITE_RAWG_KEY: ${{ secrets.RAWG_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
