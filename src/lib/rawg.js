@@ -56,3 +56,34 @@ export async function fetchSuggested(rawgGameId) {
   } catch { return []; }
   finally { clearTimeout(tm); }
 }
+
+// v1.13.1 — Fetch single game by RAWG ID. Used by Modal "Aktualizuj z RAWG" button
+// to refresh stale fields (releaseDate, year, genre, cover) for an existing game.
+// Returns normalized object (same shape subset as rawgSearch) or null on any failure.
+// Caller flashes appropriate toast on null vs success.
+//
+// Endpoint: /games/{id}?key=... — single game detail, includes released, genres, background_image.
+// We deliberately do NOT use rawgSearch(title) because:
+//   1. Game titles can change (re-launches, renames) — id is stable
+//   2. Search-by-title is non-deterministic (returns 10 results, filter risk)
+//   3. Single endpoint = less RAWG quota usage
+export async function fetchGameById(rawgId) {
+  if (!Number.isFinite(+rawgId) || +rawgId <= 0) return null;
+  const ctrl = new AbortController();
+  const tm = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(`https://api.rawg.io/api/games/${+rawgId}?key=${RAWG_KEY}`, { signal: ctrl.signal });
+    if (!r.ok) return null;
+    const g = await r.json();
+    if (!g || !g.id) return null;
+    return {
+      id: g.id,
+      title: g.name || '',
+      year: g.released ? +g.released.slice(0, 4) : null,
+      releaseDate: g.released || '',
+      genre: (g.genres || []).map(x => RMAP[x.slug]).filter(Boolean)[0] || g.genres?.[0]?.name || '',
+      cover: g.background_image || '',
+    };
+  } catch { return null; }
+  finally { clearTimeout(tm); }
+}

@@ -17,7 +17,10 @@ export const CSS = `
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%;overflow-x:hidden;max-width:100%}
-body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased}
+/* v1.13.2 — A3 fix: disable pull-to-refresh on body. Without this, swipe-down on
+   any modal at scroll-top (or any page when scrolled to top) triggers browser's
+   pull-to-refresh, reloading the app and losing in-flight modal data. */
+body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 #root{overflow-x:hidden;max-width:100%}
 .app{display:flex;flex-direction:column;min-height:100dvh;max-width:100%;overflow-x:hidden}
 
@@ -27,15 +30,25 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .lico{width:34px;height:34px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#fff;box-shadow:0 0 12px rgba(0,212,255,.35)}
 .lnm{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;letter-spacing:.1em;white-space:nowrap}
 .lsb{font-size:10px;color:${G.dim};letter-spacing:.2em;text-transform:uppercase}
-.abtn{height:44px;flex-shrink:0;border:none;border-radius:10px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0 14px;gap:6px;white-space:nowrap}
+/* v1.13.2 — A2 fix: padding 0 14px → 4px 14px + line-height:1.4 so descenders
+   ("g" in "grę"/"game") are not clipped. Issue: tightly-fitted flex container with
+   default line-height was cropping the lower portion of descender glyphs. */
+/* v1.13.2 — A2 fix: replaced fixed height:44px + padding:4px with min-height:48 +
+   padding:13px 14px 14px. Existing 4px top/bottom padding wasn't enough room for
+   descenders in "grę"/"game" (letters g, j, p, q, y) at font-size:14 + line-height:1.4.
+   New layout: 14px font * 1.4 lh = 19.6px content, 13+14 padding = 27px, total ≥48px. */
+.abtn{min-height:48px;flex-shrink:0;border:none;border-radius:10px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:13px 14px 14px;gap:6px;white-space:nowrap;line-height:1.4}
 .abtn:active{opacity:.7;transform:scale(.95)}
 
 .tabs{display:flex;gap:2px;background:${G.card};border:1px solid ${G.bdr};border-radius:13px;padding:4px}
-.tab{flex:1;min-height:42px;padding:6px 2px;border:none;border-radius:9px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:9px;font-weight:600;cursor:pointer;white-space:nowrap;position:relative;line-height:1.3;transition:all .18s}
+/* v1.13.2 — A1 fix: bumped tab font from 9px → 11px (+22%) and min-height 42→46 to better
+   match Material Design 14sp/48dp recommendation. Cannot hit 14sp exactly with 5 tabs on
+   narrow screens (would clip "Premiery"/"Releases"), but +22% font is significant readability win. */
+.tab{flex:1;min-height:46px;padding:8px 2px;border:none;border-radius:9px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;position:relative;line-height:1.3;transition:all .18s}
 .tab.on{background:rgba(0,212,255,.15);color:${G.blu}}
 .tab-dot{position:absolute;top:5px;right:4px;width:5px;height:5px;border-radius:50%;background:${G.org};animation:pulse 1.5s infinite}
 
-.scr{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-width:100%;animation:tabSlide .2s ease}
+.scr{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-width:100%;animation:tabSlide .2s ease;overscroll-behavior:contain}
 
 .hcard{background:${G.card};border:1px solid ${G.bdr};border-radius:16px;padding:16px;margin-bottom:12px;overflow:hidden;max-width:100%;animation:fadeIn .3s ease}
 .hcard-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -151,7 +164,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .fkl{font-size:9px;color:${G.dim};font-weight:600;letter-spacing:.07em;text-transform:uppercase}
 .ins-card{border-radius:13px;padding:14px;margin-bottom:10px;border:1px solid transparent;animation:fadeIn .35s ease}
 .ovr{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.9);z-index:9999;display:flex;align-items:flex-end}
-.mdl{width:100%;overflow:visible;overflow-y:auto;-webkit-overflow-scrolling:touch;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-height:90dvh;animation:slideUp .22s ease}
+.mdl{width:100%;overflow:visible;overflow-y:auto;-webkit-overflow-scrolling:touch;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-height:90dvh;animation:slideUp .22s ease;overscroll-behavior:contain}
 .mhdl{width:32px;height:4px;background:${G.bdr};border-radius:2px;margin:0 auto 16px}
 .mttl{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${G.blu};letter-spacing:.06em;margin-bottom:16px}
 .rwrp{position:relative;margin-bottom:12px}
@@ -289,7 +302,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .acc-btn:hover,.acc-btn:active{color:${G.blu};border-color:${G.blu};background:rgba(0,212,255,.04)}
 .acc-body{animation:fadeIn .2s ease}
 .fhnt{font-size:10px;color:${G.dim};margin-top:4px;line-height:1.4}
-.bs-ovr{position:fixed;inset:0;background:#000;z-index:199999;display:flex;flex-direction:column;animation:fadeIn .18s ease}
+.bs-ovr{position:fixed;inset:0;background:#000;z-index:199999;display:flex;flex-direction:column;animation:fadeIn .18s ease;overscroll-behavior:contain}
 .bs-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(12px,env(safe-area-inset-top,0px)) 14px 10px;background:${G.bg};border-bottom:1px solid ${G.bdr};padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
 .bs-ttl{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:${G.blu};letter-spacing:.06em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bs-x{flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
@@ -329,7 +342,8 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .bs-results-h{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px}
 
 /* v1.5.0 — Hamburger button */
-.hmb{flex-shrink:0;width:44px;height:44px;border:1px solid ${G.bdr};border-radius:10px;background:${G.card};color:${G.txt};font-size:22px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:background .15s;position:relative}
+/* v1.13.2 — A1 fix: bumped hamburger 44→48 to exactly hit Material 48dp tap target. */
+.hmb{flex-shrink:0;width:48px;height:48px;border:1px solid ${G.bdr};border-radius:10px;background:${G.card};color:${G.txt};font-size:22px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:background .15s;position:relative}
 /* v1.8.0 — red dot trigger on hamburger when any menu section has unseen content */
 .hmb-pulse{border-color:rgba(255,77,109,.4)}
 .hmb-dot{position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:50%;background:${G.red};box-shadow:0 0 0 2px ${G.card},0 0 8px rgba(255,77,109,.6);animation:hmbDotPulse 2s ease-in-out infinite}
@@ -472,4 +486,10 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .wipe-input:focus{border-color:${G.red};box-shadow:0 0 0 3px rgba(255,77,109,.15)}
 .wipe-yes.disabled{background:${G.bdr};color:${G.dim};cursor:not-allowed;opacity:.6}
 .wipe-yes.disabled:active{transform:none}
+/* v1.13.1 — Refresh-from-RAWG button (Modal edit only) */
+.rawg-refresh{margin-top:8px;width:100%;padding:10px 12px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:9px;color:${G.blu};font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.rawg-refresh:active{transform:scale(.99);background:rgba(0,212,255,.16)}
+.rawg-refresh:disabled{opacity:.6;cursor:not-allowed}
+.rawg-refresh:disabled:active{transform:none}
+.rawg-refresh-spin{width:13px;height:13px;border:2px solid rgba(0,212,255,.3);border-top-color:${G.blu};border-radius:50%;animation:spin .8s linear infinite}
 `;

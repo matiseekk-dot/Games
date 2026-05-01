@@ -130,6 +130,20 @@ const TRANSLATIONS = {
     scanManualBtn:"Szukaj",
     titleField:"Tytuł *", yearField:"Rok",
     releaseDateField:"Data premiery", releaseDateHint:"Zostaw puste jeśli nieznana (TBA)",
+    // ── v1.13.1 — Refresh-from-RAWG button ──────────────────────────────
+    rawgRefreshBtn:"Aktualizuj z RAWG",
+    rawgRefreshing:"Aktualizuję…",
+    rawgRefreshOk:"Zaktualizowano: {fields}",
+    rawgRefreshNoChanges:"Brak nowych zmian — dane są aktualne",
+    rawgRefreshErr:"Nie udało się zaktualizować — sprawdź połączenie",
+    // ── v1.13.2 — A4 back-button-to-exit confirmation toast ─────────────
+    backToExit:"Naciśnij ponownie aby wyjść",
+    rawgFieldDate:"data premiery",
+    rawgFieldYear:"rok",
+    rawgFieldGenre:"gatunek",
+    rawgFieldCover:"okładka",
+    // ── v1.13.2 — Back button "press again to exit" toast ───────────────
+    backToExit:"Naciśnij ponownie aby wyjść",
     statusField:"Status", genreField:"Gatunek", hoursField:"Godziny",
     ratingField:"Ocena (1–10)", targetHoursField:"Cel (godz.)", notesField:"Notatki",
     notesPh:"Twoje przemyślenia...", genrePh:"— wybierz —", targetPh:"np. 40",
@@ -444,6 +458,20 @@ const TRANSLATIONS = {
     scanManualBtn:"Search",
     titleField:"Title *", yearField:"Year",
     releaseDateField:"Release date", releaseDateHint:"Leave empty if unknown (TBA)",
+    // ── v1.13.1 — Refresh-from-RAWG button ──────────────────────────────
+    rawgRefreshBtn:"Refresh from RAWG",
+    rawgRefreshing:"Refreshing…",
+    rawgRefreshOk:"Updated: {fields}",
+    rawgRefreshNoChanges:"No new changes — data is up to date",
+    rawgRefreshErr:"Refresh failed — check your connection",
+    // ── v1.13.2 — A4 back-button-to-exit confirmation toast ─────────────
+    backToExit:"Press again to exit",
+    rawgFieldDate:"release date",
+    rawgFieldYear:"year",
+    rawgFieldGenre:"genre",
+    rawgFieldCover:"cover",
+    // ── v1.13.2 — Back button "press again to exit" toast ───────────────
+    backToExit:"Press back again to exit",
     statusField:"Status", genreField:"Genre", hoursField:"Hours",
     ratingField:"Rating (1–10)", targetHoursField:"Target (hrs)", notesField:"Notes",
     notesPh:"Your thoughts...", genrePh:"— select —", targetPh:"e.g. 40",

@@ -22,7 +22,7 @@ import {
   wipeAllData,
 } from './lib/storage.js';
 import { registerSW, requestNotifPerm, checkReleases, shareText } from './lib/platform.js';
-import { rawgSearch } from './lib/rawg.js';
+import { rawgSearch, fetchGameById } from './lib/rawg.js';
 import { eanCacheRead, eanCacheWrite, cleanProductName, eanLookup } from './lib/barcode.js';
 import { collectSessions, computeStreak, computeLongestStreak } from './lib/sessions.js';
 import { ACHIEVEMENTS, computeAchievements, unlockedAchievementIds, getAchievementById } from './lib/achievements.js';
@@ -547,7 +547,7 @@ function RawgSearch({onSelect,lang}){
   );
 }
 
-function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
+function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang,flash}){
   // v1.9.0: isEdit checks game.id specifically (not just truthy) so that pre-fill
   // objects from Recommendations (which carry title/cover/rawgId but no id) are
   // treated as NEW games with prefilled fields, not edits of nonexistent games.
@@ -562,6 +562,9 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
   // Track whether targetHours came from RAWG playtime so we can show the explanatory hint
   // and clear it once the user manually overrides the value.
   const [targetFromRawg,setTargetFromRawg]=useState(false);
+  // v1.13.1 — Refresh-from-RAWG state. Only meaningful for edited games with a rawgId.
+  // Flips true while the fetch is in flight, blocks button taps, shows spinner.
+  const [refreshing,setRefreshing]=useState(false);
   const titleRef=useRef(null);
   const SM=getSM(lang);
   const genres=lang==='en'?GENRES_EN:GENRES_PL;
@@ -594,6 +597,63 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
     }
     return next;
   });
+  // v1.13.1 — Refresh-from-RAWG: re-fetch the canonical game data by rawgId and
+  // overwrite the 4 RAWG-controlled fields (releaseDate, year, genre, cover).
+  // We do NOT touch user-controlled fields:
+  //   title — user may have customized ("My Speedrun Save")
+  //   abbr — derived from title, user may have overridden
+  //   status, hours, rating, notes, priceBought/Sold, storeBought, targetHours,
+  //   extraSpend, platform, platinum, lastPlayed, completedAt, sessions,
+  //   notifyEnabled — all user-tracked or user-preference fields
+  //
+  // Diff is reported in the success toast so the user knows what changed
+  // ("Zaktualizowano: data, okładka") or that there was nothing new ("Brak zmian").
+  // Errors (404, network, abort) flash a generic failure toast.
+  async function refreshFromRawg(){
+    if(refreshing) return;
+    if(!f.rawgId) return; // button only renders when rawgId exists, but defensive
+    setRefreshing(true);
+    try {
+      const fresh = await fetchGameById(f.rawgId);
+      if(!fresh){
+        if(typeof flash==='function') flash(t(lang,'rawgRefreshErr'));
+        return;
+      }
+      // Build per-field diff. Only flag a field as "changed" if the new value is
+      // truthy AND different from current. RAWG returning empty string for a field
+      // we already have populated should NOT clear our data.
+      const changes = [];
+      const updates = {};
+      if(fresh.releaseDate && fresh.releaseDate !== f.releaseDate){
+        updates.releaseDate = fresh.releaseDate;
+        changes.push(t(lang,'rawgFieldDate'));
+      }
+      if(fresh.year && fresh.year !== f.year){
+        updates.year = fresh.year;
+        // year usually moves with releaseDate so we don't double-flag in the toast
+        if(!updates.releaseDate) changes.push(t(lang,'rawgFieldYear'));
+      }
+      if(fresh.genre && fresh.genre !== f.genre){
+        updates.genre = fresh.genre;
+        changes.push(t(lang,'rawgFieldGenre'));
+      }
+      if(fresh.cover && fresh.cover !== f.cover){
+        updates.cover = fresh.cover;
+        changes.push(t(lang,'rawgFieldCover'));
+      }
+      if(changes.length === 0){
+        if(typeof flash==='function') flash(t(lang,'rawgRefreshNoChanges'));
+        return;
+      }
+      // Apply updates (functional form — safe vs concurrent state changes mid-fetch).
+      setF(p => ({...p, ...updates}));
+      if(typeof flash==='function') flash(t(lang,'rawgRefreshOk',{fields:changes.join(', ')}));
+    } catch {
+      if(typeof flash==='function') flash(t(lang,'rawgRefreshErr'));
+    } finally {
+      setRefreshing(false);
+    }
+  }
   function handleSave(){
     if(!f.title.trim()){
       setShake(true);
@@ -656,6 +716,13 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang}){
               <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):`— ${lang==='en'?'in':'za'} ${days} ${lang==='en'?'days':'dni'}`}</span>}</label>
               <input className='fi' type='date' value={f.releaseDate} onChange={e=>upd('releaseDate',e.target.value)} style={{colorScheme:'dark'}}/>
               <div className='fhnt'>{t(lang,'releaseDateHint')}</div>
+              {/* v1.13.1 — Refresh from RAWG. Only shown for edited games with a rawgId
+                  (new games and pre-v1.9 games without rawgId have nothing to refresh). */}
+              {isEdit && f.rawgId && (
+                <button type='button' className='rawg-refresh' onClick={refreshFromRawg} disabled={refreshing}>
+                  {refreshing ? <><span className='rawg-refresh-spin'/>{t(lang,'rawgRefreshing')}</> : <>🔄 {t(lang,'rawgRefreshBtn')}</>}
+                </button>
+              )}
             </div>
             <div className='f2'>
               <div className='fg'><label className='fl'>{t(lang,'genreField')}</label>
@@ -2553,6 +2620,63 @@ export default function App(){
     return ()=>{ delete window.__ps5v_storageError; };
   },[lang,flash]);
 
+  // v1.13.2 — A4 fix: Back button intercept (Android hardware/gesture back).
+  // Standard PWA-in-TWA wraps the page so the Android back button fires `popstate`.
+  // Without intervention, popstate from initial entry → app exits immediately with no
+  // chance to confirm. We push a sentinel history entry on mount so the FIRST back press
+  // pops THAT entry (not the initial one), then we either close an open modal/overlay
+  // or — on the bare main screen — show a "press again to exit" toast and re-push the
+  // sentinel so a second back within 2s actually exits.
+  //
+  // Critical edge cases:
+  //  - State refs (not deps) so the effect runs once-on-mount; otherwise every modal
+  //    open/close would re-mount the listener and push another sentinel = stack bloat.
+  //  - Manual close (tap X button) doesn't push; next back will fall through to exit-confirm.
+  //    The handler reads stateRef.current so it always sees the latest values.
+  //  - Browsers cap history stack ~50 entries so even with messy use, we never DoS the engine.
+  const stateRef = useRef({});
+  stateRef.current = {modal, overlay, privacyOpen, rateModal};
+  useEffect(()=>{
+    if (typeof window === 'undefined' || !window.history) return;
+    window.history.pushState({app:'ps5vault'}, '', window.location.href);
+    let lastBack = 0;
+    const onBack = () => {
+      const s = stateRef.current;
+      if (s.modal) {
+        setModal(null);
+        window.history.pushState({app:'ps5vault'}, '', window.location.href);
+        return;
+      }
+      if (s.overlay) {
+        setOverlay(null);
+        window.history.pushState({app:'ps5vault'}, '', window.location.href);
+        return;
+      }
+      if (s.privacyOpen) {
+        setPrivacyOpen(false);
+        window.history.pushState({app:'ps5vault'}, '', window.location.href);
+        return;
+      }
+      if (s.rateModal) {
+        setRateModal(null);
+        window.history.pushState({app:'ps5vault'}, '', window.location.href);
+        return;
+      }
+      // No overlay/modal open → on main screen → exit confirmation.
+      const now = Date.now();
+      if (now - lastBack < 2000) {
+        // Second back within 2s → let the browser go back (TWA exits app).
+        return;
+      }
+      lastBack = now;
+      flash(t(lang, 'backToExit'));
+      window.history.pushState({app:'ps5vault'}, '', window.location.href);
+    };
+    window.addEventListener('popstate', onBack);
+    return () => window.removeEventListener('popstate', onBack);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount-only — values read via stateRef.current
+
   // v1.10.0 — Demo escape hatch for onboarding step 3. The Onboarding component loads
   // demo games in the background during step 1→2; if the user explicitly opts out
   // ("Zacznę od pustej kolekcji" link on currency confirm step), this hook clears them.
@@ -2756,6 +2880,67 @@ export default function App(){
     setMenuSeen(menuSeenUpdate(patch));
   };
   const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:'💰 '+t(lang,'filterSold')},{k:'platinum',l:t(lang,'filterPlatinum')}];
+
+  // v1.13.2 — A4 fix: Back button intercept (Android hardware back / TWA back).
+  //
+  // Native pattern: pressing back in Android should pop the topmost screen,
+  // and on the root screen show a "press back again to exit" toast for ~2s before
+  // actually closing the app. Our PWA was just letting browser default behavior
+  // close the app immediately on any back press from any screen — surprising
+  // users and losing in-flight modal data.
+  //
+  // Implementation: on mount we push a fake history entry. The browser back button
+  // pops it, firing 'popstate'. Our handler decides what to dismiss:
+  //   1. innermost overlay (rateModal / privacy / import)
+  //   2. Add/Edit modal
+  //   3. hamburger overlay screens (settings, recommendations, etc.)
+  //   4. on root with nothing open: arm exit, show toast, second press within 2s exits
+  //
+  // After every dismiss we re-push the fake entry so the next back press has
+  // something to pop. The arm timer auto-disarms after 2s (returns to step-1 state).
+  const backExitArmed = useRef(false);
+  const backDisarmTimer = useRef(null);
+  useEffect(() => {
+    // Push fake entry on mount so first back press fires popstate (not app exit)
+    try { window.history.pushState({ ps5vault: true }, ''); } catch {}
+
+    const onPop = (e) => {
+      // Re-push immediately so subsequent back presses still hit our handler.
+      // We do this BEFORE the dismiss so that if any dismiss is slow, we don't lose
+      // the back-button trap.
+      try { window.history.pushState({ ps5vault: true }, ''); } catch {}
+
+      // Priority 1: innermost overlays (rate prompt, privacy modal, import flow)
+      if (rateModal != null) { setRateModal(null); return; }
+      if (privacyOpen)        { setPrivacyOpen(false); return; }
+      if (importModal != null){ setImportModal(null); return; }
+      // Priority 2: Add/Edit game modal
+      if (modal != null)      { setModal(null); return; }
+      // Priority 3: hamburger overlay screens (settings, wrapped, achievements, etc.)
+      if (overlay != null)    { setOverlay(null); return; }
+
+      // Priority 4: root screen — arm exit on first press, allow exit on second
+      if (backExitArmed.current) {
+        // Second press within window: actually exit. Pop our re-pushed fake entry
+        // AND then go back once more — browser/TWA closes app when no history left.
+        if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
+        backExitArmed.current = false;
+        // history.go(-2) pops both the just-pushed fake entry and the original
+        // entry, leaving an empty stack → TWA / browser closes.
+        try { window.history.go(-2); } catch { try { window.history.back(); } catch {} }
+        return;
+      }
+      backExitArmed.current = true;
+      flash(t(lang,'backToExit'));
+      backDisarmTimer.current = setTimeout(() => { backExitArmed.current = false; }, 2000);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
+    };
+  }, [rateModal, privacyOpen, importModal, modal, overlay, lang, flash]);
+
   const sortFn = {
     added:  (a,b) => 0,
     title:  (a,b) => a.title.localeCompare(b.title),
@@ -2845,7 +3030,7 @@ export default function App(){
         {tab==='st'&&<Stats games={games} lang={lang}/>}
         {/* v1.5.0 — Settings/Achievements/Goals/Wrapped now live behind hamburger menu (see overlays below) */}
 
-        {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
+        {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
         <Toast msg={toast}/>
         {achQueue.length>0 && (
           <AchievementBanner
