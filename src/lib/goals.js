@@ -30,6 +30,23 @@ export const GOAL_TYPES = {
   platinum:  { ico:'🏆', tk:'goalTplPlatinumTitle' },
 };
 
+// v1.13.3 — Build the placeholder bag for goal title interpolation. Polish uses
+// 3-form plural ("3 gry" not "3 gier") so we supply pluralized words alongside
+// the count {n}. EN uses simpler 1/many split. Caller picks pluralizers via type:
+//   complete → games word
+//   hours    → hours word
+//   add      → games word
+//   platinum → platinums word
+// Importing pluralizers here keeps the call site clean: `t(lang, tpl.tk, goalParams(type, n, lang))`.
+import { gamesWord, hoursWord, platynaWord } from './format.js';
+export function goalParams(type, n, lang) {
+  const params = { n };
+  if (type === 'complete' || type === 'add') params.games = gamesWord(n, lang);
+  if (type === 'hours')   params.hrs   = hoursWord(n, lang);
+  if (type === 'platinum') params.plats = platynaWord(n, lang);
+  return params;
+}
+
 export const GOAL_TEMPLATES = [
   { type:'complete',  target:3 },
   { type:'complete',  target:5 },

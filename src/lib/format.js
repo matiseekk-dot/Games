@@ -40,6 +40,32 @@ export function gamesWord(n, lang) {
   return 'gier';
 }
 
+// v1.13.3 — Polish 3-form plural for "hours" used in goal templates and similar
+// sentence-style strings. EN: 1 hour / 2+ hours.
+// PL: 1 godzinę / 2-4 godziny / 5+ godzin (genitive).
+// Note: this is the ACCUSATIVE form (used after verbs like "Zagraj X godzin/y/ę")
+// because that's the dominant use case. For nominative ("X godzin minęło"),
+// the forms differ slightly but accusative is what we need for goal CTAs.
+export function hoursWord(n, lang) {
+  const abs = Math.abs(n);
+  if (lang === 'en') return abs === 1 ? 'hour' : 'hours';
+  if (abs === 1) return 'godzinę';
+  const last = abs % 10, lastTwo = abs % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20)) return 'godziny';
+  return 'godzin';
+}
+
+// v1.13.3 — Polish plural for "platinum (trophy)" — same 3-form pattern.
+// EN: 1 platinum / 2+ platinums. PL: 1 platynę / 2-4 platyny / 5+ platyn.
+export function platynaWord(n, lang) {
+  const abs = Math.abs(n);
+  if (lang === 'en') return abs === 1 ? 'platinum' : 'platinums';
+  if (abs === 1) return 'platynę';
+  const last = abs % 10, lastTwo = abs % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20)) return 'platyny';
+  return 'platyn';
+}
+
 // Cost-per-hour with dynamic symbol. Format always "1.9 sym/h" regardless of before/after.
 // Named fmtCph (NOT cph) to avoid collision with local `const cph` inside Stats/Finance.
 export function fmtCph(v) {

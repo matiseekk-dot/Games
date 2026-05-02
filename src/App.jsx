@@ -10,7 +10,7 @@ import {
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
 import { uid, mkAbbr, daysUntil, dayKey, weekStart } from './lib/util.js';
-import { fmtDate, fmtShort, pln, gamesWord, fmtCph, fmtHours } from './lib/format.js';
+import { fmtDate, fmtShort, pln, gamesWord, hoursWord, platynaWord, fmtCph, fmtHours } from './lib/format.js';
 import {
   lsRead, lsWrite,
   budgetRead, budgetWrite, timerRead, timerWrite,
@@ -26,7 +26,7 @@ import { rawgSearch, fetchGameById } from './lib/rawg.js';
 import { eanCacheRead, eanCacheWrite, cleanProductName, eanLookup } from './lib/barcode.js';
 import { collectSessions, computeStreak, computeLongestStreak } from './lib/sessions.js';
 import { ACHIEVEMENTS, computeAchievements, unlockedAchievementIds, getAchievementById } from './lib/achievements.js';
-import { goalsRead, goalsWrite, monthBounds, daysLeftInMonth, GOAL_TYPES, GOAL_TEMPLATES, goalCurrent } from './lib/goals.js';
+import { goalsRead, goalsWrite, monthBounds, daysLeftInMonth, GOAL_TYPES, GOAL_TEMPLATES, goalCurrent, goalParams } from './lib/goals.js';
 import { getYearsWithData, computeYearReview } from './lib/wrapped.js';
 import { makeDemoGames, hasDemoGames, removeDemoGames } from './lib/demo.js';
 import { buildRecommendations, recsCacheStats, recsCacheClear } from './lib/recommend.js';
@@ -953,7 +953,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
                 <div className='cont-body'>
                   <div className='cont-title'>{g.title}</div>
                   <div className='cont-meta'>{[g.genre,g.hours&&t(lang,'hoursPlayed',{h:fmtHours(g.hours)})].filter(Boolean).join(' · ')}</div>
-                  {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span><span>~{fmtHours(gRem)} {t(lang,'remaining')}</span></div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
+                  {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span>{gProg<100&&<span>~{fmtHours(gRem)} {t(lang,'remaining')}</span>}</div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
                 </div>
               </div>
               <SessionTimer game={g} lang={lang} onSave={(hrs,session)=>{
@@ -1869,7 +1869,7 @@ function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }
       if(newlyDone.length){
         const gl=newlyDone[0];
         const tpl=GOAL_TYPES[gl.type];
-        const titleStr=t(lang, tpl.tk, {n:gl.target});
+        const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
         flash(t(lang,'goalDone',{title:titleStr}));
       }
     }
@@ -1896,7 +1896,7 @@ function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }
           const tpl=GOAL_TYPES[gl.type];
           const cur=goalCurrent(gl, games, sessions);
           const pct=Math.min(100, Math.round((cur/gl.target)*100));
-          const titleStr=t(lang, tpl.tk, {n:gl.target});
+          const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
           return (
             <div key={gl.id} className='goal-card'>
               <div className='goal-row'>
@@ -1918,7 +1918,7 @@ function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }
           <div className='goals-h' style={{marginTop:14}}>{t(lang,'goalsDone',{n:done.length})}</div>
           {done.map(gl=>{
             const tpl=GOAL_TYPES[gl.type];
-            const titleStr=t(lang, tpl.tk, {n:gl.target});
+            const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
             return (
               <div key={gl.id} className='goal-card goal-card-done'>
                 <div className='goal-row'>
@@ -1946,7 +1946,7 @@ function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }
                 return (
                   <button key={i} type='button' className='goal-tpl' onClick={()=>addGoal(tpl)}>
                     <span style={{fontSize:20}}>{def.ico}</span>
-                    <span style={{flex:1,textAlign:'left'}}>{t(lang, def.tk, {n:tpl.target})}</span>
+                    <span style={{flex:1,textAlign:'left'}}>{t(lang, def.tk, goalParams(tpl.type, tpl.target, lang))}</span>
                   </button>
                 );
               })}
@@ -1982,7 +1982,7 @@ function GoalsCard({ goals, games, sessions, lang, onOpen }){
         const tpl=GOAL_TYPES[gl.type];
         const cur=goalCurrent(gl, games, sessions);
         const pct=Math.min(100, Math.round((cur/gl.target)*100));
-        const titleStr=t(lang, tpl.tk, {n:gl.target});
+        const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
         return (
           <div key={gl.id} className='goal-mini'>
             <div className='goal-mini-row'>
