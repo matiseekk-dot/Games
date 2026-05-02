@@ -43,7 +43,7 @@ export function lsWrite(g) {
     // Surface to user via global hook set by App; fall back to console if not registered yet.
     const isQuota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
     if (typeof window !== 'undefined' && window.__ps5v_storageError) {
-      window.__ps5v_storageError(isQuota ? 'quota' : 'unknown', e);
+      window.__ps5v_storageError(isQuota ? 'quota' : 'unknown');
     } else {
       console.error('[ps5vault] lsWrite failed:', e);
     }

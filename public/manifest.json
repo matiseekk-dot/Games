@@ -1,17 +1,19 @@
 {
   "id": "ps5vault",
-  "name": "PS5 Vault",
+  "name": "PS5 Vault — Game Tracker",
   "short_name": "PS5 Vault",
   "description": "Spotify Wrapped dla Twoich gier + finansowy audyt + skanowanie EAN",
   "start_url": "/Games/",
   "scope": "/Games/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#080B14",
   "theme_color": "#080B14",
   "lang": "pl-PL",
   "dir": "ltr",
   "categories": ["games", "entertainment", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/Games/icons/icon-192.png",

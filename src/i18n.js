@@ -142,8 +142,6 @@ const TRANSLATIONS = {
     rawgFieldYear:"rok",
     rawgFieldGenre:"gatunek",
     rawgFieldCover:"okładka",
-    // ── v1.13.2 — Back button "press again to exit" toast ───────────────
-    backToExit:"Naciśnij ponownie aby wyjść",
     statusField:"Status", genreField:"Gatunek", hoursField:"Godziny",
     ratingField:"Ocena (1–10)", targetHoursField:"Cel (godz.)", notesField:"Notatki",
     notesPh:"Twoje przemyślenia...", genrePh:"— wybierz —", targetPh:"np. 40",
@@ -470,8 +468,6 @@ const TRANSLATIONS = {
     rawgFieldYear:"year",
     rawgFieldGenre:"genre",
     rawgFieldCover:"cover",
-    // ── v1.13.2 — Back button "press again to exit" toast ───────────────
-    backToExit:"Press back again to exit",
     statusField:"Status", genreField:"Genre", hoursField:"Hours",
     ratingField:"Rating (1–10)", targetHoursField:"Target (hrs)", notesField:"Notes",
     notesPh:"Your thoughts...", genrePh:"— select —", targetPh:"e.g. 40",

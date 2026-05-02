@@ -3,9 +3,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Cartes
 
 // v1.6.0 — extracted modules. App.jsx is now a thin orchestrator + components shell.
 import {
-  APP_VER, RAWG_KEY,
-  LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_EAN_CACHE, LS_GOALS,
-  G, GENRES_PL, GENRES_EN, RMAP, STORES, PLATFORMS, CURRENCIES, EF,
+  APP_VER,
+  LS_LANG, LS_CURRENCY,
+  G, GENRES_PL, GENRES_EN, STORES, PLATFORMS, CURRENCIES, EF,
 } from './constants.js';
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
@@ -16,7 +16,7 @@ import {
   budgetRead, budgetWrite, timerRead, timerWrite,
   isOnboarded, setOnboarded,
   getLang, getCurrency, getCurSymbol, getDefaultCurrency,
-  exportData, importData, importMerge, importReplace, isValidGameShape,
+  exportData, importMerge, importReplace,
   lastSeenAchRead, lastSeenAchWrite,
   menuSeenRead, menuSeenUpdate,
   wipeAllData,
@@ -2292,14 +2292,14 @@ function Recommendations({ games, lang, onClose, onAdd }){
 //
 // The reload is mandatory: useState/useRef refs hold deleted localStorage data, so just
 // clearing storage without unmounting React would leave the UI in inconsistent state.
-function WipeConfirm({ games, lang, onClose, flash }){
+function WipeConfirm({ games, lang, onClose }){
   const [confirmText, setConfirmText] = useState('');
   const expected = lang === 'pl' ? 'USUŃ' : 'DELETE';
   const ready = confirmText.trim().toUpperCase() === expected;
 
   function doWipe(){
     if (!ready) return;
-    const result = wipeAllData();
+    wipeAllData();
     // No way to flash a toast that survives the reload — so we just reload immediately.
     // The user lands on the welcome screen, which is itself the "✓ done" feedback.
     window.location.reload();
@@ -2419,7 +2419,7 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
           try{
             const log=JSON.parse(localStorage.getItem('ps5vault_error_log')||'[]');
             const last=log[log.length-1];
-            if(last) lastErr=`\nLast error (${last.time||'?'}): ${last.message||''}`;
+            if(last) lastErr=`\nLast error (${last.ts||'?'}): ${last.msg||''}`;
           }catch{}
           const body=encodeURIComponent(`\n\n---\nDevice: ${navigator.userAgent}\nApp: v${APP_VER}\nLang: ${lang}\nGames: ${games.length}${lastErr}`);
           window.location.href=`mailto:skudev6@gmail.com?subject=${subject}&body=${body}`;
@@ -2619,63 +2619,6 @@ export default function App(){
     };
     return ()=>{ delete window.__ps5v_storageError; };
   },[lang,flash]);
-
-  // v1.13.2 — A4 fix: Back button intercept (Android hardware/gesture back).
-  // Standard PWA-in-TWA wraps the page so the Android back button fires `popstate`.
-  // Without intervention, popstate from initial entry → app exits immediately with no
-  // chance to confirm. We push a sentinel history entry on mount so the FIRST back press
-  // pops THAT entry (not the initial one), then we either close an open modal/overlay
-  // or — on the bare main screen — show a "press again to exit" toast and re-push the
-  // sentinel so a second back within 2s actually exits.
-  //
-  // Critical edge cases:
-  //  - State refs (not deps) so the effect runs once-on-mount; otherwise every modal
-  //    open/close would re-mount the listener and push another sentinel = stack bloat.
-  //  - Manual close (tap X button) doesn't push; next back will fall through to exit-confirm.
-  //    The handler reads stateRef.current so it always sees the latest values.
-  //  - Browsers cap history stack ~50 entries so even with messy use, we never DoS the engine.
-  const stateRef = useRef({});
-  stateRef.current = {modal, overlay, privacyOpen, rateModal};
-  useEffect(()=>{
-    if (typeof window === 'undefined' || !window.history) return;
-    window.history.pushState({app:'ps5vault'}, '', window.location.href);
-    let lastBack = 0;
-    const onBack = () => {
-      const s = stateRef.current;
-      if (s.modal) {
-        setModal(null);
-        window.history.pushState({app:'ps5vault'}, '', window.location.href);
-        return;
-      }
-      if (s.overlay) {
-        setOverlay(null);
-        window.history.pushState({app:'ps5vault'}, '', window.location.href);
-        return;
-      }
-      if (s.privacyOpen) {
-        setPrivacyOpen(false);
-        window.history.pushState({app:'ps5vault'}, '', window.location.href);
-        return;
-      }
-      if (s.rateModal) {
-        setRateModal(null);
-        window.history.pushState({app:'ps5vault'}, '', window.location.href);
-        return;
-      }
-      // No overlay/modal open → on main screen → exit confirmation.
-      const now = Date.now();
-      if (now - lastBack < 2000) {
-        // Second back within 2s → let the browser go back (TWA exits app).
-        return;
-      }
-      lastBack = now;
-      flash(t(lang, 'backToExit'));
-      window.history.pushState({app:'ps5vault'}, '', window.location.href);
-    };
-    window.addEventListener('popstate', onBack);
-    return () => window.removeEventListener('popstate', onBack);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]); // mount-only — values read via stateRef.current
 
   // v1.10.0 — Demo escape hatch for onboarding step 3. The Onboarding component loads
   // demo games in the background during step 1→2; if the user explicitly opts out
@@ -3192,7 +3135,6 @@ export default function App(){
           <WipeConfirm
             games={games}
             lang={lang}
-            flash={flash}
             onClose={()=>setOverlay('settings')}
           />
         )}
