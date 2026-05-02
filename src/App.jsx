@@ -10,7 +10,7 @@ import {
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
 import { uid, mkAbbr, daysUntil, dayKey, weekStart } from './lib/util.js';
-import { fmtDate, fmtShort, pln, gamesWord, hoursWord, platynaWord, fmtCph, fmtHours } from './lib/format.js';
+import { fmtDate, fmtShort, pln, gamesWord, hoursWord, platynaWord, sessionsWord, fmtCph, fmtHours } from './lib/format.js';
 import {
   lsRead, lsWrite,
   budgetRead, budgetWrite, timerRead, timerWrite,
@@ -1394,7 +1394,7 @@ function Stats({games,lang}){
               <div>
                 <div style={{display:'flex',alignItems:'baseline',gap:10,marginBottom:8}}>
                   <span style={{fontFamily:"'Orbitron',monospace",fontSize:28,fontWeight:900,color:G.grn}}>{fmtHours(todayHours)}</span>
-                  <span style={{fontSize:11,color:G.dim}}>{t(lang,'sessionsCount',{n:todaySessions.length})}</span>
+                  <span style={{fontSize:11,color:G.dim}}>{t(lang,'sessionsCount',{n:todaySessions.length, sw:sessionsWord(todaySessions.length,lang)})}</span>
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:6,paddingTop:8,borderTop:'1px solid '+G.bdr}}>
                   {todaySessions.slice(0,4).map((s,i)=>(
@@ -2064,7 +2064,7 @@ function YearInReview({ games, lang, onClose, flash }){
           <div className='wr-hero'>
             <div className='wr-hero-num'>{review.totalHours}</div>
             <div className='wr-hero-lbl'>{t(lang,'wrappedTotalHours')}</div>
-            <div className='wr-hero-sub'>{review.sessionCount} {lang==='pl'?'sesji':'sessions'}</div>
+            <div className='wr-hero-sub'>{review.sessionCount} {sessionsWord(review.sessionCount, lang)}</div>
           </div>
 
           {/* Stats grid */}
@@ -2122,7 +2122,7 @@ function YearInReview({ games, lang, onClose, flash }){
           {review.topGenre && <div className='wr-card'>
             <div className='wr-card-h'>{t(lang,'wrappedTopGenre')}</div>
             <div className='wr-genre-name'>{review.topGenre.name}</div>
-            <div className='wr-genre-meta'>{t(lang,'wrappedTopGenreDesc',{n:review.topGenre.hours, games:review.topGenre.gamesCount})}</div>
+            <div className='wr-genre-meta'>{t(lang,'wrappedTopGenreDesc',{n:review.topGenre.hours, hrs:hoursWord(review.topGenre.hours,lang), games:review.topGenre.gamesCount, gw:gamesWord(review.topGenre.gamesCount,lang)})}</div>
           </div>}
 
           {/* Money + records */}

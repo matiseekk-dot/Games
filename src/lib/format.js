@@ -66,6 +66,18 @@ export function platynaWord(n, lang) {
   return 'platyn';
 }
 
+// v1.13.4 — Polish plural for "session" (gaming session). Used in Wrapped hero subtitle
+// ("X sesji"/"X sesje") and home stats ("X sesji dziś"). 1 sesja / 2-4 sesje / 5+ sesji.
+// EN: 1 session / 2+ sessions.
+export function sessionsWord(n, lang) {
+  const abs = Math.abs(n);
+  if (lang === 'en') return abs === 1 ? 'session' : 'sessions';
+  if (abs === 1) return 'sesja';
+  const last = abs % 10, lastTwo = abs % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20)) return 'sesje';
+  return 'sesji';
+}
+
 // Cost-per-hour with dynamic symbol. Format always "1.9 sym/h" regardless of before/after.
 // Named fmtCph (NOT cph) to avoid collision with local `const cph` inside Stats/Finance.
 export function fmtCph(v) {
