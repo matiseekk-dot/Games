@@ -2762,6 +2762,78 @@ export default function App(){
     flash(t(lang,'currencyChanged',{name:(def.name[lang]||def.name.en)}));
   },[lang,flash]);
 
+  // v1.13.2 — A4 fix: Back button intercept (Android hardware back / TWA back).
+  //
+  // Native pattern: pressing back in Android should pop the topmost screen,
+  // and on the root screen show a "press back again to exit" toast for ~2s before
+  // actually closing the app. Our PWA was just letting browser default behavior
+  // close the app immediately on any back press from any screen — surprising
+  // users and losing in-flight modal data.
+  //
+  // Implementation: on mount we push a fake history entry. The browser back button
+  // pops it, firing 'popstate'. Our handler decides what to dismiss:
+  //   1. innermost overlay (rateModal / privacy / import)
+  //   2. Add/Edit modal
+  //   3. hamburger overlay screens (settings, recommendations, etc.)
+  //   4. on root with nothing open: arm exit, show toast, second press within 2s exits
+  //
+  // After every dismiss we re-push the fake entry so the next back press has
+  // something to pop. The arm timer auto-disarms after 2s (returns to step-1 state).
+  //
+  // v1.13.8 — Hoisted ABOVE the `if(!onboarded) return` early return below.
+  // Previously these hooks lived after the gate, so they were skipped during onboarding
+  // and only mounted on the first post-onboarding render. That added 3 hooks to the
+  // call list mid-lifecycle and tripped React's "Rendered more hooks than during the
+  // previous render" Rules-of-Hooks check, crashing the app right after the user
+  // confirmed the currency step. Hooks must be unconditionally called in the same
+  // order every render — so they belong above any conditional return.
+  const backExitArmed = useRef(false);
+  const backDisarmTimer = useRef(null);
+  useEffect(() => {
+    // The back-button trap is meaningless during onboarding (the Onboarding subtree is
+    // rendered above instead of <div className='app'>), so wait until the user is past
+    // the gate before pushing the sentinel history entry + wiring popstate.
+    if (!onboarded) return;
+    // Push fake entry on mount so first back press fires popstate (not app exit)
+    try { window.history.pushState({ ps5vault: true }, ''); } catch {}
+
+    const onPop = (e) => {
+      // Re-push immediately so subsequent back presses still hit our handler.
+      // We do this BEFORE the dismiss so that if any dismiss is slow, we don't lose
+      // the back-button trap.
+      try { window.history.pushState({ ps5vault: true }, ''); } catch {}
+
+      // Priority 1: innermost overlays (rate prompt, privacy modal, import flow)
+      if (rateModal != null) { setRateModal(null); return; }
+      if (privacyOpen)        { setPrivacyOpen(false); return; }
+      if (importModal != null){ setImportModal(null); return; }
+      // Priority 2: Add/Edit game modal
+      if (modal != null)      { setModal(null); return; }
+      // Priority 3: hamburger overlay screens (settings, wrapped, achievements, etc.)
+      if (overlay != null)    { setOverlay(null); return; }
+
+      // Priority 4: root screen — arm exit on first press, allow exit on second
+      if (backExitArmed.current) {
+        // Second press within window: actually exit. Pop our re-pushed fake entry
+        // AND then go back once more — browser/TWA closes app when no history left.
+        if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
+        backExitArmed.current = false;
+        // history.go(-2) pops both the just-pushed fake entry and the original
+        // entry, leaving an empty stack → TWA / browser closes.
+        try { window.history.go(-2); } catch { try { window.history.back(); } catch {} }
+        return;
+      }
+      backExitArmed.current = true;
+      flash(t(lang,'backToExit'));
+      backDisarmTimer.current = setTimeout(() => { backExitArmed.current = false; }, 2000);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
+    };
+  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, lang, flash]);
+
   if(!onboarded)return(<><style>{CSS}</style><Onboarding
     onSkip={()=>{setOnboarded(true);setOnboard(true);}}
     onCurrencyPick={setCurrencyPersist}
@@ -2824,65 +2896,8 @@ export default function App(){
   };
   const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:'💰 '+t(lang,'filterSold')},{k:'platinum',l:t(lang,'filterPlatinum')}];
 
-  // v1.13.2 — A4 fix: Back button intercept (Android hardware back / TWA back).
-  //
-  // Native pattern: pressing back in Android should pop the topmost screen,
-  // and on the root screen show a "press back again to exit" toast for ~2s before
-  // actually closing the app. Our PWA was just letting browser default behavior
-  // close the app immediately on any back press from any screen — surprising
-  // users and losing in-flight modal data.
-  //
-  // Implementation: on mount we push a fake history entry. The browser back button
-  // pops it, firing 'popstate'. Our handler decides what to dismiss:
-  //   1. innermost overlay (rateModal / privacy / import)
-  //   2. Add/Edit modal
-  //   3. hamburger overlay screens (settings, recommendations, etc.)
-  //   4. on root with nothing open: arm exit, show toast, second press within 2s exits
-  //
-  // After every dismiss we re-push the fake entry so the next back press has
-  // something to pop. The arm timer auto-disarms after 2s (returns to step-1 state).
-  const backExitArmed = useRef(false);
-  const backDisarmTimer = useRef(null);
-  useEffect(() => {
-    // Push fake entry on mount so first back press fires popstate (not app exit)
-    try { window.history.pushState({ ps5vault: true }, ''); } catch {}
-
-    const onPop = (e) => {
-      // Re-push immediately so subsequent back presses still hit our handler.
-      // We do this BEFORE the dismiss so that if any dismiss is slow, we don't lose
-      // the back-button trap.
-      try { window.history.pushState({ ps5vault: true }, ''); } catch {}
-
-      // Priority 1: innermost overlays (rate prompt, privacy modal, import flow)
-      if (rateModal != null) { setRateModal(null); return; }
-      if (privacyOpen)        { setPrivacyOpen(false); return; }
-      if (importModal != null){ setImportModal(null); return; }
-      // Priority 2: Add/Edit game modal
-      if (modal != null)      { setModal(null); return; }
-      // Priority 3: hamburger overlay screens (settings, wrapped, achievements, etc.)
-      if (overlay != null)    { setOverlay(null); return; }
-
-      // Priority 4: root screen — arm exit on first press, allow exit on second
-      if (backExitArmed.current) {
-        // Second press within window: actually exit. Pop our re-pushed fake entry
-        // AND then go back once more — browser/TWA closes app when no history left.
-        if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
-        backExitArmed.current = false;
-        // history.go(-2) pops both the just-pushed fake entry and the original
-        // entry, leaving an empty stack → TWA / browser closes.
-        try { window.history.go(-2); } catch { try { window.history.back(); } catch {} }
-        return;
-      }
-      backExitArmed.current = true;
-      flash(t(lang,'backToExit'));
-      backDisarmTimer.current = setTimeout(() => { backExitArmed.current = false; }, 2000);
-    };
-    window.addEventListener('popstate', onPop);
-    return () => {
-      window.removeEventListener('popstate', onPop);
-      if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
-    };
-  }, [rateModal, privacyOpen, importModal, modal, overlay, lang, flash]);
+  // v1.13.8 — back-button intercept hook moved above the `if(!onboarded) return` early
+  // return earlier in this component (Rules of Hooks fix). See comment block there.
 
   const sortFn = {
     added:  (a,b) => 0,
