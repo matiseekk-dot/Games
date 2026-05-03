@@ -2228,12 +2228,28 @@ function Recommendations({ games, lang, onClose, onAdd }){
           </div>
         )}
 
-        {/* Per-track empty state */}
+        {/* Per-track empty state.
+            v1.13.9 — Distinguish "user not eligible" (no seeds) from "RAWG returned nothing
+            for the seeds we sent" (seeds present but recs empty). Previously both showed the
+            same "Rate ≥8 / Finish more" hint, which lied to users who already had eligible
+            seeds — they'd see the message and assume their data was wrong, not that the
+            external API returned an empty suggested-list. */}
         {data && track && track.recs.length===0 && (
           <div className='rec-empty'>
-            <div className='eic'>{tab==='rated'?'❤️':'✅'}</div>
-            <div className='ett'>{tab==='rated'?t(lang,'recEmptyRated'):t(lang,'recEmptyCompleted')}</div>
-            <div className='ess'>{tab==='rated'?t(lang,'recEmptyRatedHint'):t(lang,'recEmptyCompletedHint')}</div>
+            {track.seeds.length===0 ? (
+              <>
+                <div className='eic'>{tab==='rated'?'❤️':'✅'}</div>
+                <div className='ett'>{tab==='rated'?t(lang,'recEmptyRated'):t(lang,'recEmptyCompleted')}</div>
+                <div className='ess'>{tab==='rated'?t(lang,'recEmptyRatedHint'):t(lang,'recEmptyCompletedHint')}</div>
+              </>
+            ) : (
+              <>
+                <div className='eic'>🤷</div>
+                <div className='ett'>{t(lang,'recNoMatches')}</div>
+                <div className='ess'>{t(lang,'recNoMatchesHint')}</div>
+                <button type='button' className='rec-retry' onClick={()=>{ setError(false); setData(null); }}>{t(lang,'retry')}</button>
+              </>
+            )}
           </div>
         )}
 

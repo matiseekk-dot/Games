@@ -503,4 +503,20 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .rawg-refresh:disabled{opacity:.6;cursor:not-allowed}
 .rawg-refresh:disabled:active{transform:none}
 .rawg-refresh-spin{width:13px;height:13px;border:2px solid rgba(0,212,255,.3);border-top-color:${G.blu};border-radius:50%;animation:spin .8s linear infinite}
+
+/* v1.13.9 — Landscape on phones: portrait .hdr (status-bar inset + 44 + ~46 tabs + 12 + 14 ≈ 130-180px)
+   eats ~50% of a 375h screen, leaving the scroll surface tiny and effectively useless. Compress
+   the top inset and gaps in landscape so .scr/.lst gets a usable share of the viewport. Threshold
+   max-height:500px catches typical phone landscape (375-414h) without affecting tablets. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .hdr{padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-bottom:6px}
+  .htop{margin-bottom:8px}
+  .tabs{padding:2px}
+  .tab{min-height:36px;padding:6px 2px}
+  .lico{width:28px;height:28px;font-size:16px}
+  .lnm{font-size:13px}
+  .lsb{display:none}
+  .abtn{min-height:36px;padding:8px 12px;font-size:13px}
+  .hmb{min-height:36px;min-width:36px}
+}
 `;
