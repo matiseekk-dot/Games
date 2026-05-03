@@ -22,9 +22,12 @@ html{-webkit-text-size-adjust:100%;overflow-x:hidden;max-width:100%}
    pull-to-refresh, reloading the app and losing in-flight modal data. */
 body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 #root{overflow-x:hidden;max-width:100%}
-.app{display:flex;flex-direction:column;min-height:100dvh;max-width:100%;overflow-x:hidden}
+/* v1.13.6 — A4 fix: min-height → height + overflow:hidden, so flex children with overflow-y:auto
+   actually scroll instead of letting .app expand past viewport (was breaking scroll on Android TWA). */
+.app{display:flex;flex-direction:column;height:100dvh;max-height:100dvh;max-width:100%;overflow:hidden}
 
-.hdr{overflow:hidden;padding-top:calc(env(safe-area-inset-top,0px) + 44px);padding-bottom:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* v1.13.6 — flex-shrink:0 so header keeps its full height even when .app is fixed-height. */
+.hdr{flex-shrink:0;overflow:hidden;padding-top:calc(env(safe-area-inset-top,0px) + 44px);padding-bottom:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .htop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
 .logo{display:flex;align-items:center;gap:10px;min-width:0}
 .lico{width:34px;height:34px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#fff;box-shadow:0 0 12px rgba(0,212,255,.35)}
@@ -48,7 +51,8 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .tab.on{background:rgba(0,212,255,.15);color:${G.blu}}
 .tab-dot{position:absolute;top:5px;right:4px;width:5px;height:5px;border-radius:50%;background:${G.org};animation:pulse 1.5s infinite}
 
-.scr{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-width:100%;animation:tabSlide .2s ease;overscroll-behavior:contain}
+/* v1.13.6 — min-height:0 unlocks flex-child overflow scroll (default min-height:auto blocks it). */
+.scr{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-width:100%;animation:tabSlide .2s ease;overscroll-behavior:contain}
 
 .hcard{background:${G.card};border:1px solid ${G.bdr};border-radius:16px;padding:16px;margin-bottom:12px;overflow:hidden;max-width:100%;animation:fadeIn .3s ease}
 .hcard-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -77,18 +81,20 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .cnt-btn{padding:8px 10px;border-radius:9px;border:1px solid ${G.bdr};background:${G.card2};color:${G.txt};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex:1;text-align:center}
 .cnt-btn-primary{background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;border-color:transparent}
 .cnt-btn-success{background:linear-gradient(135deg,${G.grn},#00a040);color:#000;border-color:transparent;font-weight:700}
-.sw{position:relative;padding:10px 16px 6px}
+/* v1.13.6 — flex-shrink:0 on all .app's row-children (search/toolbar/chips/sort) so .lst
+   gets the full remaining flex:1 height instead of every row being squeezed proportionally. */
+.sw{flex-shrink:0;position:relative;padding:10px 16px 6px}
 .si{display:block;width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;padding:11px 12px 11px 36px;color:${G.txt};font-family:'Syne',sans-serif;font-size:16px;outline:none;-webkit-appearance:none}
 .si:focus{border-color:${G.blu}}
 .sx{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none}
-.chips{display:flex;gap:6px;padding:6px 16px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chips{flex-shrink:0;display:flex;gap:6px;padding:6px 16px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .chips::-webkit-scrollbar{display:none}
 .chip{padding:7px 14px;border-radius:20px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
 .chip.on{border-color:${G.blu};color:${G.blu};background:rgba(0,212,255,.1)}
 .chip.sold-on{border-color:${G.grn};color:${G.grn};background:rgba(57,255,110,.1)}
-.toolbar{display:flex;gap:8px;padding:0 16px 8px;justify-content:flex-end}
+.toolbar{flex-shrink:0;display:flex;gap:8px;padding:0 16px 8px;justify-content:flex-end}
 .tbtn{padding:6px 12px;border:1px solid ${G.bdr};border-radius:8px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
-.sort-row{display:flex;gap:6px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:center}
+.sort-row{flex-shrink:0;display:flex;gap:6px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:center}
 .sort-row::-webkit-scrollbar{display:none}
 .sort-lbl{font-size:10px;color:${G.dim};font-weight:600;white-space:nowrap;flex-shrink:0}
 .sort-btn{padding:5px 10px;border-radius:16px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
@@ -100,7 +106,8 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .rate-star{width:42px;height:42px;border-radius:10px;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-family:'Orbitron',monospace;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
 .rate-star.on{border-color:${G.gld};background:rgba(255,209,102,.15);color:${G.gld}}
 .rate-btns{display:flex;gap:8px}
-.lst{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:4px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+/* v1.13.6 — min-height:0 unlocks flex-child overflow scroll (same as .scr). */
+.lst{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:4px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
 .gc{width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:9px;display:flex;align-items:stretch;cursor:pointer;position:relative;overflow:hidden;animation:fadeIn .25s ease;transition:border-color .15s}
 .gc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c);opacity:.75;z-index:1}
 .gc:active{opacity:.75;transform:scale(.99)}
