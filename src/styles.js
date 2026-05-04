@@ -189,7 +189,10 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .fkv{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--c);line-height:1;margin-bottom:4px}
 .fkl{font-size:9px;color:${G.dim};font-weight:600;letter-spacing:.07em;text-transform:uppercase}
 .ins-card{border-radius:13px;padding:14px;margin-bottom:10px;border:1px solid transparent;animation:fadeIn .35s ease}
-.ovr{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.9);z-index:9999;display:flex;align-items:flex-end}
+/* v1.13.13 — same edge-to-edge fix; .ovr is the dimmed backdrop+container for the
+   game-detail modal which slides up from the bottom. Anchoring its bottom to env() makes
+   the modal's slide-up endpoint sit above the nav bar. */
+.ovr{position:fixed;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);background:rgba(4,6,14,.9);z-index:9999;display:flex;align-items:flex-end}
 .mdl{width:100%;overflow:visible;overflow-y:auto;-webkit-overflow-scrolling:touch;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px);max-height:90dvh;animation:slideUp .22s ease;overscroll-behavior:contain}
 .mhdl{width:32px;height:4px;background:${G.bdr};border-radius:2px;margin:0 auto 16px}
 .mttl{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${G.blu};letter-spacing:.06em;margin-bottom:16px}
@@ -328,7 +331,12 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .acc-btn:hover,.acc-btn:active{color:${G.blu};border-color:${G.blu};background:rgba(0,212,255,.04)}
 .acc-body{animation:fadeIn .2s ease}
 .fhnt{font-size:10px;color:${G.dim};margin-top:4px;line-height:1.4}
-.bs-ovr{position:fixed;inset:0;background:#000;z-index:199999;display:flex;flex-direction:column;animation:fadeIn .18s ease;overscroll-behavior:contain}
+/* v1.13.13 — Same Android-edge-to-edge fix as .app (v1.13.12): anchor bottom to
+   safe-area-inset-bottom so the overlay (Settings, Achievements, Wrapped, Recommendations)
+   doesn't extend behind the system nav bar. Without this, Settings — the only overlay with
+   a flex:1 inner scroller — lost its last ~50-150px to the nav bar. This was the
+   "scroll doesn't reach the end in Ustawienia" report from production. */
+.bs-ovr{position:fixed;top:0;right:0;bottom:env(safe-area-inset-bottom,0px);left:0;background:#000;z-index:199999;display:flex;flex-direction:column;animation:fadeIn .18s ease;overscroll-behavior:contain}
 .bs-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(12px,env(safe-area-inset-top,0px)) 14px 10px;background:${G.bg};border-bottom:1px solid ${G.bdr};padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
 .bs-ttl{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:${G.blu};letter-spacing:.06em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bs-x{flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}

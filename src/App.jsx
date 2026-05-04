@@ -1149,8 +1149,9 @@ function InsightsTab({insights,games,lang}){
           {cta&&<button type='button' onClick={()=>setFlowModal(flowData[cta.flow])} style={{width:'100%',padding:'10px',border:`1px solid ${ins.color}50`,borderRadius:9,background:`${ins.color}15`,color:ins.color,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:'pointer'}}>{cta.label}</button>}
         </div>);
       })}
-      {flowModal&&(<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(4,6,14,.92)',zIndex:19999,display:'flex',alignItems:'flex-end'}} onClick={()=>setFlowModal(null)}>
-        <div style={{width:'100%',background:G.card2,borderTop:`1px solid ${G.bdr}`,borderRadius:'20px 20px 0 0',padding:`18px 16px calc(env(safe-area-inset-bottom,0px) + 24px)`,maxHeight:'80dvh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+      {flowModal&&(<div style={{position:'fixed',top:0,left:0,right:0,bottom:'env(safe-area-inset-bottom,0px)',background:'rgba(4,6,14,.92)',zIndex:19999,display:'flex',alignItems:'flex-end'}} onClick={()=>setFlowModal(null)}>
+        {/* v1.13.13 — same nav-bar clearance as the rest: padding-bottom min 120px */}
+        <div style={{width:'100%',background:G.card2,borderTop:`1px solid ${G.bdr}`,borderRadius:'20px 20px 0 0',padding:'18px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)',maxHeight:'80dvh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
           <div style={{width:32,height:4,background:G.bdr,borderRadius:2,margin:'0 auto 16px'}}/>
           <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,marginBottom:16}}>{flowModal.title}</div>
           {flowModal.steps.map((s,i)=>(<div key={i} className='flow-step'><span className='flow-ico'>{s.ico}</span><p style={{fontSize:13,color:'#B0B8CC',lineHeight:1.6}}>{s.tip}</p></div>))}
@@ -3183,7 +3184,11 @@ export default function App(){
               <div className='bs-ttl'>⚙️ {t(lang,'settings').replace(/^[^\s]+\s/,'')}</div>
               <button type='button' className='bs-x' onClick={()=>setOverlay('menu')} aria-label={t(lang,'cancel')}>✕</button>
             </div>
-            <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
+            {/* v1.13.13 — added minHeight:0 (without it, flex:1 child with overflow-y:auto
+                doesn't actually scroll on mobile — same fix as .scr/.lst/.bs-pn) and
+                padding-bottom max() floor so the last setting row clears the Android nav
+                bar even when env(safe-area-inset-bottom) is 0. */}
+            <div style={{flex:1,minHeight:0,overflowY:'auto',WebkitOverflowScrolling:'touch',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)'}}>
               <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
               <div style={{padding:'0 16px 8px'}}>
                 <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
