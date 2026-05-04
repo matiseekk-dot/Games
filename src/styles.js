@@ -16,15 +16,25 @@ export const CSS = `
 @keyframes tabSlide{ from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)} }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%;overflow-x:hidden;max-width:100%}
+/* v1.13.11 — html/body/#root locked to the visible viewport. We use position:fixed on
+   .app below to anchor it; html/body still need 100% so they don't collapse to 0 when
+   .app is taken out of normal flow. overflow:hidden on body kills any chance of the
+   page itself scrolling (only .scr/.lst should). */
+html,body,#root{height:100%;width:100%;overflow:hidden;max-width:100%}
+html{-webkit-text-size-adjust:100%}
 /* v1.13.2 — A3 fix: disable pull-to-refresh on body. Without this, swipe-down on
    any modal at scroll-top (or any page when scrolled to top) triggers browser's
    pull-to-refresh, reloading the app and losing in-flight modal data. */
-body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-#root{overflow-x:hidden;max-width:100%}
-/* v1.13.6 — A4 fix: min-height → height + overflow:hidden, so flex children with overflow-y:auto
-   actually scroll instead of letting .app expand past viewport (was breaking scroll on Android TWA). */
-.app{display:flex;flex-direction:column;height:100dvh;max-height:100dvh;max-width:100%;overflow:hidden}
+body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+/* v1.13.11 — Switched .app from height:100dvh + overflow:hidden to position:fixed inset:0.
+   Why: 100dvh is unreliable in Android Chrome WebView under TWA — older WebView versions
+   don't support dvh and fall back silently (collapsing height), and edge-to-edge mode in
+   newer Android can report dvh values that don't match the actual visible WebView area
+   (the system nav bar is part of the reported height but obscures content). position:fixed
+   inset:0 anchors .app to the WebView's visible rectangle directly — no unit math, no
+   browser-version assumptions. Flex children inside (.scr/.lst with min-height:0) keep
+   working unchanged. */
+.app{position:fixed;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;max-width:100%}
 
 /* v1.13.6 — flex-shrink:0 so header keeps its full height even when .app is fixed-height. */
 .hdr{flex-shrink:0;overflow:hidden;padding-top:calc(env(safe-area-inset-top,0px) + 44px);padding-bottom:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -55,7 +65,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
    v1.13.7 — Android TWA: env(safe-area-inset-bottom) returns 0 (no edge-to-edge), so fixed 24px
    padding leaves last ~50-70px of content under the system nav bar. max(...,80px) guarantees the
    content always clears the nav bar — on iPhone PWA, env() is non-zero so the calc-branch wins. */
-.scr{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 80px);max-width:100%;animation:tabSlide .2s ease;overscroll-behavior:contain}
+.scr{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 100px);max-width:100%;animation:tabSlide .2s ease;overscroll-behavior:contain}
 
 .hcard{background:${G.card};border:1px solid ${G.bdr};border-radius:16px;padding:16px;margin-bottom:12px;overflow:hidden;max-width:100%;animation:fadeIn .3s ease}
 .hcard-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -111,7 +121,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .rate-btns{display:flex;gap:8px}
 /* v1.13.6 — min-height:0 unlocks flex-child overflow scroll (same as .scr).
    v1.13.7 — same nav-bar clearance as .scr. */
-.lst{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:4px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 80px)}
+.lst{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:4px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 100px)}
 .gc{width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:9px;display:flex;align-items:stretch;cursor:pointer;position:relative;overflow:hidden;animation:fadeIn .25s ease;transition:border-color .15s}
 .gc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c);opacity:.75;z-index:1}
 .gc:active{opacity:.75;transform:scale(.99)}
@@ -175,7 +185,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .fkl{font-size:9px;color:${G.dim};font-weight:600;letter-spacing:.07em;text-transform:uppercase}
 .ins-card{border-radius:13px;padding:14px;margin-bottom:10px;border:1px solid transparent;animation:fadeIn .35s ease}
 .ovr{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.9);z-index:9999;display:flex;align-items:flex-end}
-.mdl{width:100%;overflow:visible;overflow-y:auto;-webkit-overflow-scrolling:touch;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 80px);max-height:90dvh;animation:slideUp .22s ease;overscroll-behavior:contain}
+.mdl{width:100%;overflow:visible;overflow-y:auto;-webkit-overflow-scrolling:touch;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 100px);max-height:90dvh;animation:slideUp .22s ease;overscroll-behavior:contain}
 .mhdl{width:32px;height:4px;background:${G.bdr};border-radius:2px;margin:0 auto 16px}
 .mttl{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${G.blu};letter-spacing:.06em;margin-bottom:16px}
 .rwrp{position:relative;margin-bottom:12px}
@@ -327,7 +337,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .bs-laser{position:absolute;left:6%;right:6%;top:50%;height:2px;background:linear-gradient(90deg,transparent,${G.blu},transparent);box-shadow:0 0 12px ${G.blu};animation:bsLaser 1.6s ease-in-out infinite;pointer-events:none}
 @keyframes bsLaser{0%,100%{transform:translateY(-32px);opacity:.3}50%{transform:translateY(32px);opacity:1}}
 .bs-hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:12px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.95);padding:0 18px;pointer-events:none;font-weight:600}
-.bs-pn{padding:14px 16px max(calc(env(safe-area-inset-bottom,0px) + 16px), 80px);background:${G.card2};border-top:1px solid ${G.bdr};max-height:60dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.bs-pn{padding:14px 16px max(calc(env(safe-area-inset-bottom,0px) + 16px), 100px);background:${G.card2};border-top:1px solid ${G.bdr};max-height:60dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .bs-st{display:flex;align-items:center;gap:11px;padding:11px 12px;background:${G.bg};border:1px solid ${G.bdr};border-radius:10px;margin-bottom:10px}
 .bs-spin{flex-shrink:0;display:inline-block;font-size:18px;animation:spin .8s linear infinite}
 .bs-stxt{flex:1;min-width:0}
@@ -363,7 +373,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 
 /* v1.5.0 — Hamburger menu drawer (bottom sheet style) */
 .menu-ovr{align-items:flex-end}
-.menu-pn{width:100%;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 80px);max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .22s ease}
+.menu-pn{width:100%;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 100px);max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .22s ease}
 .menu-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
 .menu-row{width:100%;display:flex;align-items:center;gap:14px;padding:14px 14px;background:${G.bg};border:1px solid ${G.bdr};border-radius:12px;cursor:pointer;font-family:'Syne',sans-serif;text-align:left;margin-bottom:8px;transition:border-color .15s,background .15s}
 .menu-row:hover,.menu-row:active{border-color:${G.blu};background:rgba(0,212,255,.04)}
@@ -377,7 +387,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .menu-arrow{flex-shrink:0;font-size:20px;color:${G.dim};margin-left:4px}
 
 /* v1.5.0 — Achievements grid */
-.ach-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 80px)}
+.ach-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 100px)}
 .ach-sub{font-size:12px;color:${G.dim};margin-bottom:14px;padding:10px 12px;background:${G.bg};border:1px solid ${G.bdr};border-radius:10px;text-align:center;font-family:'Orbitron',monospace;letter-spacing:.04em}
 .ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ach-card{padding:14px 12px;border:1px solid ${G.bdr};border-radius:12px;background:${G.bg};opacity:.55;transition:opacity .2s,border-color .2s}
@@ -425,7 +435,7 @@ body{overflow-x:hidden;max-width:100%;background:${G.bg};color:${G.txt};font-fam
 .goal-mini-meta{font-size:10px;color:${G.dim};font-family:'Orbitron',monospace;letter-spacing:.04em}
 
 /* v1.5.0 — Year-in-Review */
-.wr-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 80px)}
+.wr-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 100px)}
 .wr-years{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .wr-years-lbl{font-size:10px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
 .wr-year{padding:6px 12px;border:1px solid ${G.bdr};border-radius:16px;background:${G.card};color:${G.dim};font-family:'Orbitron',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
