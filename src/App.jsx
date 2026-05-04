@@ -1869,8 +1869,12 @@ function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }
       if(newlyDone.length){
         const gl=newlyDone[0];
         const tpl=GOAL_TYPES[gl.type];
-        const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
-        flash(t(lang,'goalDone',{title:titleStr}));
+        // v1.13.10 — defensive: goalsRead() filters unknown types, but if anything slips
+        // through (in-memory mutation, race), don't crash the toast — just skip it.
+        if(tpl){
+          const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
+          flash(t(lang,'goalDone',{title:titleStr}));
+        }
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1894,6 +1898,7 @@ function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }
         </div>}
         {active.map(gl=>{
           const tpl=GOAL_TYPES[gl.type];
+          if(!tpl) return null;  // v1.13.10 — defensive: skip unknown goal types
           const cur=goalCurrent(gl, games, sessions);
           const pct=Math.min(100, Math.round((cur/gl.target)*100));
           const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
@@ -1918,6 +1923,7 @@ function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }
           <div className='goals-h' style={{marginTop:14}}>{t(lang,'goalsDone',{n:done.length})}</div>
           {done.map(gl=>{
             const tpl=GOAL_TYPES[gl.type];
+            if(!tpl) return null;  // v1.13.10 — defensive: skip unknown goal types
             const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
             return (
               <div key={gl.id} className='goal-card goal-card-done'>
@@ -1943,6 +1949,7 @@ function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }
             <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:14}}>
               {GOAL_TEMPLATES.map((tpl,i)=>{
                 const def=GOAL_TYPES[tpl.type];
+                if(!def) return null;  // v1.13.10 — defensive (templates are static, but consistent)
                 return (
                   <button key={i} type='button' className='goal-tpl' onClick={()=>addGoal(tpl)}>
                     <span style={{fontSize:20}}>{def.ico}</span>
@@ -1980,6 +1987,7 @@ function GoalsCard({ goals, games, sessions, lang, onOpen }){
       <div className='goal-home-h'>{t(lang,'goalCardTitle')}</div>
       {active.slice(0,3).map(gl=>{
         const tpl=GOAL_TYPES[gl.type];
+        if(!tpl) return null;  // v1.13.10 — defensive: skip unknown goal types
         const cur=goalCurrent(gl, games, sessions);
         const pct=Math.min(100, Math.round((cur/gl.target)*100));
         const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));

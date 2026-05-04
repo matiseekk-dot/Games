@@ -5,7 +5,17 @@
 import { LS_GOALS } from '../constants.js';
 import { dayKey } from './util.js';
 
-export function goalsRead() { try { return JSON.parse(localStorage.getItem(LS_GOALS) || '[]'); } catch { return []; } }
+export function goalsRead() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_GOALS) || '[]');
+    if (!Array.isArray(raw)) return [];
+    // v1.13.10 — drop stale/unknown goal types on read. A goal whose `type` no longer
+    // matches GOAL_TYPES (e.g. survived a downgrade, came from a corrupted import, or was
+    // hand-edited in localStorage) used to crash the app via `GOAL_TYPES[g.type].tk` —
+    // pure undefined.tk. Filtering here means the renderer never sees one.
+    return raw.filter(g => g && typeof g.type === 'string' && GOAL_TYPES[g.type]);
+  } catch { return []; }
+}
 export function goalsWrite(g) { try { localStorage.setItem(LS_GOALS, JSON.stringify(g)); } catch {} }
 
 export function monthBounds(d = new Date()) {

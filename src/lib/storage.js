@@ -27,6 +27,24 @@ export function lsRead() {
         const fallback = next.lastPlayed || next.addedAt || null;
         if (fallback) { dirty = true; next = { ...next, completedAt:fallback }; }
       }
+      // Migration (v1.13.10): coerce date-ish fields to ISO strings. Some older / imported
+      // schemas stored addedAt/completedAt/lastPlayed as numeric timestamps; downstream
+      // code calls .slice(0,4) / .slice(0,7) on them, which crashes on numbers. We coerce
+      // any number / Date to ISO string here so every consumer can safely string-slice.
+      // Idempotent — already-ISO strings pass through untouched.
+      for (const key of ['addedAt','completedAt','lastPlayed']) {
+        const v = next[key];
+        if (v != null && typeof v !== 'string') {
+          try {
+            const iso = new Date(v).toISOString();
+            dirty = true;
+            next = { ...next, [key]: iso };
+          } catch { /* drop unparseable value */
+            dirty = true;
+            next = { ...next, [key]: null };
+          }
+        }
+      }
       return next;
     });
     if (dirty) { try { localStorage.setItem(LS_KEY, JSON.stringify(migrated)); } catch {} }
