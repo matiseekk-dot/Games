@@ -2365,8 +2365,18 @@ function WipeConfirm({ games, lang, onClose }){
 
 function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPrivacy,onWipeOpen}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
+  // v1.13.14 — Removed className='scr' wrapper. Settings is rendered INSIDE the
+  // .bs-ovr's inner scroll div (with its own flex:1/overflow-y:auto/min-height:0).
+  // Having .scr here meant nesting two scroll containers: the inner .scr had
+  // overflow-y:auto, but in a non-flex parent flex:1 is ignored and the box just
+  // sized to content — so .scr's overflow:auto was a no-op visually, BUT Android
+  // Chrome WebView still routed touch events to it (and ate them), preventing the
+  // outer scroller from scrolling. iOS Safari propagates touch up the chain so it
+  // didn't manifest there. Plain <div> means touches go straight to the outer
+  // scroller, which is the actual scroll surface. Existing inner padding from .scr
+  // is now provided by its replacement style block + the surrounding sections.
   return(
-    <div className='scr'>
+    <div className='set-pn'>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'language')}</div>
         <div className='lang-row'>

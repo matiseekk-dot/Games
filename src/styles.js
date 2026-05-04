@@ -527,6 +527,13 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .rawg-refresh:disabled:active{transform:none}
 .rawg-refresh-spin{width:13px;height:13px;border:2px solid rgba(0,212,255,.3);border-top-color:${G.blu};border-radius:50%;animation:spin .8s linear infinite}
 
+/* v1.13.14 — Settings panel inner padding only — NO overflow / scroll. The actual
+   scroll container is the outer flex:1 div in App.jsx around <Settings>. Wrapping
+   Settings in another overflow-y:auto element broke Android touch handling
+   (WebView routes touch to first overflow-y:auto ancestor and eats it even if that
+   element doesn't actually overflow). */
+.set-pn{padding:8px 16px 0;max-width:100%}
+
 /* v1.13.9 — Landscape on phones: portrait .hdr (status-bar inset + 44 + ~46 tabs + 12 + 14 ≈ 130-180px)
    eats ~50% of a 375h screen, leaving the scroll surface tiny and effectively useless. Compress
    the top inset and gaps in landscape so .scr/.lst gets a usable share of the viewport. Threshold
