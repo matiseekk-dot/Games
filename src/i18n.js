@@ -327,6 +327,11 @@ const TRANSLATIONS = {
     recEmptyCompletedHint:"Ukończ kilka gier żeby zobaczyć podobne tytuły",
     recEmptyNoRawg:"Najpierw dodaj kilka gier",
     recEmptyNoRawgHint:"Użyj wyszukiwarki RAWG przy dodawaniu — z niej bierzemy bazę do rekomendacji",
+    // v1.13.9 — shown when the user IS eligible (has seed games) but RAWG /suggested returned
+    // an empty list. Distinct from recEmptyRated/Completed which assume the user has nothing
+    // to seed from.
+    recNoMatches:"RAWG nie zwrócił podobnych tytułów",
+    recNoMatchesHint:"To może być chwilowy problem z połączeniem albo RAWG nie ma jeszcze danych podobnych dla Twoich gier. Spróbuj ponownie za chwilę.",
     recLoading:"Pobieram rekomendacje…",
     recError:"Nie udało się pobrać rekomendacji",
     recExploreMore:"Eksploruj więcej w RAWG.io →",
@@ -648,6 +653,9 @@ const TRANSLATIONS = {
     recEmptyCompletedHint:"Finish a few games to see similar titles",
     recEmptyNoRawg:"Add a few games first",
     recEmptyNoRawgHint:"Use RAWG search when adding games — that's what powers recommendations",
+    // v1.13.9 — see PL counterpart for context
+    recNoMatches:"RAWG returned no similar titles",
+    recNoMatchesHint:"This may be a temporary connection issue or RAWG hasn't indexed similar games for your library yet. Try again in a moment.",
     recLoading:"Loading recommendations…",
     recError:"Could not load recommendations",
     recExploreMore:"Explore more on RAWG.io →",

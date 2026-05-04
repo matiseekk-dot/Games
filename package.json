@@ -1,6 +1,6 @@
 {
   "name": "ps5-vault",
-  "version": "1.13.5",
+  "version": "1.13.9",
   "private": true,
   "scripts": {
     "dev": "vite",
