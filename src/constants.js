@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies — every other module imports from here.
 
-export const APP_VER  = '1.13.14';
+export const APP_VER  = '1.13.15';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 
 // localStorage keys (single source of truth — DON'T inline these)

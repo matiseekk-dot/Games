@@ -117,7 +117,11 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .sort-lbl{font-size:10px;color:${G.dim};font-weight:600;white-space:nowrap;flex-shrink:0}
 .sort-btn{padding:5px 10px;border-radius:16px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
 .sort-btn.on{border-color:${G.pur};color:${G.pur};background:rgba(167,139,250,.1)}
-.rate-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.88);z-index:19999;display:flex;align-items:center;justify-content:center;padding:20px}
+/* v1.13.15 — bumped z-index from 19999 to 299999 so modals using this class
+   (Privacy, Rating quick-rate) sit *above* .bs-ovr (Settings overlay, 199999).
+   Previously these modals opened beneath the opaque Settings backdrop and were
+   completely hidden until the user closed Settings. */
+.rate-modal{position:fixed;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);background:rgba(4,6,14,.88);z-index:299999;display:flex;align-items:center;justify-content:center;padding:20px}
 .rate-box{background:${G.card2};border:1px solid ${G.bdr};border-radius:18px;padding:24px 20px;max-width:320px;width:100%;animation:scaleIn .2s ease}
 .rate-title{font-size:14px;color:${G.dim};margin-bottom:12px;text-align:center}
 .rate-stars{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
@@ -258,7 +262,10 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .ach-banner-x{flex-shrink:0;width:28px;height:28px;border:none;border-radius:50%;background:rgba(255,255,255,.06);color:${G.dim};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .ach-banner-x:active{transform:scale(.92)}
 @keyframes achBannerIn{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
-.confirm-ovr{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(4,6,14,.88);z-index:19999;display:flex;align-items:center;justify-content:center;padding:20px}
+/* v1.13.15 — same z-index bump as .rate-modal (was 19999, < .bs-ovr's 199999, so
+   wipe-data confirmation invoked from Settings was hidden). Now sits at 299999
+   above all overlays. Bottom anchored to safe-area for nav-bar parity. */
+.confirm-ovr{position:fixed;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);background:rgba(4,6,14,.88);z-index:299999;display:flex;align-items:center;justify-content:center;padding:20px}
 .confirm-box{background:${G.card2};border:1px solid ${G.bdr};border-radius:18px;padding:24px 20px;max-width:320px;width:100%;animation:scaleIn .2s ease}
 .confirm-ico{font-size:36px;text-align:center;margin-bottom:12px}
 .confirm-title{font-size:16px;font-weight:700;text-align:center;margin-bottom:8px}
@@ -533,6 +540,21 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
    (WebView routes touch to first overflow-y:auto ancestor and eats it even if that
    element doesn't actually overflow). */
 .set-pn{padding:8px 16px 0;max-width:100%}
+
+/* v1.13.15 — ImportModal styles. .mbg/.mwr/.mhd/.mtt/.mcb/.mbd were referenced in
+   App.jsx (function ImportModal) since the v1.2.0 refactor but never had matching
+   CSS rules — meaning every time a user clicked "Importuj dane" in Settings, the
+   modal rendered as an unstyled inline-flow div with no positioning, no background,
+   no z-index. Visually nothing happened, hence the user report "nic się nie dzieje".
+   z-index:299999 sits above .bs-ovr (Settings, 199999) so the modal is visible
+   when opened from inside Settings. */
+.mbg{position:fixed;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);background:rgba(4,6,14,.85);z-index:299999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .15s ease}
+.mwr{width:100%;background:${G.card2};border:1px solid ${G.bdr};border-radius:18px;animation:scaleIn .2s ease;max-height:calc(100vh - 80px);max-height:calc(100dvh - 80px);overflow:hidden;display:flex;flex-direction:column}
+.mhd{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 10px;border-bottom:1px solid ${G.bdr}}
+.mtt{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${G.blu};letter-spacing:.04em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcb{flex-shrink:0;width:32px;height:32px;border:none;border-radius:8px;background:transparent;color:${G.dim};font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mcb:active{background:${G.card}}
+.mbd{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px}
 
 /* v1.13.9 — Landscape on phones: portrait .hdr (status-bar inset + 44 + ~46 tabs + 12 + 14 ≈ 130-180px)
    eats ~50% of a 375h screen, leaving the scroll surface tiny and effectively useless. Compress
