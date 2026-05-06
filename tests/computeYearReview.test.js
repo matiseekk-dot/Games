@@ -139,6 +139,26 @@ describe('computeYearReview', () => {
     expect(r.totalRecovered).toBe(80);
   });
 
+  // v1.14.0 — source-aware exclusions
+  it('totalSpent excludes subscription games (PS Plus / Game Pass / etc)', () => {
+    const games = [
+      makeGame({ priceBought: 200, addedAt: `${Y}-03-15T12:00:00.000Z`, source: 'owned' }),    // IN
+      makeGame({ priceBought: 999, addedAt: `${Y}-04-01T12:00:00.000Z`, source: 'psplus' }),   // OUT — sub
+      makeGame({ priceBought: 500, addedAt: `${Y}-05-01T12:00:00.000Z`, source: 'gamepass' }), // OUT — sub
+    ];
+    const r = computeYearReview(games, Y);
+    expect(r.totalSpent).toBe(200);
+  });
+
+  it('totalRecovered excludes subscription games (priceSold ignored if source != owned)', () => {
+    const games = [
+      makeGame({ status: 'ukonczone', priceSold: 80,  completedAt: `${Y}-06-01T12:00:00.000Z`, addedAt: `${Y}-01-01T12:00:00.000Z`, source: 'owned' }),   // IN
+      makeGame({ status: 'ukonczone', priceSold: 999, completedAt: `${Y}-07-01T12:00:00.000Z`, addedAt: `${Y}-01-01T12:00:00.000Z`, source: 'psplus' }),  // OUT
+    ];
+    const r = computeYearReview(games, Y);
+    expect(r.totalRecovered).toBe(80);
+  });
+
   it('activeDays counts unique session dates in year', () => {
     const games = [makeGame({ addedAt: `${Y}-01-01T12:00:00.000Z`, sessions: [
       sessionAtDate(Y, 5, 10, 20, 1),

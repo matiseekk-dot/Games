@@ -45,6 +45,12 @@ export function lsRead() {
           }
         }
       }
+      // Migration (v1.14.0): backfill `source` field for pre-v1.14 games. Every legacy
+      // game was bought ("owned") since subscription tracking didn't exist before — that's
+      // the only safe default. Without this, downstream cost filters (which check
+      // g.source === 'owned') would erroneously exclude every legacy game from totals.
+      // Idempotent — already-set source values pass through.
+      if (next.source == null) { dirty = true; next = { ...next, source: 'owned' }; }
       return next;
     });
     if (dirty) { try { localStorage.setItem(LS_KEY, JSON.stringify(migrated)); } catch {} }
@@ -178,6 +184,14 @@ export function isValidGameShape(g) {
   return true;
 }
 
+// v1.14.0 — Apply forward-compat defaults to imported games. Mirrors the lsRead
+// migration but runs synchronously inside the import path, so users don't need to
+// reload after importing a pre-v1.14 backup before financial KPIs are correct.
+function applyImportDefaults(g) {
+  if (g.source == null) return { ...g, source: 'owned' };
+  return g;
+}
+
 export function importMerge(file, existing, onOk, onErr) {
   if (file.size > IMPORT_MAX_BYTES) { onErr('File too large (>10MB)'); return; }
   const r = new FileReader();
@@ -185,8 +199,9 @@ export function importMerge(file, existing, onOk, onErr) {
   r.onload = e => { try {
     const d = JSON.parse(e.target.result); const imported = Array.isArray(d) ? d : d.games;
     if (!Array.isArray(imported)) throw new Error('Invalid format');
-    // Filter out malformed entries and ensure each has an id (assign new if missing)
-    const cleaned = imported.filter(isValidGameShape).map(g => g.id ? g : { ...g, id:uid() });
+    // Filter out malformed entries, ensure each has an id (assign new if missing),
+    // and backfill v1.14+ defaults (source='owned') for legacy backups.
+    const cleaned = imported.filter(isValidGameShape).map(g => applyImportDefaults(g.id ? g : { ...g, id:uid() }));
     const existingIds = new Set(existing.map(g => g.id));
     const newGames = cleaned.filter(g => !existingIds.has(g.id));
     onOk([...existing, ...newGames], newGames.length, cleaned.length - newGames.length);
@@ -203,7 +218,7 @@ export function importReplace(file, onOk, onErr) {
   r.onload = e => { try {
     const d = JSON.parse(e.target.result); const imported = Array.isArray(d) ? d : d.games;
     if (!Array.isArray(imported)) throw new Error('Invalid format');
-    const cleaned = imported.filter(isValidGameShape).map(g => g.id ? g : { ...g, id:uid() });
+    const cleaned = imported.filter(isValidGameShape).map(g => applyImportDefaults(g.id ? g : { ...g, id:uid() }));
     onOk(cleaned, cleaned.length);
   } catch (err) { onErr(err.message); } };
   r.readAsText(file);

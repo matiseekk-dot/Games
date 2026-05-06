@@ -146,6 +146,11 @@ const TRANSLATIONS = {
     ratingField:"Ocena (1–10)", targetHoursField:"Cel (godz.)", notesField:"Notatki",
     notesPh:"Twoje przemyślenia...", genrePh:"— wybierz —", targetPh:"np. 40",
     finances:"💰 Finanse", priceBoughtField:"Zapłacono ({cur})", storeField:"Sklep", extraSpendField:"DLC / Mikrotransakcje ({cur})", extraSpendHint:"Dodatkowe zakupy w grze", platformField:"Platforma",
+    // v1.14.0 — Game source (owned vs subscription) for cost-exclusion filter
+    source_label:"Źródło",
+    source_owned:"Zakupiona", source_psplus:"PS Plus", source_gamepass:"Game Pass", source_eaplay:"EA Play", source_other_sub:"Inna subskrypcja", source_other:"Inne",
+    source_filter_all:"Wszystkie źródła",
+    source_disclaimer:"Gry z subskrypcji nie wliczają się do kosztu",
     storePh:"—",
     // v1.4.0 — Quick add UX
     moreDetails:"+ Więcej szczegółów", lessDetails:"− Mniej szczegółów",
@@ -477,6 +482,11 @@ const TRANSLATIONS = {
     ratingField:"Rating (1–10)", targetHoursField:"Target (hrs)", notesField:"Notes",
     notesPh:"Your thoughts...", genrePh:"— select —", targetPh:"e.g. 40",
     finances:"💰 Finances", priceBoughtField:"Price paid ({cur})", storeField:"Store", extraSpendField:"DLC / Microtransactions ({cur})", extraSpendHint:"Additional in-game purchases", platformField:"Platform",
+    // v1.14.0 — Game source (owned vs subscription) for cost-exclusion filter
+    source_label:"Source",
+    source_owned:"Owned", source_psplus:"PS Plus", source_gamepass:"Game Pass", source_eaplay:"EA Play", source_other_sub:"Other subscription", source_other:"Other",
+    source_filter_all:"All sources",
+    source_disclaimer:"Subscription games are excluded from cost calculations",
     storePh:"—",
     // v1.4.0 — Quick add UX
     moreDetails:"+ More details", lessDetails:"− Less details",

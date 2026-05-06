@@ -541,6 +541,11 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
    element doesn't actually overflow). */
 .set-pn{padding:8px 16px 0;max-width:100%}
 
+/* v1.14.0 — Disclaimer shown under the Finance KPI grid when the user has at least
+   one subscription game. Explains why total spent / cost-per-hour exclude those games.
+   Styled as a low-emphasis info pill so it doesn't compete with the KPIs above. */
+.cph-note{font-size:11px;color:${G.dim};line-height:1.5;padding:8px 12px;margin:0 0 12px;background:rgba(123,138,173,.06);border:1px solid ${G.bdr};border-radius:10px;display:flex;align-items:center;gap:6px}
+
 /* v1.13.15 — ImportModal styles. .mbg/.mwr/.mhd/.mtt/.mcb/.mbd were referenced in
    App.jsx (function ImportModal) since the v1.2.0 refactor but never had matching
    CSS rules — meaning every time a user clicked "Importuj dane" in Settings, the

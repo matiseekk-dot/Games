@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies — every other module imports from here.
 
-export const APP_VER  = '1.13.15';
+export const APP_VER  = '1.14.0';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 
 // localStorage keys (single source of truth — DON'T inline these)
@@ -61,10 +61,32 @@ export const CURRENCIES = {
   EUR: { code:'EUR', symbol:'€',  after:false, name:{pl:'Euro',              en:'Euro'} },
   USD: { code:'USD', symbol:'$',  after:false, name:{pl:'Dolar amerykański', en:'US dollar'} },
   GBP: { code:'GBP', symbol:'£',  after:false, name:{pl:'Funt brytyjski',    en:'British pound'} },
+  // v1.14.0 — North American / Australian markets requested by users
+  CAD: { code:'CAD', symbol:'C$', after:false, name:{pl:'Dolar kanadyjski',  en:'Canadian dollar'} },
+  AUD: { code:'AUD', symbol:'A$', after:false, name:{pl:'Dolar australijski',en:'Australian dollar'} },
   CZK: { code:'CZK', symbol:'Kč', after:true,  name:{pl:'Korona czeska',     en:'Czech koruna'} },
   SEK: { code:'SEK', symbol:'kr', after:true,  name:{pl:'Korona szwedzka',   en:'Swedish krona'} },
   NOK: { code:'NOK', symbol:'kr', after:true,  name:{pl:'Korona norweska',   en:'Norwegian krone'} },
 };
+
+// ─── Game source ──────────────────────────────────────────────────────────
+// v1.14.0 — Where did the user get the game from? Drives cost-exclusion: subscription
+// games (PS Plus, Game Pass, EA Play) shouldn't count toward "total spent" or
+// cost-per-hour, since the user pays a flat monthly fee unrelated to the title.
+// Only `owned` games contribute to financial KPIs and ROI math. Hours/genre/status
+// stats include all sources (the game was still played, regardless of how it was
+// acquired).
+//
+// Default for new + legacy games is 'owned' — see EF and lsRead migration.
+// Order matters: the form dropdown renders in this sequence; `owned` first so the
+// default is the top option.
+export const SOURCES = ['owned', 'psplus', 'gamepass', 'eaplay', 'other_sub', 'other'];
+// Subset that should be excluded from cost calculations. Anything not in this set
+// (currently just 'owned') is treated as a paid-per-title acquisition.
+export const COST_EXCLUDED_SOURCES = new Set(['psplus', 'gamepass', 'eaplay', 'other_sub', 'other']);
+// Helper: returns true if the game's cost should count toward total spent / cph / ROI.
+// Defensive against legacy games that pre-date the source field — null/undefined → owned.
+export function isOwned(g) { return !COST_EXCLUDED_SOURCES.has(g?.source || 'owned'); }
 
 // ─── Empty form ────────────────────────────────────────────────────────────
 // Default shape for new game in the add-modal. priceSold:null is the canonical
@@ -73,4 +95,6 @@ export const CURRENCIES = {
 // rawgId (v1.9.0) holds the RAWG.io game ID when the title was picked from
 // RAWG search — used as the seed for /games/{id}/suggested in Recommendations.
 // null for manually-entered or pre-v1.9 games (Recommendations skips those as seeds).
-export const EF = { title:'', abbr:'', status:'planuje', year:new Date().getFullYear(), genre:'', hours:'', rating:'', notes:'', cover:'', releaseDate:'', notifyEnabled:false, priceBought:'', priceSold:null, storeBought:'', targetHours:'', extraSpend:'', platform:'PS5', platinum:false, lastPlayed:null, completedAt:null, rawgId:null, sessions:[] };
+// v1.14.0 — added `source: 'owned'` (default for new games). Pre-v1.14 games loaded
+// from localStorage have no source field; lsRead migration backfills them to 'owned'.
+export const EF = { title:'', abbr:'', status:'planuje', year:new Date().getFullYear(), genre:'', hours:'', rating:'', notes:'', cover:'', releaseDate:'', notifyEnabled:false, priceBought:'', priceSold:null, storeBought:'', targetHours:'', extraSpend:'', platform:'PS5', source:'owned', platinum:false, lastPlayed:null, completedAt:null, rawgId:null, sessions:[] };

@@ -48,6 +48,7 @@ export function makeGame(overrides = {}) {
     targetHours: '',
     extraSpend: '',
     platform: 'PS5',
+    source: 'owned',          // v1.14.0 — default for tests; override to 'psplus'/'gamepass'/etc to exclude from cost
     platinum: false,
     lastPlayed: null,
     completedAt: null,

@@ -3,6 +3,7 @@
 // "Enough data" = at least 1 game added or 1 session in the year.
 import { dayKey } from './util.js';
 import { computeLongestStreak } from './sessions.js';
+import { isOwned } from '../constants.js';
 
 // List of distinct years that contain at least one addedAt or session.
 // Sorted newest-first, sanity-bounded to 2000–2100 (filters out garbage timestamps).
@@ -69,12 +70,14 @@ export function computeYearReview(games, year) {
     gamesCount: new Set(allSessions.filter(s => s.gameGenre === topGenreEntry[0]).map(s => s.gameId)).size,
   } : null;
 
-  // Money in year — use addedAt as proxy for "spent in year"
+  // Money in year — use addedAt as proxy for "spent in year".
+  // v1.14.0 — exclude subscription games (only `owned` games contribute to spend totals;
+  // PS Plus / Game Pass / etc. are flat monthly fees unrelated to per-title cost).
   const totalSpent = games
-    .filter(g => inYear(g.addedAt))
+    .filter(g => isOwned(g) && inYear(g.addedAt))
     .reduce((s, g) => s + (+g.priceBought || 0) + (+g.extraSpend || 0), 0);
   const totalRecovered = games
-    .filter(g => g.priceSold != null && +g.priceSold > 0 && inYear(completionDate(g)))
+    .filter(g => isOwned(g) && g.priceSold != null && +g.priceSold > 0 && inYear(completionDate(g)))
     .reduce((s, g) => s + (+g.priceSold || 0), 0);
 
   // Streak / active days inside the year

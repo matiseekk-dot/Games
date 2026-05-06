@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Cartes
 import {
   APP_VER,
   LS_LANG, LS_CURRENCY,
-  G, GENRES_PL, GENRES_EN, STORES, PLATFORMS, CURRENCIES, EF,
+  G, GENRES_PL, GENRES_EN, STORES, PLATFORMS, SOURCES, isOwned, CURRENCIES, EF,
 } from './constants.js';
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
@@ -712,6 +712,14 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang,flash}){
                 </select>
               </div>
             </div>
+            {/* v1.14.0 — Source dropdown (owned vs PS Plus / Game Pass / etc.).
+                Drives cost-exclusion: only `owned` games count toward total spent / cph / ROI.
+                Defaults to 'owned' for new games and pre-v1.14 imports (lsRead migration). */}
+            <div className='fg'><label className='fl'>{t(lang,'source_label')}</label>
+              <select className='fs' value={f.source||'owned'} onChange={e=>upd('source',e.target.value)}>
+                {SOURCES.map(s=><option key={s} value={s}>{t(lang,'source_'+s)}</option>)}
+              </select>
+            </div>
             <div className='fg'>
               <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):`— ${lang==='en'?'in':'za'} ${days} ${lang==='en'?'days':'dni'}`}</span>}</label>
               <input className='fi' type='date' value={f.releaseDate} onChange={e=>upd('releaseDate',e.target.value)} style={{colorScheme:'dark'}}/>
@@ -911,18 +919,18 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
   const current=games.filter(g=>g.status==='gram');
   const backlog=games.filter(g=>g.status==='planuje'&&!g.releaseDate);
   const upcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
-  const bought=games.filter(g=>!!+g.priceBought);
-  const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
+  const bought=games.filter(g=>isOwned(g) && !!+g.priceBought);
+  const sold=games.filter(g=>isOwned(g) && g.priceSold!=null&&!!+g.priceSold);
   const active=[...current].sort((a,b)=>(b.hours||0)-(a.hours||0))[0]||null;
   const prog=active&&active.targetHours>0?Math.min(100,Math.round((active.hours/active.targetHours)*100)):null;
   const remHrs=active&&active.targetHours>0?Math.max(0,active.targetHours-active.hours).toFixed(0):null;
   const nextUp=upcoming[0]||null;
   const days=nextUp?daysUntil(nextUp.releaseDate):null;
   const totalBase=bought.reduce((s,g)=>s+ +g.priceBought,0);
-  const totalDLC=games.filter(g=>!!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
+  const totalDLC=games.filter(g=>isOwned(g) && !!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
   const totalSpent=totalBase+totalDLC;
   const totalEarned=sold.reduce((s,g)=>s+ +g.priceSold,0);
-  const sellable=games.filter(g=>g.status==='porzucone'&&!!+g.priceBought&&(g.priceSold==null||!+g.priceSold)).sort((a,b)=>+b.priceBought - +a.priceBought);
+  const sellable=games.filter(g=>isOwned(g) && g.status==='porzucone'&&!!+g.priceBought&&(g.priceSold==null||!+g.priceSold)).sort((a,b)=>+b.priceBought - +a.priceBought);
   // Monthly purchases — games added in the current local month with a price.
   // Shown as expandable card on Home when purchases exist this month.
   const monthKey=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})();
@@ -1092,9 +1100,9 @@ function Upcoming({games,onOpen,onToggleNotify,onStatusChange,notifPerm,onReques
 
 function InsightsTab({insights,games,lang}){
   const [flowModal,setFlowModal]=useState(null);
-  const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
+  const sold=games.filter(g=>isOwned(g) && g.priceSold!=null&&!!+g.priceSold);
   const losses=sold.filter(g=>+g.priceSold<+g.priceBought).reduce((s,g)=>s+(+g.priceBought - +g.priceSold),0);
-  const porzucone=games.filter(g=>g.status==='porzucone'&&!!+g.priceBought&&(g.priceSold==null||!+g.priceSold));
+  const porzucone=games.filter(g=>isOwned(g) && g.status==='porzucone'&&!!+g.priceBought&&(g.priceSold==null||!+g.priceSold));
   const unsold=porzucone.reduce((s,g)=>s+ +g.priceBought*0.5,0);
   const totalSav=Math.round(losses+unsold);
   const ctaKeys={[t(lang,'biggestLoss')]:{label:t(lang,'avoidLoss'),flow:'avoid'},[t(lang,'bestInvestment')]:{label:t(lang,'buyBetter'),flow:'invest'},[t(lang,'mostExpensiveHours')]:{label:t(lang,'optimizeBacklog'),flow:'optim'},[t(lang,'bestValueShort')]:{label:t(lang,'findSimilar'),flow:'similar'},[t(lang,'financeSummary')]:{label:t(lang,'saveMoney'),flow:'save'}};
@@ -1230,10 +1238,10 @@ function Stats({games,lang}){
   const gMap={}; games.forEach(g=>{if(g.genre)gMap[g.genre]=(gMap[g.genre]||0)+1;});
   const gData=Object.entries(gMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v}));
   const buckets=[1,2,3,4,5,6,7,8,9,10].map(r=>({n:String(r),v:games.filter(g=>g.rating!=null&&Math.round(g.rating)===r).length,min:0.01}));
-  const bought=games.filter(g=>!!+g.priceBought);
-  const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
+  const bought=games.filter(g=>isOwned(g) && !!+g.priceBought);
+  const sold=games.filter(g=>isOwned(g) && g.priceSold!=null&&!!+g.priceSold);
   const totalBase=bought.reduce((s,g)=>s+ +g.priceBought,0);
-  const totalDLC=games.filter(g=>!!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
+  const totalDLC=games.filter(g=>isOwned(g) && !!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
   const totalSpent=totalBase+totalDLC;
   const totalEarned=sold.reduce((s,g)=>s+ +g.priceSold,0);
   const netCost=totalSpent-totalEarned;
@@ -1507,10 +1515,10 @@ function Finance({games,lang}){
   if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
 
   // === Computed values (copied from Stats) ===
-  const bought=games.filter(g=>!!+g.priceBought);
-  const sold=games.filter(g=>g.priceSold!=null&&!!+g.priceSold);
+  const bought=games.filter(g=>isOwned(g) && !!+g.priceBought);
+  const sold=games.filter(g=>isOwned(g) && g.priceSold!=null&&!!+g.priceSold);
   const totalBase=bought.reduce((s,g)=>s+ +g.priceBought,0);
-  const totalDLC=games.filter(g=>!!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
+  const totalDLC=games.filter(g=>isOwned(g) && !!+g.extraSpend).reduce((s,g)=>s+ +(g.extraSpend||0),0);
   const totalSpent=totalBase+totalDLC;
   const totalEarned=sold.reduce((s,g)=>s+ +g.priceSold,0);
   const netCost=totalSpent-totalEarned;
@@ -1544,7 +1552,8 @@ function Finance({games,lang}){
   const monthlyHasData=monthlyData.some(d=>d.v>0);
 
   // v1.3 #3 — Backlog cost: games with priceBought but zero hours played
-  const backlogGames=games.filter(g=>!!+g.priceBought && (!g.hours || +g.hours===0) && g.status!=='ukonczone' && g.status!=='porzucone');
+  // v1.14.0 — only owned games count toward backlog cost (subscription games have no purchase price)
+  const backlogGames=games.filter(g=>isOwned(g) && !!+g.priceBought && (!g.hours || +g.hours===0) && g.status!=='ukonczone' && g.status!=='porzucone');
   const backlogCost=backlogGames.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
 
   // v1.3 #1 — Year projection: avg from last 3-6 months × remaining months in year
@@ -1599,8 +1608,10 @@ function Finance({games,lang}){
   const perGenreHasData=perGenreData.length>0;
 
   // v1.3 #4 — Year over year ROI: bought vs recovered ratio per calendar year
+  // v1.14.0 — exclude subscription games (only owned games have meaningful "bought vs recovered")
   const yearAgg={};
   games.forEach(g=>{
+    if(!isOwned(g)) return;
     if(g.addedAt && +g.priceBought){
       const y=g.addedAt.slice(0,4);
       yearAgg[y]=yearAgg[y]||{bought:0,recovered:0};
@@ -1664,6 +1675,10 @@ function Finance({games,lang}){
         </div>
         {!bought.length?<div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noFinanceData')}</div><div className='ess'>{t(lang,'addPricesHint')}</div></div>:<>
           <div className='fkgd'>{fkpis.map(k=><div key={k.l} className='fkcd' style={{'--c':k.c,background:k.bg}}><div className='fkv'>{k.v}</div><div className='fkl'>{k.l}</div></div>)}</div>
+          {/* v1.14.0 — explain to the user that subscription games (PS Plus etc.) don't
+              count toward Spent / cost-per-hour. Only shows if at least one game has a
+              non-owned source — keeps the UI clean for users with no subscription data. */}
+          {games.some(g=>!isOwned(g))&&<div className='cph-note'>ℹ️ {t(lang,'source_disclaimer')}</div>}
           {backlogGames.length>0&&<div className='ccd' style={{borderColor:'rgba(255,159,28,.3)',background:'linear-gradient(135deg,rgba(255,159,28,.06),rgba(255,77,109,.04))'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
               <div style={{fontSize:11,fontWeight:700,color:G.org,letterSpacing:'.05em'}}>{t(lang,'backlogCost')}</div>
@@ -2583,6 +2598,9 @@ export default function App(){
   const [q,setQ]               = useState('');
   const [sortBy,setSortBy]     = useState('added');
   const [platFilter,setPlatFilter]= useState('all');
+  // v1.14.0 — source filter (parallel to platFilter). 'all' or one of SOURCES.
+  // Auto-hidden in the UI when every game shares the same source — see filter row below.
+  const [srcFilter,setSrcFilter]  = useState('all');
   const [rateModal,setRateModal]= useState(null);
   const [privacyOpen,setPrivacyOpen]=useState(false);
   // v1.5.0 — Hamburger-driven secondary screens. Single 'overlay' enum keeps mutual
@@ -2945,6 +2963,7 @@ export default function App(){
   const visible=games
     .filter(g=>flt==='all'||(flt==='sold'?g.priceSold!=null&&!!+g.priceSold:flt==='platinum'?g.platinum===true:g.status===flt))
     .filter(g=>platFilter==='all'||g.platform===platFilter)
+    .filter(g=>srcFilter==='all'||(g.source||'owned')===srcFilter)
     .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
     .sort(sortFn[sortBy]||sortFn.added);
 
@@ -2988,6 +3007,16 @@ export default function App(){
               <button type='button' key={p} className={'sort-btn'+(platFilter===p?' on':'')} onClick={()=>setPlatFilter(p)}>{p}</button>
             ))}
           </div>}
+          {/* v1.14.0 — Source filter row. Mirrors the platform filter pattern: only renders
+              when there are at least 2 distinct sources in the collection (parallel to the
+              "filter out PS5" check above). Avoids clutter for users who only own games. */}
+          {[...new Set(games.map(g=>g.source||'owned'))].length>1&&<div className='sort-row'>
+            <span className='sort-lbl'>{t(lang,'source_label')}:</span>
+            <button type='button' className={'sort-btn'+(srcFilter==='all'?' on':'')} onClick={()=>setSrcFilter('all')}>{t(lang,'source_filter_all')}</button>
+            {SOURCES.filter(s=>games.some(g=>(g.source||'owned')===s)).map(s=>(
+              <button type='button' key={s} className={'sort-btn'+(srcFilter===s?' on':'')} onClick={()=>setSrcFilter(s)}>{t(lang,'source_'+s)}</button>
+            ))}
+          </div>}
           <div className='sort-row'>
             <span className='sort-lbl'>{t(lang,'sortBy')}</span>
             {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
@@ -3001,7 +3030,7 @@ export default function App(){
                 <div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>setModal(g)}>
                   {g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
-                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{g.genre&&<span className='gmp'>{g.genre}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
+                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 — subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{g.genre}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
                     <div className='grt'>
                       {g.rating!=null?<><span className='grn'>{g.rating}</span><span className='grd'>/10</span></>:<span style={{color:G.dim,fontSize:17}}>—</span>}
                       {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
