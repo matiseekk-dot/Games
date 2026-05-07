@@ -151,6 +151,15 @@ const TRANSLATIONS = {
     source_owned:"Zakupiona", source_psplus:"PS Plus", source_gamepass:"Game Pass", source_eaplay:"EA Play", source_other_sub:"Inna subskrypcja", source_other:"Inne",
     source_filter_all:"Wszystkie źródła",
     source_disclaimer:"Gry z subskrypcji nie wliczają się do kosztu",
+    // v1.14.1 — first-run onboarding clarity. Surfaced from r/SideProject + Play Console
+    // 60% bounce. Banner appears on Home when storage has only demo games.
+    onboarding_demo_title:"Przykładowe gry",
+    onboarding_demo_text:"To nie są Twoje gry. To przykłady żeby pokazać jak działa apka. Dodaj swoją kolekcję przyciskiem '+' u góry albo niżej w prawym dolnym rogu.",
+    onboarding_clear_demos:"Wyczyść przykłady",
+    onboarding_dismiss:"Rozumiem",
+    add_game_label:"Dodaj grę",
+    home_empty_title:"Brak gier w kolekcji",
+    home_empty_hint:"Dodaj pierwszą grę przyciskiem '+' poniżej.",
     storePh:"—",
     // v1.4.0 — Quick add UX
     moreDetails:"+ Więcej szczegółów", lessDetails:"− Mniej szczegółów",
@@ -487,6 +496,14 @@ const TRANSLATIONS = {
     source_owned:"Owned", source_psplus:"PS Plus", source_gamepass:"Game Pass", source_eaplay:"EA Play", source_other_sub:"Other subscription", source_other:"Other",
     source_filter_all:"All sources",
     source_disclaimer:"Subscription games are excluded from cost calculations",
+    // v1.14.1 — see PL counterpart for context
+    onboarding_demo_title:"Example games",
+    onboarding_demo_text:"These aren't your games. They're examples showing how the app works. Add your collection with the '+' button at the top or in the bottom-right corner.",
+    onboarding_clear_demos:"Clear examples",
+    onboarding_dismiss:"Got it",
+    add_game_label:"Add game",
+    home_empty_title:"No games in your collection yet",
+    home_empty_hint:"Add your first one with the '+' button below.",
     storePh:"—",
     // v1.4.0 — Quick add UX
     moreDetails:"+ More details", lessDetails:"− Less details",

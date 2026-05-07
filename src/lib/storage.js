@@ -2,7 +2,7 @@
 // onboarding, language, currency). Plus export/import helpers that act on the games array.
 // Per-feature persistence (eanCache, goals) lives next to its feature in lib/barcode.js
 // and lib/goals.js — keeping this file focused on the canonical games collection.
-import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, CURRENCIES } from '../constants.js';
+import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, LS_ONBOARDING_BANNER_DISMISSED, CURRENCIES } from '../constants.js';
 import { uid } from './util.js';
 
 // ─── Games list ────────────────────────────────────────────────────────────
@@ -82,6 +82,15 @@ export function timerRead() { try { return JSON.parse(localStorage.getItem('ps5v
 export function timerWrite(d) { try { if (d === null) localStorage.removeItem('ps5vault_timer'); else localStorage.setItem('ps5vault_timer', JSON.stringify(d)); } catch {} }
 export function isOnboarded() { return !!localStorage.getItem(LS_ONBOARD); }
 export function setOnboarded() { localStorage.setItem(LS_ONBOARD, '1'); }
+
+// v1.14.1 — Demo banner dismissal flag. Read at App mount + after every games[]
+// mutation that could change banner visibility (clear demos, add first own game).
+export function isDemoBannerDismissed() {
+  try { return !!localStorage.getItem(LS_ONBOARDING_BANNER_DISMISSED); } catch { return false; }
+}
+export function dismissDemoBanner() {
+  try { localStorage.setItem(LS_ONBOARDING_BANNER_DISMISSED, '1'); } catch {}
+}
 
 // v1.7.0 — set of achievement IDs that the user has already been notified about.
 // Returns Set<string>. Reading returns null if never set (callers treat null as

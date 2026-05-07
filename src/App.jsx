@@ -15,6 +15,7 @@ import {
   lsRead, lsWrite,
   budgetRead, budgetWrite, timerRead, timerWrite,
   isOnboarded, setOnboarded,
+  isDemoBannerDismissed, dismissDemoBanner,
   getLang, getCurrency, getCurSymbol, getDefaultCurrency,
   exportData, importMerge, importReplace,
   lastSeenAchRead, lastSeenAchWrite,
@@ -913,7 +914,7 @@ function SessionTimer({game, onSave, lang}) {
   );
 }
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen,onRecOpen}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen,onRecOpen,showDemoBanner,onClearDemos,onDismissBanner}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -938,11 +939,35 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
     .filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought)
     .sort((a,b)=>(b.addedAt||'').localeCompare(a.addedAt||''));
   const monthSpent=monthPurchasesList.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
-  if(!games.length)return(<div className='scr'><div className='empty' style={{paddingTop:60}}><div className='eic'>🎮</div><div className='ett'>{t(lang,'obTitle')}</div><div className='ess'>{t(lang,'obSub')}</div><button className='empty-cta' onClick={onAddFirst}>{t(lang,'addGame')}</button></div></div>);
+  // v1.14.1 — Friendlier empty state. Triggered when user clears all demos and hasn't
+  // added their own games yet, OR on a hand-cleaned install. Different copy from the
+  // first-run onboarding (obTitle/obSub) — those run BEFORE the demo seed; this is the
+  // post-seed/post-clear state.
+  if(!games.length)return(<div className='scr'><div className='empty' style={{paddingTop:60}}><div className='eic'>🎮</div><div className='ett'>{t(lang,'home_empty_title')}</div><div className='ess'>{t(lang,'home_empty_hint')}</div><button className='empty-cta' onClick={onAddFirst}>{t(lang,'addGame')}</button></div></div>);
   const hour=new Date().getHours();
   const greet=hour<6?t(lang,'goodNight'):hour<12?t(lang,'goodMorning'):hour<18?t(lang,'goodAfternoon'):t(lang,'goodEvening');
   return(
     <div className='scr'>
+      {/* v1.14.1 — Onboarding banner shown only when:
+          (1) the user hasn't dismissed it yet, AND
+          (2) at least one demo game exists in storage, AND
+          (3) the user has zero non-demo games.
+          Parent App computes showDemoBanner — this just renders if true. Two CTAs:
+          "Clear examples" (removeDemos + dismiss) and "Got it" (dismiss only). Distinct
+          accent-bordered styling so it doesn't read as a regular game card. */}
+      {showDemoBanner && (
+        <div className='demo-banner'>
+          <div className='demo-banner-ico'>👋</div>
+          <div className='demo-banner-body'>
+            <div className='demo-banner-title'>{t(lang,'onboarding_demo_title')}</div>
+            <div className='demo-banner-text'>{t(lang,'onboarding_demo_text')}</div>
+            <div className='demo-banner-actions'>
+              <button type='button' className='demo-banner-btn demo-banner-btn-primary' onClick={onClearDemos}>{t(lang,'onboarding_clear_demos')}</button>
+              <button type='button' className='demo-banner-btn demo-banner-btn-secondary' onClick={onDismissBanner}>{t(lang,'onboarding_dismiss')}</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{marginBottom:16}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
@@ -2591,6 +2616,9 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
 export default function App(){
   const [games,setGamesRaw]    = useState(()=>lsRead());
   const [onboarded,setOnboard] = useState(()=>isOnboarded());
+  // v1.14.1 — Demo banner dismissal state. Hydrated from LS at mount; flipped to true
+  // when user clicks Got it / Clear examples / adds their first non-demo game.
+  const [demoBannerDismissed,setDemoBannerDismissed] = useState(()=>isDemoBannerDismissed());
   const [lang,setLang]         = useState(()=>getLang());
   const [currency,setCurrencyState] = useState(()=>getCurrency());
   const [tab,setTab]           = useState('home');
@@ -2624,7 +2652,28 @@ export default function App(){
   const [toast,setToast]       = useState(null);
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
 
-  const setGames=useCallback(val=>{setGamesRaw(prev=>{const next=typeof val==='function'?val(prev):val;lsWrite(next);return next;});},[]);
+  const setGames=useCallback(val=>{
+    setGamesRaw(prev=>{
+      const next=typeof val==='function'?val(prev):val;
+      lsWrite(next);
+      // v1.14.1 — Auto-dismiss the demo banner the first time the user adds a
+      // non-demo game. We treat this as "user understood the app" and silence the
+      // banner permanently regardless of whether demos are still around. Idempotent:
+      // re-checks the LS flag itself (don't read stale state) and only fires when a
+      // brand-new own game appears in the array.
+      try {
+        if (!isDemoBannerDismissed()) {
+          const prevOwn = (prev||[]).filter(g => !(g && g._demo === true)).length;
+          const nextOwn = (next||[]).filter(g => !(g && g._demo === true)).length;
+          if (nextOwn > prevOwn) {
+            dismissDemoBanner();
+            setDemoBannerDismissed(true);
+          }
+        }
+      } catch {}
+      return next;
+    });
+  },[]);
   useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&Notification.permission==='granted')checkReleases(g,lang);});},[]);// eslint-disable-line
 
   // v1.10.0 — Weekly summary push. Once-per-mount call; the helper internally throttles
@@ -2991,7 +3040,23 @@ export default function App(){
           </div>
         </div>
 
-        {tab==='home'&&<Home games={games} onOpen={setModal} onStatusChange={handleStatusChange} onAddFirst={()=>setModal('add')} onToggleNotify={toggleNotify} lang={lang} goals={goals} onGoalsOpen={()=>setOverlay('goals')} onRecOpen={()=>setOverlay('recommendations')}/>}
+        {tab==='home'&&<Home
+          games={games}
+          onOpen={setModal}
+          onStatusChange={handleStatusChange}
+          onAddFirst={()=>setModal('add')}
+          onToggleNotify={toggleNotify}
+          lang={lang}
+          goals={goals}
+          onGoalsOpen={()=>setOverlay('goals')}
+          onRecOpen={()=>setOverlay('recommendations')}
+          /* v1.14.1 — onboarding banner. Only shown when storage holds ONLY demo games
+              and the user hasn't dismissed yet. After first own-game add, setGames auto-
+              flips dismissed → true, hiding the banner. */
+          showDemoBanner={!demoBannerDismissed && hasDemoGames(games) && games.filter(g=>!(g&&g._demo===true)).length===0}
+          onClearDemos={()=>{ setGames(prev=>removeDemoGames(prev)); dismissDemoBanner(); setDemoBannerDismissed(true); flash(t(lang,'demoCleared',{n:games.filter(g=>g._demo).length})); }}
+          onDismissBanner={()=>{ dismissDemoBanner(); setDemoBannerDismissed(true); }}
+        />}
 
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
@@ -3051,6 +3116,25 @@ export default function App(){
         {tab==='fin'&&<Finance games={games} lang={lang}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
         {/* v1.5.0 — Settings/Achievements/Goals/Wrapped now live behind hamburger menu (see overlays below) */}
+
+        {/* v1.14.1 — Floating action button (FAB) for adding games. Standard Material
+            Design pattern — much more discoverable on mobile than a top-right "+" alone.
+            Visible on Home + Collection (the two views where adding makes sense). Pinned
+            to bottom-right with the same env(safe-area-inset-bottom) clearance the rest
+            of the layout uses, plus a baseline 24px so it sits above the nav bar even on
+            non-edge-to-edge devices where env() returns 0. Aria-labeled for screen readers. */}
+        {(tab==='home'||tab==='col') && (
+          <button
+            type='button'
+            className='fab'
+            aria-label={t(lang,'add_game_label')}
+            title={t(lang,'add_game_label')}
+            onClick={()=>setModal('add')}
+          >
+            <span className='fab-ico' aria-hidden='true'>+</span>
+            <span className='fab-lbl'>{t(lang,'add_game_label')}</span>
+          </button>
+        )}
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
         <Toast msg={toast}/>

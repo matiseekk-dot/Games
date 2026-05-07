@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies — every other module imports from here.
 
-export const APP_VER  = '1.14.0';
+export const APP_VER  = '1.14.1';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 
 // localStorage keys (single source of truth — DON'T inline these)
@@ -31,6 +31,13 @@ export const LS_RECS_CACHE = 'ps5vault_recs_cache';
 // once-per-week throttle in App.jsx. Stored as ISO string. Default null → first
 // eligible visit triggers immediately (assuming permission + sessions).
 export const LS_LAST_WEEKLY_PUSH = 'ps5vault_last_weekly_push';
+// v1.14.1 — One-shot dismissal of the "these are example games" banner on Home.
+// Driven by Play Console feedback: ~60% of fresh installs never opened the app a
+// second time, with users on r/SideProject reporting they couldn't tell that the
+// games shown were demos and not their own library. Banner is shown until either
+// the user clicks dismiss/clear, OR adds their first non-demo game (auto-dismiss).
+// Stored as the literal string '1' once dismissed; absence = not yet dismissed.
+export const LS_ONBOARDING_BANNER_DISMISSED = 'ps5vault_onboarding_demo_banner_dismissed';
 
 // ─── Theme ─────────────────────────────────────────────────────────────────
 // Used by both the CSS template literal AND inline JSX styles. Hex strings inside

@@ -546,6 +546,33 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
    Styled as a low-emphasis info pill so it doesn't compete with the KPIs above. */
 .cph-note{font-size:11px;color:${G.dim};line-height:1.5;padding:8px 12px;margin:0 0 12px;background:rgba(123,138,173,.06);border:1px solid ${G.bdr};border-radius:10px;display:flex;align-items:center;gap:6px}
 
+/* v1.14.1 — First-run onboarding banner. Distinct accent-bordered styling so it
+   doesn't read as a regular game card. Two CTAs: primary (Clear examples) is filled
+   accent gradient, secondary (Got it) is outlined low-emphasis. The whole banner
+   uses padding+gap proportional to .hcard so it lines up with cards below. */
+.demo-banner{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(167,139,250,.06));border:1px solid rgba(0,212,255,.35);border-left:3px solid ${G.blu};border-radius:14px;padding:14px;margin-bottom:14px;animation:fadeIn .25s ease}
+.demo-banner-ico{font-size:24px;line-height:1;flex-shrink:0}
+.demo-banner-body{flex:1;min-width:0}
+.demo-banner-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${G.blu};letter-spacing:.04em;margin-bottom:6px}
+.demo-banner-text{font-size:12px;color:${G.txt};line-height:1.5;margin-bottom:12px}
+.demo-banner-actions{display:flex;gap:8px;flex-wrap:wrap}
+.demo-banner-btn{flex:1;min-width:120px;padding:10px 12px;border-radius:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:opacity .15s,transform .1s}
+.demo-banner-btn:active{transform:scale(.97)}
+.demo-banner-btn-primary{background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff}
+.demo-banner-btn-secondary{background:transparent;color:${G.dim};border:1px solid ${G.bdr}}
+.demo-banner-btn-secondary:active{background:${G.card}}
+
+/* v1.14.1 — Floating action button. Material 3 spec: 56dp container, 24dp ripple area,
+   bottom-right corner with 16dp screen edge inset. We use position:fixed (consistent
+   with other overlays) plus env(safe-area-inset-bottom) to avoid the Android nav bar.
+   Extended FAB variant: includes a label next to the icon for max discoverability —
+   per Material guidelines, that's the right call when the action is the primary screen
+   action. Solid accent gradient + soft shadow so it visually pops above content cards. */
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 16px);z-index:99998;display:flex;align-items:center;gap:8px;padding:14px 20px 14px 16px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:.02em;border:none;border-radius:28px;box-shadow:0 4px 14px rgba(0,212,255,.4),0 2px 6px rgba(0,0,0,.3);cursor:pointer;animation:scaleIn .22s ease;transition:transform .12s,box-shadow .15s}
+.fab:active{transform:scale(.96);box-shadow:0 2px 8px rgba(0,212,255,.35),0 1px 3px rgba(0,0,0,.3)}
+.fab-ico{font-size:22px;line-height:1;font-weight:900}
+.fab-lbl{white-space:nowrap}
+
 /* v1.13.15 — ImportModal styles. .mbg/.mwr/.mhd/.mtt/.mcb/.mbd were referenced in
    App.jsx (function ImportModal) since the v1.2.0 refactor but never had matching
    CSS rules — meaning every time a user clicked "Importuj dane" in Settings, the
