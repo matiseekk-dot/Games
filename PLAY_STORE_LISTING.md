@@ -28,6 +28,12 @@ Spotify Wrapped for your games + finance audit + barcode scan
 ```
 (60 znaków ✓)
 
+### Español (es-419 neutral)
+```
+Spotify Wrapped para tus juegos + auditoría financiera + escáner EAN
+```
+(67 znaków ✓ — válido en es-MX/AR/CO/CL y comprensible para es-ES)
+
 ---
 
 ## Full description (max 4000 characters)
@@ -159,6 +165,70 @@ PL/EN UI — switch in Settings.
 ```
 
 (3,792 znaków ✓ pod limit 4000)
+
+### Español (es-419 neutral)
+
+```
+🎮 ¿Y si Spotify Wrapped existiera para tus juegos?
+
+PS5 Vault es un tracker personal de juegos que convierte tu colección en historias — cuántas horas, los más jugados, gasto total, ROI de tu pendiente.
+
+━━━ QUÉ HACE ━━━
+
+📊 RESUMEN DEL AÑO
+Spotify Wrapped, pero para juegos. Horas totales, juego más jugado, juego más caro, completado más rápido, racha más larga, mejor ROI. Todo a fin de año, listo para compartir.
+
+💰 AUDITORÍA FINANCIERA
+Cada juego tiene precio de compra, precio de venta (si lo vendiste), gasto en el juego (DLC, microtransacciones). PS5 Vault calcula costo por hora, gasto mensual y ROI de juegos sin terminar (= cuánto dinero "está parado" en el estante).
+
+📱 ESCÁNER DE CÓDIGO DE BARRAS (EAN)
+Compra un juego físico, escanea el código de barras → título, género, año y portada se autocompletan. Funciona offline tras el primer escaneo (caché).
+
+🏆 19 LOGROS
+Primer juego, Coleccionista I-V, Finalizador I-III, Maratonista (100h+), 5 platinos, racha de 30 días, Economista (50% de juegos con ROI positivo), Crítico, Saltador de Géneros. Dosis de dopamina con cada nueva entrada.
+
+🎯 METAS
+"Termina 1 juego este mes", "Solo 5h en lanzamientos nuevos", "Vende 1 juego por 50% del precio" — metas semanales/mensuales con seguimiento en tiempo real y registro de éxitos/fracasos.
+
+✨ RECOMENDACIONES
+Motor híbrido impulsado por RAWG.io: "Porque te gustó X" (semillas con mejor nota) + "Porque terminaste Y" (recién completados). Top 10 sugerencias con portadas + razones, modal "+ Añadir a colección" precargado.
+
+🔔 LANZAMIENTOS
+Añade un juego con fecha futura → notificación push 30 / 7 / 1 día antes del lanzamiento.
+
+📊 ESTADÍSTICAS
+Gráfico de estado, barras por género, histograma de notas, mapa de calor de actividad (últimas 12 semanas), racha más larga, promedio de horas por título.
+
+📲 PWA — FUNCIONA OFFLINE
+Funciona sin internet (excepto búsqueda en RAWG y consulta EAN). Se instala en la pantalla de inicio como app nativa. iOS / Android / desktop.
+
+━━━ PRIVACIDAD ━━━
+
+Tus datos NUNCA salen de tu dispositivo. Todo en localStorage. Sin cuenta. Sin telemetría. Sin anuncios.
+
+La app en sí no recolecta análisis. El sitio que la aloja (matiseekk-dot.github.io) usa Cloudflare Web Analytics — estadísticas de tráfico anónimas, sin cookies, sin identificación personal. Tu colección de juegos se queda estrictamente local.
+
+Únicas llamadas de red: RAWG.io (búsqueda de títulos), UPCitemdb (consulta de EAN) y Google Pages para cargar la app. A ninguno enviamos tus datos — les preguntamos sobre JUEGOS, no sobre ti.
+
+━━━ PARA QUIÉN ES ━━━
+
+✓ Jugadores de PS5 / PS4 / multiplataforma
+✓ Cualquiera que se haya preguntado "¿cuánto he gastado en este hobby este año?"
+✓ Quienes quieren un Resumen del Año real (Steam / PSN solo dan estadísticas superficiales)
+✓ Backloggers — mira cuántas horas "descansan" en el estante, motívate a terminar
+
+━━━ TÉCNICO ━━━
+
+• PWA React de un solo archivo (730 KB / 210 KB gzip — esto NO es una app nativa de 50 MB)
+• Modo offline (Service Worker, caché network-first)
+• Persistencia en localStorage (~5 KB por juego)
+• API RAWG.io para metadatos (free tier)
+• 100% open source, código en GitHub
+
+UI en PL/EN/ES — cambia en Ajustes. Monedas: PLN, EUR, USD, GBP, CAD, AUD, MXN, CZK, SEK, NOK.
+```
+
+(3,650 znaków ✓ pod limit 4000)
 
 ---
 

@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies — every other module imports from here.
 
-export const APP_VER  = '1.14.2';
+export const APP_VER  = '1.14.3';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 
 // localStorage keys (single source of truth — DON'T inline these)
@@ -54,6 +54,21 @@ export const G = { bg:'#080B14', card:'#0D1120', card2:'#111827', bdr:'#1E2A42',
 // Keep PL labels canonical — the EN array is just a translation layer for UI.
 export const GENRES_PL = ['Action','RPG','FPS','Horror','Sport','Racing','Platformer','Puzzle','Adventure','Strategia','Fighting','Indie','Inne'];
 export const GENRES_EN = ['Action','RPG','FPS','Horror','Sports','Racing','Platformer','Puzzle','Adventure','Strategy','Fighting','Indie','Other'];
+// v1.14.3 — Spanish genre labels. Keep keys identical to PL so RMAP / persisted
+// genre values keep working — this list is for *display* only.
+export const GENRES_ES = ['Acción','RPG','FPS','Terror','Deportes','Carreras','Plataformas','Puzles','Aventura','Estrategia','Lucha','Indie','Otros'];
+
+// v1.14.3 — Localize a stored canonical (PL) genre value for display in lang. Returns the
+// input unchanged if it isn't in the canonical list (e.g. legacy/imported game with a free-form
+// genre). Storage values stay PL canonical so cross-language collections + RMAP keep working.
+export function localizeGenre(stored, lang) {
+  if (!stored) return stored;
+  const idx = GENRES_PL.indexOf(stored);
+  if (idx < 0) return stored;
+  if (lang === 'es') return GENRES_ES[idx];
+  if (lang === 'en') return GENRES_EN[idx];
+  return GENRES_PL[idx];
+}
 export const RMAP = {'action':'Action','role-playing-games-rpg':'RPG','shooter':'FPS','horror':'Horror','sports':'Sport','racing':'Racing','platformer':'Platformer','puzzle':'Puzzle','adventure':'Adventure','strategy':'Strategia','fighting':'Fighting','indie':'Indie'};
 
 export const STORES    = ['PSN','PS Store','Steam','CDP','Allegro','OLX','Media Expert','Empik','Amazon','eBay','Disc','Key','Other'];

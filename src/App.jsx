@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Cartes
 import {
   APP_VER,
   LS_LANG, LS_CURRENCY,
-  G, GENRES_PL, GENRES_EN, STORES, PLATFORMS, SOURCES, isOwned, CURRENCIES, EF,
+  G, GENRES_PL, GENRES_EN, GENRES_ES, localizeGenre, STORES, PLATFORMS, SOURCES, isOwned, CURRENCIES, EF,
 } from './constants.js';
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
@@ -49,7 +49,7 @@ function ReleaseBadge({releaseDate,lang}){
   if(d<0)return null;
   if(d===0)return<span className='rbdg-today'>🎉 {t(lang,'today')}</span>;
   if(d<=3)return<span className='rbdg-soon'>⏰ {d}d</span>;
-  if(d<=30)return<span className='rbdg-upcoming'>📅 {d} {lang==='en'?'days':'dni'}</span>;
+  if(d<=30)return<span className='rbdg-upcoming'>📅 {d} {t(lang,'daysShort')}</span>;
   return<span className='rbdg-upcoming'>📅 {fmtShort(releaseDate,lang)}</span>;
 }
 
@@ -531,7 +531,7 @@ function RawgSearch({onSelect,lang}){
       </div>
       <div className='rhnt'>{t(lang,'rawgHint')}</div>
       {open&&<div className='rdd'>
-        {busy&&res.length===0&&<div style={{padding:'14px',textAlign:'center',color:'#8B93A7',fontSize:11}}>{lang==='pl'?'Szukam...':'Searching...'}</div>}
+        {busy&&res.length===0&&<div style={{padding:'14px',textAlign:'center',color:'#8B93A7',fontSize:11}}>{t(lang,'rawgSearching')}</div>}
         {!busy&&res.length===0&&q.trim()&&<div style={{padding:'14px 12px',textAlign:'center'}}>
           <div style={{fontSize:22,marginBottom:6}}>🔍</div>
           <div style={{fontSize:12,fontWeight:700,color:G.txt,marginBottom:3}}>{t(lang,'rawgNotFound')}</div>
@@ -568,7 +568,11 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang,flash}){
   const [refreshing,setRefreshing]=useState(false);
   const titleRef=useRef(null);
   const SM=getSM(lang);
-  const genres=lang==='en'?GENRES_EN:GENRES_PL;
+  // v1.14.3 — Spanish added. Localized labels only — value stored on the game is
+  // still the PL canonical (RMAP+legacy data), so cross-language collections stay
+  // consistent. The Modal's <select> uses GENRES_PL as values + this localized
+  // array as visible labels (see render below).
+  const genres=lang==='es'?GENRES_ES:lang==='en'?GENRES_EN:GENRES_PL;
   // upd auto-regenerates abbr from title on every keystroke (abbr field is hidden in UI now).
   const upd=(k,v)=>setF(p=>{
     const n={...p,[k]:v};
@@ -722,7 +726,7 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang,flash}){
               </select>
             </div>
             <div className='fg'>
-              <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):`— ${lang==='en'?'in':'za'} ${days} ${lang==='en'?'days':'dni'}`}</span>}</label>
+              <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):'— '+t(lang,'inDays',{n:days})}</span>}</label>
               <input className='fi' type='date' value={f.releaseDate} onChange={e=>upd('releaseDate',e.target.value)} style={{colorScheme:'dark'}}/>
               <div className='fhnt'>{t(lang,'releaseDateHint')}</div>
               {/* v1.13.1 — Refresh from RAWG. Only shown for edited games with a rawgId
@@ -737,7 +741,9 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang,flash}){
               <div className='fg'><label className='fl'>{t(lang,'genreField')}</label>
                 <select className='fs' value={f.genre} onChange={e=>upd('genre',e.target.value)}>
                   <option value=''>{t(lang,'genrePh')}</option>
-                  {genres.map(g=><option key={g} value={g}>{g}</option>)}
+                  {/* v1.14.3 — value=PL canonical (back-compat with stored data + RMAP),
+                      label=localized for the active language. */}
+                  {GENRES_PL.map((gPl,i)=><option key={gPl} value={gPl}>{genres[i]}</option>)}
                 </select>
               </div>
               <div className='fg'><label className='fl'>{t(lang,'hoursField')}</label><input className='fi' inputMode='decimal' value={f.hours} onChange={e=>upd('hours',e.target.value)} placeholder='0'/></div>
@@ -752,7 +758,7 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang,flash}){
             </div>
             <div className='fg'><label className='fl'>{t(lang,'notesField')}</label><textarea className='fta' value={f.notes} onChange={e=>upd('notes',e.target.value)} placeholder={t(lang,'notesPh')}/></div>
             {f.status==='ukonczone'&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:f.platinum?'rgba(255,209,102,.08)':G.bg,border:f.platinum?'1px solid rgba(255,209,102,.4)':'1px solid '+G.bdr,borderRadius:9,cursor:'pointer',transition:'all .2s'}} onClick={()=>upd('platinum',!f.platinum)}>
-              <div><div style={{fontSize:14,color:f.platinum?G.gld:G.txt}}>🏆 {t(lang,'platinum')}</div><div style={{fontSize:10,color:G.dim,marginTop:2}}>{lang==='pl'?'Zdobyłem platynowe trofeum':'I earned the platinum trophy'}</div></div>
+              <div><div style={{fontSize:14,color:f.platinum?G.gld:G.txt}}>🏆 {t(lang,'platinum')}</div><div style={{fontSize:10,color:G.dim,marginTop:2}}>{t(lang,'platinumDesc')}</div></div>
               <div style={{width:44,height:26,borderRadius:13,background:f.platinum?G.gld:G.bdr,position:'relative',flexShrink:0,transition:'background .2s'}}>
                 <div style={{position:'absolute',top:3,left:f.platinum?21:3,width:20,height:20,borderRadius:'50%',background:'#fff',transition:'left .2s'}}/>
               </div>
@@ -883,30 +889,30 @@ function SessionTimer({game, onSave, lang}) {
     <div style={{marginTop:8,padding:'10px 12px',background:bgColor,border:'1px solid '+borderColor,borderRadius:10}}>
       {active&&<div style={{fontFamily:"'Orbitron',monospace",fontSize:22,fontWeight:900,color:timerColor,textAlign:'center',marginBottom:6,letterSpacing:'.05em'}}>
         {String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}
-        {isPaused && <div style={{fontSize:9,fontWeight:600,color:G2.gld,letterSpacing:'.15em',marginTop:2}}>⏸ {lang==='pl'?'PAUZA':'PAUSED'}</div>}
+        {isPaused && <div style={{fontSize:9,fontWeight:600,color:G2.gld,letterSpacing:'.15em',marginTop:2}}>⏸ {t(lang,'timerPaused')}</div>}
       </div>}
       {!active && (
         <button type='button' onClick={start} style={{width:'100%',padding:'8px 0',border:'none',borderRadius:8,background:G2.blu,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,cursor:'pointer'}}>
-          {lang==='pl'?'▶ Zacznij sesję':'▶ Start session'}
+          {t(lang,'timerStartLabel')}
         </button>
       )}
       {active && !isPaused && (
         <div style={{display:'flex',gap:6}}>
           <button type='button' onClick={pause} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.gld,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {lang==='pl'?'⏸ Pauza':'⏸ Pause'}
+            {t(lang,'timerPauseLabel')}
           </button>
           <button type='button' onClick={stop} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.grn,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {lang==='pl'?'⏹ Zakończ':'⏹ Stop'}
+            {t(lang,'timerStopLabel')}
           </button>
         </div>
       )}
       {active && isPaused && (
         <div style={{display:'flex',gap:6}}>
           <button type='button' onClick={resume} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.grn,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {lang==='pl'?'▶ Wznów':'▶ Resume'}
+            {t(lang,'timerResumeLabel')}
           </button>
           <button type='button' onClick={stop} style={{flex:1,padding:'8px 0',border:'1px solid '+G2.bdr,borderRadius:8,background:'transparent',color:G2.txt,fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {lang==='pl'?'⏹ Zakończ':'⏹ Stop'}
+            {t(lang,'timerStopLabel')}
           </button>
         </div>
       )}
@@ -1030,8 +1036,8 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>💰 {t(lang,'financeInsight')}</span></div>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{lang==='pl'?'Gry (cena bazowa)':'Games (base price)'}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.red}}>{pln(totalBase,lang)}</span></div>
-            {totalDLC>0&&<div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{lang==='pl'?'DLC / Mikrotransakcje':'DLC / Microtransactions'}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:'#FF6B9D'}}>{pln(totalDLC,lang)}</span></div>}
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'spentBaseShort')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.red}}>{pln(totalBase,lang)}</span></div>
+            {totalDLC>0&&<div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'spentDLCShort')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:'#FF6B9D'}}>{pln(totalDLC,lang)}</span></div>}
             <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{color:G.dim}}>{t(lang,'recovered')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.grn}}>{pln(totalEarned,lang)}</span></div>
             <div style={{height:1,background:G.bdr,margin:'2px 0'}}/>
             <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}><span style={{fontWeight:600}}>{t(lang,'realCost')}</span><span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.org}}>{pln(totalSpent-totalEarned,lang)}</span></div>
@@ -1073,7 +1079,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
           )}
           {!monthOpen && (
             <div style={{fontSize:11,color:G.dim,marginTop:6}}>
-              {lang==='pl'?'Stuknij żeby zobaczyć szczegóły':'Tap to see details'}
+              {t(lang,'tapForDetails')}
             </div>
           )}
         </div>
@@ -1117,7 +1123,7 @@ function Upcoming({games,onOpen,onToggleNotify,onStatusChange,notifPerm,onReques
         {released.map(g=>(<div key={g.id} className='upc-card'><div className='upc-banner' style={g.cover?{backgroundImage:`url(${g.cover})`}:{}}><div className='upc-ov'/><div className='upc-bt'>{g.title}</div><div className='upc-bd' style={{color:G.grn,background:'rgba(57,255,110,.2)',borderColor:'rgba(57,255,110,.4)'}}>{t(lang,'out')}</div></div><div className='upc-body'><div className='upc-date'>{t(lang,'premiere')} {fmtDate(g.releaseDate,lang)}</div><div className='upc-acts'><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></div></div></div>))}
       </>}
       {tba.length>0&&<><div className='sec-hdr' style={{marginTop:16}}><span className='sec-title'>{t(lang,'tba')}</span><span className='sec-count'>{tba.length}</span></div>
-        {tba.map(g=>{const SM2=getSM(lang);const m=SM2[g.status]||SM2.planuje;return(<div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>onOpen(g)}>{g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}<div className='gcnt'><div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='rbdg-tba'>TBA</span>{g.genre&&<span className='gmp'>{g.genre}</span>}</div></div></div></div>);})}
+        {tba.map(g=>{const SM2=getSM(lang);const m=SM2[g.status]||SM2.planuje;return(<div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>onOpen(g)}>{g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}<div className='gcnt'><div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='rbdg-tba'>TBA</span>{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}</div></div></div></div>);})}
       </>}
     </div>
   );
@@ -1131,37 +1137,37 @@ function InsightsTab({insights,games,lang}){
   const unsold=porzucone.reduce((s,g)=>s+ +g.priceBought*0.5,0);
   const totalSav=Math.round(losses+unsold);
   const ctaKeys={[t(lang,'biggestLoss')]:{label:t(lang,'avoidLoss'),flow:'avoid'},[t(lang,'bestInvestment')]:{label:t(lang,'buyBetter'),flow:'invest'},[t(lang,'mostExpensiveHours')]:{label:t(lang,'optimizeBacklog'),flow:'optim'},[t(lang,'bestValueShort')]:{label:t(lang,'findSimilar'),flow:'similar'},[t(lang,'financeSummary')]:{label:t(lang,'saveMoney'),flow:'save'}};
-  const isEn = lang==='en';
+  // v1.14.3 — flow tutorial tips routed through t() (PL/EN/ES). Was 20× isEn ternary.
   const flowData={
     avoid:{title:t(lang,"flowAvoidTitle"),steps:[
-      {ico:"⏰",tip:isEn?"Buy 3-6 months after release — price drops 30-50%.":"Kupuj 3-6 miesięcy po premierze — cena spada o 30-50%."},
-      {ico:"🏷",tip:isEn?"Track sales on PSN and stores. Set price alerts.":"Śledź promocje PSN, CDP i Allegro. Ustaw alerty cenowe."},
-      {ico:"📦",tip:isEn?"Buy physical — you can resell. Digital is permanent.":"Kupuj pudełkowe — możesz odsprzedać. Cyfrowe są definitywne."},
-      {ico:"⭐",tip:isEn?"Check reviews before buying. Games below 7/10 rarely worth full price.":"Sprawdź oceny przed zakupem. Gry poniżej 7/10 rzadko warte pełnej ceny."},
+      {ico:"⏰",tip:t(lang,'flowAvoidTip1')},
+      {ico:"🏷",tip:t(lang,'flowAvoidTip2')},
+      {ico:"📦",tip:t(lang,'flowAvoidTip3')},
+      {ico:"⭐",tip:t(lang,'flowAvoidTip4')},
     ]},
     invest:{title:t(lang,"flowInvestTitle"),steps:[
-      {ico:"🎮",tip:isEn?"Long RPGs and open worlds give the best cost/hour ratio.":"Długie RPG i otwarte światy dają najlepszy koszt/godzinę."},
-      {ico:"💎",tip:isEn?"Sony exclusives hold resale value well.":"Gry Sony utrzymują wartość przy odsprzedaży."},
-      {ico:"🛒",tip:isEn?"GOTY editions often include all DLC at a lower price.":"Edycje GOTY — wszystkie DLC w niższej cenie."},
-      {ico:"👥",tip:isEn?"Multiplayer with active community has long lifespan.":"Multiplayer z aktywną społecznością ma długą żywotność."},
+      {ico:"🎮",tip:t(lang,'flowInvestTip1')},
+      {ico:"💎",tip:t(lang,'flowInvestTip2')},
+      {ico:"🛒",tip:t(lang,'flowInvestTip3')},
+      {ico:"👥",tip:t(lang,'flowInvestTip4')},
     ]},
     optim:{title:t(lang,"flowOptimTitle"),steps:[
-      {ico:"📋",tip:isEn?"Remove games waiting over 1 year — chance of playing is low.":"Usuń gry czekające ponad rok — szansa że zagrasz jest mała."},
-      {ico:"⏱",tip:isEn?"Prioritize short games (10-20h) for quick satisfaction.":"Priorytetyzuj krótkie gry (10-20h) dla szybkiej satysfakcji."},
-      {ico:"💰",tip:isEn?"Sell abandoned games before they lose value.":"Sprzedaj porzucone zanim stracą wartość — im szybciej tym lepiej."},
-      {ico:"🎯",tip:isEn?"Play your favourite genre — you finish faster.":"Graj w swój ulubiony gatunek — szybciej ukończysz."},
+      {ico:"📋",tip:t(lang,'flowOptimTip1')},
+      {ico:"⏱",tip:t(lang,'flowOptimTip2')},
+      {ico:"💰",tip:t(lang,'flowOptimTip3')},
+      {ico:"🎯",tip:t(lang,'flowOptimTip4')},
     ]},
     similar:{title:t(lang,"flowSimilarTitle"),steps:[
-      {ico:"🔍",tip:isEn?"RAWG.io has a Similar games section for every title.":"RAWG.io ma sekcję Similar games dla każdego tytułu."},
-      {ico:"📊",tip:isEn?"Filter your backlog by genre — you already have games you like.":"Filtruj backlog po gatunku — masz już gry które lubisz."},
-      {ico:"⭐",tip:isEn?"PS Plus Extra offers games similar to your favourites.":"PS Plus Extra oferuje gry podobne do Twoich ulubionych."},
-      {ico:"💬",tip:isEn?"r/PS5 and r/patientgamers recommend games by preference.":"r/PS5 i r/patientgamers polecają gry wg preferencji."},
+      {ico:"🔍",tip:t(lang,'flowSimilarTip1')},
+      {ico:"📊",tip:t(lang,'flowSimilarTip2')},
+      {ico:"⭐",tip:t(lang,'flowSimilarTip3')},
+      {ico:"💬",tip:t(lang,'flowSimilarTip4')},
     ]},
     save:{title:t(lang,"flowSaveTitle"),steps:[
-      {ico:"📅",tip:isEn?"Max 1-2 full-price games per month. Rest on sale.":"Max 1-2 gry miesięcznie po pełnej cenie. Resztę w promocjach."},
-      {ico:"🔄",tip:isEn?"Resell immediately after finishing — less value lost.":"Odsprzedaj zaraz po ukończeniu — tracisz mniej wartości."},
-      {ico:"📦",tip:isEn?"1 new + 2 used = same gaming for less money.":"1 nowa + 2 używane = tyle samo grania za mniej pieniędzy."},
-      {ico:"🎮",tip:isEn?"PS Plus Extra gives access to hundreds of games for a fraction.":"PS Plus Extra daje dostęp do setek gier za ułamek ceny."},
+      {ico:"📅",tip:t(lang,'flowSaveTip1')},
+      {ico:"🔄",tip:t(lang,'flowSaveTip2')},
+      {ico:"📦",tip:t(lang,'flowSaveTip3')},
+      {ico:"🎮",tip:t(lang,'flowSaveTip4')},
     ]},
   };
   return(
@@ -1228,7 +1234,7 @@ function ImportModal({onClose,onPickFile,mode,onPickMode,games,lang,pendingFile,
               {mode==='merge'?t(lang,'importMerge'):t(lang,'importReplace')}
             </div>
             <label style={{display:'block',width:'100%',padding:'14px',background:G.blu,color:'#000',borderRadius:10,textAlign:'center',cursor:'pointer',fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700}}>
-              {lang==='pl'?'📁 Wybierz plik JSON':'📁 Choose JSON file'}
+              {t(lang,'pickJsonFile')}
               <input type='file' accept='.json' style={{display:'none'}} onChange={e=>{if(e.target.files[0])onPickFile(e.target.files[0]);}}/>
             </label>
           </>}
@@ -1503,11 +1509,11 @@ function Stats({games,lang}){
               })}
             </div>
             <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:4,marginTop:8,fontSize:9,color:G.dim}}>
-              <span>{lang==='pl'?'Mniej':'Less'}</span>
+              <span>{t(lang,'showLess')}</span>
               {[0.2,0.4,0.6,0.8,1.0].map(op=>(
                 <div key={op} style={{width:10,height:10,background:`rgba(57,255,110,${op})`,borderRadius:2}}/>
               ))}
-              <span>{lang==='pl'?'Więcej':'More'}</span>
+              <span>{t(lang,'showMore')}</span>
             </div>
           </div>
 
@@ -1568,7 +1574,8 @@ function Finance({games,lang}){
   for(let i=11;i>=0;i--){
     const d=new Date(_now.getFullYear(),_now.getMonth()-i,1);
     const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const months=lang==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+    // v1.14.3 — month short labels via t() so all 3 languages (PL/EN/ES) share the same keys
+    const months=[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>t(lang,'monthShort_'+n));
     const label=`${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
     monthlyData.push({n:label,v:Math.round(monthlyMap[k]||0),k});
   }
@@ -1686,7 +1693,7 @@ function Finance({games,lang}){
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
 
-  const subTabs=[[' overview',lang==='pl'?'📊 Przegląd':'📊 Overview'],[' insights',t(lang,'analysis')]];
+  const subTabs=[[' overview',t(lang,'statsOverview')],[' insights',t(lang,'analysis')]];
 
   return(
     <div className='scr'>
@@ -2066,11 +2073,10 @@ function YearInReview({ games, lang, onClose, flash }){
     if(!review) return;
     const top = review.topPlayed[0]?.game?.title;
     const lines = [
-      lang==='pl' ? `🎮 Mój ${year} w grach (PS5 Vault)` : `🎮 My ${year} in games (PS5 Vault)`,
-      lang==='pl' ? `${review.totalHours}h grania, ${review.gamesAdded} dodanych, ${review.gamesCompleted} ukończonych`
-                  : `${review.totalHours}h played, ${review.gamesAdded} added, ${review.gamesCompleted} completed`,
+      t(lang,'wrappedShareLine1',{year}),
+      t(lang,'wrappedShareLine2',{hours:review.totalHours, added:review.gamesAdded, completed:review.gamesCompleted}),
     ];
-    if(top) lines.push(lang==='pl' ? `Najwięcej: ${top}` : `Most played: ${top}`);
+    if(top) lines.push(t(lang,'wrappedShareTopPlayed',{title:top}));
     const text = lines.join('\n');
     const result = await shareText({
       title: t(lang,'wrappedShareTitle',{year}),
@@ -2440,7 +2446,7 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'data')}</div>
-        <div className='set-row' onClick={()=>exportData(games,lang,()=>flash(lang==='pl'?'✓ Backup zapisany':'✓ Backup saved'))}>
+        <div className='set-row' onClick={()=>exportData(games,lang,()=>flash(t(lang,'backupSaved')))}>
           <span className='set-row-ico'>⬆️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'exportData')}</div><div className='set-row-desc'>{t(lang,'exportDesc',{n:games.length})}</div></div><span className='set-row-arrow'>›</span>
         </div>
         <div className='set-row' onClick={openImport}>
@@ -2837,7 +2843,7 @@ export default function App(){
       }
       return next;
     }));
-    if(extra.hours!==undefined)flash(lang==='pl'?`✓ Sesja zapisana`:t(lang,'sessionSaved',{h:Math.floor(extra.hours),m:Math.round((extra.hours%1)*60)}));
+    if(extra.hours!==undefined)flash(t(lang,'sessionSaved',{h:Math.floor(extra.hours),m:Math.round((extra.hours%1)*60)}));
     else flash(t(lang,'statusChanged',{status:SM2[status]?.label}));
   }
   function toggleNotify(id){
@@ -2849,7 +2855,7 @@ export default function App(){
       requestNotif();  // best-effort — user may decline; we still toggle the flag
     }
     setGames(prev=>prev.map(g=>g.id===id?{...g,notifyEnabled:next}:g));
-    flash(next?(lang==='pl'?'🔔 Powiadomienia włączone':'🔔 Notifications enabled'):(lang==='pl'?'🔕 Powiadomienia wyłączone':'🔕 Notifications disabled'));
+    flash(next?t(lang,'notifEnabled'):t(lang,'notifDisabled'));
   }
 
   // Currency: silent persist (used by Onboarding initial pick — no toast on first-time setup)
@@ -3025,7 +3031,7 @@ export default function App(){
       <div className='app'>
         <div className='hdr'>
           <div className='htop'>
-            <div className='logo'><div className='lico'>V</div><div><div className='lnm'>VAULT</div><div className='lsb'>Game Tracker</div></div></div>
+            <div className='logo'><div className='lico'>V</div><div><div className='lnm'>VAULT</div><div className='lsb'>{t(lang,'appSubtitle')}</div></div></div>
             <div style={{display:'flex',gap:8,alignItems:'center'}}>
               <button type='button' className={'hmb'+(menuTriggers.any?' hmb-pulse':'')} onClick={()=>setOverlay('menu')} aria-label={t(lang,'menuAria')} title={t(lang,'menuAria')}>
                 ≡
@@ -3064,13 +3070,13 @@ export default function App(){
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
           <div className='toolbar'>
-            <button type='button' className='tbtn' onClick={()=>exportData(games,lang,()=>flash(lang==='pl'?'✓ Backup zapisany':'✓ Backup saved'))}>{t(lang,'export')}</button>
+            <button type='button' className='tbtn' onClick={()=>exportData(games,lang,()=>flash(t(lang,'backupSaved')))}>{t(lang,'export')}</button>
             <button type='button' className='tbtn' onClick={openImport}>{t(lang,'import')}</button>
           </div>
           <div className='chips'>{chips.map(ch=><button type='button' key={ch.k} className={'chip'+(flt===ch.k?' on':'')} onClick={()=>setFlt(ch.k)}>{ch.l}</button>)}</div>
           {[...new Set(games.map(g=>g.platform||'PS5'))].filter(p=>p!=='PS5').length>0&&<div className='sort-row'>
-            <span className='sort-lbl'>{lang==='pl'?'Platforma:':'Platform:'}</span>
-            <button type='button' className={'sort-btn'+(platFilter==='all'?' on':'')} onClick={()=>setPlatFilter('all')}>{lang==='pl'?'Wszystkie':'All'}</button>
+            <span className='sort-lbl'>{t(lang,'platformLabel')}</span>
+            <button type='button' className={'sort-btn'+(platFilter==='all'?' on':'')} onClick={()=>setPlatFilter('all')}>{t(lang,'allShort')}</button>
             {[...new Set(games.map(g=>g.platform||'PS5'))].sort().map(p=>(
               <button type='button' key={p} className={'sort-btn'+(platFilter===p?' on':'')} onClick={()=>setPlatFilter(p)}>{p}</button>
             ))}
@@ -3098,7 +3104,7 @@ export default function App(){
                 <div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>setModal(g)}>
                   {g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
-                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 — subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{g.genre}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
+                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 — subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
                     <div className='grt'>
                       {g.rating!=null?<><span className='grn'>{g.rating}</span><span className='grd'>/10</span></>:<span style={{color:G.dim,fontSize:17}}>—</span>}
                       {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
