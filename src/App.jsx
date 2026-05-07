@@ -2422,6 +2422,9 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='lang-row'>
           <button type='button' className={'lang-btn'+(lang==='pl'?' on':'')} onClick={()=>{setLang('pl');localStorage.setItem(LS_LANG,'pl');}}>🇵🇱 Polski</button>
           <button type='button' className={'lang-btn'+(lang==='en'?' on':'')} onClick={()=>{setLang('en');localStorage.setItem(LS_LANG,'en');}}>🇬🇧 English</button>
+          {/* v1.14.2 — Spanish (es-419 neutral). Globe emoji used instead of a single
+              flag — picking 🇪🇸 vs 🇲🇽 vs 🇦🇷 would alienate users from other regions. */}
+          <button type='button' className={'lang-btn'+(lang==='es'?' on':'')} onClick={()=>{setLang('es');localStorage.setItem(LS_LANG,'es');}}>🌎 Español</button>
         </div>
       </div>
       <div className='set-section'>
@@ -3028,7 +3031,7 @@ export default function App(){
                 ≡
                 {menuTriggers.any && <span className='hmb-dot' aria-hidden='true'/>}
               </button>
-              <button type='button' className='abtn' onClick={()=>setModal('add')}>+ {lang==='pl'?'Dodaj grę':'Add game'}</button>
+              <button type='button' className='abtn' onClick={()=>setModal('add')}>+ {t(lang,'add_game_label')}</button>
             </div>
           </div>
           <div className='tabs'>

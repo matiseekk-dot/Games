@@ -1,5 +1,5 @@
-// PS5 Vault — Service Worker v1.14.1 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
-const CACHE = "ps5vault-v28";
+// PS5 Vault — Service Worker v1.14.2 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v29";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -21,6 +21,17 @@ const NOTIF_I18N = {
     monthTitle: "📅 One month to release",
     monthBody: t => `${t} — in one month!`,
     daysTitle: d => `⏳ ${d} days to release`,
+    daysBody: t => `${t}`
+  },
+  // v1.14.2 — Spanish (es-419 neutral)
+  es: {
+    todayTitle: "🎮 ¡Sale hoy!",
+    todayBody: t => `¡${t} ya está disponible!`,
+    weekTitle: "⏳ ¡Una semana para el lanzamiento!",
+    weekBody: t => `${t} — ¡en 7 días!`,
+    monthTitle: "📅 Un mes para el lanzamiento",
+    monthBody: t => `${t} — ¡en un mes!`,
+    daysTitle: d => `⏳ ${d} días para el lanzamiento`,
     daysBody: t => `${t}`
   }
 };
@@ -67,7 +78,9 @@ self.addEventListener("message", async event => {
   if (event.data?.type === "SKIP_WAITING") { self.skipWaiting(); return; }
   if (event.data?.type !== "CHECK_RELEASES") return;
   const games = event.data.games || [];
-  const lang = event.data.lang === "en" ? "en" : "pl";
+  // v1.14.2 — accept es alongside pl/en. Anything else (or undefined) defaults to pl
+  // for backward-compat with pre-v1.14.2 scheduled notifications.
+  const lang = event.data.lang === "en" ? "en" : event.data.lang === "es" ? "es" : "pl";
   const i18n = NOTIF_I18N[lang];
   const today = new Date(); today.setHours(0,0,0,0);
   for (const game of games) {

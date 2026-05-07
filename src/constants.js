@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies — every other module imports from here.
 
-export const APP_VER  = '1.14.1';
+export const APP_VER  = '1.14.2';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 
 // localStorage keys (single source of truth — DON'T inline these)
@@ -64,16 +64,18 @@ export const PLATFORMS = ['PS5','PS4','Xbox Series X/S','Xbox One','PC','Nintend
 // after:true  → "100 zł"  (PLN/CZK/SEK/NOK)
 // after:false → "$100"    (EUR/USD/GBP)
 export const CURRENCIES = {
-  PLN: { code:'PLN', symbol:'zł', after:true,  name:{pl:'Polski złoty',      en:'Polish złoty'} },
-  EUR: { code:'EUR', symbol:'€',  after:false, name:{pl:'Euro',              en:'Euro'} },
-  USD: { code:'USD', symbol:'$',  after:false, name:{pl:'Dolar amerykański', en:'US dollar'} },
-  GBP: { code:'GBP', symbol:'£',  after:false, name:{pl:'Funt brytyjski',    en:'British pound'} },
+  PLN: { code:'PLN', symbol:'zł', after:true,  name:{pl:'Polski złoty',      en:'Polish złoty',     es:'Złoty polaco'} },
+  EUR: { code:'EUR', symbol:'€',  after:false, name:{pl:'Euro',              en:'Euro',             es:'Euro'} },
+  USD: { code:'USD', symbol:'$',  after:false, name:{pl:'Dolar amerykański', en:'US dollar',        es:'Dólar estadounidense'} },
+  GBP: { code:'GBP', symbol:'£',  after:false, name:{pl:'Funt brytyjski',    en:'British pound',    es:'Libra esterlina'} },
   // v1.14.0 — North American / Australian markets requested by users
-  CAD: { code:'CAD', symbol:'C$', after:false, name:{pl:'Dolar kanadyjski',  en:'Canadian dollar'} },
-  AUD: { code:'AUD', symbol:'A$', after:false, name:{pl:'Dolar australijski',en:'Australian dollar'} },
-  CZK: { code:'CZK', symbol:'Kč', after:true,  name:{pl:'Korona czeska',     en:'Czech koruna'} },
-  SEK: { code:'SEK', symbol:'kr', after:true,  name:{pl:'Korona szwedzka',   en:'Swedish krona'} },
-  NOK: { code:'NOK', symbol:'kr', after:true,  name:{pl:'Korona norweska',   en:'Norwegian krone'} },
+  CAD: { code:'CAD', symbol:'C$', after:false, name:{pl:'Dolar kanadyjski',  en:'Canadian dollar', es:'Dólar canadiense'} },
+  AUD: { code:'AUD', symbol:'A$', after:false, name:{pl:'Dolar australijski',en:'Australian dollar', es:'Dólar australiano'} },
+  // v1.14.2 — Mexican peso for the growing es-MX userbase
+  MXN: { code:'MXN', symbol:'$',  after:false, name:{pl:'Peso meksykańskie', en:'Mexican peso',     es:'Peso mexicano'} },
+  CZK: { code:'CZK', symbol:'Kč', after:true,  name:{pl:'Korona czeska',     en:'Czech koruna',     es:'Corona checa'} },
+  SEK: { code:'SEK', symbol:'kr', after:true,  name:{pl:'Korona szwedzka',   en:'Swedish krona',    es:'Corona sueca'} },
+  NOK: { code:'NOK', symbol:'kr', after:true,  name:{pl:'Korona norweska',   en:'Norwegian krone',  es:'Corona noruega'} },
 };
 
 // ─── Game source ──────────────────────────────────────────────────────────

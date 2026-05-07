@@ -140,10 +140,16 @@ export function menuSeenUpdate(patch) {
 }
 
 // ─── Language + currency selection ────────────────────────────────────────
+// v1.14.2 — Spanish (es-419 neutral) added. Detection prefers exact match on the
+// stored choice, then falls back to browser navigator.language. Anything outside
+// pl/es/en-* defaults to EN since EN has full string coverage.
 export function getLang() {
   const saved = localStorage.getItem(LS_LANG);
   if (saved) return saved;
-  return navigator.language?.startsWith('pl') ? 'pl' : 'en';
+  const nav = (navigator.language || '').toLowerCase();
+  if (nav.startsWith('pl')) return 'pl';
+  if (nav.startsWith('es')) return 'es';
+  return 'en';
 }
 export function getCurrency() {
   try { const c = localStorage.getItem(LS_CURRENCY); if (c && CURRENCIES[c]) return c; } catch {}
@@ -151,11 +157,17 @@ export function getCurrency() {
 }
 export function getCurSymbol() { return (CURRENCIES[getCurrency()] || CURRENCIES.PLN).symbol; }
 // Default for Onboarding picker — based on navigator.language at first render.
+// v1.14.2 — refined Spanish detection: es-MX/AR/CO/CL/PE → MXN as a "first-pass"
+// regional default (the user can still change it on the next onboarding step);
+// es-ES → EUR (eurozone). Other es-* fall through to USD as a neutral hemisphere
+// default rather than mismatched Polish PLN.
 export function getDefaultCurrency() {
   try {
     const l = (navigator.language || '').toLowerCase();
     if (l.startsWith('pl')) return 'PLN';
-    if (/^(de|fr|es|it)/.test(l)) return 'EUR';
+    if (l === 'es-mx' || l === 'es-419') return 'MXN';
+    if (l === 'es-es' || /^(de|fr|it)/.test(l)) return 'EUR';
+    if (l.startsWith('es')) return 'USD';  // Latin America fallback (AR/CL/PE/CO without explicit MXN)
     if (l === 'en-us') return 'USD';
     if (l === 'en-gb') return 'GBP';
   } catch {}
