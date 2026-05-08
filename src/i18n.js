@@ -440,6 +440,10 @@ const TRANSLATIONS = {
     bulkScanFlashDup:"↻ Już zeskanowane",
     bulkScanCommitFlash:"✓ Dodano {n} {gw}",
     bulkScanLookingUp:"Szukam…",
+    // v1.15.2 — Wrapped share image
+    wrappedShareImg:"Udostępnij jako obrazek",
+    wrappedShareImgGenerating:"⏳ Generuję obrazek...",
+    wrappedShareImgDownloaded:"✓ Obrazek zapisany",
   },
   en: {
     gram:"Playing", psplus:"PS Plus", ukonczone:"Completed", planuje:"Planning", porzucone:"Abandoned",
@@ -861,6 +865,10 @@ const TRANSLATIONS = {
     bulkScanFlashDup:"↻ Already scanned",
     bulkScanCommitFlash:"✓ Added {n} {gw}",
     bulkScanLookingUp:"Looking up…",
+    // v1.15.2 — Wrapped share image
+    wrappedShareImg:"Share as image",
+    wrappedShareImgGenerating:"⏳ Generating image...",
+    wrappedShareImgDownloaded:"✓ Image saved",
   },
   // v1.14.2 — Spanish (es-419, neutral Latin American Spanish — covers MX/AR/CO/CL/PE
   // and is intelligible to ES-Spain users). Mirrors the EN key set 1:1; t() falls back
@@ -1265,6 +1273,10 @@ const TRANSLATIONS = {
     bulkScanFlashDup:"↻ Ya escaneado",
     bulkScanCommitFlash:"✓ Añadidos {n} {gw}",
     bulkScanLookingUp:"Buscando…",
+    // v1.15.2 — Wrapped share image
+    wrappedShareImg:"Compartir como imagen",
+    wrappedShareImgGenerating:"⏳ Generando imagen...",
+    wrappedShareImgDownloaded:"✓ Imagen guardada",
   }
 };
 

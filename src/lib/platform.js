@@ -66,3 +66,37 @@ export async function shareText({ title, text, url }) {
   }
   return 'failed';
 }
+
+// v1.15.2 — Web Share API with a generated file. Used by Wrapped image share.
+// Returns 'shared' / 'cancelled' / 'downloaded' (fallback). Caller must invoke from
+// inside a user-gesture handler. The blob is wrapped into a File so canShare({files})
+// works on Chrome/Android (89+); other browsers fall through to download via blob URL.
+export async function shareFile({ title, text, blob, filename }) {
+  // Try Web Share API with file
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function') {
+    try {
+      const file = new File([blob], filename, { type: blob.type || 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ title, text, files: [file] });
+        return 'shared';
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return 'cancelled';
+      // Fall through to download
+    }
+  }
+  // Fallback: trigger download
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 200);
+    return 'downloaded';
+  } catch {
+    return 'failed';
+  }
+}

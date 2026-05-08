@@ -482,8 +482,17 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .wr-row-meta{font-size:11px;color:${G.dim};margin-top:2px}
 .wr-genre-name{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:${G.gld};text-align:center;letter-spacing:-.02em}
 .wr-genre-meta{font-size:11px;color:${G.dim};text-align:center;margin-top:4px}
-.wr-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:18px;padding:14px;background:linear-gradient(135deg,${G.blu},${G.pur});border:none;border-radius:14px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.2px;box-shadow:0 4px 20px rgba(0,212,255,.3)}
-.wr-share-btn:active{transform:scale(.98);box-shadow:0 2px 12px rgba(0,212,255,.25)}
+/* v1.15.2 — Two-button share row. Image (primary, accent gradient) + text (secondary,
+   outlined). Stacks on narrow screens, side-by-side at >340px. The image button is
+   slightly more visually prominent because it's the share path that drives virality. */
+.wr-share-row{display:flex;gap:8px;width:100%;margin-top:18px;flex-wrap:wrap}
+.wr-share-btn{flex:1;min-width:140px;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.2px;border:none;transition:transform .12s,opacity .15s,box-shadow .15s}
+.wr-share-btn:active{transform:scale(.98)}
+.wr-share-btn:disabled{opacity:.55;cursor:not-allowed}
+.wr-share-btn-img{background:linear-gradient(135deg,${G.blu},${G.pur});color:#fff;box-shadow:0 4px 20px rgba(0,212,255,.3)}
+.wr-share-btn-img:active{box-shadow:0 2px 12px rgba(0,212,255,.25)}
+.wr-share-btn-txt{background:transparent;color:${G.txt};border:1px solid ${G.bdr}}
+.wr-share-btn-txt:active{background:${G.card}}
 /* v1.9.0 — Recommendations engine UI */
 .rec-home-card{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-top:14px;background:linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,212,255,.06));border:1px solid rgba(167,139,250,.3);border-radius:14px;cursor:pointer;transition:transform .15s,border-color .15s}
 .rec-home-card:active{transform:scale(.99)}

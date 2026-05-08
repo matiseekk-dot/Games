@@ -21,7 +21,8 @@ import {
   menuSeenRead, menuSeenUpdate,
   wipeAllData,
 } from './lib/storage.js';
-import { registerSW, requestNotifPerm, checkReleases, shareText } from './lib/platform.js';
+import { registerSW, requestNotifPerm, checkReleases, shareText, shareFile } from './lib/platform.js';
+import { buildWrappedImage } from './lib/wrapped-image.js';
 import { rawgSearch, fetchGameById } from './lib/rawg.js';
 import { eanCacheRead, eanCacheWrite, cleanProductName, eanLookup } from './lib/barcode.js';
 import { collectSessions, computeStreak, computeLongestStreak } from './lib/sessions.js';
@@ -2170,6 +2171,34 @@ function YearInReview({ games, lang, onClose, flash }){
     else if(result==='cancelled') { /* user dismissed — silent */ }
     else                          { flash && flash(t(lang,'wrappedShareFailed')); }
   }
+  // v1.15.2 — Image share. Generates a 1080×1920 PNG via Canvas, hands it to the
+  // OS share sheet (Android Chrome 89+ canShare files API). Falls back to download
+  // if Web Share files unavailable. Disabled flag prevents double-fire while
+  // generating (image build can take ~200-400ms with cover fetch).
+  const [imgBusy,setImgBusy]=useState(false);
+  async function handleShareImage(){
+    if(!review || imgBusy) return;
+    setImgBusy(true);
+    flash && flash(t(lang,'wrappedShareImgGenerating'));
+    try {
+      const blob = await buildWrappedImage(review, year, lang);
+      if(!blob){ flash && flash(t(lang,'wrappedShareFailed')); return; }
+      const filename = `PS5Vault_${year}_Wrapped.png`;
+      const result = await shareFile({
+        title: t(lang,'wrappedShareTitle',{year}),
+        text: t(lang,'wrappedShareLine1',{year}),
+        blob,
+        filename,
+      });
+      if(result==='downloaded'){ flash && flash(t(lang,'wrappedShareImgDownloaded')); }
+      else if(result==='failed'){ flash && flash(t(lang,'wrappedShareFailed')); }
+      // 'shared' / 'cancelled' → silent
+    } catch {
+      flash && flash(t(lang,'wrappedShareFailed'));
+    } finally {
+      setImgBusy(false);
+    }
+  }
   return (
     <div className='bs-ovr'>
       <div className='bs-hdr'>
@@ -2282,9 +2311,17 @@ function YearInReview({ games, lang, onClose, flash }){
             </div>
           </div>
 
-          <button type='button' className='wr-share-btn' onClick={handleShare}>
-            📤 {t(lang,'wrappedShare')}
-          </button>
+          {/* v1.15.2 — Two share paths: text (Twitter/SMS-friendly) + image (IG Story
+              / TikTok / Discord). Image is the viral mechanic — visual hero number is
+              the whole point of a shareable Wrapped. Text remains as the lighter option. */}
+          <div className='wr-share-row'>
+            <button type='button' className='wr-share-btn wr-share-btn-img' onClick={handleShareImage} disabled={imgBusy}>
+              {imgBusy ? '⏳ ' : '🖼️ '}{t(lang,'wrappedShareImg')}
+            </button>
+            <button type='button' className='wr-share-btn wr-share-btn-txt' onClick={handleShare}>
+              📤 {t(lang,'wrappedShare')}
+            </button>
+          </div>
         </>}
       </div>
     </div>
