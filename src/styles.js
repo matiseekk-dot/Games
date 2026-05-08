@@ -548,6 +548,30 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 
 /* v1.14.1 demo banner styles removed in v1.15.0 — banner replaced by setup wizard. */
 
+/* v1.15.1 — Multi-EAN bulk scan UI.
+   Layout: header counter + camera + queue strip below camera + Done button.
+   Queue strip is horizontally scrollable so the user can see what was just scanned
+   without taking the camera off the next box. Cards are 80×96 thumbnails — small
+   enough to fit 4-5 on a 375px viewport, big enough for the cover art to be
+   recognizable. */
+.bs-bulk-queue{flex-shrink:0;display:flex;gap:8px;padding:10px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:${G.card};border-bottom:1px solid ${G.bdr};min-height:120px}
+.bs-bulk-queue::-webkit-scrollbar{display:none}
+.bs-bulk-empty{flex:1;display:flex;align-items:center;justify-content:center;color:${G.dim};font-size:12px;text-align:center;padding:0 16px;line-height:1.4}
+.bs-bulk-card{flex-shrink:0;width:80px;display:flex;flex-direction:column;gap:6px;animation:fadeIn .25s ease}
+.bs-bulk-cover{width:80px;height:96px;border-radius:8px;background-size:cover;background-position:center;background-color:${G.card2};border:1px solid ${G.bdr}}
+.bs-bulk-cover0{width:80px;height:96px;border-radius:8px;background:${G.card2};border:1px solid ${G.bdr};display:flex;align-items:center;justify-content:center;font-size:24px}
+.bs-bulk-card-pending .bs-bulk-cover0{animation:pulse 1.4s ease infinite}
+.bs-bulk-card-err .bs-bulk-cover,.bs-bulk-card-err .bs-bulk-cover0{border-color:rgba(255,77,109,.5);opacity:.6}
+.bs-bulk-card-ok .bs-bulk-cover,.bs-bulk-card-ok .bs-bulk-cover0{border-color:rgba(57,255,110,.5)}
+.bs-bulk-title{font-size:10px;color:${G.txt};text-align:center;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;max-width:80px}
+.bs-bulk-card-err .bs-bulk-title{color:${G.dim}}
+
+/* Transient toast overlaid on the camera viewport — bottom-center, 3 color variants. */
+.bs-bulk-flash{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);padding:8px 16px;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;animation:scaleIn .18s ease;max-width:calc(100% - 32px);text-align:center;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-bulk-flash-ok{background:rgba(57,255,110,.95);color:#000}
+.bs-bulk-flash-err{background:rgba(255,159,28,.95);color:#000}
+.bs-bulk-flash-dup{background:rgba(167,139,250,.95);color:#000}
+
 /* v1.15.0 — small step counter chip rendered top-right on wizard steps 2-4. Helps
    users see where they are in the flow ("Step 2 of 4") so they don't feel like the
    wizard is going on forever. Step 1 (welcome) doesn't show it — single-CTA screens

@@ -427,6 +427,19 @@ const TRANSLATIONS = {
     settingsResetWizardDesc:"Wyczyści flag i pokaże 4-krokowy setup przy następnym otwarciu",
     settingsResetWizardConfirm:"Pokazać samouczek przy następnym otwarciu apki? Twoje gry, ustawienia i dane finansowe zostaną zachowane.",
     settingsResetWizardDone:"✓ Samouczek pojawi się przy następnym otwarciu",
+    // v1.15.1 — Multi-EAN bulk scan
+    scanModeSingle:"Pojedynczo",
+    scanModeBulk:"Wiele gier",
+    scanModeBulkHint:"Skanuj kod po kodzie — gry dodają się automatycznie",
+    bulkScanCounter:"Dodano: {n}",
+    bulkScanQueueEmpty:"Skieruj kamerę na kod kreskowy z pudełka gry",
+    bulkScanDoneBtn:"✓ Gotowe ({n})",
+    bulkScanDoneBtnEmpty:"Anuluj",
+    bulkScanFlashAdded:"✓ {title}",
+    bulkScanFlashSkipped:"⚠️ EAN {ean} — nie znaleziono",
+    bulkScanFlashDup:"↻ Już zeskanowane",
+    bulkScanCommitFlash:"✓ Dodano {n} {gw}",
+    bulkScanLookingUp:"Szukam…",
   },
   en: {
     gram:"Playing", psplus:"PS Plus", ukonczone:"Completed", planuje:"Planning", porzucone:"Abandoned",
@@ -835,6 +848,19 @@ const TRANSLATIONS = {
     settingsResetWizardDesc:"Clears the flag and shows the 4-step setup on next launch",
     settingsResetWizardConfirm:"Show tutorial on next app launch? Your games, settings and finance data will be kept.",
     settingsResetWizardDone:"✓ Tutorial will appear next time you open the app",
+    // v1.15.1 — Multi-EAN bulk scan
+    scanModeSingle:"One at a time",
+    scanModeBulk:"Multiple games",
+    scanModeBulkHint:"Scan code after code — games are added automatically",
+    bulkScanCounter:"Added: {n}",
+    bulkScanQueueEmpty:"Point the camera at a barcode on a game box",
+    bulkScanDoneBtn:"✓ Done ({n})",
+    bulkScanDoneBtnEmpty:"Cancel",
+    bulkScanFlashAdded:"✓ {title}",
+    bulkScanFlashSkipped:"⚠️ EAN {ean} — not found",
+    bulkScanFlashDup:"↻ Already scanned",
+    bulkScanCommitFlash:"✓ Added {n} {gw}",
+    bulkScanLookingUp:"Looking up…",
   },
   // v1.14.2 — Spanish (es-419, neutral Latin American Spanish — covers MX/AR/CO/CL/PE
   // and is intelligible to ES-Spain users). Mirrors the EN key set 1:1; t() falls back
@@ -1226,6 +1252,19 @@ const TRANSLATIONS = {
     settingsResetWizardDesc:"Limpia el flag y muestra la configuración de 4 pasos al siguiente inicio",
     settingsResetWizardConfirm:"¿Mostrar tutorial al abrir la app la próxima vez? Tus juegos, ajustes y datos financieros se conservan.",
     settingsResetWizardDone:"✓ El tutorial aparecerá la próxima vez que abras la app",
+    // v1.15.1 — Multi-EAN bulk scan
+    scanModeSingle:"Uno por uno",
+    scanModeBulk:"Varios juegos",
+    scanModeBulkHint:"Escanea código tras código — los juegos se añaden automáticamente",
+    bulkScanCounter:"Añadidos: {n}",
+    bulkScanQueueEmpty:"Apunta la cámara a un código de barras en una caja de juego",
+    bulkScanDoneBtn:"✓ Listo ({n})",
+    bulkScanDoneBtnEmpty:"Cancelar",
+    bulkScanFlashAdded:"✓ {title}",
+    bulkScanFlashSkipped:"⚠️ EAN {ean} — no encontrado",
+    bulkScanFlashDup:"↻ Ya escaneado",
+    bulkScanCommitFlash:"✓ Añadidos {n} {gw}",
+    bulkScanLookingUp:"Buscando…",
   }
 };
 

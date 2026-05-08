@@ -192,7 +192,11 @@ function AchievementBanner({ ach, queueLen, onTap, onDismiss, lang }){
   );
 }
 
-function BarcodeScanner({ onPick, onClose, lang }){
+// v1.15.1 — Added bulk mode. Pass mode='bulk' + onBulkAdd to enable continuous scan
+// with dedup, in-camera queue, and batch commit on Done. Single mode (default, called
+// from RawgSearch) keeps current behavior — pick one EAN, lookup, return result, done.
+function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
+  const isBulk = mode === 'bulk';
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const detectorRef = useRef(null);
@@ -201,9 +205,9 @@ function BarcodeScanner({ onPick, onClose, lang }){
   // Phases:
   //   'init'        — checking BarcodeDetector / requesting camera
   //   'scanning'    — camera live, polling for codes
-  //   'lookup'      — got an EAN, asking UPCitemdb
-  //   'rawg'        — got a name, asking RAWG
-  //   'results'     — done, show RAWG hits (possibly 0) + scan-again
+  //   'lookup'      — got an EAN, asking UPCitemdb (single mode only — bulk stays in 'scanning')
+  //   'rawg'        — got a name, asking RAWG (single mode only)
+  //   'results'     — done, show RAWG hits (possibly 0) + scan-again (single mode only)
   //   'unsupported' — no BarcodeDetector available (iOS Safari)
   //   'denied'      — user denied camera
   //   'error'       — getUserMedia threw something else
@@ -214,6 +218,16 @@ function BarcodeScanner({ onPick, onClose, lang }){
   const [results, setResults] = useState([]);
   const [errMsg, setErrMsg] = useState('');
   const [manualEAN, setManualEAN] = useState('');
+  // v1.15.1 bulk-mode state. Always declared (Rules of Hooks) but only used when isBulk.
+  // bulkQueue: ordered list of {id, ean, status, title, cover, gameObj?, addedAt}.
+  //   Newest items prepended — UI shows top-3 horizontal strip.
+  // bulkScannedRef: Set<ean> to skip duplicates within a single session (user accidentally
+  //   waving same box past camera again — happens in practice on a tilted shelf).
+  // bulkToast: transient flash overlay over camera view {key, type, text}; key forces
+  //   re-render for animation; auto-clears after 1.4s.
+  const [bulkQueue, setBulkQueue] = useState([]);
+  const [bulkToast, setBulkToast] = useState(null);
+  const bulkScannedRef = useRef(new Set());
 
   const stopCam = useCallback(()=>{
     if(intervalRef.current){ clearInterval(intervalRef.current); intervalRef.current = null; }
@@ -253,8 +267,55 @@ function BarcodeScanner({ onPick, onClose, lang }){
     }
   },[stopCam]);
 
+  // v1.15.1 — Bulk-mode handler. Camera stays live; we lookup + auto-pick the first
+  // RAWG result silently, push to queue, flash a transient toast over the video. No
+  // results screen, no rescan button — just keep scanning.
+  const handleEANBulk = useCallback(async (code)=>{
+    const clean = String(code).replace(/\D/g,'');
+    if(!clean) return;
+    if(bulkScannedRef.current.has(clean)){
+      // Duplicate within this session — quick visual ack, don't re-fetch.
+      setBulkToast({ key:Date.now(), type:'dup', text:t(lang,'bulkScanFlashDup') });
+      return;
+    }
+    bulkScannedRef.current.add(clean);
+    const itemId = 'bs_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    // Optimistic queue entry — gives instant feedback while UPCitemdb + RAWG run.
+    setBulkQueue(q => [{ id:itemId, ean:clean, status:'pending', title:t(lang,'bulkScanLookingUp'), cover:'', addedAt:new Date().toISOString() }, ...q]);
+    try {
+      const name = await eanLookup(clean);
+      let chosen = null;
+      if(name){
+        const cleanedName = cleanProductName(name);
+        const r = await rawgSearch(cleanedName.length >= 3 ? cleanedName : name);
+        if(r && r.length) chosen = r[0];
+      }
+      if(chosen){
+        setBulkQueue(q => q.map(i => i.id === itemId
+          ? { ...i, status:'ok', title:chosen.title, cover:chosen.cover, gameObj:chosen }
+          : i));
+        setBulkToast({ key:Date.now(), type:'ok', text:t(lang,'bulkScanFlashAdded',{title:chosen.title}) });
+      } else {
+        // Lookup succeeded but RAWG returned nothing — keep the entry as 'err' so user
+        // sees what was scanned but didn't make it; gets dropped at commit time.
+        setBulkQueue(q => q.map(i => i.id === itemId ? { ...i, status:'err', title:name||clean } : i));
+        setBulkToast({ key:Date.now(), type:'err', text:t(lang,'bulkScanFlashSkipped',{ean:clean}) });
+      }
+    } catch {
+      setBulkQueue(q => q.map(i => i.id === itemId ? { ...i, status:'err', title:clean } : i));
+      setBulkToast({ key:Date.now(), type:'err', text:t(lang,'bulkScanFlashSkipped',{ean:clean}) });
+    }
+  },[lang]);
+
+  // Auto-clear bulk toast after 1.4s so it doesn't stack visibly
+  useEffect(()=>{
+    if(!bulkToast) return;
+    const tm = setTimeout(()=>setBulkToast(null), 1400);
+    return ()=>clearTimeout(tm);
+  },[bulkToast]);
+
   // Keep the latest handleEAN reachable from the polling interval without re-creating it
-  handleEANRef.current = handleEAN;
+  handleEANRef.current = isBulk ? handleEANBulk : handleEAN;
 
   const startCamera = useCallback(async ()=>{
     setPhase('init');
@@ -338,26 +399,62 @@ function BarcodeScanner({ onPick, onClose, lang }){
 
   const close = ()=>{ stopCam(); onClose(); };
 
+  // v1.15.1 — Done button in bulk mode commits the queue's successful items + closes.
+  const bulkOk = bulkQueue.filter(i => i.status === 'ok');
+  const finishBulk = ()=>{
+    stopCam();
+    if(bulkOk.length > 0 && typeof onBulkAdd === 'function'){
+      onBulkAdd(bulkOk.map(i => i.gameObj));
+    }
+    onClose();
+  };
+
   // ── Render bits ──
+  // v1.15.1 — bulk stays in 'scanning' phase forever; we never transition to lookup/results.
   const showVideo = phase === 'init' || phase === 'scanning';
-  const showStatus = phase === 'lookup' || phase === 'rawg';
-  const showResults = phase === 'results';
+  const showStatus = !isBulk && (phase === 'lookup' || phase === 'rawg');
+  const showResults = !isBulk && phase === 'results';
   const showHardError = phase === 'unsupported' || phase === 'denied' || phase === 'error';
 
   return (
     <div className='bs-ovr' role='dialog' aria-label={t(lang,'scanTitle')}>
       <div className='bs-hdr'>
-        <div className='bs-ttl'>📷 {t(lang,'scanTitle')}</div>
+        <div className='bs-ttl'>{isBulk ? '📦 ' : '📷 '}{t(lang,'scanTitle')}{isBulk && <span style={{marginLeft:10,fontSize:11,color:G.dim,fontWeight:600}}>{t(lang,'bulkScanCounter',{n:bulkOk.length})}</span>}</div>
         <button type='button' className='bs-x' onClick={close} aria-label={t(lang,'cancel')}>✕</button>
       </div>
 
       {showVideo && (
-        <div className='bs-vid'>
+        <div className='bs-vid' style={isBulk?{position:'relative'}:undefined}>
           <video ref={videoRef} playsInline muted autoPlay/>
           <div className='bs-frm'><div className='bs-laser'/></div>
           <div className='bs-hint'>
-            {phase==='init' ? t(lang,'scanInitializing') : t(lang,'scanHint')}
+            {phase==='init' ? t(lang,'scanInitializing') : (isBulk ? t(lang,'scanModeBulkHint') : t(lang,'scanHint'))}
           </div>
+          {/* v1.15.1 — Bulk transient toast overlaid on video. Reuses tiny key-bumped state
+              for animation re-trigger. Three colors: green/red/blue for ok/err/dup. */}
+          {isBulk && bulkToast && (
+            <div key={bulkToast.key} className={'bs-bulk-flash bs-bulk-flash-'+bulkToast.type}>
+              {bulkToast.text}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* v1.15.1 — Bulk queue strip (horizontal scroll). Newest 8 visible, oldest scrolls
+          out of view. Each card shows cover thumbnail + title + status icon. Pending
+          items show a spinner; errors are red and dropped at commit time. */}
+      {isBulk && phase === 'scanning' && (
+        <div className='bs-bulk-queue'>
+          {bulkQueue.length === 0 ? (
+            <div className='bs-bulk-empty'>{t(lang,'bulkScanQueueEmpty')}</div>
+          ) : bulkQueue.slice(0,12).map(item => (
+            <div key={item.id} className={'bs-bulk-card bs-bulk-card-'+item.status}>
+              {item.cover
+                ? <div className='bs-bulk-cover' style={{backgroundImage:`url(${item.cover})`}}/>
+                : <div className='bs-bulk-cover0'>{item.status==='pending'?'⏳':item.status==='err'?'❌':'🎮'}</div>}
+              <div className='bs-bulk-title'>{item.title}</div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -440,25 +537,38 @@ function BarcodeScanner({ onPick, onClose, lang }){
           </>
         )}
 
-        {/* Manual EAN entry — always available as a fallback */}
-        <div className='bs-mlbl'>{t(lang,'scanManualLabel')}</div>
-        <div className='bs-mrow'>
-          <input
-            inputMode='numeric'
-            pattern='\d*'
-            maxLength={14}
-            value={manualEAN}
-            onChange={e=>setManualEAN(e.target.value.replace(/\D/g,''))}
-            placeholder={t(lang,'scanManualPh')}
-            onKeyDown={e=>{ if(e.key==='Enter') submitManual(); }}
-            disabled={phase==='lookup'||phase==='rawg'}
-          />
-          <button
-            type='button'
-            onClick={submitManual}
-            disabled={manualEAN.length < 8 || phase==='lookup' || phase==='rawg'}
-          >{t(lang,'scanManualBtn')}</button>
-        </div>
+        {/* v1.15.1 — Bulk-mode commit button. Replaces single-mode's manual EAN entry +
+            results UI. Disabled until at least one game is queued. Label includes the
+            count so user can see "Done (5)" before tapping. */}
+        {isBulk ? (
+          <div className='bs-actrow' style={{marginTop:10}}>
+            <button type='button' className='bs-retry' onClick={finishBulk} style={bulkOk.length>0?{background:`linear-gradient(135deg,${G.blu},#0060FF)`,color:'#fff',borderColor:'transparent'}:undefined}>
+              {bulkOk.length > 0 ? t(lang,'bulkScanDoneBtn',{n:bulkOk.length}) : t(lang,'bulkScanDoneBtnEmpty')}
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Manual EAN entry — always available as a fallback */}
+            <div className='bs-mlbl'>{t(lang,'scanManualLabel')}</div>
+            <div className='bs-mrow'>
+              <input
+                inputMode='numeric'
+                pattern='\d*'
+                maxLength={14}
+                value={manualEAN}
+                onChange={e=>setManualEAN(e.target.value.replace(/\D/g,''))}
+                placeholder={t(lang,'scanManualPh')}
+                onKeyDown={e=>{ if(e.key==='Enter') submitManual(); }}
+                disabled={phase==='lookup'||phase==='rawg'}
+              />
+              <button
+                type='button'
+                onClick={submitManual}
+                disabled={manualEAN.length < 8 || phase==='lookup' || phase==='rawg'}
+              >{t(lang,'scanManualBtn')}</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -524,7 +634,7 @@ function RawgSearch({onSelect,lang}){
   );
 }
 
-function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang,flash}){
+function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,lang,flash}){
   // v1.9.0: isEdit checks game.id specifically (not just truthy) so that pre-fill
   // objects from Recommendations (which carry title/cover/rawgId but no id) are
   // treated as NEW games with prefilled fields, not edits of nonexistent games.
@@ -665,6 +775,18 @@ function Modal({game,onSave,onDel,onClose,notifPerm,onRequestNotif,lang,flash}){
         <div className='mdl'>
           <div className='mhdl'/>
           <div className='mttl'>{isEdit?t(lang,'editGameTitle'):t(lang,'addGameTitle')}</div>
+          {/* v1.15.1 — Bulk scan call-out, only on Add (not Edit). Discoverable but
+              not pushy; tap → close this modal + open BarcodeScanner in bulk mode. */}
+          {!isEdit && typeof onBulkScan === 'function' && (
+            <button type='button' onClick={onBulkScan} style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'12px 14px',marginBottom:12,background:'linear-gradient(135deg,rgba(0,212,255,.1),rgba(167,139,250,.06))',border:'1px solid rgba(0,212,255,.35)',borderRadius:12,cursor:'pointer',color:G.txt,textAlign:'left'}}>
+              <span style={{fontSize:22,flexShrink:0}}>📦</span>
+              <span style={{flex:1,minWidth:0}}>
+                <span style={{display:'block',fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,color:G.blu}}>{t(lang,'scanModeBulk')}</span>
+                <span style={{display:'block',fontSize:11,color:G.dim,lineHeight:1.4,marginTop:2}}>{t(lang,'scanModeBulkHint')}</span>
+              </span>
+              <span style={{color:G.dim,fontSize:18}}>›</span>
+            </button>
+          )}
           {/* ── Quick add core: search → cover → title → status ─────────────────── */}
           <RawgSearch onSelect={fill} lang={lang}/>
           {f.cover&&<img className='covp' src={f.cover} alt=''/>}
@@ -2631,6 +2753,10 @@ export default function App(){
   const [budget,setBudgetRaw]      = useState(()=>budgetRead());
   const setBudget=useCallback(val=>{setBudgetRaw(prev=>{const next=typeof val==='function'?val(prev):val;budgetWrite(next);return next;});},[]);
   const [modal,setModal]       = useState(null);
+  // v1.15.1 — Bulk scanner state. Lives at App level (not inside Modal) because the
+  // bulk path bypasses the form entirely — games go straight to library. Toggled from
+  // the "Or scan multiple games" banner in Modal Add view.
+  const [bulkScannerOpen,setBulkScannerOpen] = useState(false);
   const [toast,setToast]       = useState(null);
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
 
@@ -2760,6 +2886,43 @@ export default function App(){
 
   const requestNotif=async()=>{const p=await requestNotifPerm();setNotifP(p);return p;};
 
+  // v1.15.1 — Bulk scan handler. Receives an array of RAWG game objects from
+  // BarcodeScanner's bulk mode, converts each to a full game record (mirroring fill()
+  // in Modal but standalone since there's no current form), and appends them all to
+  // the collection in a single setGames call. Uses the same EF defaults as Modal.
+  // Skips games whose title duplicates an existing entry (by case-insensitive match)
+  // so users who scan a shelf they already partially logged don't get duplicates.
+  function handleBulkAdd(rawgGames){
+    if(!Array.isArray(rawgGames) || !rawgGames.length) return;
+    const existingTitles = new Set(games.map(g => (g.title||'').trim().toLowerCase()));
+    const toAdd = [];
+    for(const r of rawgGames){
+      const title = (r.title||'').trim();
+      if(!title) continue;
+      if(existingTitles.has(title.toLowerCase())) continue;  // dedup vs library
+      existingTitles.add(title.toLowerCase());
+      toAdd.push({
+        ...EF,
+        id: uid(),
+        title,
+        abbr: r.abbr || mkAbbr(title),
+        year: r.year || EF.year,
+        genre: r.genre || EF.genre,
+        cover: r.cover || '',
+        releaseDate: r.releaseDate || '',
+        rawgId: r.id || null,
+        targetHours: +r.playtime || 0,
+        addedAt: new Date().toISOString(),
+        source: 'owned',
+      });
+    }
+    if(!toAdd.length){
+      flash(t(lang,'bulkScanCommitFlash',{n:0,gw:gamesWord(0,lang)}));
+      return;
+    }
+    setGames(prev => [...prev, ...toAdd]);
+    flash(t(lang,'bulkScanCommitFlash',{n:toAdd.length, gw:gamesWord(toAdd.length,lang)}));
+  }
   function handleSave(form){
     const isEdit=!!form.id;const id=isEdit?form.id:uid();
     // v1.7.0: stamp completedAt when modal saves with status='ukonczone' for the first time.
@@ -3096,7 +3259,17 @@ export default function App(){
           </button>
         )}
 
-        {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
+        {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} onBulkScan={()=>{setModal(null);setBulkScannerOpen(true);}} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
+        {/* v1.15.1 — Bulk barcode scanner. Renders at App level (not inside Modal) so it
+            takes over the full screen. onBulkAdd receives RAWG game objects from the queue
+            and pushes them all to library in one batch. */}
+        {bulkScannerOpen && <BarcodeScanner
+          mode='bulk'
+          lang={lang}
+          onPick={()=>{}}
+          onBulkAdd={handleBulkAdd}
+          onClose={()=>setBulkScannerOpen(false)}
+        />}
         <Toast msg={toast}/>
         {achQueue.length>0 && (
           <AchievementBanner
