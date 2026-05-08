@@ -175,12 +175,39 @@ export function getDefaultCurrency() {
 }
 
 // ─── Backup export / import ───────────────────────────────────────────────
-export function exportData(games, lang, onDone) {
-  const blob = new Blob([JSON.stringify({ version:1, exported:new Date().toISOString(), count:games.length, games }, null, 2)], { type:'application/json' });
+// v1.15.0 — Hardened export filename + MIME type:
+//   1. Filename was reported saving as "data.json" instead of PS5Vault_Backup_YYYY-MM-DD.json
+//      on some Android WebView builds. Root cause: Chrome ignores the `download` attribute
+//      for blob: URLs when MIME is text-y (application/json) and chooses a UUID-derived
+//      fallback. Switching MIME to application/octet-stream forces the browser into
+//      "must download" mode, which respects the download attribute reliably.
+//   2. Trying Web Share API first if available — opens the system share sheet (user can
+//      pick Drive / Mail / save to Files) with the correct filename. Falls back to the
+//      legacy blob+download flow on browsers without share support.
+export async function exportData(games, lang, onDone) {
+  const filename = `PS5Vault_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+  const json = JSON.stringify({ version:1, exported:new Date().toISOString(), count:games.length, games }, null, 2);
+  // Web Share API path (Android Chrome 89+, supports files via canShare)
+  try {
+    if (typeof navigator !== 'undefined' && navigator.canShare) {
+      const file = new File([json], filename, { type:'application/json' });
+      if (navigator.canShare({ files:[file] })) {
+        await navigator.share({ files:[file], title:filename });
+        if (typeof onDone === 'function') onDone();
+        return;
+      }
+    }
+  } catch (e) {
+    // User canceled the share sheet — exit silently, don't fall through to download dialog.
+    if (e && e.name === 'AbortError') return;
+    // Any other error: fall through to legacy blob+download.
+  }
+  // Legacy blob+download fallback (desktop, older mobile browsers)
+  const blob = new Blob([json], { type:'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `PS5Vault_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

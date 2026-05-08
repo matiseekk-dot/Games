@@ -546,21 +546,13 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
    Styled as a low-emphasis info pill so it doesn't compete with the KPIs above. */
 .cph-note{font-size:11px;color:${G.dim};line-height:1.5;padding:8px 12px;margin:0 0 12px;background:rgba(123,138,173,.06);border:1px solid ${G.bdr};border-radius:10px;display:flex;align-items:center;gap:6px}
 
-/* v1.14.1 — First-run onboarding banner. Distinct accent-bordered styling so it
-   doesn't read as a regular game card. Two CTAs: primary (Clear examples) is filled
-   accent gradient, secondary (Got it) is outlined low-emphasis. The whole banner
-   uses padding+gap proportional to .hcard so it lines up with cards below. */
-.demo-banner{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(167,139,250,.06));border:1px solid rgba(0,212,255,.35);border-left:3px solid ${G.blu};border-radius:14px;padding:14px;margin-bottom:14px;animation:fadeIn .25s ease}
-.demo-banner-ico{font-size:24px;line-height:1;flex-shrink:0}
-.demo-banner-body{flex:1;min-width:0}
-.demo-banner-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${G.blu};letter-spacing:.04em;margin-bottom:6px}
-.demo-banner-text{font-size:12px;color:${G.txt};line-height:1.5;margin-bottom:12px}
-.demo-banner-actions{display:flex;gap:8px;flex-wrap:wrap}
-.demo-banner-btn{flex:1;min-width:120px;padding:10px 12px;border-radius:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:opacity .15s,transform .1s}
-.demo-banner-btn:active{transform:scale(.97)}
-.demo-banner-btn-primary{background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff}
-.demo-banner-btn-secondary{background:transparent;color:${G.dim};border:1px solid ${G.bdr}}
-.demo-banner-btn-secondary:active{background:${G.card}}
+/* v1.14.1 demo banner styles removed in v1.15.0 — banner replaced by setup wizard. */
+
+/* v1.15.0 — small step counter chip rendered top-right on wizard steps 2-4. Helps
+   users see where they are in the flow ("Step 2 of 4") so they don't feel like the
+   wizard is going on forever. Step 1 (welcome) doesn't show it — single-CTA screens
+   should feel inviting, not procedural. */
+.ob-step-chip{position:absolute;top:max(16px,env(safe-area-inset-top,0px));right:16px;padding:6px 12px;background:rgba(123,138,173,.12);border:1px solid ${G.bdr};border-radius:999px;font-size:10px;font-weight:600;color:${G.dim};letter-spacing:.04em;text-transform:uppercase}
 
 /* v1.14.1 — Floating action button. Material 3 spec: 56dp container, 24dp ripple area,
    bottom-right corner with 16dp screen edge inset. We use position:fixed (consistent

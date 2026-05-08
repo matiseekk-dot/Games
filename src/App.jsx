@@ -15,7 +15,6 @@ import {
   lsRead, lsWrite,
   budgetRead, budgetWrite, timerRead, timerWrite,
   isOnboarded, setOnboarded,
-  isDemoBannerDismissed, dismissDemoBanner,
   getLang, getCurrency, getCurSymbol, getDefaultCurrency,
   exportData, importMerge, importReplace,
   lastSeenAchRead, lastSeenAchWrite,
@@ -53,23 +52,19 @@ function ReleaseBadge({releaseDate,lang}){
   return<span className='rbdg-upcoming'>📅 {fmtShort(releaseDate,lang)}</span>;
 }
 
+// v1.15.0 — Replaces v1.10 carousel + v1.14 demo banner. Linear 4-step setup wizard:
+//   1 = Welcome (single CTA, sets the brand tone)
+//   2 = Currency picker (full grid — user makes deliberate choice, no auto-detect surprise)
+//   3 = Demo games choice (EXPLICIT — fixes "I think I'm too dumb, why are these games here"
+//       reported on r/SideProject by TheBigRandowski). User picks "show examples" or "start
+//       empty" — no more silent demo seed.
+//   4 = Expectation setting (CRITICAL — addresses TheEnigmaEric's "do I have to manually add
+//       my games or can I connect my existing PS5 library" feedback. Says explicitly: this
+//       is a manual tracker, PSN sync coming in Premium).
+// onLoadDemo is fired only if the user picks "show examples" in step 3 (was: fired in step 1
+// in the v1.10 flow, which created the activation problem we're fixing).
 function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
-  const features=[
-    {ico:'🎮',tk:'obF1Title',dk:'obF1Desc'},{ico:'📅',tk:'obF2Title',dk:'obF2Desc'},
-    {ico:'💰',tk:'obF3Title',dk:'obF3Desc'},{ico:'📊',tk:'obF4Title',dk:'obF4Desc'},
-  ];
-  // v1.10.0 — Flipped onboarding flow: demo loads first, features animate in background,
-  // currency is a 1-tap confirmation derived from navigator.language. Three steps:
-  //   1 = welcome (single big CTA, hooks attention)
-  //   2 = features carousel (auto-advance ~1.5s/card, skippable, demo loads in bg on entry)
-  //   3 = currency confirm (preselected, 1-tap dismiss; secondary "change" link expands picker)
   const [step,setStep]=useState(1);
-  // Auto-advancing carousel index for step 2 (0..features.length-1, then +1 = "done").
-  const [carIdx,setCarIdx]=useState(0);
-  // Toggle: when user taps "change →" on step 3, expand the full grid picker.
-  const [expandedPicker,setExpandedPicker]=useState(false);
-  // Detected currency from navigator.language (already uses navigator.language internally).
-  // Shows as preselected in confirm step; user can override via expanded picker.
   const [pickedCur,setPickedCur]=useState(()=>{
     try { const s=localStorage.getItem(LS_CURRENCY); if(s && CURRENCIES[s]) return s; } catch{}
     return getDefaultCurrency();
@@ -78,103 +73,76 @@ function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
     setPickedCur(code);
     if(typeof onCurrencyPick==='function') onCurrencyPick(code);
   }
-
-  // Step 1 → Step 2 transition: load demo silently in the background. By the time the
-  // user finishes the carousel (~6s) or skips it, demo data is already in localStorage and
-  // games[] is populated. The currency confirm step then just persists the locale-derived
-  // pick and exits to the populated Home — net latency: zero.
-  function startCarousel(){
-    if(typeof onLoadDemo==='function') onLoadDemo();
-    setStep(2);
+  function finish(loadDemo){
+    selectCur(pickedCur);
+    if(loadDemo && typeof onLoadDemo==='function') onLoadDemo();
+    onSkip();
   }
-
-  // Auto-advance carousel: 1500ms per card, then advance to step 3. Cleanup timer on
-  // unmount or step change — important because skip/back would leave a stray timeout.
-  useEffect(()=>{
-    if(step!==2) return;
-    if(carIdx >= features.length){ setStep(3); return; }
-    const tm=setTimeout(()=>setCarIdx(i=>i+1), 1500);
-    return ()=>clearTimeout(tm);
-  },[step,carIdx,features.length]);
+  // Tiny step-counter chip rendered on every step (except 1 — welcome doesn't need it)
+  const stepLabel = step>1 ? <div className='ob-step-chip'>{t(lang,'wizard4StepLabel',{n:step})}</div> : null;
 
   if(step===1){
     return(
       <div className='onboard'>
         <div className='ob-logo'>V</div>
-        <div className='ob-title'>{t(lang,'obWelcomeTitle')}</div>
-        <div className='ob-sub'>{t(lang,'obWelcomeSub')}</div>
-        <button type='button' className='ob-start' onClick={startCarousel}>{t(lang,'obWelcomeStart')}</button>
+        <div className='ob-title'>{t(lang,'wizard1Title')}</div>
+        <div className='ob-sub'>{t(lang,'wizard1Body')}</div>
+        <button type='button' className='ob-start' onClick={()=>setStep(2)}>{t(lang,'wizard1Btn')}</button>
       </div>
     );
   }
 
   if(step===2){
-    // Features carousel — single card visible at a time, dot indicators below, skip link top-right.
-    const f = features[Math.min(carIdx, features.length-1)];
     return(
-      <div className='onboard ob-carousel'>
-        <button type='button' className='ob-carousel-skip' onClick={()=>setStep(3)}>{t(lang,'obCarouselSkip')}</button>
-        <div className='ob-carousel-card' key={carIdx}>
-          <div className='ob-carousel-ico'>{f.ico}</div>
-          <div className='ob-carousel-title'>{t(lang,f.tk)}</div>
-          <div className='ob-carousel-desc'>{t(lang,f.dk)}</div>
-        </div>
-        <div className='ob-carousel-dots'>
-          {features.map((_,i)=>(
-            <span key={i} className={'ob-carousel-dot'+(i===carIdx?' on':'')}/>
+      <div className='onboard'>
+        {stepLabel}
+        <div className='ob-logo' style={{fontSize:36}}>💰</div>
+        <div className='ob-title'>{t(lang,'wizard2Title')}</div>
+        <div className='ob-sub'>{t(lang,'wizard2Body')}</div>
+        <div className='cur-grid'>
+          {Object.values(CURRENCIES).map(d=>(
+            <button key={d.code} type='button'
+              className={'cur-btn'+(pickedCur===d.code?' on':'')}
+              onClick={()=>setPickedCur(d.code)}>
+              <span className='cur-btn-sym'>{d.symbol}</span>
+              <span className='cur-btn-code'>{d.code}</span>
+              <span className='cur-btn-name'>{d.name[lang]||d.name.en}</span>
+            </button>
           ))}
         </div>
+        <button type='button' className='ob-start' onClick={()=>setStep(3)}>{t(lang,'wizard2Btn')}</button>
       </div>
     );
   }
 
-  // Step 3: 1-tap currency confirm. The expanded picker is hidden behind "change →"
-  // so the default path is a single tap.
-  // Escape hatch: tapping "Zacznę od pustej kolekcji" clears the demo data that loaded
-  // in the background during step 1→2 — gives users who explicitly don't want demo a way
-  // out, at the cost of a slightly less prominent placement (below the change-currency link).
-  const def = CURRENCIES[pickedCur] || CURRENCIES.PLN;
-  const curName = def.name[lang] || def.name.en;
-  if(!expandedPicker){
+  if(step===3){
     return(
       <div className='onboard'>
-        <div className='ob-logo' style={{fontSize:36}}>{def.symbol}</div>
-        <div className='ob-title'>{t(lang,'obCurConfirmTitle')}</div>
-        <div className='ob-sub'>{t(lang,'obCurConfirmSub',{curName,curCode:pickedCur})}</div>
-        <button type='button' className='ob-start' onClick={()=>{selectCur(pickedCur);onSkip();}}>{t(lang,'obCurConfirmOk')}</button>
-        <button type='button' onClick={()=>setExpandedPicker(true)} style={{marginTop:10,padding:'10px',background:'transparent',border:'none',color:'#8B93A7',fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obCurConfirmChange')}</button>
-        <button type='button' onClick={()=>{
-          // User explicitly opts out of demo. Caller's onSkip handler doesn't know about
-          // demo — we need to tell App to clear demo games. Done inline by re-using
-          // onLoadDemo's state with empty input (semantic abuse, but practical):
-          // we set onCurrencyPick to picked then call onSkip with an "empty" hint.
-          // Simpler approach: directly call window.__ps5v_clearDemo if exposed by App,
-          // else just call onSkip — user will see demo and can clear via Settings.
-          if(typeof window.__ps5v_clearDemo === 'function') window.__ps5v_clearDemo();
-          selectCur(pickedCur);
-          onSkip();
-        }} style={{marginTop:6,padding:'8px',background:'transparent',border:'none',color:'#6B7388',fontFamily:"'Syne',sans-serif",fontSize:11,fontWeight:500,cursor:'pointer',textDecoration:'underline',textUnderlineOffset:3,width:'100%'}}>{t(lang,'obDemoSkip')}</button>
+        {stepLabel}
+        <div className='ob-logo' style={{fontSize:36}}>🎮</div>
+        <div className='ob-title'>{t(lang,'wizard3Title')}</div>
+        <div className='ob-sub'>{t(lang,'wizard3Body')}</div>
+        {/* Two equal-weight choices — no "primary/secondary" hierarchy because both are
+            valid paths. User feedback explicitly said the default seeded demos confused
+            them, so making this an explicit 50/50 choice is the fix. */}
+        <button type='button' className='ob-start' onClick={()=>{ window.__ps5v_pendingDemo=true; setStep(4); }}>{t(lang,'wizard3Yes')}</button>
+        <button type='button' onClick={()=>{ window.__ps5v_pendingDemo=false; setStep(4); }} style={{marginTop:10,padding:'12px',background:'transparent',border:'1px solid #1E2A42',borderRadius:11,color:'#E8EDF8',fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,cursor:'pointer',width:'100%'}}>{t(lang,'wizard3No')}</button>
       </div>
     );
   }
-  // Expanded picker (legacy step 2 from v1.9 — same component, reached only if user taps "change →")
+
+  // step === 4 — expectation setting. The "this is manual tracker" message is the most
+  // important text in the whole wizard. Don't soften it — clarity is the conversion fix.
   return(
     <div className='onboard'>
-      <div className='ob-logo' style={{fontSize:36}}>💰</div>
-      <div className='ob-title'>{t(lang,'obCurrencyTitle')}</div>
-      <div className='ob-sub'>{t(lang,'obCurrencySub')}</div>
-      <div className='cur-grid'>
-        {Object.values(CURRENCIES).map(d=>(
-          <button key={d.code} type='button'
-            className={'cur-btn'+(pickedCur===d.code?' on':'')}
-            onClick={()=>selectCur(d.code)}>
-            <span className='cur-btn-sym'>{d.symbol}</span>
-            <span className='cur-btn-code'>{d.code}</span>
-            <span className='cur-btn-name'>{d.name[lang]||d.name.en}</span>
-          </button>
-        ))}
+      {stepLabel}
+      <div className='ob-logo' style={{fontSize:36}}>📋</div>
+      <div className='ob-title'>{t(lang,'wizard4Title')}</div>
+      <div className='ob-sub'>{t(lang,'wizard4Body')}</div>
+      <div style={{margin:'14px 0',padding:'12px 14px',background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.3)',borderRadius:12,fontSize:12,color:'#E8EDF8',lineHeight:1.5}}>
+        {t(lang,'wizard4Premium')}
       </div>
-      <button type='button' className='ob-start' onClick={()=>{selectCur(pickedCur);onSkip();}}>{t(lang,'obContinue')}</button>
+      <button type='button' className='ob-start' onClick={()=>finish(window.__ps5v_pendingDemo===true)}>{t(lang,'wizard4Btn')}</button>
     </div>
   );
 }
@@ -501,21 +469,29 @@ function RawgSearch({onSelect,lang}){
   const [scanOpen,setScanOpen]=useState(false);
   const timer=useRef(null);
   const reqId=useRef(0);
+  // v1.15.0 — Anti-flicker: don't clear `res` on every keystroke (it caused the dropdown
+  // to flash empty between requests). Old results stay visible while the user types,
+  // dimmed via the .stale class (see styles.js). When the new request resolves, results
+  // swap in atomically. setRes([]) only fires when query becomes empty.
   const search=val=>{
     setQ(val);
     clearTimeout(timer.current);
-    setRes([]);
-    if(!val.trim()){setOpen(false);setBusy(false);return;}
+    if(!val.trim()){setOpen(false);setBusy(false);setRes([]);return;}
     setBusy(true);
     setOpen(true);
     const myReq=++reqId.current;
     timer.current=setTimeout(async()=>{
-      const r=await rawgSearch(val);
-      if(myReq!==reqId.current)return;
-      setRes(r);
-      // Keep dropdown open even when 0 results — show "not found" hint instead of silently closing
-      setOpen(true);
-      setBusy(false);
+      try {
+        const r=await rawgSearch(val);
+        if(myReq!==reqId.current)return;
+        setRes(r);
+        // Keep dropdown open even when 0 results — show "not found" hint instead of silently closing
+        setOpen(true);
+        setBusy(false);
+      } catch {
+        if(myReq!==reqId.current)return;
+        setBusy(false);
+      }
     },450);
   };
   const pick=item=>{onSelect(item);setQ('');setRes([]);setOpen(false);reqId.current++;};
@@ -920,7 +896,7 @@ function SessionTimer({game, onSave, lang}) {
   );
 }
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen,onRecOpen,showDemoBanner,onClearDemos,onDismissBanner}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen,onRecOpen}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -954,26 +930,10 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
   const greet=hour<6?t(lang,'goodNight'):hour<12?t(lang,'goodMorning'):hour<18?t(lang,'goodAfternoon'):t(lang,'goodEvening');
   return(
     <div className='scr'>
-      {/* v1.14.1 — Onboarding banner shown only when:
-          (1) the user hasn't dismissed it yet, AND
-          (2) at least one demo game exists in storage, AND
-          (3) the user has zero non-demo games.
-          Parent App computes showDemoBanner — this just renders if true. Two CTAs:
-          "Clear examples" (removeDemos + dismiss) and "Got it" (dismiss only). Distinct
-          accent-bordered styling so it doesn't read as a regular game card. */}
-      {showDemoBanner && (
-        <div className='demo-banner'>
-          <div className='demo-banner-ico'>👋</div>
-          <div className='demo-banner-body'>
-            <div className='demo-banner-title'>{t(lang,'onboarding_demo_title')}</div>
-            <div className='demo-banner-text'>{t(lang,'onboarding_demo_text')}</div>
-            <div className='demo-banner-actions'>
-              <button type='button' className='demo-banner-btn demo-banner-btn-primary' onClick={onClearDemos}>{t(lang,'onboarding_clear_demos')}</button>
-              <button type='button' className='demo-banner-btn demo-banner-btn-secondary' onClick={onDismissBanner}>{t(lang,'onboarding_dismiss')}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* v1.15.0 — Removed demo banner from v1.14. The banner was a band-aid for the
+          activation problem; the real fix is the 4-step setup wizard which sets explicit
+          expectations BEFORE the user sees any games. Demo games (if user picked them in
+          wizard step 3) are now self-explanatory because user opted in. */}
       <div style={{marginBottom:16}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
@@ -2474,6 +2434,19 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             <span className='set-row-ico'>♻️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'recCacheClear')}</div><div className='set-row-desc'>{t(lang,'recCacheClearDesc',{n:stats.entries, kb:Math.round(stats.bytes/1024)})}</div></div><span className='set-row-arrow'>›</span>
           </div>
         );})()}
+        {/* v1.15.0 — Reset onboarding wizard. Useful for users who skipped it accidentally
+            or want to revisit the expectation-setting screen. Doesn't touch games or settings.
+            Implementation: just clears the LS_ONBOARD flag + reloads. */}
+        <div className='set-row' onClick={()=>{
+          if(window.confirm(t(lang,'settingsResetWizardConfirm'))){
+            try { localStorage.removeItem('ps5vault_onboarded'); } catch {}
+            flash(t(lang,'settingsResetWizardDone'));
+            // Tiny delay so the flash is visible before reload
+            setTimeout(()=>{ try { location.reload(); } catch {} }, 800);
+          }
+        }}>
+          <span className='set-row-ico'>🎓</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'settingsResetWizard')}</div><div className='set-row-desc'>{t(lang,'settingsResetWizardDesc')}</div></div><span className='set-row-arrow'>›</span>
+        </div>
         {/* v1.11.1 — GDPR right-to-deletion. Always visible; opens 2-step confirm modal.
             Last row of Data section because it's the most destructive action. */}
         <div className='set-row set-row-danger' onClick={onWipeOpen}>
@@ -2625,9 +2598,9 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
 export default function App(){
   const [games,setGamesRaw]    = useState(()=>lsRead());
   const [onboarded,setOnboard] = useState(()=>isOnboarded());
-  // v1.14.1 — Demo banner dismissal state. Hydrated from LS at mount; flipped to true
-  // when user clicks Got it / Clear examples / adds their first non-demo game.
-  const [demoBannerDismissed,setDemoBannerDismissed] = useState(()=>isDemoBannerDismissed());
+  // v1.14.1 demo banner state removed in v1.15.0 — banner replaced by setup wizard.
+  // The LS_ONBOARDING_BANNER_DISMISSED key is left in place (never read anymore) so
+  // existing users don't see any leftover side effects on upgrade.
   const [lang,setLang]         = useState(()=>getLang());
   const [currency,setCurrencyState] = useState(()=>getCurrency());
   const [tab,setTab]           = useState('home');
@@ -2665,21 +2638,7 @@ export default function App(){
     setGamesRaw(prev=>{
       const next=typeof val==='function'?val(prev):val;
       lsWrite(next);
-      // v1.14.1 — Auto-dismiss the demo banner the first time the user adds a
-      // non-demo game. We treat this as "user understood the app" and silence the
-      // banner permanently regardless of whether demos are still around. Idempotent:
-      // re-checks the LS flag itself (don't read stale state) and only fires when a
-      // brand-new own game appears in the array.
-      try {
-        if (!isDemoBannerDismissed()) {
-          const prevOwn = (prev||[]).filter(g => !(g && g._demo === true)).length;
-          const nextOwn = (next||[]).filter(g => !(g && g._demo === true)).length;
-          if (nextOwn > prevOwn) {
-            dismissDemoBanner();
-            setDemoBannerDismissed(true);
-          }
-        }
-      } catch {}
+      // v1.14.1 auto-dismiss-banner-on-first-add removed in v1.15.0 (banner is gone).
       return next;
     });
   },[]);
@@ -2949,11 +2908,9 @@ export default function App(){
     onSkip={()=>{setOnboarded(true);setOnboard(true);}}
     onCurrencyPick={setCurrencyPersist}
     onLoadDemo={()=>{
-      // v1.10.0 — Demo loads silently in the background during step 1→2 transition.
-      // We do NOT finalize onboarding here — that happens on the currency confirm step.
-      // By the time the user finishes the carousel (~6s) or skips it, demo is already
-      // in localStorage and games[] is populated, so currency confirm exits to a fully
-      // populated Home with zero perceived latency.
+      // v1.15.0 — Demo loads ONLY if user picked "Show examples" in wizard step 3.
+      // Was: silently loaded during step 1→2 transition (v1.10) — that hidden default
+      // is what created the activation problem we're fixing this release.
       const demos=makeDemoGames();
       setGames(demos);
       flash(t(lang,'demoLoaded',{n:demos.length}));
@@ -3059,12 +3016,6 @@ export default function App(){
           goals={goals}
           onGoalsOpen={()=>setOverlay('goals')}
           onRecOpen={()=>setOverlay('recommendations')}
-          /* v1.14.1 — onboarding banner. Only shown when storage holds ONLY demo games
-              and the user hasn't dismissed yet. After first own-game add, setGames auto-
-              flips dismissed → true, hiding the banner. */
-          showDemoBanner={!demoBannerDismissed && hasDemoGames(games) && games.filter(g=>!(g&&g._demo===true)).length===0}
-          onClearDemos={()=>{ setGames(prev=>removeDemoGames(prev)); dismissDemoBanner(); setDemoBannerDismissed(true); flash(t(lang,'demoCleared',{n:games.filter(g=>g._demo).length})); }}
-          onDismissBanner={()=>{ dismissDemoBanner(); setDemoBannerDismissed(true); }}
         />}
 
         {tab==='col'&&<>
