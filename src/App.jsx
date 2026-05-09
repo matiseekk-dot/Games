@@ -2754,6 +2754,40 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
   const [matches, setMatches] = useState({});  // index → { status, rawg?, error? }
   const [selected, setSelected] = useState(new Set());  // indices of selected rows
   const [committing, setCommitting] = useState(false);
+  // v1.16.2 — File upload as primary input path. At 1000+ games, copy-paste of
+  // raw CSV stalls the browser textarea (especially on mobile WebView). FileReader
+  // sidesteps that — pick file, read text, hand same string to parser. Steam still
+  // supports paste because steamcommunity.com page source isn't a downloadable file.
+  const [fileName, setFileName] = useState('');
+  const [fileError, setFileError] = useState('');
+  const [showPaste, setShowPaste] = useState(platform === 'steam'); // Steam defaults to paste; PSN/Xbox default to file
+  const fileInputRef = useRef(null);
+  const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB — generous cap (1000-game CSV ≈300KB; Steam page source ≈5-10MB)
+
+  async function onPickFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setFileError('');
+    setParsed(null); // clear stale "no games found" message
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError(t(lang, 'importFileTooBig'));
+      setFileName('');
+      setPasteText('');
+      return;
+    }
+    try {
+      const text = await file.text();
+      const sizeKb = Math.round(file.size / 1024);
+      setFileName(`${file.name} (${sizeKb} KB)`);
+      setPasteText(text);
+    } catch {
+      setFileError(t(lang, 'importFileReadErr'));
+      setFileName('');
+      setPasteText('');
+    }
+    // Reset input so picking the same file twice still fires onChange
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
 
   // v1.16.1 — Platform dispatch. Map prop to (i18n key prefix, parser fn, public help URL).
   const platformConfig = {
@@ -2890,15 +2924,54 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
               ))}
             </div>
             <a href={platformConfig?.helpUrl || '#'} target='_blank' rel='noopener noreferrer' style={{display:'block',padding:'10px',background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.3)',borderRadius:10,color:G.blu,fontSize:13,fontWeight:700,textDecoration:'none',textAlign:'center',marginBottom:18}}>{t(lang, k('OpenSite'))}</a>
-            <div style={{fontSize:11,fontWeight:700,color:G.dim,letterSpacing:'.05em',marginBottom:6}}>{t(lang, k('PasteLabel'))}</div>
-            <textarea
-              value={pasteText}
-              onChange={e=>setPasteText(e.target.value)}
-              placeholder={t(lang, k('PastePh'))}
-              spellCheck={false}
-              autoCapitalize='off'
-              style={{width:'100%',minHeight:160,padding:12,fontFamily:'monospace',fontSize:11,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:10,color:G.txt,resize:'vertical',marginBottom:10}}
+
+            {/* v1.16.2 — File upload (primary path for PSN/Xbox CSV downloads).
+                Hidden file input + visible button — standard pattern for styled file
+                pickers. accept=".csv,.json,.txt,.html" covers all 3 platforms (PSN/Xbox
+                CSV, Steam HTML page source, plaintext title lists). FileReader.text()
+                resolves with file content as UTF-8 string. */}
+            <div style={{fontSize:11,fontWeight:700,color:G.dim,letterSpacing:'.05em',marginBottom:6}}>{t(lang, 'importFileLabel')}</div>
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept='.csv,.json,.txt,.html,.htm,text/csv,application/json,text/plain,text/html'
+              onChange={onPickFile}
+              style={{display:'none'}}
             />
+            <button
+              type='button'
+              onClick={()=>fileInputRef.current && fileInputRef.current.click()}
+              style={{width:'100%',padding:'14px 12px',background:fileName?'rgba(57,255,110,.06)':G.card,border:`2px dashed ${fileName?'rgba(57,255,110,.4)':G.bdr}`,borderRadius:11,color:fileName?G.grn:G.txt,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8,textAlign:'center',transition:'all .15s'}}
+            >
+              {fileName ? `✓ ${fileName}` : t(lang, 'importFilePickBtn')}
+            </button>
+            {fileError && (
+              <div style={{padding:'8px 12px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:10,color:G.red,fontSize:12,marginBottom:10}}>⚠️ {fileError}</div>
+            )}
+
+            {/* "Or paste" toggle — collapsed by default for PSN/Xbox (most users will
+                use the file picker), expanded by default for Steam (page source isn't
+                a downloadable file, paste is the only path). */}
+            <button
+              type='button'
+              onClick={()=>setShowPaste(s=>!s)}
+              style={{width:'100%',padding:'8px',background:'transparent',border:'none',color:G.dim,fontSize:11,cursor:'pointer',textDecoration:'underline',marginBottom:showPaste?6:14}}
+            >
+              {showPaste ? t(lang, 'importHidePaste') : t(lang, 'importShowPaste')}
+            </button>
+            {showPaste && (
+              <>
+                <div style={{fontSize:11,fontWeight:700,color:G.dim,letterSpacing:'.05em',marginBottom:6}}>{t(lang, k('PasteLabel'))}</div>
+                <textarea
+                  value={pasteText}
+                  onChange={e=>{setPasteText(e.target.value); setFileName(''); setFileError('');}}
+                  placeholder={t(lang, k('PastePh'))}
+                  spellCheck={false}
+                  autoCapitalize='off'
+                  style={{width:'100%',minHeight:140,padding:12,fontFamily:'monospace',fontSize:11,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:10,color:G.txt,resize:'vertical',marginBottom:10}}
+                />
+              </>
+            )}
             {parsed && parsed.count === 0 && (
               <div style={{padding:'10px 12px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:10,color:G.red,fontSize:12,marginBottom:10}}>⚠️ {t(lang, k('Empty'))}</div>
             )}
