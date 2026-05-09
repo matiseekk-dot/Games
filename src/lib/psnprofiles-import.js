@@ -20,7 +20,10 @@
 // Splits a single CSV line into fields, respecting "double quotes" and embedded
 // commas. Embedded quotes inside a field are encoded as "" per CSV convention.
 // Returns array of strings, trimmed.
-function splitCsvLine(line) {
+// v1.16.3 — delimiter param + BOM strip + auto-detect (matches xbox-import.js
+// for consistency). Original PSN-Profiles CSV uses ',', but users sometimes
+// re-export from Excel which switches to ';' in EU locales.
+function splitCsvLine(line, delim = ',') {
   const fields = [];
   let cur = '';
   let inQuotes = false;
@@ -32,7 +35,7 @@ function splitCsvLine(line) {
       cur += ch;
     } else {
       if (ch === '"' && cur === '') { inQuotes = true; continue; }
-      if (ch === ',') { fields.push(cur.trim()); cur = ''; continue; }
+      if (ch === delim) { fields.push(cur.trim()); cur = ''; continue; }
       cur += ch;
     }
   }
@@ -40,35 +43,86 @@ function splitCsvLine(line) {
   return fields;
 }
 
+function stripBOM(text) {
+  return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+}
+
+function detectDelimiter(headerLine) {
+  const counts = {
+    ',': (headerLine.match(/,/g) || []).length,
+    ';': (headerLine.match(/;/g) || []).length,
+    '\t': (headerLine.match(/\t/g) || []).length,
+  };
+  const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  return best[1] > 0 ? best[0] : ',';
+}
+
 // Parse full CSV string into rows of fields. First non-empty line is the header.
-// Returns { header: string[], rows: string[][] }.
+// Returns { header: string[], rows: string[][], delim: string }.
 function parseCsv(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-  if (lines.length === 0) return { header: [], rows: [] };
-  const header = splitCsvLine(lines[0]).map(h => h.toLowerCase());
-  const rows = lines.slice(1).map(splitCsvLine);
-  return { header, rows };
+  const cleaned = stripBOM(text);
+  const lines = cleaned.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (lines.length === 0) return { header: [], rows: [], delim: ',' };
+  const delim = detectDelimiter(lines[0]);
+  const header = splitCsvLine(lines[0], delim).map(h => h.toLowerCase());
+  const rows = lines.slice(1).map(l => splitCsvLine(l, delim));
+  return { header, rows, delim };
 }
 
 // ─── COLUMN NAME NORMALIZATION ─────────────────────────────────────────────
 // Map varying column names from PSN-Profiles / similar sites to canonical fields.
 // Each canonical field has a list of accepted aliases (lowercase, alphanumeric).
+// v1.16.3 — broader aliases incl. PL/ES localized headers + "Game Title" forms.
 const COLUMN_MAP = {
-  title:        ['title', 'game', 'name'],
-  platform:     ['platform', 'platforms', 'console', 'system'],
-  hours:        ['hours', 'playtime', 'time', 'time played', 'h'],
-  completion:   ['completion', 'progress', 'progress %', '%', 'complete'],
-  lastPlayed:   ['last played', 'last_played', 'lastplayed', 'updated', 'last activity'],
-  trophies:     ['trophies', 'earned', 'trophy'],
+  title:        ['title', 'game', 'name', 'game title', 'game name', 'gra', 'tytuł', 'tytul', 'titulo', 'título', 'juego'],
+  platform:     ['platform', 'platforms', 'console', 'system', 'platforma', 'plataforma'],
+  hours:        ['hours', 'playtime', 'time', 'time played', 'h', 'czas gry', 'godziny', 'horas'],
+  completion:   ['completion', 'progress', 'progress %', '%', 'complete', 'progreso', 'ukończenie', 'ukonczenie'],
+  lastPlayed:   ['last played', 'last_played', 'lastplayed', 'updated', 'last activity', 'finished'],
+  trophies:     ['trophies', 'earned', 'trophy', 'trofea'],
 };
 
+// v1.16.3 — exact-then-substring matching, same logic as xbox-import.js
 function findColumn(header, canonical) {
   const aliases = COLUMN_MAP[canonical] || [canonical];
   for (let i = 0; i < header.length; i++) {
     const h = header[i].toLowerCase().trim();
     if (aliases.includes(h)) return i;
   }
+  for (let i = 0; i < header.length; i++) {
+    const h = header[i].toLowerCase().trim();
+    if (aliases.some(a => h.includes(a))) return i;
+  }
   return -1;
+}
+
+// v1.16.3 — heuristic title-column guess for unknown CSV schemas (same as xbox-import.js).
+function guessTitleColumn(header, rows) {
+  // v1.16.3 — only guess on multi-column, multi-row inputs (same guard as xbox-import.js).
+  if (header.length < 2 || rows.length < 2) return -1;
+  const sampleSize = Math.min(rows.length, 20);
+  const candidates = [];
+  for (let c = 0; c < header.length; c++) {
+    let textCount = 0;
+    let numericCount = 0;
+    let totalLen = 0;
+    for (let r = 0; r < sampleSize; r++) {
+      const cell = (rows[r][c] || '').trim();
+      if (!cell) continue;
+      if (/^[-+]?\d+(\.\d+)?$/.test(cell) || /^\d{4}-\d{2}-\d{2}/.test(cell) || /^\d+%$/.test(cell)) {
+        numericCount++;
+      } else if (cell.length >= 2 && cell.length <= 100) {
+        textCount++;
+        totalLen += cell.length;
+      }
+    }
+    if (textCount > numericCount && textCount > 0) {
+      candidates.push({ col: c, avgLen: totalLen / textCount, count: textCount });
+    }
+  }
+  if (candidates.length === 0) return -1;
+  candidates.sort((a, b) => b.count - a.count || b.avgLen - a.avgLen);
+  return candidates[0].col;
 }
 
 // ─── PLATFORM NORMALIZATION ────────────────────────────────────────────────
@@ -157,8 +211,26 @@ function parseHtmlTable(html) {
 // Empty / malformed input returns count:0 + empty rows. Caller should check count
 // before showing the import preview.
 export function parsePsnProfilesPaste(text) {
-  const trimmed = (text || '').trim();
+  const trimmed = stripBOM((text || '').trim());
   if (!trimmed) return { format: 'unknown', count: 0, rows: [] };
+
+  // v1.16.3 — early reject binary inputs (xlsx / xls / zip etc.). See xbox-import.js comment.
+  const looksLikeBinary = /[\x00-\x08\x0E-\x1F]/.test(trimmed.slice(0, 200));
+  if (looksLikeBinary) {
+    return {
+      format: 'unknown',
+      count: 0,
+      rows: [],
+      debug: {
+        bytesRead: trimmed.length,
+        firstLine: trimmed.split(/\r?\n/)[0]?.slice(0, 200) || '',
+        detectedDelim: '?',
+        headerCols: [],
+        dataRows: 0,
+        looksLikeBinary: true,
+      },
+    };
+  }
 
   let parsed = null;
   let format = 'unknown';
@@ -196,17 +268,40 @@ export function parsePsnProfilesPaste(text) {
   }
 
   if (!parsed.header.length || !parsed.rows.length) {
-    return { format, count: 0, rows: [] };
+    const debug = {
+      bytesRead: trimmed.length,
+      firstLine: trimmed.split(/\r?\n/)[0]?.slice(0, 200) || '',
+      detectedDelim: parsed?.delim || '?',
+      headerCols: parsed?.header || [],
+      dataRows: parsed?.rows?.length || 0,
+      looksLikeBinary: /[\x00-\x08\x0E-\x1F]/.test(trimmed.slice(0, 200)),
+    };
+    return { format, count: 0, rows: [], debug };
   }
 
-  const idxTitle      = findColumn(parsed.header, 'title');
+  let idxTitle       = findColumn(parsed.header, 'title');
   const idxPlatform   = findColumn(parsed.header, 'platform');
   const idxHours      = findColumn(parsed.header, 'hours');
   const idxCompletion = findColumn(parsed.header, 'completion');
   const idxLastPlayed = findColumn(parsed.header, 'lastPlayed');
 
-  // If we can't find a title column, the input isn't usable — bail.
-  if (idxTitle < 0) return { format, count: 0, rows: [] };
+  // v1.16.3 — column-guess fallback for non-standard CSV schemas
+  if (idxTitle < 0) {
+    idxTitle = guessTitleColumn(parsed.header, parsed.rows);
+    if (idxTitle >= 0) format = format + '-guessed';
+  }
+
+  if (idxTitle < 0) {
+    const debug = {
+      bytesRead: trimmed.length,
+      firstLine: trimmed.split(/\r?\n/)[0]?.slice(0, 200) || '',
+      detectedDelim: parsed?.delim || '?',
+      headerCols: parsed?.header || [],
+      dataRows: parsed?.rows?.length || 0,
+      looksLikeBinary: /[\x00-\x08\x0E-\x1F]/.test(trimmed.slice(0, 200)),
+    };
+    return { format, count: 0, rows: [], debug };
+  }
 
   const rows = parsed.rows
     .map(r => ({
@@ -217,7 +312,7 @@ export function parsePsnProfilesPaste(text) {
       lastPlayed:    (idxLastPlayed  >= 0 ? r[idxLastPlayed] : '') || null,
       raw: r,
     }))
-    .filter(r => r.title);  // drop empty rows
+    .filter(r => r.title);  // drop empty rows; single-char titles legit ("A", "B" used in tests/data)
 
   return { format, count: rows.length, rows };
 }

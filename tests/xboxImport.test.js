@@ -70,4 +70,67 @@ describe('parseXboxPaste', () => {
     expect(r.count).toBe(2);
     expect(r.rows.map(x => x.title)).toEqual(['A', 'C']);
   });
+
+  // v1.16.3 — robustness improvements (BOM / ; delimiter / localized headers / col-guess fallback)
+  it('strips UTF-8 BOM from header', () => {
+    const csv = '﻿Game,Platform,Time Played\n"Halo","Xbox One","10h"';
+    const r = parseXboxPaste(csv);
+    expect(r.count).toBe(1);
+    expect(r.rows[0].title).toBe('Halo');
+  });
+
+  it('handles semicolon delimiter (EU Excel re-export)', () => {
+    const csv = 'Game;Platform;Time Played\n"Halo Infinite";"Xbox Series X";"42h"';
+    const r = parseXboxPaste(csv);
+    expect(r.count).toBe(1);
+    expect(r.rows[0].title).toBe('Halo Infinite');
+    expect(r.rows[0].hours).toBe(42);
+  });
+
+  it('handles tab delimiter (TSV)', () => {
+    const csv = 'Game\tPlatform\tTime Played\nHalo\tXbox One\t10h';
+    const r = parseXboxPaste(csv);
+    expect(r.count).toBe(1);
+    expect(r.rows[0].title).toBe('Halo');
+  });
+
+  it('matches localized headers (PL: Gra/Czas gry)', () => {
+    const csv = 'Gra,Platforma,Czas gry\n"Halo","Xbox One","10h"';
+    const r = parseXboxPaste(csv);
+    expect(r.count).toBe(1);
+    expect(r.rows[0].title).toBe('Halo');
+    expect(r.rows[0].hours).toBe(10);
+  });
+
+  it('matches Spanish headers (Juego/Plataforma/Horas)', () => {
+    const csv = 'Juego,Plataforma,Horas\n"Halo","Xbox One","10"';
+    const r = parseXboxPaste(csv);
+    expect(r.count).toBe(1);
+    expect(r.rows[0].title).toBe('Halo');
+  });
+
+  it('substring-matches "Game Title" → title column', () => {
+    const csv = 'Game Title,Platform,Hours\n"Forza","Xbox","20"';
+    const r = parseXboxPaste(csv);
+    expect(r.count).toBe(1);
+    expect(r.rows[0].title).toBe('Forza');
+  });
+
+  it('falls back to column-guess on unknown headers (multi-col, multi-row)', () => {
+    // No standard header alias, but col 0 looks like text titles
+    const csv = 'Item,Score,Date\n"Halo Infinite",1500,2023-01-15\n"Forza",2000,2023-06-20\n"Sea of Thieves",1200,2024-01-01';
+    const r = parseXboxPaste(csv);
+    expect(r.format).toBe('csv-guessed');
+    expect(r.count).toBe(3);
+    expect(r.rows[0].title).toBe('Halo Infinite');
+  });
+
+  it('emits debug info on full failure (binary file detection)', () => {
+    // Simulate xlsx file content — null bytes + binary signature
+    const binary = '\x00\x01\x02PK\x03\x04xlsxgarbage';
+    const r = parseXboxPaste(binary);
+    expect(r.count).toBe(0);
+    expect(r.debug).toBeTruthy();
+    expect(r.debug.looksLikeBinary).toBe(true);
+  });
 });

@@ -2973,7 +2973,27 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
               </>
             )}
             {parsed && parsed.count === 0 && (
-              <div style={{padding:'10px 12px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:10,color:G.red,fontSize:12,marginBottom:10}}>⚠️ {t(lang, k('Empty'))}</div>
+              <div style={{padding:'10px 12px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:10,color:G.red,fontSize:12,marginBottom:10}}>
+                ⚠️ {t(lang, k('Empty'))}
+                {/* v1.16.3 — Surface parser debug info to help users diagnose
+                    "no games found" issues. Most common: they uploaded .xlsx
+                    (binary) instead of .csv, or the file has unusual headers. */}
+                {parsed.debug && (
+                  <div style={{marginTop:8,fontSize:11,color:G.dim,fontFamily:'monospace',lineHeight:1.5,wordBreak:'break-all'}}>
+                    {parsed.debug.looksLikeBinary && <div style={{color:G.org,marginBottom:4}}>📦 {t(lang,'importDebugBinary')}</div>}
+                    {!parsed.debug.looksLikeBinary && parsed.debug.bytesRead === 0 && <div>{t(lang,'importDebugEmpty')}</div>}
+                    {!parsed.debug.looksLikeBinary && parsed.debug.bytesRead > 0 && (
+                      <>
+                        <div>{t(lang,'importDebugBytes',{n:parsed.debug.bytesRead})}</div>
+                        <div>{t(lang,'importDebugFirstLine')}: <span style={{color:G.txt}}>{parsed.debug.firstLine || '(empty)'}</span></div>
+                        {parsed.debug.headerCols && parsed.debug.headerCols.length > 0 && (
+                          <div>{t(lang,'importDebugHeaders')}: <span style={{color:G.txt}}>{parsed.debug.headerCols.join(' | ')}</span></div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
             <button
               type='button'
