@@ -51,6 +51,57 @@ function stripBOM(text) {
 // v1.16.3 — auto-detect delimiter by counting on header line. Pick whichever of
 // ','  ';'  '\t' appears most often. Tab-separated (TSV) is what some TA legacy
 // exports use; semicolon comes from Excel re-exports in EU locales.
+// v1.16.9 — Same plaintext-table detector as psnprofiles-import.js. Handles
+// iOS Safari "Select All → Copy" which produces one-cell-per-line text.
+function isLikelyTitle(line) {
+  if (!line || line.length < 2 || line.length > 120) return false;
+  if (/^\d+(\.\d+)?%?$/.test(line)) return false;
+  if (/^\d+\s*\/\s*\d+$/.test(line)) return false;
+  if (/^\d+\s*h(\s+\d+\s*m)?$/i.test(line)) return false;
+  if (/^\d+\s*m$/i.test(line)) return false;
+  if (/^(PS[1-5]|PSP|PS\s?Vita|Xbox(\s+(Series\s*[XS]?(\|S)?|One|360))?|PC|Steam|Switch|Mobile|iOS|Android)$/i.test(line)) return false;
+  if (/^(PS[1-5][,\s/|]+PS[1-5])$/i.test(line)) return false;
+  if (!/[a-zA-Z]/.test(line)) return false;
+  return true;
+}
+
+function parsePlaintextTable(lines) {
+  const titleIdxs = lines.map((l, i) => isLikelyTitle(l) ? i : -1).filter(i => i >= 0);
+  if (titleIdxs.length < 4) return null;
+  const gaps = [];
+  for (let i = 1; i < titleIdxs.length; i++) gaps.push(titleIdxs[i] - titleIdxs[i-1]);
+  const hist = {};
+  gaps.forEach(g => { hist[g] = (hist[g] || 0) + 1; });
+  const sorted = Object.entries(hist).sort((a, b) => b[1] - a[1]);
+  const [modeGap, count] = sorted[0];
+  const rowSize = +modeGap;
+  if (count < 3 || rowSize < 2 || rowSize > 12) return null;
+  const rows = [];
+  for (let i = 0; i < titleIdxs.length; i++) {
+    if (i > 0 && titleIdxs[i] - titleIdxs[i-1] !== rowSize) continue;
+    const tIdx = titleIdxs[i];
+    if (tIdx + rowSize > lines.length) break;
+    rows.push(lines.slice(tIdx, tIdx + rowSize));
+  }
+  if (rows.length < 3) return null;
+  const sample = rows.slice(0, Math.min(10, rows.length));
+  const header = [];
+  for (let c = 0; c < rowSize; c++) {
+    const cells = sample.map(r => r[c] || '');
+    if (c === 0) { header.push('title'); continue; }
+    const fracCount = cells.filter(x => /^\d+\s*\/\s*\d+$/.test(x)).length;
+    const pctCount  = cells.filter(x => /^\d+\s*%$/.test(x)).length;
+    const hrCount   = cells.filter(x => /^\d+\s*h(\s+\d+\s*m)?$/i.test(x) || /^\d+(\.\d+)?$/.test(x)).length;
+    const platCount = cells.filter(x => /^(PS[1-5]|Xbox|PC|Switch)/i.test(x)).length;
+    if (fracCount >= sample.length * 0.6) header.push('achievements');
+    else if (pctCount >= sample.length * 0.6) header.push('completion');
+    else if (platCount >= sample.length * 0.6) header.push('platform');
+    else if (hrCount >= sample.length * 0.6) header.push('hours');
+    else header.push(`col${c}`);
+  }
+  return { header, rows, delim: '\n' };
+}
+
 function detectDelimiter(headerLine) {
   const counts = {
     ',': (headerLine.match(/,/g) || []).length,
@@ -248,8 +299,18 @@ export function parseXboxPaste(text) {
     };
   }
 
-  // Try CSV
-  const csv = parseCsv(trimmed);
+  // Try CSV (or plaintext-table fallback for iOS Safari pastes)
+  let csv = parseCsv(trimmed);
+  // v1.16.9 — If CSV parsing produced a single-column or no-column result
+  // (typical of iOS Safari "Select All → Copy" which gives one cell per line),
+  // try the plaintext-table pattern detector. It groups consecutive lines into
+  // rows by finding the modal gap between title-looking lines.
+  if (csv.header.length <= 1 || csv.rows.length === 0 || (csv.rows.length > 0 && csv.rows[0].length <= 1)) {
+    const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    const plain = parsePlaintextTable(lines);
+    if (plain) csv = plain;
+  }
+
   if (csv.header.length > 0 && csv.rows.length > 0) {
     let idxTitle       = findColumn(csv.header, 'title');
     const idxPlatform   = findColumn(csv.header, 'platform');
@@ -260,10 +321,10 @@ export function parseXboxPaste(text) {
 
     // v1.16.3 — if no header alias matched, try heuristic title-column guess
     // (e.g. column 0 is usually the game name even when header is "Item" / localized)
-    let format = 'csv';
+    let format = csv.delim === '\n' ? 'plaintext-table' : 'csv';
     if (idxTitle < 0) {
       idxTitle = guessTitleColumn(csv.header, csv.rows);
-      if (idxTitle >= 0) format = 'csv-guessed';
+      if (idxTitle >= 0 && format === 'csv') format = 'csv-guessed';
     }
 
     if (idxTitle >= 0) {

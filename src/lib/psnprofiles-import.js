@@ -47,6 +47,78 @@ function stripBOM(text) {
   return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
 }
 
+// v1.16.9 — iOS Safari "Select All → Copy" on a rendered <table> produces
+// plain text with each cell on its own line — no tabs, no commas. So:
+//   God of War Ragnarök
+//   PS5
+//   36/36
+//   18
+//   100%
+//   Elden Ring
+//   PS5,PS4
+//   42/42
+//   95
+//   100%
+//   ...
+// Detect this pattern by finding "title-looking" lines (alphabetic, not pure
+// numbers/fractions/percentages/platforms) and the consistent gap K between
+// them. Then group each K-line block as one row. Synthetic header is inferred
+// from cell contents (column where most entries match a fraction → 'trophies',
+// where most are 'X%' → 'completion', etc.).
+function isLikelyTitle(line) {
+  if (!line || line.length < 2 || line.length > 120) return false;
+  if (/^\d+(\.\d+)?%?$/.test(line)) return false;             // pure number / percentage
+  if (/^\d+\s*\/\s*\d+$/.test(line)) return false;            // fraction "X/Y"
+  if (/^\d+\s*h(\s+\d+\s*m)?$/i.test(line)) return false;     // "12h 30m"
+  if (/^\d+\s*m$/i.test(line)) return false;                  // "60m"
+  if (/^(PS[1-5]|PSP|PS\s?Vita|Xbox(\s+(Series\s*[XS]?(\|S)?|One|360))?|PC|Steam|Switch|Mobile|iOS|Android)$/i.test(line)) return false;
+  if (/^(PS[1-5][,\s/|]+PS[1-5])$/i.test(line)) return false; // "PS5,PS4"
+  if (!/[a-zA-Z]/.test(line)) return false;                   // must have at least one letter
+  return true;
+}
+
+// Detect repeating-block plaintext pattern. Returns { header, rows, delim }
+// shape compatible with parseCsv output, or null if pattern not found.
+function parsePlaintextTable(lines) {
+  const titleIdxs = lines.map((l, i) => isLikelyTitle(l) ? i : -1).filter(i => i >= 0);
+  if (titleIdxs.length < 4) return null;  // need ≥4 candidate titles
+  // Find modal gap between consecutive title indices
+  const gaps = [];
+  for (let i = 1; i < titleIdxs.length; i++) gaps.push(titleIdxs[i] - titleIdxs[i-1]);
+  const hist = {};
+  gaps.forEach(g => { hist[g] = (hist[g] || 0) + 1; });
+  const sorted = Object.entries(hist).sort((a, b) => b[1] - a[1]);
+  const [modeGap, count] = sorted[0];
+  const rowSize = +modeGap;
+  if (count < 3 || rowSize < 2 || rowSize > 12) return null;
+  // Extract rows where title→title gap matches mode
+  const rows = [];
+  for (let i = 0; i < titleIdxs.length; i++) {
+    if (i > 0 && titleIdxs[i] - titleIdxs[i-1] !== rowSize) continue;
+    const tIdx = titleIdxs[i];
+    if (tIdx + rowSize > lines.length) break;
+    rows.push(lines.slice(tIdx, tIdx + rowSize));
+  }
+  if (rows.length < 3) return null;
+  // Infer column types from first 10 rows — synthesize header
+  const sample = rows.slice(0, Math.min(10, rows.length));
+  const header = [];
+  for (let c = 0; c < rowSize; c++) {
+    const cells = sample.map(r => r[c] || '');
+    if (c === 0) { header.push('title'); continue; }
+    const fracCount = cells.filter(x => /^\d+\s*\/\s*\d+$/.test(x)).length;
+    const pctCount  = cells.filter(x => /^\d+\s*%$/.test(x)).length;
+    const hrCount   = cells.filter(x => /^\d+\s*h(\s+\d+\s*m)?$/i.test(x) || /^\d+(\.\d+)?$/.test(x)).length;
+    const platCount = cells.filter(x => /^(PS[1-5]|Xbox|PC|Switch)/i.test(x)).length;
+    if (fracCount >= sample.length * 0.6) header.push('trophies');
+    else if (pctCount >= sample.length * 0.6) header.push('completion');
+    else if (platCount >= sample.length * 0.6) header.push('platform');
+    else if (hrCount >= sample.length * 0.6) header.push('hours');
+    else header.push(`col${c}`);
+  }
+  return { header, rows, delim: '\n' };
+}
+
 function detectDelimiter(headerLine) {
   const counts = {
     ',': (headerLine.match(/,/g) || []).length,
@@ -356,6 +428,18 @@ export function parsePsnProfilesPaste(text) {
   if (!parsed) {
     parsed = parseCsv(trimmed);
     format = 'csv';
+  }
+
+  // 3b. v1.16.9 — Plaintext-table fallback for iOS Safari "Select All → Copy"
+  // which produces one-cell-per-line text. Only kicks in when CSV detection
+  // failed to find a title column (otherwise normal CSV path wins).
+  if (!parsed.header.length || !parsed.rows.length || (parsed.header.length === 1 && parsed.rows.length > 0)) {
+    const lines = stripBOM(trimmed).split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    const plain = parsePlaintextTable(lines);
+    if (plain) {
+      parsed = plain;
+      format = 'plaintext-table';
+    }
   }
 
   if (!parsed.header.length || !parsed.rows.length) {

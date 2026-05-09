@@ -133,4 +133,36 @@ describe('parseXboxPaste', () => {
     expect(r.debug).toBeTruthy();
     expect(r.debug.looksLikeBinary).toBe(true);
   });
+
+  // v1.16.9 — iOS Safari clipboard format (cell-per-line, no delimiters)
+  it('parses iOS Safari "one cell per line" plaintext (5-col TA pattern)', () => {
+    const safariPaste = `Halo Infinite
+Xbox Series X
+50/120
+42h 30m
+42%
+Forza Horizon 5
+Xbox Series X|S
+100/100
+85h
+100%
+Sea of Thieves
+Xbox One
+60/200
+120h 15m
+30%
+Microsoft Flight Simulator
+PC
+20/45
+60h
+44%`;
+    const r = parseXboxPaste(safariPaste);
+    expect(r.format).toBe('plaintext-table');
+    expect(r.count).toBe(4);
+    expect(r.rows[0].title).toBe('Halo Infinite');
+    expect(r.rows[1].title).toBe('Forza Horizon 5');
+    expect(r.rows[0].hours).toBe(42.5); // "42h 30m" parsed
+    expect(r.rows[0].completionPct).toBe(42);
+    expect(r.rows[3].platform).toBe('PC');
+  });
 });
