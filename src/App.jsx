@@ -828,6 +828,17 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
               <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):'— '+t(lang,'inDays',{n:days})}</span>}</label>
               <input className='fi' type='date' value={f.releaseDate} onChange={e=>upd('releaseDate',e.target.value)} style={{colorScheme:'dark'}}/>
               <div className='fhnt'>{t(lang,'releaseDateHint')}</div>
+              {/* v1.15.3 — Pre-order toggle. Only relevant for games not yet released
+                  (days > 0). Checkbox style + amber/gold accent matches the "💳" semantic. */}
+              {days!==null && days>0 && (
+                <label style={{display:'flex',alignItems:'center',gap:10,marginTop:10,padding:'10px 12px',background:'rgba(255,209,102,.07)',border:'1px solid rgba(255,209,102,.25)',borderRadius:10,cursor:'pointer'}}>
+                  <input type='checkbox' checked={!!f.preOrdered} onChange={e=>upd('preOrdered',e.target.checked)} style={{width:18,height:18,accentColor:G.gld,cursor:'pointer',flexShrink:0}}/>
+                  <span style={{flex:1,minWidth:0}}>
+                    <span style={{display:'block',fontSize:13,fontWeight:700,color:G.gld}}>💳 {t(lang,'preOrderField')}</span>
+                    <span style={{display:'block',fontSize:11,color:G.dim,marginTop:2,lineHeight:1.4}}>{t(lang,'preOrderHint')}</span>
+                  </span>
+                </label>
+              )}
               {/* v1.13.1 — Refresh from RAWG. Only shown for edited games with a rawgId
                   (new games and pre-v1.9 games without rawgId have nothing to refresh). */}
               {isEdit && f.rawgId && (
@@ -1182,25 +1193,59 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
   );
 }
 
+// v1.15.3 — Pre-order awareness. Upcoming list now splits into "Pre-ordered" (user
+// already paid, awaiting release) + "Watching" (user is just tracking). Pre-ordered
+// section renders first because it's the higher-stakes bucket — money is already
+// committed, user wants to see those most. Watching is the discovery / wishlist view.
+// Card body unchanged for both — only the section header + 💳 badge in the banner
+// distinguishes pre-orders. Buy button is suppressed for pre-orders (already paid).
+function UpcomingCard({g,d,lang,onOpen,onStatusChange,onToggleNotify,onRequestNotif,notifPerm}){
+  return (
+    <div key={g.id} className='upc-card'>
+      <div className='upc-banner' style={g.cover?{backgroundImage:`url(${g.cover})`}:{}}>
+        <div className='upc-ov'/>
+        {/* v1.15.3 — pre-order badge in banner top-left. Gold accent matches the form
+            checkbox tone. Stacks with the days countdown on the right. */}
+        {g.preOrdered && (
+          <div className='upc-preorder-bdg' style={{position:'absolute',top:10,left:10,padding:'4px 10px',background:'rgba(255,209,102,.95)',color:'#000',borderRadius:999,fontSize:10,fontWeight:700,letterSpacing:'.06em'}}>💳 {t(lang,'preOrderBadge')}</div>
+        )}
+        <div className='upc-bt'>{g.title}</div>
+        {d===0
+          ? <div className='upc-bd' style={{color:G.grn,background:'rgba(57,255,110,.2)',borderColor:'rgba(57,255,110,.4)'}}>{t(lang,'today')}</div>
+          : <div className='upc-bd'>{d}d</div>}
+      </div>
+      <div className='upc-body'>
+        <div className='upc-date'>{fmtDate(g.releaseDate,lang)}{g.genre?' · '+g.genre:''}</div>
+        <div className='upc-acts'>{d===0
+          ? (<><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></>)
+          : (<>
+              <button type='button' className='upc-btn upc-btn-plan' onClick={()=>onOpen(g)}>{t(lang,'edit')}</button>
+              <button type='button' className={'upc-btn upc-btn-watch'+(g.notifyEnabled?' on':'')} onClick={async()=>{if(!g.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();onToggleNotify(g.id);}}>{g.notifyEnabled?'✓ '+t(lang,'watch'):t(lang,'watch')}</button>
+              {/* Hide "Buy" CTA on pre-orders — user already paid. */}
+              {!g.preOrdered && <button type='button' className='upc-btn' style={{borderColor:'rgba(0,212,255,.3)',color:G.blu,background:'rgba(0,212,255,.07)'}} onClick={()=>window.open(`https://store.playstation.com/search/${encodeURIComponent(g.title)}`,'_blank','noopener,noreferrer')}>{t(lang,'buy')}</button>}
+            </>)}</div>
+        <div className='ntgl-row'><span className='ntgl-lbl'>{t(lang,'notifyToggle')}</span><div className={'ntgl-sw'+(g.notifyEnabled?' on':'')} onClick={async()=>{if(!g.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();onToggleNotify(g.id);}}><div className='ntgl-knob'/></div></div>
+      </div>
+    </div>
+  );
+}
+
 function Upcoming({games,onOpen,onToggleNotify,onStatusChange,notifPerm,onRequestNotif,lang}){
-  const upcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
+  const allUpcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
+  const preOrdered=allUpcoming.filter(g=>g.preOrdered);
+  const watching=allUpcoming.filter(g=>!g.preOrdered);
   const released=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)<0&&g.status==='planuje').sort((a,b)=>new Date(b.releaseDate)-new Date(a.releaseDate)).slice(0,5);
   const tba=games.filter(g=>!g.releaseDate&&g.status==='planuje');
-  if(!upcoming.length&&!released.length&&!tba.length)return(<div className='scr'><div className='empty'><div className='eic'>📅</div><div className='ett'>{t(lang,'noReleases')}</div><div className='ess'>{t(lang,'noReleasesHint')}</div></div></div>);
+  if(!allUpcoming.length&&!released.length&&!tba.length)return(<div className='scr'><div className='empty'><div className='eic'>📅</div><div className='ett'>{t(lang,'noReleases')}</div><div className='ess'>{t(lang,'noReleasesHint')}</div></div></div>);
+  const cardProps = {lang,onOpen,onStatusChange,onToggleNotify,onRequestNotif,notifPerm};
   return(
     <div className='scr'>
       {notifPerm==='default'&&(<div className='notif-banner'><span style={{fontSize:22}}>🔔</span><div className='notif-banner-txt'><strong>{t(lang,'enableNotif')}</strong><br/>{t(lang,'enableNotifDesc')}</div><button className='notif-banner-btn' onClick={onRequestNotif}>{t(lang,'enable')}</button></div>)}
-      {upcoming.length>0&&<><div className='sec-hdr'><span className='sec-title'>{t(lang,'upcoming')}</span><span className='sec-count'>{upcoming.length}</span></div>
-        {upcoming.map(g=>{const d=daysUntil(g.releaseDate);return(
-          <div key={g.id} className='upc-card'>
-            <div className='upc-banner' style={g.cover?{backgroundImage:`url(${g.cover})`}:{}}><div className='upc-ov'/><div className='upc-bt'>{g.title}</div>{d===0?<div className='upc-bd' style={{color:G.grn,background:'rgba(57,255,110,.2)',borderColor:'rgba(57,255,110,.4)'}}>{t(lang,'today')}</div>:<div className='upc-bd'>{d}d</div>}</div>
-            <div className='upc-body'>
-              <div className='upc-date'>{fmtDate(g.releaseDate,lang)}{g.genre?' · '+g.genre:''}</div>
-              <div className='upc-acts'>{d===0?(<><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></>):(<><button type='button' className='upc-btn upc-btn-plan' onClick={()=>onOpen(g)}>{t(lang,'edit')}</button><button type='button' className={'upc-btn upc-btn-watch'+(g.notifyEnabled?' on':'')} onClick={async()=>{if(!g.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();onToggleNotify(g.id);}}>{g.notifyEnabled?'✓ '+t(lang,'watch'):t(lang,'watch')}</button><button type='button' className='upc-btn' style={{borderColor:'rgba(0,212,255,.3)',color:G.blu,background:'rgba(0,212,255,.07)'}} onClick={()=>window.open(`https://store.playstation.com/search/${encodeURIComponent(g.title)}`,'_blank','noopener,noreferrer')}>{t(lang,'buy')}</button></>)}</div>
-              <div className='ntgl-row'><span className='ntgl-lbl'>{t(lang,'notifyToggle')}</span><div className={'ntgl-sw'+(g.notifyEnabled?' on':'')} onClick={async()=>{if(!g.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();onToggleNotify(g.id);}}><div className='ntgl-knob'/></div></div>
-            </div>
-          </div>
-        );})}
+      {preOrdered.length>0&&<><div className='sec-hdr'><span className='sec-title'>{t(lang,'upcomingPreOrdered')}</span><span className='sec-count'>{preOrdered.length}</span></div>
+        {preOrdered.map(g=><UpcomingCard key={g.id} g={g} d={daysUntil(g.releaseDate)} {...cardProps}/>)}
+      </>}
+      {watching.length>0&&<><div className='sec-hdr' style={preOrdered.length>0?{marginTop:16}:undefined}><span className='sec-title'>{preOrdered.length>0?t(lang,'upcomingWatching'):t(lang,'upcoming')}</span><span className='sec-count'>{watching.length}</span></div>
+        {watching.map(g=><UpcomingCard key={g.id} g={g} d={daysUntil(g.releaseDate)} {...cardProps}/>)}
       </>}
       {released.length>0&&<><div className='sec-hdr' style={{marginTop:16}}><span className='sec-title'>{t(lang,'alreadyOut')}</span><span className='sec-count'>{released.length}</span></div>
         {released.map(g=>(<div key={g.id} className='upc-card'><div className='upc-banner' style={g.cover?{backgroundImage:`url(${g.cover})`}:{}}><div className='upc-ov'/><div className='upc-bt'>{g.title}</div><div className='upc-bd' style={{color:G.grn,background:'rgba(57,255,110,.2)',borderColor:'rgba(57,255,110,.4)'}}>{t(lang,'out')}</div></div><div className='upc-body'><div className='upc-date'>{t(lang,'premiere')} {fmtDate(g.releaseDate,lang)}</div><div className='upc-acts'><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></div></div></div>))}

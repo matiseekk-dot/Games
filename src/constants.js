@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies — every other module imports from here.
 
-export const APP_VER  = '1.15.2';
+export const APP_VER  = '1.15.3';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 
 // localStorage keys (single source of truth — DON'T inline these)
@@ -121,4 +121,9 @@ export function isOwned(g) { return !COST_EXCLUDED_SOURCES.has(g?.source || 'own
 // null for manually-entered or pre-v1.9 games (Recommendations skips those as seeds).
 // v1.14.0 — added `source: 'owned'` (default for new games). Pre-v1.14 games loaded
 // from localStorage have no source field; lsRead migration backfills them to 'owned'.
-export const EF = { title:'', abbr:'', status:'planuje', year:new Date().getFullYear(), genre:'', hours:'', rating:'', notes:'', cover:'', releaseDate:'', notifyEnabled:false, priceBought:'', priceSold:null, storeBought:'', targetHours:'', extraSpend:'', platform:'PS5', source:'owned', platinum:false, lastPlayed:null, completedAt:null, rawgId:null, sessions:[] };
+// v1.15.3 — added `preOrdered: false`. Set when user already paid for a game whose
+// releaseDate is in the future. Distinguishes "watching upcoming" from "owned but not
+// yet released" — visible in Releases tab as a 💳 badge + dedicated section. Field is
+// orthogonal to `status` (which tracks play state) and to `source` (which tracks
+// acquisition channel).
+export const EF = { title:'', abbr:'', status:'planuje', year:new Date().getFullYear(), genre:'', hours:'', rating:'', notes:'', cover:'', releaseDate:'', notifyEnabled:false, priceBought:'', priceSold:null, storeBought:'', targetHours:'', extraSpend:'', platform:'PS5', source:'owned', preOrdered:false, platinum:false, lastPlayed:null, completedAt:null, rawgId:null, sessions:[] };

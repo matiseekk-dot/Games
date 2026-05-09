@@ -444,6 +444,13 @@ const TRANSLATIONS = {
     wrappedShareImg:"Udostępnij jako obrazek",
     wrappedShareImgGenerating:"⏳ Generuję obrazek...",
     wrappedShareImgDownloaded:"✓ Obrazek zapisany",
+    // v1.15.3 — Pre-order tracking. Field on game model; visible in Modal form (only when
+    // release date is in the future) and Releases tab (own section + 💳 badge).
+    preOrderField:"Zamówione w przedsprzedaży",
+    preOrderHint:"Już zapłaciłem — gra czeka na premierę",
+    preOrderBadge:"PRE-ORDER",
+    upcomingPreOrdered:"💳 W przedsprzedaży",
+    upcomingWatching:"👀 Obserwowane",
   },
   en: {
     gram:"Playing", psplus:"PS Plus", ukonczone:"Completed", planuje:"Planning", porzucone:"Abandoned",
@@ -869,6 +876,12 @@ const TRANSLATIONS = {
     wrappedShareImg:"Share as image",
     wrappedShareImgGenerating:"⏳ Generating image...",
     wrappedShareImgDownloaded:"✓ Image saved",
+    // v1.15.3 — see PL counterpart for context
+    preOrderField:"Pre-ordered",
+    preOrderHint:"Already paid — waiting for release",
+    preOrderBadge:"PRE-ORDER",
+    upcomingPreOrdered:"💳 Pre-ordered",
+    upcomingWatching:"👀 Watching",
   },
   // v1.14.2 — Spanish (es-419, neutral Latin American Spanish — covers MX/AR/CO/CL/PE
   // and is intelligible to ES-Spain users). Mirrors the EN key set 1:1; t() falls back
@@ -1277,6 +1290,12 @@ const TRANSLATIONS = {
     wrappedShareImg:"Compartir como imagen",
     wrappedShareImgGenerating:"⏳ Generando imagen...",
     wrappedShareImgDownloaded:"✓ Imagen guardada",
+    // v1.15.3 — see PL counterpart for context
+    preOrderField:"Pre-pedido",
+    preOrderHint:"Ya lo pagué — esperando el lanzamiento",
+    preOrderBadge:"PRE-PEDIDO",
+    upcomingPreOrdered:"💳 En pre-pedido",
+    upcomingWatching:"👀 Observando",
   }
 };
 

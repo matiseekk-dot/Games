@@ -51,6 +51,10 @@ export function lsRead() {
       // g.source === 'owned') would erroneously exclude every legacy game from totals.
       // Idempotent — already-set source values pass through.
       if (next.source == null) { dirty = true; next = { ...next, source: 'owned' }; }
+      // Migration (v1.15.3): backfill `preOrdered: false` for pre-v1.15.3 games. Legacy
+      // schema didn't track pre-orders at all — safe default is false (no game was
+      // implicitly pre-ordered). Idempotent.
+      if (typeof next.preOrdered !== 'boolean') { dirty = true; next = { ...next, preOrdered: false }; }
       return next;
     });
     if (dirty) { try { localStorage.setItem(LS_KEY, JSON.stringify(migrated)); } catch {} }
@@ -235,9 +239,12 @@ export function isValidGameShape(g) {
 // v1.14.0 — Apply forward-compat defaults to imported games. Mirrors the lsRead
 // migration but runs synchronously inside the import path, so users don't need to
 // reload after importing a pre-v1.14 backup before financial KPIs are correct.
+// v1.15.3 — also backfill preOrdered:false for pre-v1.15.3 backups.
 function applyImportDefaults(g) {
-  if (g.source == null) return { ...g, source: 'owned' };
-  return g;
+  let out = g;
+  if (out.source == null) out = { ...out, source: 'owned' };
+  if (typeof out.preOrdered !== 'boolean') out = { ...out, preOrdered: false };
+  return out;
 }
 
 export function importMerge(file, existing, onOk, onErr) {
