@@ -211,6 +211,7 @@ export function parseXboxPaste(text) {
     const idxHours      = findColumn(csv.header, 'hours');
     const idxCompletion = findColumn(csv.header, 'completion');
     const idxLastPlayed = findColumn(csv.header, 'lastPlayed');
+    const idxAchievements = findColumn(csv.header, 'achievements');  // v1.16.4 — "X/Y" for platinum detection
 
     // v1.16.3 — if no header alias matched, try heuristic title-column guess
     // (e.g. column 0 is usually the game name even when header is "Item" / localized)
@@ -228,6 +229,10 @@ export function parseXboxPaste(text) {
           hours:         parseHours      (idxHours       >= 0 ? r[idxHours]       : ''),
           completionPct: parseCompletion (idxCompletion  >= 0 ? r[idxCompletion]  : ''),
           lastPlayed:    (idxLastPlayed  >= 0 ? r[idxLastPlayed] : '') || null,
+          // v1.16.4 — raw "X/Y" achievements string. Mapped downstream to
+          // platinum=true when fully completed (Xbox doesn't have platinum
+          // trophies but our schema reuses the same flag for "all unlocked").
+          achievements:  idxAchievements >= 0 ? String(r[idxAchievements] || '').trim() : '',
           raw: r,
         }))
         .filter(r => r.title);  // drop blank rows; single-char titles ("A", "B") legit in tests/data

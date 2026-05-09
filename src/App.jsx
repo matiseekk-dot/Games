@@ -2875,6 +2875,37 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
       const m = matches[i];
       if (!row || (m && m.status === 'dup')) continue;
       const rawg = m && m.rawg;
+
+      // v1.16.4 — Status mapping rewrite based on user feedback:
+      // OLD logic mapped 1-99% completion → 'gram', which polluted the active
+      // "currently playing" list with 200+ historical games. New 3-tier:
+      //   100% completion        → 'ukonczone'  (counts toward achievements)
+      //   started (hours > 0)    → 'porzucone'  (started but not active rotation)
+      //   untouched (hours == 0) → 'planuje'    (owned, never opened)
+      // User can manually move any imported game to 'gram' for active play.
+      let status, completedAt = null;
+      if (row.completionPct === 100) {
+        status = 'ukonczone';
+        completedAt = row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString();
+      } else if ((row.hours || 0) > 0) {
+        status = 'porzucone';
+      } else {
+        status = 'planuje';
+      }
+
+      // v1.16.4 — Detect platinum/full completion from trophy/achievement strings.
+      // PSN: row.trophies = "36/36" → all earned (incl. platinum if game has one).
+      // Xbox: row.achievements = "100/100" → all earned (no platinum concept on
+      // Xbox but our schema reuses the flag for "100% achievement-complete").
+      // Falls back to completionPct === 100 when no X/Y string available.
+      let platinum = false;
+      const xy = String(row.trophies || row.achievements || '').match(/^\s*(\d+)\s*\/\s*(\d+)\s*$/);
+      if (xy && parseInt(xy[1], 10) > 0 && parseInt(xy[1], 10) === parseInt(xy[2], 10)) {
+        platinum = true;
+      } else if (row.completionPct === 100 && (platform === 'psn' || platform === 'xbox')) {
+        platinum = true;
+      }
+
       games.push({
         // RAWG-derived (when matched): cover, genre, year, releaseDate, rawgId
         title: rawg?.title || row.title,
@@ -2883,15 +2914,13 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
         year: rawg?.year || new Date().getFullYear(),
         releaseDate: rawg?.releaseDate || '',
         rawgId: rawg?.id || null,
-        // PSN-derived: hours, completion → status, last played
+        // Platform-derived: hours, status, last played, platinum flag
         hours: row.hours || 0,
         platform: row.platform || 'PS5',
-        // Map completion: 100% → 'ukonczone', 1-99% → 'gram', 0% → 'planuje'
-        status: row.completionPct === 100 ? 'ukonczone' : (row.completionPct > 0 ? 'gram' : 'planuje'),
-        completedAt: row.completionPct === 100
-          ? (row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString())
-          : null,
+        status,
+        completedAt,
         lastPlayed: row.lastPlayed || null,
+        platinum,
         source: 'owned',
         preOrdered: false,
       });
@@ -3006,6 +3035,30 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
 
         {step === 2 && parsed && (
           <>
+            {/* v1.16.4 — Sticky action bar at TOP of step 2. With 400+ games the
+                bottom commit button is unreachable without scrolling forever; this
+                surfaces the same actions at the top of the scroll viewport. Also
+                adds Select All / None toggles for bulk control. position:sticky
+                top:-N counters the scroll-container's top padding so the bar
+                snaps cleanly to the visible top edge. */}
+            <div style={{position:'sticky',top:-1,zIndex:10,background:G.bg,paddingBottom:10,marginBottom:6,borderBottom:`1px solid ${G.bdr}`,marginLeft:-16,marginRight:-16,paddingLeft:16,paddingRight:16,paddingTop:6}}>
+              <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
+                <div style={{flex:1,fontSize:12,fontWeight:700,color:G.txt,fontFamily:"'Syne',sans-serif"}}>
+                  ✓ {selectedCount} / {parsed.count}
+                </div>
+                <button type='button' onClick={()=>setStep(1)} style={{padding:'8px 12px',background:'transparent',color:G.dim,border:`1px solid ${G.bdr}`,borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}>← {t(lang,'cancel2')}</button>
+                <button
+                  type='button'
+                  onClick={commit}
+                  disabled={selectedCount === 0 || committing}
+                  style={{padding:'9px 14px',background:selectedCount>0?`linear-gradient(135deg,${G.blu},#0060FF)`:G.card,color:'#fff',border:'none',borderRadius:8,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:selectedCount>0?'pointer':'not-allowed',opacity:selectedCount>0?1:.55}}
+                >{committing ? '⏳' : `+ ${t(lang,'add_game_label') || 'Add'} (${selectedCount})`}</button>
+              </div>
+              <div style={{display:'flex',gap:14,fontSize:11}}>
+                <button type='button' onClick={()=>setSelected(new Set(parsed.rows.map((_,i)=>i).filter(i=>(matches[i]?.status)!=='dup')))} style={{background:'transparent',border:'none',color:G.blu,fontSize:11,cursor:'pointer',textDecoration:'underline',padding:0}}>{t(lang,'importSelectAll')}</button>
+                <button type='button' onClick={()=>setSelected(new Set())} style={{background:'transparent',border:'none',color:G.dim,fontSize:11,cursor:'pointer',textDecoration:'underline',padding:0}}>{t(lang,'importSelectNone')}</button>
+              </div>
+            </div>
             <div style={{padding:'4px 0 6px',fontSize:14,fontWeight:700,color:G.blu,fontFamily:"'Orbitron',monospace"}}>{t(lang, k('PreviewTitle'),{n:parsed.count, gw:gamesWord(parsed.count,lang)})}</div>
             <div style={{fontSize:11,color:G.dim,marginBottom:14,lineHeight:1.5}}>{t(lang, k('PreviewSub'))}</div>
             <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:14}}>
@@ -3037,6 +3090,19 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                         {m.status === 'nomatch' && <span style={{color:G.org}}>{t(lang,'psnImportNoMatch')}</span>}
                         {m.status === 'dup' && <span style={{color:G.dim}}>{t(lang,'psnImportDup')}</span>}
                       </div>
+                      {/* v1.16.4 — Show predicted status (ukonczone/porzucone/planuje)
+                          so user knows where each game will land before committing. */}
+                      {m.status !== 'dup' && (() => {
+                        const predicted =
+                          row.completionPct === 100 ? { lbl: t(lang,'completed2'), color: G.grn, ico: '✓' }
+                          : (row.hours || 0) > 0    ? { lbl: t(lang,'abandoned'), color: G.org, ico: '⊘' }
+                          :                           { lbl: t(lang,'planning'),  color: G.blu, ico: '⏳' };
+                        return (
+                          <div style={{fontSize:10,marginTop:3,color:predicted.color,fontWeight:700}}>
+                            {predicted.ico} → {predicted.lbl}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </label>
                 );

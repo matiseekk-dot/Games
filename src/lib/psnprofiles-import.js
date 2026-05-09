@@ -248,6 +248,7 @@ export function parsePsnProfilesPaste(text) {
           hours: parseHours(o.hours || o.playtime || ''),
           completionPct: parseCompletion(o.completion || o.progress || ''),
           lastPlayed: String(o.lastPlayed || o.last_played || '').trim() || null,
+          trophies: String(o.trophies || o.trophy || '').trim(),  // v1.16.4
           raw: o,
         })).filter(r => r.title);
         return { format, count: rows.length, rows };
@@ -284,6 +285,7 @@ export function parsePsnProfilesPaste(text) {
   const idxHours      = findColumn(parsed.header, 'hours');
   const idxCompletion = findColumn(parsed.header, 'completion');
   const idxLastPlayed = findColumn(parsed.header, 'lastPlayed');
+  const idxTrophies   = findColumn(parsed.header, 'trophies');  // v1.16.4 — platinum detection
 
   // v1.16.3 — column-guess fallback for non-standard CSV schemas
   if (idxTitle < 0) {
@@ -310,6 +312,10 @@ export function parsePsnProfilesPaste(text) {
       hours:         parseHours      (idxHours       >= 0 ? r[idxHours]       : ''),
       completionPct: parseCompletion (idxCompletion  >= 0 ? r[idxCompletion]  : ''),
       lastPlayed:    (idxLastPlayed  >= 0 ? r[idxLastPlayed] : '') || null,
+      // v1.16.4 — raw "X/Y" trophies string (e.g. "36/36"). Used downstream to
+      // detect platinum trophy on PSN — when X==Y, all trophies (incl. platinum
+      // if the game has one) are earned.
+      trophies:      idxTrophies >= 0 ? String(r[idxTrophies] || '').trim() : '',
       raw: r,
     }))
     .filter(r => r.title);  // drop empty rows; single-char titles legit ("A", "B" used in tests/data)
