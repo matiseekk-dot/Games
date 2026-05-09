@@ -1713,7 +1713,12 @@ function Finance({games,lang}){
 
   // v1.3 #3 — Backlog cost: games with priceBought but zero hours played
   // v1.14.0 — only owned games count toward backlog cost (subscription games have no purchase price)
-  const backlogGames=games.filter(g=>isOwned(g) && !!+g.priceBought && (!g.hours || +g.hours===0) && g.status!=='ukonczone' && g.status!=='porzucone');
+  // v1.15.4 — Pre-orders + games not yet released are NOT backlog. Backlog by definition
+  // means "you bought it but it sits on the shelf unplayed" — that's a value-leak signal.
+  // A game whose release date is still in the future was never playable; counting it as
+  // "frozen on shelf" misrepresents the user's actual backlog and double-stings them with
+  // a "you wasted X zł" warning that doesn't apply.
+  const backlogGames=games.filter(g=>isOwned(g) && !!+g.priceBought && (!g.hours || +g.hours===0) && g.status!=='ukonczone' && g.status!=='porzucone' && !g.preOrdered && !(g.releaseDate && daysUntil(g.releaseDate) > 0));
   const backlogCost=backlogGames.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
 
   // v1.3 #1 — Year projection: avg from last 3-6 months × remaining months in year
