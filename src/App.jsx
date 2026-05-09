@@ -1395,6 +1395,42 @@ function Stats({games,lang}){
   const rated=games.filter(g=>g.rating!=null);
   const avg=rated.length?(rated.reduce((s,g)=>s+g.rating,0)/rated.length).toFixed(1):'—';
   const SM2=getSM(lang);
+
+  // v1.16.6 — Library-scale stats. With 400+ game libraries (post-import) the
+  // existing 4 KPIs (games/completed/hours/rating) don't tell the full story.
+  // These compute lazily and only render when meaningful (>0 or > threshold).
+  const completedCnt = games.filter(g => g.status === 'ukonczone').length;
+  const completionRate = games.length ? Math.round((completedCnt / games.length) * 100) : 0;
+  const platinumCnt = games.filter(g => g.platinum).length;
+  // Backlog = planuje + porzucone, summed targetHours. Falls back to 30h estimate
+  // per game when targetHours missing (RAWG can't always estimate, esp. older titles).
+  const backlogGames = games.filter(g => g.status === 'planuje' || g.status === 'porzucone');
+  const backlogHours = backlogGames.reduce((s, g) => s + (+g.targetHours || 30), 0);
+  const backlogDays = Math.round(backlogHours / 8);  // 8h/day non-stop estimate
+  // Per-platform completion — only show platforms with ≥3 games to avoid noise.
+  const byPlatform = {};
+  games.forEach(g => {
+    const p = g.platform || 'Other';
+    if (!byPlatform[p]) byPlatform[p] = { total: 0, done: 0 };
+    byPlatform[p].total++;
+    if (g.status === 'ukonczone') byPlatform[p].done++;
+  });
+  const platformStats = Object.entries(byPlatform)
+    .filter(([, s]) => s.total >= 3)
+    .map(([p, s]) => ({ n: p, total: s.total, done: s.done, rate: Math.round((s.done / s.total) * 100) }))
+    .sort((a, b) => b.total - a.total);
+  // Library age — RAWG year for each game. Skip 0/missing years.
+  const years = games.map(g => +g.year).filter(y => y > 1980 && y <= new Date().getFullYear() + 2);
+  const oldestYear = years.length ? Math.min(...years) : null;
+  const newestYear = years.length ? Math.max(...years) : null;
+  const avgYear = years.length ? Math.round(years.reduce((s, y) => s + y, 0) / years.length) : null;
+  // Decade distribution (only if ≥20 dated games)
+  const decades = {};
+  if (years.length >= 20) {
+    years.forEach(y => { const d = Math.floor(y / 10) * 10; decades[d] = (decades[d] || 0) + 1; });
+  }
+  const decadeData = Object.entries(decades).sort((a, b) => +a[0] - +b[0]).map(([d, v]) => ({ n: d + 's', v }));
+
   const kpis=[{l:t(lang,'gamesTotal'),v:games.length,c:G.blu},{l:t(lang,'completed2'),v:games.filter(g=>g.status==='ukonczone').length,c:G.grn},{l:t(lang,'hoursTotal'),v:fmtHours(hrs),c:G.pur},{l:t(lang,'avgRating'),v:avg,c:G.gld}];
   const sData=Object.entries(SM2).map(([k,m])=>({n:m.label,v:games.filter(g=>g.status===k).length,c:m.c})).filter(d=>d.v>0);
   const gMap={}; games.forEach(g=>{if(g.genre)gMap[g.genre]=(gMap[g.genre]||0)+1;});
@@ -1442,7 +1478,106 @@ function Stats({games,lang}){
       </div>
       {tab==='general'&&<>
         <div className='kgd'>{kpis.map(k=><div key={k.l} className='kcd' style={{'--c':k.c}}><div className='kvl'>{k.v}</div><div className='klb'>{k.l}</div></div>)}</div>
+
+        {/* v1.16.6 — Library completion gauge (single most insightful stat for big libraries).
+            Big number + horizontal progress bar. Color shifts green→amber→red as rate drops.
+            Only meaningful with ≥10 games (otherwise shows "—"). */}
+        {games.length >= 10 && (
+          <div className='ccd' style={{padding:'14px 16px'}}>
+            <div className='ctl'>{t(lang,'libraryCompletion')}</div>
+            <div style={{display:'flex',alignItems:'baseline',gap:8,marginTop:6,marginBottom:8}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:32,fontWeight:900,color:completionRate>=30?G.grn:completionRate>=10?G.org:G.red}}>{completionRate}%</div>
+              <div style={{fontSize:12,color:G.dim}}>{t(lang,'libraryCompletionDesc',{done:completedCnt, total:games.length})}</div>
+            </div>
+            <div style={{height:8,borderRadius:4,background:G.bdr,overflow:'hidden'}}>
+              <div style={{height:'100%',width:`${completionRate}%`,background:`linear-gradient(90deg,${G.grn},${G.blu})`,transition:'width .3s'}}/>
+            </div>
+            {platinumCnt > 0 && <div style={{fontSize:11,color:G.gld,marginTop:8,fontWeight:700}}>🏆 {t(lang,'platinumCount',{n:platinumCnt})}</div>}
+          </div>
+        )}
+
+        {/* Backlog estimate — only renders when ≥10 unplayed games (otherwise not worth a card). */}
+        {backlogGames.length >= 10 && (
+          <div className='ccd' style={{padding:'14px 16px'}}>
+            <div className='ctl'>{t(lang,'backlogEstimate')}</div>
+            <div style={{display:'flex',gap:14,alignItems:'baseline',marginTop:6}}>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.org}}>{backlogGames.length}</div>
+                <div style={{fontSize:10,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase'}}>{t(lang,'backlogGamesLabel')}</div>
+              </div>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.pur}}>{fmtHours(backlogHours)}</div>
+                <div style={{fontSize:10,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase'}}>{t(lang,'backlogHoursLabel')}</div>
+              </div>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.blu}}>~{backlogDays}</div>
+                <div style={{fontSize:10,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase'}}>{t(lang,'backlogDaysLabel')}</div>
+              </div>
+            </div>
+            <div style={{fontSize:11,color:G.dim,marginTop:8,lineHeight:1.4}}>{t(lang,'backlogHint')}</div>
+          </div>
+        )}
+
         <div className='ccd'><div className='ctl'>{t(lang,'statusChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={sData} barSize={28} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:24,right:24}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]}>{sData.map((d,i)=><Cell key={i} fill={d.c} fillOpacity={0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>
+
+        {/* Per-platform completion comparison — only useful when user has games on ≥2 platforms.
+            Shows total + completed counts per platform with colored completion-rate bar. */}
+        {platformStats.length >= 2 && (
+          <div className='ccd'>
+            <div className='ctl'>{t(lang,'platformCompletion')}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:8}}>
+              {platformStats.map(p => (
+                <div key={p.n}>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}>
+                    <span style={{color:G.txt,fontWeight:700}}>{p.n}</span>
+                    <span style={{color:G.dim}}>{p.done} / {p.total} · <strong style={{color:p.rate>=30?G.grn:p.rate>=10?G.org:G.red}}>{p.rate}%</strong></span>
+                  </div>
+                  <div style={{height:6,borderRadius:3,background:G.bdr,overflow:'hidden'}}>
+                    <div style={{height:'100%',width:`${p.rate}%`,background:p.rate>=30?G.grn:p.rate>=10?G.org:G.red,opacity:0.85}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Library age — oldest/newest/average year. Only renders when ≥20 dated games
+            (otherwise the average is too noisy to be meaningful). */}
+        {years.length >= 20 && (
+          <div className='ccd' style={{padding:'14px 16px'}}>
+            <div className='ctl'>{t(lang,'libraryAge')}</div>
+            <div style={{display:'flex',justifyContent:'space-between',marginTop:8,gap:8}}>
+              <div style={{textAlign:'center',flex:1}}>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:18,fontWeight:900,color:G.dim}}>{oldestYear}</div>
+                <div style={{fontSize:9,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase',marginTop:2}}>{t(lang,'libraryAgeOldest')}</div>
+              </div>
+              <div style={{textAlign:'center',flex:1,borderLeft:`1px solid ${G.bdr}`,borderRight:`1px solid ${G.bdr}`,padding:'0 4px'}}>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.blu}}>{avgYear}</div>
+                <div style={{fontSize:9,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase',marginTop:2}}>{t(lang,'libraryAgeAvg')}</div>
+              </div>
+              <div style={{textAlign:'center',flex:1}}>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:18,fontWeight:900,color:G.grn}}>{newestYear}</div>
+                <div style={{fontSize:9,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase',marginTop:2}}>{t(lang,'libraryAgeNewest')}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Decade breakdown bar chart — only renders when ≥20 dated games (need enough
+            data spread across decades to be visually meaningful). */}
+        {decadeData.length >= 2 && (
+          <div className='ccd'>
+            <div className='ctl'>{t(lang,'decadeChart')}</div>
+            <ResponsiveContainer width='100%' height={130}>
+              <BarChart data={decadeData} barSize={26} margin={{top:4,left:0,right:0,bottom:4}}>
+                <XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:18,right:18}}/>
+                <YAxis hide/>
+                <Tooltip content={<CTip/>}/>
+                <Bar dataKey='v' radius={[4,4,0,0]} fill={G.gld} fillOpacity={0.85}/>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
         {gData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'genreChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
         {rated.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'ratingChart')}</div><ResponsiveContainer width='100%' height={140}><BarChart data={buckets} barSize={20} margin={{top:4,left:0,right:0,bottom:4}}><CartesianGrid vertical={false} stroke={G.bdr} strokeDasharray='3 3'/><XAxis dataKey='n' tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false} padding={{left:20,right:20}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} minPointSize={3}>{buckets.map((b,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={b.v===0?0.2:0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>}
       </>}
@@ -2935,6 +3070,9 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
         year: rawg?.year || new Date().getFullYear(),
         releaseDate: rawg?.releaseDate || '',
         rawgId: rawg?.id || null,
+        // v1.16.6 — RAWG playtime estimate carried into targetHours so the new
+        // backlog-hours stat can sum unplayed library size in hours.
+        targetHours: rawg?.playtime || '',
         // Platform-derived: hours, status, last played, platinum flag
         hours: row.hours || 0,
         platform: row.platform || 'PS5',

@@ -176,9 +176,31 @@ function parseCompletion(raw) {
 }
 
 // ─── HTML PARSER ──────────────────────────────────────────────────────────
-// Fallback for users who paste the rendered HTML table from the Games page.
-// Uses DOMParser (browser-only — Node tests skip this path). Looks for <table>
-// and extracts <th> as header, <td> as rows.
+// Fallback for users who paste / upload the rendered HTML table from the Games
+// page. Uses DOMParser (browser-only — Node tests skip this path). Looks for
+// <table> and extracts <th> as header, <td> as rows.
+//
+// v1.16.6 — When a cell contains an anchor (e.g. PSN-Profiles wraps game
+// titles in <a class="title">), prefer the anchor's text. PSN-Profiles' title
+// cell typically has the format:
+//   <td><a class="title" href="...">Game Title</a> <span>PS5 · 36/36</span></td>
+// `td.textContent` returns "Game Title PS5 · 36/36" which pollutes RAWG search;
+// the anchor's text is just "Game Title" which matches cleanly.
+function cellText(td) {
+  // Prefer .title anchor (PSN-Profiles), then any anchor with reasonable length,
+  // then fall back to textContent with whitespace collapsed.
+  const titleLink = td.querySelector('a.title, a[class*="title"]');
+  if (titleLink && titleLink.textContent.trim().length >= 1) {
+    return titleLink.textContent.trim();
+  }
+  const anyLink = td.querySelector('a');
+  if (anyLink) {
+    const lt = anyLink.textContent.trim();
+    if (lt.length >= 1 && lt.length <= 150) return lt;
+  }
+  return td.textContent.replace(/\s+/g, ' ').trim();
+}
+
 function parseHtmlTable(html) {
   if (typeof DOMParser === 'undefined') return null;
   try {
@@ -191,7 +213,7 @@ function parseHtmlTable(html) {
       const trs = [...table.querySelectorAll('tbody tr')].length > 0
         ? [...table.querySelectorAll('tbody tr')]
         : [...table.querySelectorAll('tr')].slice(1);
-      const rows = trs.map(tr => [...tr.querySelectorAll('td')].map(td => td.textContent.trim()));
+      const rows = trs.map(tr => [...tr.querySelectorAll('td')].map(cellText));
       if (rows.length > 0 && rows[0].length === header.length) {
         return { header, rows };
       }
