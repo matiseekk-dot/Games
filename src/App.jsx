@@ -30,6 +30,7 @@ import { ACHIEVEMENTS, computeAchievements, unlockedAchievementIds, getAchieveme
 import { goalsRead, goalsWrite, monthBounds, daysLeftInMonth, GOAL_TYPES, GOAL_TEMPLATES, goalCurrent, goalParams } from './lib/goals.js';
 import { getYearsWithData, computeYearReview } from './lib/wrapped.js';
 import { makeDemoGames, hasDemoGames, removeDemoGames } from './lib/demo.js';
+import { parsePsnProfilesPaste } from './lib/psnprofiles-import.js';
 import { buildRecommendations, recsCacheStats, recsCacheClear } from './lib/recommend.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
@@ -2578,7 +2579,7 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
-function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPrivacy,onWipeOpen}){
+function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openPrivacy,onWipeOpen}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   // v1.13.14 — Removed className='scr' wrapper. Settings is rendered INSIDE the
   // .bs-ovr's inner scroll div (with its own flex:1/overflow-y:auto/min-height:0).
@@ -2621,6 +2622,13 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='set-row' onClick={openImport}>
           <span className='set-row-ico'>⬇️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'importData')}</div><div className='set-row-desc'>{t(lang,'importDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
+        {/* v1.16.0 — PSN-Profiles paste import. Opens dedicated overlay; closes Settings
+            implicitly because overlay sits on top with higher z-index. */}
+        {typeof openPsnImport === 'function' && (
+          <div className='set-row' onClick={openPsnImport}>
+            <span className='set-row-ico'>🎮</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'psnImportRowTitle')}</div><div className='set-row-desc'>{t(lang,'psnImportRowDesc')}</div></div><span className='set-row-arrow'>›</span>
+          </div>
+        )}
         {hasDemoGames(games) && (
           <div className='set-row' onClick={()=>{
             const demoCount=games.filter(g=>g._demo).length;
@@ -2701,6 +2709,226 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='set-row' onClick={()=>{if(window.confirm(t(lang,'clearConfirm',{n:games.length}))){setGames([]);flash(t(lang,'cleared'));}}} style={{borderColor:'rgba(255,77,109,.2)'}}>
           <span className='set-row-ico'>🗑</span><div className='set-row-body'><div className='set-row-title' style={{color:G.red}}>{t(lang,'clearCollection')}</div><div className='set-row-desc'>{t(lang,'clearDesc',{n:games.length})}</div></div><span className='set-row-arrow' style={{color:G.red}}>›</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// v1.16.0 — PSN-Profiles paste import overlay.
+// 3-step flow:
+//   step 1 — instructions + paste textarea
+//   step 2 — preview list with per-row RAWG match status (parallel async with concurrency 5)
+//   step 3 — commit selected → flash success → close
+//
+// User does NOT need a PSN API key, NPSSO token, or developer account. This is pure
+// frontend: user views their own public PSN-Profiles page, copies CSV, pastes here,
+// we parse + RAWG-match locally.
+//
+// Concurrency: RAWG free tier is 20k req/month. We cap at 5 parallel lookups
+// to be polite + avoid hammering the API on big libraries (1000+ games).
+//
+// Dedup: existingTitles set built from current library (lowercase title match).
+// Duplicates rendered as 'dup' status and excluded from default-selected set.
+function PsnImportOverlay({ existingGames, onClose, onCommit, lang }){
+  const [step, setStep] = useState(1);
+  const [pasteText, setPasteText] = useState('');
+  const [parsed, setParsed] = useState(null);  // { format, count, rows }
+  const [matches, setMatches] = useState({});  // index → { status, rawg?, error? }
+  const [selected, setSelected] = useState(new Set());  // indices of selected rows
+  const [committing, setCommitting] = useState(false);
+
+  // Trigger parse + RAWG lookup pipeline when entering step 2
+  function onParseAndProceed(){
+    const result = parsePsnProfilesPaste(pasteText);
+    if (result.count === 0) {
+      // empty / invalid input — stay on step 1, show error
+      setParsed(result);
+      return;
+    }
+    setParsed(result);
+    // Mark all rows as pending and dedup against library by title
+    const existingTitles = new Set(
+      (existingGames || []).map(g => (g.title || '').trim().toLowerCase())
+    );
+    const initial = {};
+    const initialSelected = new Set();
+    result.rows.forEach((row, i) => {
+      const isDup = existingTitles.has(row.title.toLowerCase());
+      initial[i] = { status: isDup ? 'dup' : 'pending' };
+      if (!isDup) initialSelected.add(i);
+    });
+    setMatches(initial);
+    setSelected(initialSelected);
+    setStep(2);
+    // Kick off RAWG lookups, concurrency-limited
+    runRawgQueue(result.rows, initial);
+  }
+
+  // Concurrency-limited RAWG lookup queue. Skips dups (no RAWG call needed).
+  // Each completion updates matches[i] in state.
+  async function runRawgQueue(rows, initialState){
+    const indices = rows
+      .map((_, i) => i)
+      .filter(i => initialState[i].status === 'pending');
+    const CONCURRENCY = 5;
+    let cursor = 0;
+    async function worker(){
+      while (cursor < indices.length) {
+        const idx = indices[cursor++];
+        const row = rows[idx];
+        try {
+          const r = await rawgSearch(row.title);
+          const top = r && r[0];
+          setMatches(prev => ({
+            ...prev,
+            [idx]: top
+              ? { status: 'ok', rawg: top }
+              : { status: 'nomatch' },
+          }));
+        } catch {
+          setMatches(prev => ({ ...prev, [idx]: { status: 'nomatch' } }));
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+  }
+
+  function toggleSel(i){
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  }
+
+  function commit(){
+    if (committing || selected.size === 0) return;
+    setCommitting(true);
+    const games = [];
+    for (const i of selected) {
+      const row = parsed.rows[i];
+      const m = matches[i];
+      if (!row || (m && m.status === 'dup')) continue;
+      const rawg = m && m.rawg;
+      games.push({
+        // RAWG-derived (when matched): cover, genre, year, releaseDate, rawgId
+        title: rawg?.title || row.title,
+        cover: rawg?.cover || '',
+        genre: rawg?.genre || '',
+        year: rawg?.year || new Date().getFullYear(),
+        releaseDate: rawg?.releaseDate || '',
+        rawgId: rawg?.id || null,
+        // PSN-derived: hours, completion → status, last played
+        hours: row.hours || 0,
+        platform: row.platform || 'PS5',
+        // Map completion: 100% → 'ukonczone', 1-99% → 'gram', 0% → 'planuje'
+        status: row.completionPct === 100 ? 'ukonczone' : (row.completionPct > 0 ? 'gram' : 'planuje'),
+        completedAt: row.completionPct === 100
+          ? (row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString())
+          : null,
+        lastPlayed: row.lastPlayed || null,
+        source: 'owned',
+        preOrdered: false,
+      });
+    }
+    onCommit(games);
+  }
+
+  const selectedCount = selected.size;
+  const matchedSummary = parsed
+    ? Object.values(matches).reduce((acc, m) => {
+        acc[m.status] = (acc[m.status] || 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
+  return (
+    <div className='bs-ovr'>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>📥 {t(lang,'psnImportTitle')}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div className='set-pn' style={{flex:1,minHeight:0,overflowY:'auto',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)'}}>
+        {step === 1 && (
+          <>
+            <div style={{padding:'4px 0 14px',fontSize:14,fontWeight:700,color:G.blu,fontFamily:"'Orbitron',monospace"}}>{t(lang,'psnImportStep1Title')}</div>
+            <div style={{fontSize:13,color:G.txt,lineHeight:1.6,marginBottom:14}}>{t(lang,'psnImportStep1Body')}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:14}}>
+              {[1,2,3,4,5].map(n=>(
+                <div key={n} style={{fontSize:12,color:G.txt,lineHeight:1.5,padding:'10px 12px',background:G.card,border:`1px solid ${G.bdr}`,borderRadius:8}} dangerouslySetInnerHTML={{__html: t(lang,'psnImportStep1Step'+n)}}/>
+              ))}
+            </div>
+            <a href='https://psnprofiles.com' target='_blank' rel='noopener noreferrer' style={{display:'block',padding:'10px',background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.3)',borderRadius:10,color:G.blu,fontSize:13,fontWeight:700,textDecoration:'none',textAlign:'center',marginBottom:18}}>{t(lang,'openPsnProfiles')}</a>
+            <div style={{fontSize:11,fontWeight:700,color:G.dim,letterSpacing:'.05em',marginBottom:6}}>{t(lang,'psnImportPasteLabel')}</div>
+            <textarea
+              value={pasteText}
+              onChange={e=>setPasteText(e.target.value)}
+              placeholder={t(lang,'psnImportPastePh')}
+              spellCheck={false}
+              autoCapitalize='off'
+              style={{width:'100%',minHeight:160,padding:12,fontFamily:'monospace',fontSize:11,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:10,color:G.txt,resize:'vertical',marginBottom:10}}
+            />
+            {parsed && parsed.count === 0 && (
+              <div style={{padding:'10px 12px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:10,color:G.red,fontSize:12,marginBottom:10}}>⚠️ {t(lang,'psnImportEmpty')}</div>
+            )}
+            <button
+              type='button'
+              onClick={onParseAndProceed}
+              disabled={!pasteText.trim()}
+              style={{width:'100%',padding:13,background:pasteText.trim()?`linear-gradient(135deg,${G.blu},#0060FF)`:G.card,color:'#fff',border:'none',borderRadius:11,fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,cursor:pasteText.trim()?'pointer':'not-allowed',opacity:pasteText.trim()?1:.5}}
+            >{t(lang,'psnImportNextBtn')}</button>
+          </>
+        )}
+
+        {step === 2 && parsed && (
+          <>
+            <div style={{padding:'4px 0 6px',fontSize:14,fontWeight:700,color:G.blu,fontFamily:"'Orbitron',monospace"}}>{t(lang,'psnImportPreviewTitle',{n:parsed.count, gw:gamesWord(parsed.count,lang)})}</div>
+            <div style={{fontSize:11,color:G.dim,marginBottom:14,lineHeight:1.5}}>{t(lang,'psnImportPreviewSub')}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:14}}>
+              {parsed.rows.map((row, i) => {
+                const m = matches[i] || { status:'pending' };
+                const isSelected = selected.has(i);
+                const isDup = m.status === 'dup';
+                return (
+                  <label key={i} style={{display:'flex',gap:10,alignItems:'center',padding:'10px 12px',background:isDup?'rgba(123,138,173,.06)':G.card,border:`1px solid ${G.bdr}`,borderRadius:10,opacity:isDup?.55:1,cursor:isDup?'not-allowed':'pointer'}}>
+                    <input
+                      type='checkbox'
+                      checked={isSelected}
+                      disabled={isDup}
+                      onChange={()=>toggleSel(i)}
+                      style={{width:18,height:18,accentColor:G.blu,flexShrink:0}}
+                    />
+                    {m.rawg && m.rawg.cover
+                      ? <div style={{width:36,height:48,borderRadius:6,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${m.rawg.cover})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
+                      : <div style={{width:36,height:48,borderRadius:6,background:G.card2,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,border:`1px solid ${G.bdr}`}}>🎮</div>}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:700,color:G.txt,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{m.rawg?.title || row.title}</div>
+                      <div style={{fontSize:10,color:G.dim,marginTop:2}}>
+                        {row.platform}
+                        {row.hours > 0 ? ` · ${Math.round(row.hours)}h` : ''}
+                        {row.completionPct !== null ? ` · ${row.completionPct}%` : ''}
+                        {' · '}
+                        {m.status === 'pending' && t(lang,'psnImportMatching')}
+                        {m.status === 'ok' && <span style={{color:G.grn}}>{t(lang,'psnImportFound')}</span>}
+                        {m.status === 'nomatch' && <span style={{color:G.org}}>{t(lang,'psnImportNoMatch')}</span>}
+                        {m.status === 'dup' && <span style={{color:G.dim}}>{t(lang,'psnImportDup')}</span>}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button type='button' onClick={()=>setStep(1)} style={{flex:1,padding:12,background:'transparent',color:G.txt,border:`1px solid ${G.bdr}`,borderRadius:10,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,cursor:'pointer'}}>{t(lang,'psnImportBackBtn')}</button>
+              <button
+                type='button'
+                onClick={commit}
+                disabled={selectedCount === 0 || committing}
+                style={{flex:2,padding:12,background:selectedCount>0?`linear-gradient(135deg,${G.blu},#0060FF)`:G.card,color:'#fff',border:'none',borderRadius:10,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:selectedCount>0?'pointer':'not-allowed',opacity:selectedCount>0?1:.55}}
+              >{committing ? t(lang,'psnImportCommitting') : t(lang,'psnImportCommitBtn',{n:selectedCount})}</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -2844,6 +3072,8 @@ export default function App(){
   // bulk path bypasses the form entirely — games go straight to library. Toggled from
   // the "Or scan multiple games" banner in Modal Add view.
   const [bulkScannerOpen,setBulkScannerOpen] = useState(false);
+  // v1.16.0 — PSN-Profiles paste import overlay state. Triggered from Settings.
+  const [psnImportOpen,setPsnImportOpen] = useState(false);
   const [toast,setToast]       = useState(null);
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
 
@@ -3357,6 +3587,26 @@ export default function App(){
           onBulkAdd={handleBulkAdd}
           onClose={()=>setBulkScannerOpen(false)}
         />}
+        {/* v1.16.0 — PSN-Profiles paste import overlay. Top-level (not nested in
+            Settings) so it covers the full screen with its own bs-ovr container. */}
+        {psnImportOpen && <PsnImportOverlay
+          existingGames={games}
+          lang={lang}
+          onClose={()=>setPsnImportOpen(false)}
+          onCommit={(newGames)=>{
+            if(newGames && newGames.length){
+              const withIds = newGames.map(g => ({
+                ...EF, ...g,
+                id: uid(),
+                abbr: g.abbr || mkAbbr(g.title),
+                addedAt: new Date().toISOString(),
+              }));
+              setGames(prev => [...prev, ...withIds]);
+              flash(t(lang,'psnImportSuccess',{n:withIds.length, gw:gamesWord(withIds.length,lang)}));
+            }
+            setPsnImportOpen(false);
+          }}
+        />}
         <Toast msg={toast}/>
         {achQueue.length>0 && (
           <AchievementBanner
@@ -3532,7 +3782,7 @@ export default function App(){
                 padding-bottom max() floor so the last setting row clears the Android nav
                 bar even when env(safe-area-inset-bottom) is 0. */}
             <div style={{flex:1,minHeight:0,overflowY:'auto',WebkitOverflowScrolling:'touch',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)'}}>
-              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
+              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPsnImport={()=>{setOverlay(null);setPsnImportOpen(true);}} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
               <div style={{padding:'0 16px 8px'}}>
                 <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
                 <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>

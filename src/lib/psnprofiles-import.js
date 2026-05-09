@@ -1,0 +1,223 @@
+// v1.16.0 — Parser for PSN-Profiles game library exports.
+//
+// PSN-Profiles (psnprofiles.com) is the de-facto public PSN library mirror — users
+// link their PSN ID and the site scrapes their public trophy/game data. It exposes a
+// "Games" tab with built-in CSV export, plus a copy-paste-friendly HTML table.
+// Both are public, scraped from public PSN data — no Sony API access, no NPSSO token,
+// no ToS violation. User views their own data via their own browser, copies, pastes
+// into our app, we parse locally.
+//
+// This module accepts either format and returns a normalized games array:
+//   [{ title, platform, hours, completionPct, lastPlayedISO, source }]
+// where source is 'psnprofiles' (for migration tracking).
+//
+// Format flexibility is intentional — PSN-Profiles has changed export schemas a few
+// times, and users sometimes paste partial data (just a column they highlighted).
+// Parser is generous: ignores unknown columns, skips empty rows, recovers from
+// malformed quotes by line-by-line scan instead of requiring strict RFC 4180.
+
+// ─── CSV PARSER (RFC 4180-ish with recovery) ───────────────────────────────
+// Splits a single CSV line into fields, respecting "double quotes" and embedded
+// commas. Embedded quotes inside a field are encoded as "" per CSV convention.
+// Returns array of strings, trimmed.
+function splitCsvLine(line) {
+  const fields = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; continue; }
+      if (ch === '"') { inQuotes = false; continue; }
+      cur += ch;
+    } else {
+      if (ch === '"' && cur === '') { inQuotes = true; continue; }
+      if (ch === ',') { fields.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+  }
+  fields.push(cur.trim());
+  return fields;
+}
+
+// Parse full CSV string into rows of fields. First non-empty line is the header.
+// Returns { header: string[], rows: string[][] }.
+function parseCsv(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (lines.length === 0) return { header: [], rows: [] };
+  const header = splitCsvLine(lines[0]).map(h => h.toLowerCase());
+  const rows = lines.slice(1).map(splitCsvLine);
+  return { header, rows };
+}
+
+// ─── COLUMN NAME NORMALIZATION ─────────────────────────────────────────────
+// Map varying column names from PSN-Profiles / similar sites to canonical fields.
+// Each canonical field has a list of accepted aliases (lowercase, alphanumeric).
+const COLUMN_MAP = {
+  title:        ['title', 'game', 'name'],
+  platform:     ['platform', 'platforms', 'console', 'system'],
+  hours:        ['hours', 'playtime', 'time', 'time played', 'h'],
+  completion:   ['completion', 'progress', 'progress %', '%', 'complete'],
+  lastPlayed:   ['last played', 'last_played', 'lastplayed', 'updated', 'last activity'],
+  trophies:     ['trophies', 'earned', 'trophy'],
+};
+
+function findColumn(header, canonical) {
+  const aliases = COLUMN_MAP[canonical] || [canonical];
+  for (let i = 0; i < header.length; i++) {
+    const h = header[i].toLowerCase().trim();
+    if (aliases.includes(h)) return i;
+  }
+  return -1;
+}
+
+// ─── PLATFORM NORMALIZATION ────────────────────────────────────────────────
+// PSN-Profiles uses values like "PS5", "PS4,PS3", "PSVita", "PSP", "PS1".
+// We map to our PLATFORMS enum (PS5/PS4/Xbox.../PC/Switch/Mobile/Other).
+// Multiple platforms get split — we take the first one (most relevant).
+function normalizePlatform(raw) {
+  if (!raw) return 'PS5';  // safe default
+  const first = String(raw).split(/[,/|;]/)[0].trim().toUpperCase();
+  if (first === 'PS5')         return 'PS5';
+  if (first === 'PS4')         return 'PS4';
+  if (first === 'PS3')         return 'Other';   // not in our enum
+  if (first === 'PSVITA' || first === 'VITA' || first === 'PS VITA') return 'Other';
+  if (first === 'PSP')         return 'Other';
+  if (first === 'PS1' || first === 'PSX') return 'Other';
+  return 'PS5';  // PSN-Profiles is PS-centric — anything else is likely PS5
+}
+
+// Parse hours field. PSN-Profiles formats vary:
+//   "12" → 12
+//   "12h" → 12
+//   "12h 30m" → 12.5
+//   "12.5" → 12.5
+//   "" / null → 0
+function parseHours(raw) {
+  if (!raw) return 0;
+  const s = String(raw).trim();
+  if (!s || s === '-' || s === 'N/A') return 0;
+  // "12h 30m" or "12h30m"
+  const m = /^(\d+(?:\.\d+)?)\s*h\s*(?:(\d+)\s*m)?$/i.exec(s);
+  if (m) {
+    const h = parseFloat(m[1]) || 0;
+    const min = parseInt(m[2] || '0', 10) || 0;
+    return h + min / 60;
+  }
+  // "12.5" or "12"
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+// Parse completion %. PSN-Profiles formats:
+//   "100%" → 100
+//   "92.3%" → 92
+//   "92" → 92
+//   "" → null (unknown)
+function parseCompletion(raw) {
+  if (!raw) return null;
+  const m = /(\d+(?:\.\d+)?)/.exec(String(raw));
+  if (!m) return null;
+  return Math.round(parseFloat(m[1]));
+}
+
+// ─── HTML PARSER ──────────────────────────────────────────────────────────
+// Fallback for users who paste the rendered HTML table from the Games page.
+// Uses DOMParser (browser-only — Node tests skip this path). Looks for <table>
+// and extracts <th> as header, <td> as rows.
+function parseHtmlTable(html) {
+  if (typeof DOMParser === 'undefined') return null;
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tables = doc.querySelectorAll('table');
+    for (const table of tables) {
+      const ths = [...table.querySelectorAll('thead th, tr:first-child th')];
+      if (ths.length === 0) continue;
+      const header = ths.map(th => th.textContent.trim().toLowerCase());
+      const trs = [...table.querySelectorAll('tbody tr')].length > 0
+        ? [...table.querySelectorAll('tbody tr')]
+        : [...table.querySelectorAll('tr')].slice(1);
+      const rows = trs.map(tr => [...tr.querySelectorAll('td')].map(td => td.textContent.trim()));
+      if (rows.length > 0 && rows[0].length === header.length) {
+        return { header, rows };
+      }
+    }
+    return null;
+  } catch { return null; }
+}
+
+// ─── MAIN PARSER ───────────────────────────────────────────────────────────
+// Public entry. Accepts CSV text, HTML, or JSON array (in case PSN-Profiles
+// adds a raw export later). Returns normalized rows + format detected.
+//
+// Output: { format, count, rows: [{title, platform, hours, completionPct, lastPlayed, raw}] }
+//   format: 'csv' | 'html' | 'json' | 'unknown'
+//   raw:    original row object (CSV string[]/HTML cells/JSON object) for debugging
+//
+// Empty / malformed input returns count:0 + empty rows. Caller should check count
+// before showing the import preview.
+export function parsePsnProfilesPaste(text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) return { format: 'unknown', count: 0, rows: [] };
+
+  let parsed = null;
+  let format = 'unknown';
+
+  // 1. Try JSON (PSN-Profiles doesn't expose this today, but future-proof)
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    try {
+      const j = JSON.parse(trimmed);
+      const arr = Array.isArray(j) ? j : (Array.isArray(j.games) ? j.games : null);
+      if (arr) {
+        format = 'json';
+        const rows = arr.map(o => ({
+          title: String(o.title || o.game || o.name || '').trim(),
+          platform: normalizePlatform(o.platform || o.platforms || ''),
+          hours: parseHours(o.hours || o.playtime || ''),
+          completionPct: parseCompletion(o.completion || o.progress || ''),
+          lastPlayed: String(o.lastPlayed || o.last_played || '').trim() || null,
+          raw: o,
+        })).filter(r => r.title);
+        return { format, count: rows.length, rows };
+      }
+    } catch { /* fall through */ }
+  }
+
+  // 2. Try HTML if it looks tag-like
+  if (trimmed.includes('<table') || trimmed.includes('<tr')) {
+    const parsedHtml = parseHtmlTable(trimmed);
+    if (parsedHtml) { parsed = parsedHtml; format = 'html'; }
+  }
+
+  // 3. Default: CSV
+  if (!parsed) {
+    parsed = parseCsv(trimmed);
+    format = 'csv';
+  }
+
+  if (!parsed.header.length || !parsed.rows.length) {
+    return { format, count: 0, rows: [] };
+  }
+
+  const idxTitle      = findColumn(parsed.header, 'title');
+  const idxPlatform   = findColumn(parsed.header, 'platform');
+  const idxHours      = findColumn(parsed.header, 'hours');
+  const idxCompletion = findColumn(parsed.header, 'completion');
+  const idxLastPlayed = findColumn(parsed.header, 'lastPlayed');
+
+  // If we can't find a title column, the input isn't usable — bail.
+  if (idxTitle < 0) return { format, count: 0, rows: [] };
+
+  const rows = parsed.rows
+    .map(r => ({
+      title:         (r[idxTitle] || '').trim(),
+      platform:      normalizePlatform(idxPlatform   >= 0 ? r[idxPlatform]   : ''),
+      hours:         parseHours      (idxHours       >= 0 ? r[idxHours]       : ''),
+      completionPct: parseCompletion (idxCompletion  >= 0 ? r[idxCompletion]  : ''),
+      lastPlayed:    (idxLastPlayed  >= 0 ? r[idxLastPlayed] : '') || null,
+      raw: r,
+    }))
+    .filter(r => r.title);  // drop empty rows
+
+  return { format, count: rows.length, rows };
+}
