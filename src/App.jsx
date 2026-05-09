@@ -2581,7 +2581,7 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
-function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openPrivacy,onWipeOpen}){
+function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openImportUndo,openPrivacy,onWipeOpen}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   // v1.13.14 — Removed className='scr' wrapper. Settings is rendered INSIDE the
   // .bs-ovr's inner scroll div (with its own flex:1/overflow-y:auto/min-height:0).
@@ -2643,6 +2643,27 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             <span className='set-row-ico'>🟢</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'xboxImportRowTitle')}</div><div className='set-row-desc'>{t(lang,'xboxImportRowDesc')}</div></div><span className='set-row-arrow'>›</span>
           </div>
         )}
+        {/* v1.16.5 — Undo a specific import batch (tagged by importSource OR
+            detected via addedAt clustering). Only renders if there's at least
+            one detectable batch — keeps Settings clean for users who never
+            imported anything. */}
+        {typeof openImportUndo === 'function' && (() => {
+          const hasTagged = games.some(g => g.importSource === 'psn' || g.importSource === 'steam' || g.importSource === 'xbox');
+          // Quick heuristic check — any addedAt cluster of 5+ games?
+          const untagged = games.filter(g => !g.importSource && g.addedAt).map(g => new Date(g.addedAt).getTime()).sort((a,b)=>a-b);
+          let hasCluster = false;
+          let cnt = 1;
+          for (let i = 1; i < untagged.length; i++) {
+            if (untagged[i] - untagged[i-1] <= 60000) { cnt++; if (cnt >= 5) { hasCluster = true; break; } }
+            else cnt = 1;
+          }
+          if (!hasTagged && !hasCluster) return null;
+          return (
+            <div className='set-row' onClick={openImportUndo}>
+              <span className='set-row-ico'>🔙</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'importUndoRowTitle')}</div><div className='set-row-desc'>{t(lang,'importUndoRowDesc')}</div></div><span className='set-row-arrow'>›</span>
+            </div>
+          );
+        })()}
         {hasDemoGames(games) && (
           <div className='set-row' onClick={()=>{
             const demoCount=games.filter(g=>g._demo).length;
@@ -2923,6 +2944,9 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
         platinum,
         source: 'owned',
         preOrdered: false,
+        // v1.16.5 — tag this game with the import platform so Settings → "Undo
+        // import" can find the batch without timestamp heuristics.
+        importSource: platform,  // 'psn' | 'steam' | 'xbox'
       });
     }
     onCommit(games);
@@ -3124,6 +3148,134 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
   );
 }
 
+// v1.16.5 — Import Undo overlay. User imports 400 games via Xbox flow, decides
+// they don't want them, but doesn't want to wipe entire collection. This finds
+// "import batches" two ways:
+//   1. Tagged batches — games where importSource ∈ {'psn','steam','xbox'} (set
+//      starting v1.16.5 on every import commit).
+//   2. Heuristic clusters — games added within 60s of each other (≥5 in cluster),
+//      catches pre-1.16.5 imports that have no importSource tag.
+// Each batch shows: source/icon, count, timestamp; user clicks "Remove N games"
+// to delete the batch atomically with confirmation.
+function ImportUndoOverlay({ games, onClose, onRemoveBatch, lang }){
+  // Group tagged games by importSource
+  const tagged = { psn: [], steam: [], xbox: [] };
+  for (const g of games) {
+    if (g.importSource && tagged[g.importSource]) tagged[g.importSource].push(g);
+  }
+
+  // Cluster untagged games by addedAt proximity (≥5 games within 60s gap)
+  const untagged = games
+    .filter(g => !g.importSource && g.addedAt)
+    .sort((a, b) => new Date(a.addedAt) - new Date(b.addedAt));
+  const clusters = [];
+  let cur = null;
+  const GAP_MS = 60 * 1000;
+  for (const g of untagged) {
+    const ts = new Date(g.addedAt).getTime();
+    if (!cur || ts - cur.last > GAP_MS) {
+      cur = { firstTs: ts, last: ts, games: [g] };
+      clusters.push(cur);
+    } else {
+      cur.games.push(g);
+      cur.last = ts;
+    }
+  }
+  const heuristicBatches = clusters.filter(c => c.games.length >= 5);
+
+  // Build display list — tagged batches first (one per platform), then heuristic
+  const PLATFORM_META = {
+    psn:   { icon: '🎮', label: 'PSN-Profiles' },
+    steam: { icon: '⚙️', label: 'Steam' },
+    xbox:  { icon: '🟢', label: 'Xbox / TrueAchievements' },
+  };
+  const batches = [];
+  for (const [src, gs] of Object.entries(tagged)) {
+    if (gs.length === 0) continue;
+    const meta = PLATFORM_META[src];
+    const lastTs = Math.max(...gs.map(g => new Date(g.addedAt || 0).getTime()));
+    batches.push({
+      key: `tagged-${src}`,
+      icon: meta.icon,
+      label: meta.label,
+      count: gs.length,
+      timestamp: lastTs,
+      tagged: true,
+      games: gs,
+    });
+  }
+  for (const c of heuristicBatches) {
+    batches.push({
+      key: `cluster-${c.firstTs}`,
+      icon: '📦',
+      label: t(lang, 'importUndoUnknownSource'),
+      count: c.games.length,
+      timestamp: c.firstTs,
+      tagged: false,
+      games: c.games,
+    });
+  }
+  // Sort newest first
+  batches.sort((a, b) => b.timestamp - a.timestamp);
+
+  function fmtTime(ts) {
+    if (!ts) return '?';
+    const d = new Date(ts);
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now.getTime() - 86400000);
+    const TODAY    = lang === 'pl' ? 'Dziś'    : lang === 'es' ? 'Hoy'  : 'Today';
+    const YDAY     = lang === 'pl' ? 'Wczoraj' : lang === 'es' ? 'Ayer' : 'Yesterday';
+    const hhmm     = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    if (sameDay) return `${TODAY} ${hhmm}`;
+    if (d.toDateString() === yesterday.toDateString()) return `${YDAY} ${hhmm}`;
+    return d.toLocaleDateString(lang === 'pl' ? 'pl-PL' : (lang === 'es' ? 'es-ES' : 'en-US'), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
+  return (
+    <div className='bs-ovr'>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>🔙 {t(lang,'importUndoTitle')}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div className='set-pn' style={{flex:1,minHeight:0,overflowY:'auto',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)'}}>
+        <div style={{fontSize:13,color:G.txt,lineHeight:1.6,marginBottom:14}}>{t(lang,'importUndoIntro')}</div>
+        {batches.length === 0 ? (
+          <div style={{padding:'14px',background:G.card,border:`1px solid ${G.bdr}`,borderRadius:10,fontSize:12,color:G.dim,textAlign:'center'}}>
+            {t(lang,'importUndoEmpty')}
+          </div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {batches.map(b => (
+              <div key={b.key} style={{padding:'12px 14px',background:G.card,border:`1px solid ${G.bdr}`,borderRadius:10}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+                  <span style={{fontSize:22}}>{b.icon}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:700,color:G.txt}}>{b.label}</div>
+                    <div style={{fontSize:11,color:G.dim,marginTop:2}}>
+                      {t(lang,'importUndoCount',{n:b.count})} · {fmtTime(b.timestamp)}
+                      {!b.tagged && <span style={{color:G.org,marginLeft:6}}>· {t(lang,'importUndoHeuristic')}</span>}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type='button'
+                  onClick={() => {
+                    if (window.confirm(t(lang,'importUndoConfirm',{n:b.count, label:b.label}))) {
+                      onRemoveBatch(b.games.map(g => g.id));
+                    }
+                  }}
+                  style={{width:'100%',padding:'10px',background:'rgba(255,77,109,.1)',color:G.red,border:'1px solid rgba(255,77,109,.3)',borderRadius:8,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:'pointer'}}
+                >🗑 {t(lang,'importUndoBtn',{n:b.count})}</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // v1.3: BudgetEditor — proper save/edit pattern instead of "phantom Set button"
 // State machine: editing=true (input + Set/Cancel) ←→ editing=false (display + Edit + Clear)
 function BudgetEditor({budget,setBudget,games,flash,lang}){
@@ -3269,6 +3421,8 @@ export default function App(){
   const [psnImportOpen,setPsnImportOpen] = useState(false);
   const [steamImportOpen,setSteamImportOpen] = useState(false);
   const [xboxImportOpen,setXboxImportOpen] = useState(false);
+  // v1.16.5 — Undo-import overlay (Settings → "Cofnij import")
+  const [importUndoOpen,setImportUndoOpen] = useState(false);
   const [toast,setToast]       = useState(null);
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
 
@@ -3847,6 +4001,19 @@ export default function App(){
             setXboxImportOpen(false);
           }}
         />}
+        {/* v1.16.5 — Undo-import overlay. Removes a batch of games matched by
+            importSource tag (post-1.16.5 imports) or addedAt clustering (legacy). */}
+        {importUndoOpen && <ImportUndoOverlay
+          games={games}
+          lang={lang}
+          onClose={()=>setImportUndoOpen(false)}
+          onRemoveBatch={(idsToRemove)=>{
+            const idSet = new Set(idsToRemove);
+            setGames(prev => prev.filter(g => !idSet.has(g.id)));
+            flash(t(lang,'importUndoSuccess',{n:idsToRemove.length}));
+            setImportUndoOpen(false);
+          }}
+        />}
         <Toast msg={toast}/>
         {achQueue.length>0 && (
           <AchievementBanner
@@ -4022,7 +4189,7 @@ export default function App(){
                 padding-bottom max() floor so the last setting row clears the Android nav
                 bar even when env(safe-area-inset-bottom) is 0. */}
             <div style={{flex:1,minHeight:0,overflowY:'auto',WebkitOverflowScrolling:'touch',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)'}}>
-              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPsnImport={()=>{setOverlay(null);setPsnImportOpen(true);}} openSteamImport={()=>{setOverlay(null);setSteamImportOpen(true);}} openXboxImport={()=>{setOverlay(null);setXboxImportOpen(true);}} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
+              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPsnImport={()=>{setOverlay(null);setPsnImportOpen(true);}} openSteamImport={()=>{setOverlay(null);setSteamImportOpen(true);}} openXboxImport={()=>{setOverlay(null);setXboxImportOpen(true);}} openImportUndo={()=>{setOverlay(null);setImportUndoOpen(true);}} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
               <div style={{padding:'0 16px 8px'}}>
                 <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
                 <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>
