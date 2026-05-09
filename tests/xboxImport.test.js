@@ -1,0 +1,73 @@
+import { describe, it, expect } from 'vitest';
+import { parseXboxPaste } from '../src/lib/xbox-import.js';
+
+const TA_CSV = `Game,Platform,Gamerscore,Achievements,Time Played,Completion
+"Halo Infinite","Xbox Series X",1500,"50/120","42h 30m","42%"
+"Forza Horizon 5","Xbox Series X|S",2000,"100/100","85h","100%"
+"Sea of Thieves","Xbox One",1200,"60/200","120h 15m","30%"
+"Microsoft Flight Simulator","PC",800,"20/45","60h","44%"`;
+
+const TA_CSV_MIN = `Game,Platform,Time Played
+"Forza",Xbox Series X,30h
+"Halo",Xbox One,15h`;
+
+const PLAINTEXT = `Halo Infinite
+Forza Horizon 5
+Gears 5`;
+
+describe('parseXboxPaste', () => {
+  it('parses TrueAchievements CSV with full columns', () => {
+    const r = parseXboxPaste(TA_CSV);
+    expect(r.format).toBe('csv');
+    expect(r.count).toBe(4);
+    expect(r.rows[0].title).toBe('Halo Infinite');
+    expect(r.rows[0].platform).toBe('Xbox Series X/S');
+    expect(r.rows[0].hours).toBe(42.5);  // 42h 30m → 42.5
+    expect(r.rows[0].completionPct).toBe(42);
+  });
+
+  it('handles "12h" / "12h 30m" / "1234m" / plain int hour formats', () => {
+    const r = parseXboxPaste(TA_CSV);
+    const hours = r.rows.map(x => x.hours);
+    expect(hours[0]).toBe(42.5);   // "42h 30m"
+    expect(hours[1]).toBe(85);     // "85h"
+    expect(hours[2]).toBe(120.25); // "120h 15m"
+    expect(hours[3]).toBe(60);     // "60h"
+  });
+
+  it('normalizes Xbox platform variants to enum', () => {
+    const r = parseXboxPaste(TA_CSV);
+    expect(r.rows[0].platform).toBe('Xbox Series X/S');     // "Xbox Series X"
+    expect(r.rows[1].platform).toBe('Xbox Series X/S');     // "Xbox Series X|S"
+    expect(r.rows[2].platform).toBe('Xbox One');            // "Xbox One"
+    expect(r.rows[3].platform).toBe('PC');                  // "PC"
+  });
+
+  it('parses minimal CSV (Game/Platform/Time)', () => {
+    const r = parseXboxPaste(TA_CSV_MIN);
+    expect(r.count).toBe(2);
+    expect(r.rows[0].title).toBe('Forza');
+    expect(r.rows[0].hours).toBe(30);
+    expect(r.rows[0].completionPct).toBe(null);
+  });
+
+  it('falls back to plaintext when no CSV header detected', () => {
+    const r = parseXboxPaste(PLAINTEXT);
+    expect(r.format).toBe('plaintext');
+    expect(r.count).toBe(3);
+    expect(r.rows[0].title).toBe('Halo Infinite');
+    expect(r.rows[0].platform).toBe('Xbox Series X/S');
+  });
+
+  it('rejects empty/null', () => {
+    expect(parseXboxPaste('').count).toBe(0);
+    expect(parseXboxPaste(null).count).toBe(0);
+  });
+
+  it('skips rows without title', () => {
+    const csv = 'Game,Time Played\n"A","10h"\n,"5h"\n"C","8h"';
+    const r = parseXboxPaste(csv);
+    expect(r.count).toBe(2);
+    expect(r.rows.map(x => x.title)).toEqual(['A', 'C']);
+  });
+});
