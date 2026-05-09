@@ -53,6 +53,12 @@ function stripBOM(text) {
 // exports use; semicolon comes from Excel re-exports in EU locales.
 // v1.16.9 — Same plaintext-table detector as psnprofiles-import.js. Handles
 // iOS Safari "Select All → Copy" which produces one-cell-per-line text.
+// v1.16.11 — Same noise/section-break filters as psnprofiles-import.js. Kept
+// in sync intentionally because both platforms have similar sidebar/recommendation
+// pollution problems when user does Select-All-Copy on mobile.
+const SECTION_BREAK_RX = /^(recommended|trending|sponsored|advertis|you may|you might|popular|featured|related|similar|sugest|polec|reklam|sponsorow|see also|learn more|sign up|log in|register)/i;
+const UI_NOISE_RX = /^(more|edit|add|view|play|filter|sort|share|home|games|trophies|achievements|friends|search|menu|settings|profile|next|prev|back|all|none|select)$/i;
+
 function isLikelyTitle(line) {
   if (!line || line.length < 2 || line.length > 120) return false;
   if (/^\d+(\.\d+)?%?$/.test(line)) return false;
@@ -61,12 +67,26 @@ function isLikelyTitle(line) {
   if (/^\d+\s*m$/i.test(line)) return false;
   if (/^(PS[1-5]|PSP|PS\s?Vita|Xbox(\s+(Series\s*[XS]?(\|S)?|One|360))?|PC|Steam|Switch|Mobile|iOS|Android)$/i.test(line)) return false;
   if (/^(PS[1-5][,\s/|]+PS[1-5])$/i.test(line)) return false;
+  if (UI_NOISE_RX.test(line)) return false;
   if (!/[a-zA-Z]/.test(line)) return false;
   return true;
 }
 
+function rowHasTrophyMetadata(cells) {
+  return cells.some(c =>
+    /^\d+\s*\/\s*\d+$/.test(c) ||  // "10/30"
+    /^\d+\s*%$/.test(c)             // "42%"
+  );
+}
+
 function parsePlaintextTable(lines) {
-  const titleIdxs = lines.map((l, i) => isLikelyTitle(l) ? i : -1).filter(i => i >= 0);
+  // v1.16.11 — Truncate at first section-break (Recommended/Sponsored/etc.)
+  let workingLines = lines;
+  for (let i = 10; i < lines.length; i++) {
+    if (SECTION_BREAK_RX.test(lines[i])) { workingLines = lines.slice(0, i); break; }
+  }
+
+  const titleIdxs = workingLines.map((l, i) => isLikelyTitle(l) ? i : -1).filter(i => i >= 0);
   if (titleIdxs.length < 4) return null;
   const gaps = [];
   for (let i = 1; i < titleIdxs.length; i++) gaps.push(titleIdxs[i] - titleIdxs[i-1]);
@@ -76,13 +96,17 @@ function parsePlaintextTable(lines) {
   const [modeGap, count] = sorted[0];
   const rowSize = +modeGap;
   if (count < 3 || rowSize < 2 || rowSize > 12) return null;
-  const rows = [];
+  const rawRows = [];
   for (let i = 0; i < titleIdxs.length; i++) {
     if (i > 0 && titleIdxs[i] - titleIdxs[i-1] !== rowSize) continue;
     const tIdx = titleIdxs[i];
-    if (tIdx + rowSize > lines.length) break;
-    rows.push(lines.slice(tIdx, tIdx + rowSize));
+    if (tIdx + rowSize > workingLines.length) break;
+    rawRows.push(workingLines.slice(tIdx, tIdx + rowSize));
   }
+  if (rawRows.length < 3) return null;
+  // v1.16.11 — STRICT: keep only rows with trophy/achievement metadata
+  const filtered = rawRows.filter(rowHasTrophyMetadata);
+  const rows = filtered.length >= Math.max(3, rawRows.length * 0.3) ? filtered : rawRows;
   if (rows.length < 3) return null;
   const sample = rows.slice(0, Math.min(10, rows.length));
   const header = [];
@@ -359,7 +383,12 @@ export function parseXboxPaste(text) {
   }
 
   // v1.16.10 — Last-resort: extract alphabetic-rich lines as titles only.
-  const allLinesAll = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  // v1.16.11 — Truncate at section break first (Recommended/Sponsored/etc.)
+  const allLinesRaw = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let allLinesAll = allLinesRaw;
+  for (let i = 10; i < allLinesRaw.length; i++) {
+    if (SECTION_BREAK_RX.test(allLinesRaw[i])) { allLinesAll = allLinesRaw.slice(0, i); break; }
+  }
   const titleLines = allLinesAll.filter(isLikelyTitle);
   if (titleLines.length >= 5 && titleLines.length <= 5000) {
     const titlesOnly = titleLines.map(t => ({

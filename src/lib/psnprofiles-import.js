@@ -65,6 +65,15 @@ function stripBOM(text) {
 // them. Then group each K-line block as one row. Synthetic header is inferred
 // from cell contents (column where most entries match a fraction → 'trophies',
 // where most are 'X%' → 'completion', etc.).
+// v1.16.11 — Lines that signal we're entering a non-games section (recommended
+// games sidebar, ads, "you may like", etc.). When parser hits these in PSN-
+// Profiles "Select All" pastes, downstream rows are usually noise — skip them.
+const SECTION_BREAK_RX = /^(recommended|trending|sponsored|advertis|you may|you might|popular|featured|related|similar|sugest|polec|reklam|sponsorow|see also|learn more|sign up|log in|register)/i;
+
+// v1.16.11 — UI-text noise that often appears between game rows in mobile
+// renders (buttons, link labels). Reject these as "title candidates".
+const UI_NOISE_RX = /^(more|edit|add|view|play|filter|sort|share|home|games|trophies|friends|search|menu|settings|profile|next|prev|back|all|none|select)$/i;
+
 function isLikelyTitle(line) {
   if (!line || line.length < 2 || line.length > 120) return false;
   if (/^\d+(\.\d+)?%?$/.test(line)) return false;             // pure number / percentage
@@ -73,14 +82,36 @@ function isLikelyTitle(line) {
   if (/^\d+\s*m$/i.test(line)) return false;                  // "60m"
   if (/^(PS[1-5]|PSP|PS\s?Vita|Xbox(\s+(Series\s*[XS]?(\|S)?|One|360))?|PC|Steam|Switch|Mobile|iOS|Android)$/i.test(line)) return false;
   if (/^(PS[1-5][,\s/|]+PS[1-5])$/i.test(line)) return false; // "PS5,PS4"
+  if (UI_NOISE_RX.test(line)) return false;                   // v1.16.11 — common UI labels
   if (!/[a-zA-Z]/.test(line)) return false;                   // must have at least one letter
   return true;
+}
+
+// v1.16.11 — A row qualifies as "real game record" only if it contains BOTH:
+//   (a) a title-looking cell (handled by extraction logic upstream), AND
+//   (b) at least one cell with trophy/achievement metadata (X/Y fraction or X%)
+// Recommended-games sidebars / ads usually show only game name + image, no
+// trophies — so this filter cleanly separates owned games from noise.
+function rowHasTrophyMetadata(cells) {
+  return cells.some(c =>
+    /^\d+\s*\/\s*\d+$/.test(c) ||  // "36/36"
+    /^\d+\s*%$/.test(c)             // "100%"
+  );
 }
 
 // Detect repeating-block plaintext pattern. Returns { header, rows, delim }
 // shape compatible with parseCsv output, or null if pattern not found.
 function parsePlaintextTable(lines) {
-  const titleIdxs = lines.map((l, i) => isLikelyTitle(l) ? i : -1).filter(i => i >= 0);
+  // v1.16.11 — Truncate at first "section break" (Recommended/Sponsored/etc).
+  // Everything after is sidebar/ad noise that pollutes the table. Only truncate
+  // if the break appears past line 10 (so we don't kill input that legitimately
+  // starts with "Recommended" header somewhere).
+  let workingLines = lines;
+  for (let i = 10; i < lines.length; i++) {
+    if (SECTION_BREAK_RX.test(lines[i])) { workingLines = lines.slice(0, i); break; }
+  }
+
+  const titleIdxs = workingLines.map((l, i) => isLikelyTitle(l) ? i : -1).filter(i => i >= 0);
   if (titleIdxs.length < 4) return null;  // need ≥4 candidate titles
   // Find modal gap between consecutive title indices
   const gaps = [];
@@ -92,13 +123,21 @@ function parsePlaintextTable(lines) {
   const rowSize = +modeGap;
   if (count < 3 || rowSize < 2 || rowSize > 12) return null;
   // Extract rows where title→title gap matches mode
-  const rows = [];
+  const rawRows = [];
   for (let i = 0; i < titleIdxs.length; i++) {
     if (i > 0 && titleIdxs[i] - titleIdxs[i-1] !== rowSize) continue;
     const tIdx = titleIdxs[i];
-    if (tIdx + rowSize > lines.length) break;
-    rows.push(lines.slice(tIdx, tIdx + rowSize));
+    if (tIdx + rowSize > workingLines.length) break;
+    rawRows.push(workingLines.slice(tIdx, tIdx + rowSize));
   }
+  if (rawRows.length < 3) return null;
+  // v1.16.11 — STRICT FILTER: keep only rows with trophy/achievement metadata
+  // (X/Y fraction or X% cell). Recommended-games sidebars don't show trophies,
+  // so this cleanly separates owned games from noise. Defensive: only apply
+  // strict filter if it keeps ≥30% of rows (otherwise user genuinely pasted
+  // titles-only and we shouldn't drop everything).
+  const filtered = rawRows.filter(rowHasTrophyMetadata);
+  const rows = filtered.length >= Math.max(3, rawRows.length * 0.3) ? filtered : rawRows;
   if (rows.length < 3) return null;
   // Infer column types from first 10 rows — synthesize header
   const sample = rows.slice(0, Math.min(10, rows.length));
@@ -446,7 +485,13 @@ export function parsePsnProfilesPaste(text) {
     // v1.16.10 — Even when CSV/HTML/plaintext-table all failed, try one more
     // thing: extract any alphabetic-looking lines as titles. Better to import
     // 400 game names without metadata than to import nothing.
-    const allLines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    // v1.16.11 — Truncate at section break first to avoid pulling sidebar
+    // recommended-games as if they were owned games.
+    const allLinesRaw = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    let allLines = allLinesRaw;
+    for (let i = 10; i < allLinesRaw.length; i++) {
+      if (SECTION_BREAK_RX.test(allLinesRaw[i])) { allLines = allLinesRaw.slice(0, i); break; }
+    }
     const titleLines = allLines.filter(isLikelyTitle);
     if (titleLines.length >= 5 && titleLines.length <= 5000) {
       const titlesOnly = titleLines.map(t => ({
