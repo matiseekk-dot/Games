@@ -443,9 +443,23 @@ export function parsePsnProfilesPaste(text) {
   }
 
   if (!parsed.header.length || !parsed.rows.length) {
+    // v1.16.10 — Even when CSV/HTML/plaintext-table all failed, try one more
+    // thing: extract any alphabetic-looking lines as titles. Better to import
+    // 400 game names without metadata than to import nothing.
+    const allLines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const titleLines = allLines.filter(isLikelyTitle);
+    if (titleLines.length >= 5 && titleLines.length <= 5000) {
+      const titlesOnly = titleLines.map(t => ({
+        title: t, platform: 'PS5', hours: 0, completionPct: null, lastPlayed: null, trophies: '',
+        raw: { source: 'titles-only' },
+      }));
+      return { format: 'titles-only', count: titlesOnly.length, rows: titlesOnly };
+    }
     const debug = {
       bytesRead: trimmed.length,
-      firstLine: trimmed.split(/\r?\n/)[0]?.slice(0, 200) || '',
+      totalLines: allLines.length,
+      firstLine: allLines[0]?.slice(0, 200) || '',
+      firstLines: allLines.slice(0, 20).map(l => l.slice(0, 200)),
       detectedDelim: parsed?.delim || '?',
       headerCols: parsed?.header || [],
       dataRows: parsed?.rows?.length || 0,
@@ -468,9 +482,23 @@ export function parsePsnProfilesPaste(text) {
   }
 
   if (idxTitle < 0) {
+    // v1.16.10 — Last-resort fallback: pull alphabetic-rich lines as titles only.
+    // Loses metadata but at least imports game names. Useful for users on weird
+    // mobile browsers / formats we don't recognize.
+    const allLines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const titleLines = allLines.filter(isLikelyTitle);
+    if (titleLines.length >= 5 && titleLines.length <= 5000) {
+      const titlesOnly = titleLines.map(t => ({
+        title: t, platform: 'PS5', hours: 0, completionPct: null, lastPlayed: null, trophies: '',
+        raw: { source: 'titles-only' },
+      }));
+      return { format: 'titles-only', count: titlesOnly.length, rows: titlesOnly };
+    }
     const debug = {
       bytesRead: trimmed.length,
-      firstLine: trimmed.split(/\r?\n/)[0]?.slice(0, 200) || '',
+      totalLines: allLines.length,
+      firstLine: allLines[0]?.slice(0, 200) || '',
+      firstLines: allLines.slice(0, 20).map(l => l.slice(0, 200)),
       detectedDelim: parsed?.delim || '?',
       headerCols: parsed?.header || [],
       dataRows: parsed?.rows?.length || 0,

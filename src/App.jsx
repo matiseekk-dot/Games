@@ -3178,20 +3178,51 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
             {parsed && parsed.count === 0 && (
               <div style={{padding:'10px 12px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:10,color:G.red,fontSize:12,marginBottom:10}}>
                 ⚠️ {t(lang, k('Empty'))}
-                {/* v1.16.3 — Surface parser debug info to help users diagnose
-                    "no games found" issues. Most common: they uploaded .xlsx
-                    (binary) instead of .csv, or the file has unusual headers. */}
+                {/* v1.16.3 / v1.16.10 — Rich debug panel. Shows first 20 lines
+                    of what was pasted so user can screenshot/share back —
+                    that's the only way for me to diagnose mobile-paste quirks
+                    (iOS Safari produces different format than Android Chrome). */}
                 {parsed.debug && (
                   <div style={{marginTop:8,fontSize:11,color:G.dim,fontFamily:'monospace',lineHeight:1.5,wordBreak:'break-all'}}>
                     {parsed.debug.looksLikeBinary && <div style={{color:G.org,marginBottom:4}}>📦 {t(lang,'importDebugBinary')}</div>}
                     {!parsed.debug.looksLikeBinary && parsed.debug.bytesRead === 0 && <div>{t(lang,'importDebugEmpty')}</div>}
                     {!parsed.debug.looksLikeBinary && parsed.debug.bytesRead > 0 && (
                       <>
-                        <div>{t(lang,'importDebugBytes',{n:parsed.debug.bytesRead})}</div>
-                        <div>{t(lang,'importDebugFirstLine')}: <span style={{color:G.txt}}>{parsed.debug.firstLine || '(empty)'}</span></div>
+                        <div>📏 {t(lang,'importDebugBytes',{n:parsed.debug.bytesRead})} · {parsed.debug.totalLines || '?'} lines</div>
                         {parsed.debug.headerCols && parsed.debug.headerCols.length > 0 && (
-                          <div>{t(lang,'importDebugHeaders')}: <span style={{color:G.txt}}>{parsed.debug.headerCols.join(' | ')}</span></div>
+                          <div style={{marginTop:4}}>🔍 {t(lang,'importDebugHeaders')}: <span style={{color:G.txt}}>{parsed.debug.headerCols.join(' | ')}</span></div>
                         )}
+                        {parsed.debug.firstLines && parsed.debug.firstLines.length > 0 && (
+                          <div style={{marginTop:6,padding:'6px 8px',background:G.bg,border:`1px solid ${G.bdr}`,borderRadius:6,maxHeight:200,overflowY:'auto'}}>
+                            <div style={{color:G.dim,fontSize:10,marginBottom:4}}>{t(lang,'importDebugFirstLines')}:</div>
+                            {parsed.debug.firstLines.map((l, i) => (
+                              <div key={i} style={{color:G.txt,fontSize:10,whiteSpace:'pre-wrap',padding:'1px 0',borderBottom:i < parsed.debug.firstLines.length-1?`1px dashed ${G.bdr}`:'none'}}>
+                                <span style={{color:G.dim,marginRight:6}}>{i+1}.</span>{l || <em style={{color:G.dim}}>(empty)</em>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          type='button'
+                          onClick={(e)=>{
+                            const txt = JSON.stringify(parsed.debug, null, 2);
+                            const showCopied = () => { e.target.textContent = '✓ ' + t(lang,'importDebugCopied'); };
+                            try {
+                              navigator.clipboard.writeText(txt).then(showCopied, () => {
+                                const ta = document.createElement('textarea');
+                                ta.value = txt; document.body.appendChild(ta); ta.select();
+                                try { document.execCommand('copy'); showCopied(); } catch {}
+                                ta.remove();
+                              });
+                            } catch {
+                              const ta = document.createElement('textarea');
+                              ta.value = txt; document.body.appendChild(ta); ta.select();
+                              try { document.execCommand('copy'); showCopied(); } catch {}
+                              ta.remove();
+                            }
+                          }}
+                          style={{marginTop:8,padding:'6px 10px',background:'rgba(0,212,255,.1)',color:G.blu,border:`1px solid ${G.blu}`,borderRadius:6,fontSize:10,fontWeight:700,cursor:'pointer',width:'100%'}}
+                        >📋 {t(lang,'importDebugCopy')}</button>
                       </>
                     )}
                   </div>

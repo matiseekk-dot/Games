@@ -358,16 +358,27 @@ export function parseXboxPaste(text) {
     }
   }
 
-  // v1.16.3 — emit diagnostic info on full failure so the UI can show user
-  // *what* we actually parsed (helps debug "no games found" mysteries: was it
-  // a binary xlsx? wrong delimiter? all-numeric file?).
+  // v1.16.10 — Last-resort: extract alphabetic-rich lines as titles only.
+  const allLinesAll = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const titleLines = allLinesAll.filter(isLikelyTitle);
+  if (titleLines.length >= 5 && titleLines.length <= 5000) {
+    const titlesOnly = titleLines.map(t => ({
+      title: t, platform: 'Xbox Series X/S', hours: 0, completionPct: null, lastPlayed: null,
+      achievements: '', raw: { source: 'titles-only' },
+    }));
+    return { format: 'titles-only', count: titlesOnly.length, rows: titlesOnly };
+  }
+
+  // v1.16.3/v1.16.10 — rich diagnostic on full failure
   const debug = {
     bytesRead: trimmed.length,
-    firstLine: trimmed.split(/\r?\n/)[0]?.slice(0, 200) || '',
+    totalLines: allLinesAll.length,
+    firstLine: allLinesAll[0]?.slice(0, 200) || '',
+    firstLines: allLinesAll.slice(0, 20).map(l => l.slice(0, 200)),
     detectedDelim: csv.delim || '?',
     headerCols: csv.header || [],
     dataRows: csv.rows?.length || 0,
-    looksLikeBinary: /[\x00-\x08\x0E-\x1F]/.test(trimmed.slice(0, 200)),  // null bytes etc → xlsx/xls/zip
+    looksLikeBinary: /[\x00-\x08\x0E-\x1F]/.test(trimmed.slice(0, 200)),
   };
   return { format: 'unknown', count: 0, rows: [], debug };
 }
