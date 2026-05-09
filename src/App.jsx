@@ -3037,19 +3037,26 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
       if (!row || (m && m.status === 'dup')) continue;
       const rawg = m && m.rawg;
 
-      // v1.16.4 — Status mapping rewrite based on user feedback:
-      // OLD logic mapped 1-99% completion → 'gram', which polluted the active
-      // "currently playing" list with 200+ historical games. New 3-tier:
-      //   100% completion        → 'ukonczone'  (counts toward achievements)
-      //   started (hours > 0)    → 'porzucone'  (started but not active rotation)
-      //   untouched (hours == 0) → 'planuje'    (owned, never opened)
-      // User can manually move any imported game to 'gram' for active play.
+      // v1.16.8 — Status mapping uses lastPlayed as a signal, not just hours.
+      // Previous logic put any hours>0 game into 'porzucone' (abandoned), which
+      // was wrong for active games — e.g. a 26h game user is currently playing
+      // got auto-tagged as abandoned. New logic:
+      //   100% completion                    → 'ukonczone' (objective)
+      //   hours>0 + lastPlayed within 60 days → 'gram'      (active rotation)
+      //   everything else                    → 'planuje'   (neutral default)
+      // Never auto-tag 'porzucone' — that's a deliberate user choice ("I gave
+      // up on this"), shouldn't be inferred from data. With the 60-day recency
+      // filter, 'gram' won't get polluted by historical libraries (most games
+      // won't have a recent lastPlayed → they go to 'planuje', not 'gram').
+      const RECENT_DAYS = 60;
       let status, completedAt = null;
+      const lastPlayedTs = row.lastPlayed ? new Date(row.lastPlayed).getTime() : null;
+      const isRecent = lastPlayedTs && (Date.now() - lastPlayedTs) < RECENT_DAYS * 86400000;
       if (row.completionPct === 100) {
         status = 'ukonczone';
         completedAt = row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString();
-      } else if ((row.hours || 0) > 0) {
-        status = 'porzucone';
+      } else if ((row.hours || 0) > 0 && isRecent) {
+        status = 'gram';
       } else {
         status = 'planuje';
       }
@@ -3257,13 +3264,15 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                         {m.status === 'nomatch' && <span style={{color:G.org}}>{t(lang,'psnImportNoMatch')}</span>}
                         {m.status === 'dup' && <span style={{color:G.dim}}>{t(lang,'psnImportDup')}</span>}
                       </div>
-                      {/* v1.16.4 — Show predicted status (ukonczone/porzucone/planuje)
-                          so user knows where each game will land before committing. */}
+                      {/* v1.16.4 / v1.16.8 — Show predicted status before commit.
+                          Mirrors the logic in commit() — see status mapping comment there. */}
                       {m.status !== 'dup' && (() => {
+                        const lpTs = row.lastPlayed ? new Date(row.lastPlayed).getTime() : null;
+                        const recent = lpTs && (Date.now() - lpTs) < 60 * 86400000;
                         const predicted =
-                          row.completionPct === 100 ? { lbl: t(lang,'completed2'), color: G.grn, ico: '✓' }
-                          : (row.hours || 0) > 0    ? { lbl: t(lang,'abandoned'), color: G.org, ico: '⊘' }
-                          :                           { lbl: t(lang,'planning'),  color: G.blu, ico: '⏳' };
+                          row.completionPct === 100         ? { lbl: t(lang,'completed2'), color: G.grn, ico: '✓' }
+                          : ((row.hours || 0) > 0 && recent) ? { lbl: t(lang,'gram'),       color: G.org, ico: '🎮' }
+                          :                                    { lbl: t(lang,'planning'),   color: G.blu, ico: '⏳' };
                         return (
                           <div style={{fontSize:10,marginTop:3,color:predicted.color,fontWeight:700}}>
                             {predicted.ico} → {predicted.lbl}
