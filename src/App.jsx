@@ -2916,7 +2916,12 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
   // supports paste because steamcommunity.com page source isn't a downloadable file.
   const [fileName, setFileName] = useState('');
   const [fileError, setFileError] = useState('');
-  const [showPaste, setShowPaste] = useState(platform === 'steam'); // Steam defaults to paste; PSN/Xbox default to file
+  // v1.16.7 — On mobile, paste is the primary input path even for PSN/Xbox
+  // because Save Page As / file pickers are awkward in mobile browsers. Detect
+  // via UA and auto-expand the textarea. Steam always opens with paste expanded
+  // because steamcommunity.com page source isn't downloadable on any device.
+  const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || '');
+  const [showPaste, setShowPaste] = useState(platform === 'steam' || isMobile);
   const fileInputRef = useRef(null);
   const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB — generous cap (1000-game CSV ≈300KB; Steam page source ≈5-10MB)
 

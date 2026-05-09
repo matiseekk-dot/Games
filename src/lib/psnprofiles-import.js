@@ -59,11 +59,79 @@ function detectDelimiter(headerLine) {
 
 // Parse full CSV string into rows of fields. First non-empty line is the header.
 // Returns { header: string[], rows: string[][], delim: string }.
+// v1.16.7 — Find the best "table-like" line to use as header. Mobile users
+// pasting "Select All → Copy" from PSN-Profiles get the entire page content
+// including navigation, footer, etc. The actual games table is buried in the
+// middle. Scan first 100 lines for the one with the most consistent column
+// count (tabs/commas/etc.) — that's almost certainly the table header line.
+//
+// Algorithm: for each line in first 100, count delim occurrences. Find the
+// modal column count among lines that share it (≥3 lines with same count, ≥3
+// columns each). Pick the FIRST line matching that mode as the header — the
+// rest of those modal-count lines become data rows. Other lines (nav/footer)
+// are dropped.
+function findBestTableSection(lines) {
+  // Try each delim, pick one that yields the cleanest table
+  const DELIMS = ['\t', ',', ';'];
+  let best = null;
+  for (const delim of DELIMS) {
+    const sample = lines.slice(0, 100);
+    const counts = sample.map(l => {
+      // Count delim occurrences NOT inside quotes (rough — ok for this heuristic)
+      return (l.match(new RegExp(delim === '\t' ? '\\t' : `\\${delim}`, 'g')) || []).length;
+    });
+    // Find the modal count (most common count value, must be ≥2 = ≥3 columns)
+    const histogram = {};
+    counts.forEach((c, i) => {
+      if (c >= 2) {
+        if (!histogram[c]) histogram[c] = [];
+        histogram[c].push(i);
+      }
+    });
+    const modes = Object.entries(histogram).sort((a, b) => b[1].length - a[1].length);
+    if (modes.length === 0) continue;
+    const [modeColCount, indices] = modes[0];
+    if (indices.length < 3) continue;  // need ≥3 lines with same column count for table
+    // First index is header, rest are data
+    const headerIdx = indices[0];
+    const dataIdxs = indices.slice(1);
+    if (best === null || indices.length > best.indices.length) {
+      best = { delim, modeColCount: +modeColCount, indices, headerIdx, dataIdxs };
+    }
+  }
+  return best;
+}
+
 function parseCsv(text) {
   const cleaned = stripBOM(text);
   const lines = cleaned.split(/\r?\n/).filter(l => l.trim().length > 0);
   if (lines.length === 0) return { header: [], rows: [], delim: ',' };
-  const delim = detectDelimiter(lines[0]);
+
+  // Try strict mode first: line 0 IS the header (covers TA CSV / clean exports).
+  const strictDelim = detectDelimiter(lines[0]);
+  const strictCols = (lines[0].match(strictDelim === '\t' ? /\t/g : new RegExp(`\\${strictDelim}`,'g')) || []).length;
+  if (strictCols >= 1) {
+    const header = splitCsvLine(lines[0], strictDelim).map(h => h.toLowerCase());
+    const rows = lines.slice(1).map(l => splitCsvLine(l, strictDelim));
+    // If strict mode found a recognizable title column, use it
+    const hasTitleCol = header.some(h => /game|title|name|gra|tytuł|tytul|titulo|juego/.test(h));
+    if (hasTitleCol) {
+      return { header, rows, delim: strictDelim };
+    }
+  }
+
+  // v1.16.7 — Fuzzy fallback for noisy mobile pastes (Select-All-Copy from a
+  // rendered PSN-Profiles page includes nav/sidebar/footer noise). Find the
+  // table section by column-count consistency.
+  const best = findBestTableSection(lines);
+  if (best) {
+    const header = splitCsvLine(lines[best.headerIdx], best.delim).map(h => h.toLowerCase());
+    const rows = best.dataIdxs.map(i => splitCsvLine(lines[i], best.delim));
+    return { header, rows, delim: best.delim };
+  }
+
+  // Last fallback: original behavior (line 0 as header)
+  const delim = strictDelim;
   const header = splitCsvLine(lines[0], delim).map(h => h.toLowerCase());
   const rows = lines.slice(1).map(l => splitCsvLine(l, delim));
   return { header, rows, delim };

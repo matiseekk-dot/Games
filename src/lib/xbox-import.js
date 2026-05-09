@@ -61,14 +61,59 @@ function detectDelimiter(headerLine) {
   return best[1] > 0 ? best[0] : ',';
 }
 
+// v1.16.7 — Find a table section in noisy input (e.g. mobile Select-All-Copy
+// from a rendered TA page that includes nav/sidebar). Same algorithm as
+// psnprofiles-import.js — kept in sync deliberately.
+function findBestTableSection(lines) {
+  const DELIMS = ['\t', ',', ';'];
+  let best = null;
+  for (const delim of DELIMS) {
+    const sample = lines.slice(0, 100);
+    const counts = sample.map(l => (l.match(delim === '\t' ? /\t/g : new RegExp(`\\${delim}`,'g')) || []).length);
+    const histogram = {};
+    counts.forEach((c, i) => {
+      if (c >= 2) {
+        if (!histogram[c]) histogram[c] = [];
+        histogram[c].push(i);
+      }
+    });
+    const modes = Object.entries(histogram).sort((a, b) => b[1].length - a[1].length);
+    if (modes.length === 0) continue;
+    const [, indices] = modes[0];
+    if (indices.length < 3) continue;
+    if (best === null || indices.length > best.indices.length) {
+      best = { delim, indices, headerIdx: indices[0], dataIdxs: indices.slice(1) };
+    }
+  }
+  return best;
+}
+
 function parseCsv(text) {
   const cleaned = stripBOM(text);
   const lines = cleaned.split(/\r?\n/).filter(l => l.trim().length > 0);
   if (lines.length === 0) return { header: [], rows: [], delim: ',' };
-  const delim = detectDelimiter(lines[0]);
-  const header = splitCsvLine(lines[0], delim).map(h => h.toLowerCase());
-  const rows = lines.slice(1).map(l => splitCsvLine(l, delim));
-  return { header, rows, delim };
+
+  // Strict mode: line 0 is header, recognized title column present.
+  const strictDelim = detectDelimiter(lines[0]);
+  const header = splitCsvLine(lines[0], strictDelim).map(h => h.toLowerCase());
+  const hasTitleCol = header.some(h => /game|title|name|gra|tytuł|tytul|titulo|juego/.test(h));
+  if (hasTitleCol) {
+    const rows = lines.slice(1).map(l => splitCsvLine(l, strictDelim));
+    return { header, rows, delim: strictDelim };
+  }
+
+  // Fuzzy fallback: find table-like section in noisy input
+  const best = findBestTableSection(lines);
+  if (best) {
+    return {
+      header: splitCsvLine(lines[best.headerIdx], best.delim).map(h => h.toLowerCase()),
+      rows:   best.dataIdxs.map(i => splitCsvLine(lines[i], best.delim)),
+      delim:  best.delim,
+    };
+  }
+
+  // Last resort: original behavior
+  return { header, rows: lines.slice(1).map(l => splitCsvLine(l, strictDelim)), delim: strictDelim };
 }
 
 // Column aliases — TrueAchievements uses different casings + sometimes legacy
