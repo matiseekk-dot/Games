@@ -2716,50 +2716,45 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
-// v1.16.16 — Smart 5-tier status derivation. Adds "essentially completed"
-// detection: high completion + old date = user gave up on platinum/100%, treat
-// as completed. Works identically for PSN (completion% + date) and Xbox/TA
-// (completion% + hours + date) because the function is signal-agnostic.
+// v1.16.17 — Simplified status derivation. Previous version had so many
+// thresholds that Xbox imports (often missing lastPlayed) defaulted everything
+// to 'planuje'. New default: ANY progress (hours OR completion) → 'gram',
+// unless overridden by completion threshold or old-abandoned signal. Untouched
+// games (0+0) stay 'planuje'.
 //
-//   100% completion                    → 'ukonczone' (strict — platinum / all achievements)
-//   ≥80% completion + old (>90d)       → 'ukonczone' (essentially done — platinum hunt abandoned)
-//   recent (≤60d) activity             → 'gram' (currently playing)
-//   completion ≥ 30%                   → 'gram' (deep progress = active rotation)
-//   hours ≥ 10h                        → 'gram' (significant time invested)
-//   old (>180d) + has progress         → 'porzucone' (started but moved on)
-//   any progress, no clear signal      → 'planuje' (small/uncertain)
-//   no progress at all                 → 'planuje' (untouched)
+// Decision matrix (first match wins):
+//   100% completion                    → 'ukonczone' (strict, platinum)
+//   ≥95% completion                    → 'ukonczone' (essentially done — 1 trophy left)
+//   ≥80% completion + old (>90d)       → 'ukonczone' (gave up platinum hunt)
+//   no progress at all (0% + 0h)       → 'planuje' (untouched in library)
+//   old (>180d) + progress (>5%/>2h)   → 'porzucone' (clearly abandoned)
+//   any progress (c>0 OR h>0)          → 'gram' (default for "did play this")
+//   else                               → 'planuje' (no signals)
 //
-// The "≥80% + old" rule (v1.16.16) catches games like Peppa Pig (84% complete,
-// 16 days ago — wait that's recent so still gram) — better example: any game
-// where user reached e.g. 90% three months ago and clearly stopped pursuing
-// platinum. "Essentially completed" is a real category gamers use.
+// Key change: "any progress → gram" is the catch-all. Xbox games with hours but
+// no date now correctly land in 'gram' instead of 'planuje'. PSN games with
+// completion but no hours work the same way. User can manually move shelf'd
+// games to 'porzucone' via the click-cycle override.
 function deriveStatusFromSignals({ completionPct, hours, lastPlayed }) {
-  const RECENT_MS = 60 * 86400000;        // 2 months — "currently playing"
-  const ESSENTIALLY_OLD_MS = 90 * 86400000; // 3 months — "stopped pursuing platinum"
-  const VERY_OLD_MS = 180 * 86400000;     // 6 months — "long abandoned"
   const c = +completionPct || 0;
   const h = +hours || 0;
   const lpTs = lastPlayed ? new Date(lastPlayed).getTime() : null;
-  const isRecent = lpTs && (Date.now() - lpTs) < RECENT_MS;
-  const isEssentiallyOld = lpTs && (Date.now() - lpTs) > ESSENTIALLY_OLD_MS;
-  const isVeryOld = lpTs && (Date.now() - lpTs) > VERY_OLD_MS;
+  const daysAgo = lpTs ? (Date.now() - lpTs) / 86400000 : null;
 
-  // Strict completion (always wins)
+  // 1. Completed (3 ways)
   if (c === 100) return 'ukonczone';
-  // Smart "essentially completed" — high completion + old = user gave up on
-  // remaining trophies / achievements, considers game finished
-  if (c >= 80 && isEssentiallyOld) return 'ukonczone';
-  // Untouched
+  if (c >= 95) return 'ukonczone';                              // 95%+ regardless of date
+  if (c >= 80 && daysAgo !== null && daysAgo > 90) return 'ukonczone';
+
+  // 2. Untouched
   if (c === 0 && h === 0) return 'planuje';
-  // Currently playing
-  if (isRecent) return 'gram';
-  // Old + progress = abandoned
-  if (isVeryOld && (c > 5 || h > 2)) return 'porzucone';
-  // Deep progress = active rotation regardless of date
-  if (c >= 30) return 'gram';
-  if (h >= 10) return 'gram';
-  // Small uncertain progress
+
+  // 3. Old + progress = abandoned
+  if (daysAgo !== null && daysAgo > 180 && (c > 5 || h > 2)) return 'porzucone';
+
+  // 4. Default: any progress → currently active
+  if (c > 0 || h > 0) return 'gram';
+
   return 'planuje';
 }
 
@@ -3347,7 +3342,39 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
               </div>
             </div>
             <div style={{padding:'4px 0 6px',fontSize:14,fontWeight:700,color:G.blu,fontFamily:"'Orbitron',monospace"}}>{t(lang, k('PreviewTitle'),{n:parsed.count, gw:gamesWord(parsed.count,lang)})}</div>
-            <div style={{fontSize:11,color:G.dim,marginBottom:14,lineHeight:1.5}}>{t(lang, k('PreviewSub'))}</div>
+            <div style={{fontSize:11,color:G.dim,marginBottom:8,lineHeight:1.5}}>{t(lang, k('PreviewSub'))}</div>
+
+            {/* v1.16.17 — Status breakdown chip row. User immediately sees the
+                proportions before scrolling 300 rows. Counts include all rows
+                (selected + dups), based on derived status (overrides not applied
+                here for performance — would require recompute on every override). */}
+            {parsed.rows.length >= 5 && (() => {
+              const counts = { ukonczone: 0, gram: 0, porzucone: 0, planuje: 0 };
+              parsed.rows.forEach((row, i) => {
+                const ovr = statusOverrides[i];
+                const s = ovr || deriveStatusFromSignals({
+                  completionPct: row.completionPct,
+                  hours: row.hours,
+                  lastPlayed: row.lastPlayed,
+                });
+                if (counts[s] !== undefined) counts[s]++;
+              });
+              const items = [
+                { k:'ukonczone', n:counts.ukonczone, c:G.grn, ico:'✓', lbl:t(lang,'completed2') },
+                { k:'gram',      n:counts.gram,      c:G.org, ico:'🎮', lbl:t(lang,'gram')      },
+                { k:'porzucone', n:counts.porzucone, c:G.red, ico:'⊘', lbl:t(lang,'abandoned') },
+                { k:'planuje',   n:counts.planuje,   c:G.blu, ico:'⏳', lbl:t(lang,'planning')  },
+              ].filter(x => x.n > 0);
+              return (
+                <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:12}}>
+                  {items.map(item => (
+                    <div key={item.k} style={{padding:'4px 9px',background:`${item.c}1a`,border:`1px solid ${item.c}55`,borderRadius:14,fontSize:11,fontWeight:700,color:item.c,whiteSpace:'nowrap'}}>
+                      {item.ico} {item.n} {item.lbl}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
             <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:14}}>
               {parsed.rows.map((row, i) => {
                 const m = matches[i] || { status:'pending' };
