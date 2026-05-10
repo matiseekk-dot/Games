@@ -2716,37 +2716,51 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
-// v1.16.15 — Smart 4-tier status derivation using ALL available signals.
-// Replaces previous logic that mostly defaulted to 'gram' or 'planuje' and
-// rarely auto-assigned 'porzucone'. Now uses date+completion+hours together:
+// v1.16.16 — Smart 5-tier status derivation. Adds "essentially completed"
+// detection: high completion + old date = user gave up on platinum/100%, treat
+// as completed. Works identically for PSN (completion% + date) and Xbox/TA
+// (completion% + hours + date) because the function is signal-agnostic.
 //
-//   100% completion              → 'ukonczone' (objective: done)
-//   recent (≤60d) activity       → 'gram' (currently playing)
-//   completion ≥ 30% mid-range   → 'gram' (deep progress, active rotation)
-//   hours ≥ 10h mid-range        → 'gram' (significant time invested)
-//   old (>180d) + has progress   → 'porzucone' (started but moved on)
-//   any progress, no clear signal → 'planuje' (small/uncertain)
-//   no progress at all           → 'planuje' (untouched in library)
+//   100% completion                    → 'ukonczone' (strict — platinum / all achievements)
+//   ≥80% completion + old (>90d)       → 'ukonczone' (essentially done — platinum hunt abandoned)
+//   recent (≤60d) activity             → 'gram' (currently playing)
+//   completion ≥ 30%                   → 'gram' (deep progress = active rotation)
+//   hours ≥ 10h                        → 'gram' (significant time invested)
+//   old (>180d) + has progress         → 'porzucone' (started but moved on)
+//   any progress, no clear signal      → 'planuje' (small/uncertain)
+//   no progress at all                 → 'planuje' (untouched)
 //
-// "Old + progress" is the ONLY auto-porzucone path. User specifically asked for
-// this — they want games like "Days Gone 41% complete, last played 17 months
-// ago" to land in porzucone, not gram (current rotation) or planuje (untouched).
+// The "≥80% + old" rule (v1.16.16) catches games like Peppa Pig (84% complete,
+// 16 days ago — wait that's recent so still gram) — better example: any game
+// where user reached e.g. 90% three months ago and clearly stopped pursuing
+// platinum. "Essentially completed" is a real category gamers use.
 function deriveStatusFromSignals({ completionPct, hours, lastPlayed }) {
-  const RECENT_MS = 60 * 86400000;   // 2 months — "currently playing"
-  const OLD_MS = 180 * 86400000;     // 6 months — "long abandoned"
+  const RECENT_MS = 60 * 86400000;        // 2 months — "currently playing"
+  const ESSENTIALLY_OLD_MS = 90 * 86400000; // 3 months — "stopped pursuing platinum"
+  const VERY_OLD_MS = 180 * 86400000;     // 6 months — "long abandoned"
   const c = +completionPct || 0;
   const h = +hours || 0;
   const lpTs = lastPlayed ? new Date(lastPlayed).getTime() : null;
   const isRecent = lpTs && (Date.now() - lpTs) < RECENT_MS;
-  const isOld = lpTs && (Date.now() - lpTs) > OLD_MS;
+  const isEssentiallyOld = lpTs && (Date.now() - lpTs) > ESSENTIALLY_OLD_MS;
+  const isVeryOld = lpTs && (Date.now() - lpTs) > VERY_OLD_MS;
 
+  // Strict completion (always wins)
   if (c === 100) return 'ukonczone';
-  if (c === 0 && h === 0) return 'planuje';      // truly untouched
-  if (isRecent) return 'gram';                    // recent activity = active
-  if (isOld && (c > 5 || h > 2)) return 'porzucone';  // old + progress = abandoned
-  if (c >= 30) return 'gram';                     // deep into game
-  if (h >= 10) return 'gram';                     // significant play time
-  return 'planuje';                               // small progress, uncertain → planning
+  // Smart "essentially completed" — high completion + old = user gave up on
+  // remaining trophies / achievements, considers game finished
+  if (c >= 80 && isEssentiallyOld) return 'ukonczone';
+  // Untouched
+  if (c === 0 && h === 0) return 'planuje';
+  // Currently playing
+  if (isRecent) return 'gram';
+  // Old + progress = abandoned
+  if (isVeryOld && (c > 5 || h > 2)) return 'porzucone';
+  // Deep progress = active rotation regardless of date
+  if (c >= 30) return 'gram';
+  if (h >= 10) return 'gram';
+  // Small uncertain progress
+  return 'planuje';
 }
 
 // Wrapper for recategorize tool (matches stored game shape — no completionPct
@@ -2995,6 +3009,11 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
   // because steamcommunity.com page source isn't downloadable on any device.
   const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || '');
   const [showPaste, setShowPaste] = useState(platform === 'steam' || isMobile);
+  // v1.16.16 — Manual status override per row (option E). Map row index →
+  // status string. Click predicted-status badge in step 2 to cycle through
+  // the 4 statuses. commit() prefers the override; falls back to derive() if unset.
+  const [statusOverrides, setStatusOverrides] = useState({});
+  const STATUS_CYCLE = ['ukonczone', 'gram', 'porzucone', 'planuje'];
   const fileInputRef = useRef(null);
   const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB — generous cap (1000-game CSV ≈300KB; Steam page source ≈5-10MB)
 
@@ -3110,15 +3129,15 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
       if (!row || (m && m.status === 'dup')) continue;
       const rawg = m && m.rawg;
 
-      // v1.16.15 — Use shared deriveStatusFromSignals() (4-tier logic). See
-      // function comment for the full decision matrix. Key new behavior: old
-      // games (>6 months) with progress get auto-tagged 'porzucone' (per user
-      // request — these aren't in active rotation but aren't planning either).
-      const status = deriveStatusFromSignals({
+      // v1.16.15 / v1.16.16 — Manual override (option E) takes precedence.
+      // If user clicked the predicted-status badge in step 2, statusOverrides[i]
+      // holds their choice; otherwise fall back to deriveStatusFromSignals().
+      const derived = deriveStatusFromSignals({
         completionPct: row.completionPct,
         hours: row.hours,
         lastPlayed: row.lastPlayed,
       });
+      const status = statusOverrides[i] || derived;
       let completedAt = null;
       if (status === 'ukonczone') {
         completedAt = row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString();
@@ -3358,14 +3377,17 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                         {m.status === 'nomatch' && <span style={{color:G.org}}>{t(lang,'psnImportNoMatch')}</span>}
                         {m.status === 'dup' && <span style={{color:G.dim}}>{t(lang,'psnImportDup')}</span>}
                       </div>
-                      {/* v1.16.4 / v1.16.15 — Show predicted status before commit.
-                          Mirrors deriveStatusFromSignals() — all 4 statuses possible. */}
+                      {/* v1.16.4 / v1.16.15 / v1.16.16 — Predicted status before commit.
+                          Click cycles through 4 statuses (manual override, option E).
+                          Override stored per-index in statusOverrides; commit() reads it. */}
                       {m.status !== 'dup' && (() => {
-                        const status = deriveStatusFromSignals({
+                        const derived = deriveStatusFromSignals({
                           completionPct: row.completionPct,
                           hours: row.hours,
                           lastPlayed: row.lastPlayed,
                         });
+                        const status = statusOverrides[i] || derived;
+                        const isOverridden = statusOverrides[i] && statusOverrides[i] !== derived;
                         const meta = {
                           ukonczone: { lbl: t(lang,'completed2'), color: G.grn, ico: '✓' },
                           gram:      { lbl: t(lang,'gram'),       color: G.org, ico: '🎮' },
@@ -3373,8 +3395,17 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                           planuje:   { lbl: t(lang,'planning'),   color: G.blu, ico: '⏳' },
                         }[status];
                         return (
-                          <div style={{fontSize:10,marginTop:3,color:meta.color,fontWeight:700}}>
-                            {meta.ico} → {meta.lbl}
+                          <div
+                            onClick={(e) => {
+                              e.preventDefault(); e.stopPropagation();
+                              const cur = statusOverrides[i] || derived;
+                              const nextIdx = (STATUS_CYCLE.indexOf(cur) + 1) % STATUS_CYCLE.length;
+                              setStatusOverrides(prev => ({ ...prev, [i]: STATUS_CYCLE[nextIdx] }));
+                            }}
+                            style={{fontSize:10,marginTop:3,color:meta.color,fontWeight:700,cursor:'pointer',userSelect:'none',display:'inline-block',padding:'2px 6px',borderRadius:6,background:isOverridden?'rgba(255,255,255,0.06)':'transparent',border:isOverridden?`1px dashed ${meta.color}`:'1px dashed transparent'}}
+                            title={t(lang, 'importStatusCycleHint')}
+                          >
+                            {meta.ico} → {meta.lbl}{isOverridden ? ' ✎' : ''}
                           </div>
                         );
                       })()}

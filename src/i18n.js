@@ -471,6 +471,7 @@ const TRANSLATIONS = {
     // v1.16.4 — bulk select + predicted-status labels for import preview
     importSelectAll:"Zaznacz wszystkie",
     importSelectNone:"Odznacz wszystkie",
+    importStatusCycleHint:"Kliknij by zmienić status (cyklicznie)",
     abandoned:"Porzucone",
     planning:"Planuję",
     // v1.16.5 — Undo-import flow
@@ -1024,6 +1025,7 @@ const TRANSLATIONS = {
     importDebugCopied:"✓ Debug info copied",
     importSelectAll:"Select all",
     importSelectNone:"Deselect all",
+    importStatusCycleHint:"Tap to change status (cycles)",
     abandoned:"Abandoned",
     planning:"Planning",
     importUndoRowTitle:"🔙 Undo import",
@@ -1556,6 +1558,7 @@ const TRANSLATIONS = {
     importDebugCopied:"✓ Info debug copiada",
     importSelectAll:"Seleccionar todos",
     importSelectNone:"Deseleccionar todos",
+    importStatusCycleHint:"Pulsa para cambiar estado (cíclicamente)",
     abandoned:"Abandonados",
     planning:"Planeo jugar",
     importUndoRowTitle:"🔙 Deshacer importación",
