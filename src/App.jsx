@@ -33,6 +33,7 @@ import { makeDemoGames, hasDemoGames, removeDemoGames } from './lib/demo.js';
 import { parsePsnProfilesPaste } from './lib/psnprofiles-import.js';
 import { parseSteamPaste } from './lib/steam-import.js';
 import { parseXboxPaste } from './lib/xbox-import.js';
+import { parsePlaynitePaste } from './lib/playnite-import.js';
 import { buildRecommendations, recsCacheStats, recsCacheClear } from './lib/recommend.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
@@ -2781,7 +2782,7 @@ function recomputeImportStatus(g) {
   });
 }
 
-function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openImportUndo,openPrivacy,onWipeOpen}){
+function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openPlayniteImport,openImportUndo,openPrivacy,onWipeOpen}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   // v1.13.14 — Removed className='scr' wrapper. Settings is rendered INSIDE the
   // .bs-ovr's inner scroll div (with its own flex:1/overflow-y:auto/min-height:0).
@@ -2824,6 +2825,14 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='set-row' onClick={openImport}>
           <span className='set-row-ico'>⬇️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'importData')}</div><div className='set-row-desc'>{t(lang,'importDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
+        {/* v1.17.0 — Playnite import (RECOMMENDED — cleanest data, user already
+            categorized everything). Listed first because it's the best path
+            when available. */}
+        {typeof openPlayniteImport === 'function' && (
+          <div className='set-row' onClick={openPlayniteImport}>
+            <span className='set-row-ico'>🎯</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'playniteImportRowTitle')}</div><div className='set-row-desc'>{t(lang,'playniteImportRowDesc')}</div></div><span className='set-row-arrow'>›</span>
+          </div>
+        )}
         {/* v1.16.0 — PSN-Profiles paste import. Opens dedicated overlay; closes Settings
             implicitly because overlay sits on top with higher z-index.
             v1.16.1 — Steam (steamcommunity.com) + Xbox (trueachievements.com) paste flows
@@ -2875,7 +2884,7 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             one detectable batch — keeps Settings clean for users who never
             imported anything. */}
         {typeof openImportUndo === 'function' && (() => {
-          const hasTagged = games.some(g => g.importSource === 'psn' || g.importSource === 'steam' || g.importSource === 'xbox');
+          const hasTagged = games.some(g => g.importSource === 'psn' || g.importSource === 'steam' || g.importSource === 'xbox' || g.importSource === 'playnite');
           // Quick heuristic check — any addedAt cluster of 5+ games?
           const untagged = games.filter(g => !g.importSource && g.addedAt).map(g => new Date(g.addedAt).getTime()).sort((a,b)=>a-b);
           let hasCluster = false;
@@ -3049,9 +3058,10 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
 
   // v1.16.1 — Platform dispatch. Map prop to (i18n key prefix, parser fn, public help URL).
   const platformConfig = {
-    psn:   { keyPrefix: 'psnImport',   parser: parsePsnProfilesPaste, helpUrl: 'https://psnprofiles.com',     icon: '🎮' },
-    steam: { keyPrefix: 'steamImport', parser: parseSteamPaste,       helpUrl: 'https://steamcommunity.com',  icon: '⚙️' },
-    xbox:  { keyPrefix: 'xboxImport',  parser: parseXboxPaste,        helpUrl: 'https://trueachievements.com', icon: '🟢' },
+    psn:      { keyPrefix: 'psnImport',      parser: parsePsnProfilesPaste, helpUrl: 'https://psnprofiles.com',     icon: '🎮' },
+    steam:    { keyPrefix: 'steamImport',    parser: parseSteamPaste,       helpUrl: 'https://steamcommunity.com',  icon: '⚙️' },
+    xbox:     { keyPrefix: 'xboxImport',     parser: parseXboxPaste,        helpUrl: 'https://trueachievements.com', icon: '🟢' },
+    playnite: { keyPrefix: 'playniteImport', parser: parsePlaynitePaste,    helpUrl: 'https://playnite.link',        icon: '🎯' },
   }[platform] || null;
 
   // Helper to build i18n key for the active platform. Each platform has its own
@@ -3134,15 +3144,18 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
       if (!row || (m && m.status === 'dup')) continue;
       const rawg = m && m.rawg;
 
-      // v1.16.15 / v1.16.16 / v1.16.18 — Manual override takes precedence;
-      // otherwise derive from signals including RAWG's playtime estimate.
+      // v1.16.15 / v1.16.16 / v1.16.18 / v1.17.0 — Status priority:
+      //   1. Manual override (statusOverrides[i]) — user clicked status badge
+      //   2. Explicit status from parser (Playnite has user's CompletionStatus —
+      //      gold standard, beats heuristics)
+      //   3. Derived from signals (completion% / hours / lastPlayed / targetHours)
       const derived = deriveStatusFromSignals({
         completionPct: row.completionPct,
         hours: row.hours,
         lastPlayed: row.lastPlayed,
         targetHours: rawg?.playtime,
       });
-      const status = statusOverrides[i] || derived;
+      const status = statusOverrides[i] || row.explicitStatus || derived;
       let completedAt = null;
       if (status === 'ukonczone') {
         completedAt = row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString();
@@ -3362,7 +3375,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
               const counts = { ukonczone: 0, gram: 0, porzucone: 0, planuje: 0 };
               parsed.rows.forEach((row, i) => {
                 const ovr = statusOverrides[i];
-                const s = ovr || deriveStatusFromSignals({
+                const s = ovr || row.explicitStatus || deriveStatusFromSignals({
                   completionPct: row.completionPct,
                   hours: row.hours,
                   lastPlayed: row.lastPlayed,
@@ -3415,8 +3428,8 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                         {m.status === 'nomatch' && <span style={{color:G.org}}>{t(lang,'psnImportNoMatch')}</span>}
                         {m.status === 'dup' && <span style={{color:G.dim}}>{t(lang,'psnImportDup')}</span>}
                       </div>
-                      {/* v1.16.4 / v1.16.15 / v1.16.16 / v1.16.18 — Predicted status.
-                          Click cycles through 4 statuses (manual override). */}
+                      {/* v1.16.4 / v1.16.15 / v1.16.16 / v1.16.18 / v1.17.0 — Predicted status.
+                          Priority: override > explicit (Playnite) > derived. */}
                       {m.status !== 'dup' && (() => {
                         const derived = deriveStatusFromSignals({
                           completionPct: row.completionPct,
@@ -3424,7 +3437,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                           lastPlayed: row.lastPlayed,
                           targetHours: m.rawg?.playtime,
                         });
-                        const status = statusOverrides[i] || derived;
+                        const status = statusOverrides[i] || row.explicitStatus || derived;
                         const isOverridden = statusOverrides[i] && statusOverrides[i] !== derived;
                         const meta = {
                           ukonczone: { lbl: t(lang,'completed2'), color: G.grn, ico: '✓' },
@@ -3478,8 +3491,8 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
 // Each batch shows: source/icon, count, timestamp; user clicks "Remove N games"
 // to delete the batch atomically with confirmation.
 function ImportUndoOverlay({ games, onClose, onRemoveBatch, lang }){
-  // Group tagged games by importSource
-  const tagged = { psn: [], steam: [], xbox: [] };
+  // Group tagged games by importSource (v1.17.0 added playnite)
+  const tagged = { psn: [], steam: [], xbox: [], playnite: [] };
   for (const g of games) {
     if (g.importSource && tagged[g.importSource]) tagged[g.importSource].push(g);
   }
@@ -3505,9 +3518,10 @@ function ImportUndoOverlay({ games, onClose, onRemoveBatch, lang }){
 
   // Build display list — tagged batches first (one per platform), then heuristic
   const PLATFORM_META = {
-    psn:   { icon: '🎮', label: 'PSN-Profiles' },
-    steam: { icon: '⚙️', label: 'Steam' },
-    xbox:  { icon: '🟢', label: 'Xbox / TrueAchievements' },
+    psn:      { icon: '🎮', label: 'PSN-Profiles' },
+    steam:    { icon: '⚙️', label: 'Steam' },
+    xbox:     { icon: '🟢', label: 'Xbox / TrueAchievements' },
+    playnite: { icon: '🎯', label: 'Playnite' },
   };
   const batches = [];
   for (const [src, gs] of Object.entries(tagged)) {
@@ -3741,6 +3755,9 @@ export default function App(){
   const [psnImportOpen,setPsnImportOpen] = useState(false);
   const [steamImportOpen,setSteamImportOpen] = useState(false);
   const [xboxImportOpen,setXboxImportOpen] = useState(false);
+  // v1.17.0 — Playnite import (best path: cross-platform aggregator with
+  // user-curated CompletionStatus that maps 1:1 to our statuses).
+  const [playniteImportOpen,setPlayniteImportOpen] = useState(false);
   // v1.16.5 — Undo-import overlay (Settings → "Cofnij import")
   const [importUndoOpen,setImportUndoOpen] = useState(false);
   const [toast,setToast]       = useState(null);
@@ -4321,6 +4338,27 @@ export default function App(){
             setXboxImportOpen(false);
           }}
         />}
+        {/* v1.17.0 — Playnite import overlay. Best path because Playnite users
+            already categorized everything via CompletionStatus → no heuristics. */}
+        {playniteImportOpen && <PlatformImportOverlay
+          platform='playnite'
+          existingGames={games}
+          lang={lang}
+          onClose={()=>setPlayniteImportOpen(false)}
+          onCommit={(newGames)=>{
+            if(newGames && newGames.length){
+              const withIds = newGames.map(g => ({
+                ...EF, ...g,
+                id: uid(),
+                abbr: g.abbr || mkAbbr(g.title),
+                addedAt: new Date().toISOString(),
+              }));
+              setGames(prev => [...prev, ...withIds]);
+              flash(t(lang,'playniteImportSuccess',{n:withIds.length, gw:gamesWord(withIds.length,lang)}));
+            }
+            setPlayniteImportOpen(false);
+          }}
+        />}
         {/* v1.16.5 — Undo-import overlay. Removes a batch of games matched by
             importSource tag (post-1.16.5 imports) or addedAt clustering (legacy). */}
         {importUndoOpen && <ImportUndoOverlay
@@ -4509,7 +4547,7 @@ export default function App(){
                 padding-bottom max() floor so the last setting row clears the Android nav
                 bar even when env(safe-area-inset-bottom) is 0. */}
             <div style={{flex:1,minHeight:0,overflowY:'auto',WebkitOverflowScrolling:'touch',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)'}}>
-              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPsnImport={()=>{setOverlay(null);setPsnImportOpen(true);}} openSteamImport={()=>{setOverlay(null);setSteamImportOpen(true);}} openXboxImport={()=>{setOverlay(null);setXboxImportOpen(true);}} openImportUndo={()=>{setOverlay(null);setImportUndoOpen(true);}} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
+              <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPsnImport={()=>{setOverlay(null);setPsnImportOpen(true);}} openSteamImport={()=>{setOverlay(null);setSteamImportOpen(true);}} openXboxImport={()=>{setOverlay(null);setXboxImportOpen(true);}} openPlayniteImport={()=>{setOverlay(null);setPlayniteImportOpen(true);}} openImportUndo={()=>{setOverlay(null);setImportUndoOpen(true);}} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
               <div style={{padding:'0 16px 8px'}}>
                 <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
                 <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>
