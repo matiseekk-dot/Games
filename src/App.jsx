@@ -1432,6 +1432,64 @@ function Stats({games,lang}){
   }
   const decadeData = Object.entries(decades).sort((a, b) => +a[0] - +b[0]).map(([d, v]) => ({ n: d + 's', v }));
 
+  // v1.17.1 — Big-library storytelling stats. Designed for users with 200+
+  // game collections (post-Playnite import). All gated on data thresholds so
+  // small libraries don't see noise.
+
+  // Hero card: total hours → days/years context. "7000h ≈ 292 days non-stop OR
+  // 4.8 years at 4h/day". Helps users grasp the magnitude.
+  const totalDaysNonStop = hrs > 0 ? Math.round(hrs / 24) : 0;
+  const yearsAt4h = hrs > 0 ? +(hrs / (4 * 365)).toFixed(1) : 0;
+  const hrsPerGameAvg = games.length > 0 ? +(hrs / games.length).toFixed(1) : 0;
+
+  // Top 10 most-played games. The killer "where my time went" insight.
+  const topPlayed = [...games]
+    .filter(g => (+g.hours || 0) > 0)
+    .sort((a, b) => (+b.hours || 0) - (+a.hours || 0))
+    .slice(0, 10);
+
+  // Hours by Platform (vs game count) — reveals where time actually goes
+  const hoursByPlatform = {};
+  games.forEach(g => {
+    const h = +g.hours || 0;
+    if (h <= 0) return;
+    const p = g.platform || 'Other';
+    hoursByPlatform[p] = (hoursByPlatform[p] || 0) + h;
+  });
+  const platformHoursData = Object.entries(hoursByPlatform)
+    .sort((a, b) => b[1] - a[1])
+    .map(([n, v]) => ({ n, v: Math.round(v) }));
+
+  // Hours by Genre — true preferences (gData above is by COUNT)
+  const hoursByGenre = {};
+  games.forEach(g => {
+    const h = +g.hours || 0;
+    if (h <= 0 || !g.genre) return;
+    hoursByGenre[g.genre] = (hoursByGenre[g.genre] || 0) + h;
+  });
+  const genreHoursData = Object.entries(hoursByGenre)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([n, v]) => ({ n, v: Math.round(v) }));
+
+  // Backlog runway: at user's historical pace, how long to clear backlog?
+  // Uses average yearly hours from user's library spread (best estimate without
+  // knowing their actual play patterns).
+  const yearsActive = years.length >= 5
+    ? Math.max(1, new Date().getFullYear() - Math.min(...years))
+    : 1;
+  const yearlyHoursPace = hrs > 0 && yearsActive > 0 ? hrs / yearsActive : 0;
+  const backlogYears = backlogHours > 0 && yearlyHoursPace > 0
+    ? +(backlogHours / yearlyHoursPace).toFixed(1)
+    : 0;
+
+  // Quick wins: short backlog games (≤10h target). Actionable list of "you
+  // could finish these in a weekend".
+  const quickWins = backlogGames
+    .filter(g => +g.targetHours > 0 && +g.targetHours <= 10)
+    .sort((a, b) => (+a.targetHours || 0) - (+b.targetHours || 0))
+    .slice(0, 8);
+
   const kpis=[{l:t(lang,'gamesTotal'),v:games.length,c:G.blu},{l:t(lang,'completed2'),v:games.filter(g=>g.status==='ukonczone').length,c:G.grn},{l:t(lang,'hoursTotal'),v:fmtHours(hrs),c:G.pur},{l:t(lang,'avgRating'),v:avg,c:G.gld}];
   const sData=Object.entries(SM2).map(([k,m])=>({n:m.label,v:games.filter(g=>g.status===k).length,c:m.c})).filter(d=>d.v>0);
   const gMap={}; games.forEach(g=>{if(g.genre)gMap[g.genre]=(gMap[g.genre]||0)+1;});
@@ -1478,7 +1536,67 @@ function Stats({games,lang}){
         {subTabs.map(([k,l])=><button key={k} type='button' onClick={()=>setTab(k.trim())} style={{flex:1,minHeight:40,padding:'7px 2px',border:'none',borderRadius:8,background:tab===k.trim()?'rgba(0,212,255,.15)':'transparent',color:tab===k.trim()?G.blu:G.dim,fontFamily:"'Syne',sans-serif",fontSize:10,fontWeight:600,cursor:'pointer'}}>{l}</button>)}
       </div>
       {tab==='general'&&<>
+        {/* v1.17.1 — Hero card for big libraries (≥100 games). Frames total hours
+            in human time (days non-stop, years at a sane pace). The "wow" moment
+            when opening Stats — gives users a sense of magnitude. */}
+        {games.length >= 100 && hrs >= 100 && (
+          <div className='ccd' style={{padding:'18px 16px',background:`linear-gradient(135deg,${G.card},rgba(167,139,250,.08))`,marginBottom:14}}>
+            <div style={{fontSize:11,fontWeight:700,color:G.dim,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10}}>{t(lang,'libraryHero')}</div>
+            <div style={{display:'flex',gap:14,alignItems:'baseline',flexWrap:'wrap',marginBottom:10}}>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:32,fontWeight:900,color:G.pur,lineHeight:1}}>{fmtHours(hrs)}</div>
+                <div style={{fontSize:10,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase',marginTop:2}}>{t(lang,'hoursTotal')}</div>
+              </div>
+              <div style={{color:G.dim,fontSize:14}}>·</div>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.blu,lineHeight:1}}>{games.length}</div>
+                <div style={{fontSize:10,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase',marginTop:2}}>{t(lang,'gamesTotal')}</div>
+              </div>
+              <div style={{color:G.dim,fontSize:14}}>·</div>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.grn,lineHeight:1}}>{completedCnt}</div>
+                <div style={{fontSize:10,color:G.dim,letterSpacing:'.05em',textTransform:'uppercase',marginTop:2}}>{t(lang,'completed2')}</div>
+              </div>
+            </div>
+            <div style={{fontSize:12,color:G.txt,lineHeight:1.6,padding:'10px 12px',background:'rgba(167,139,250,.08)',borderRadius:8,border:`1px solid rgba(167,139,250,.2)`}}>
+              ≈ <strong style={{color:G.pur}}>{totalDaysNonStop}</strong> {t(lang,'heroDaysNonStop')} · <strong style={{color:G.pur}}>{yearsAt4h}</strong> {t(lang,'heroYearsAt4h')} · <strong style={{color:G.pur}}>{hrsPerGameAvg}h</strong> {t(lang,'heroAvgPerGame')}
+            </div>
+          </div>
+        )}
+
         <div className='kgd'>{kpis.map(k=><div key={k.l} className='kcd' style={{'--c':k.c}}><div className='kvl'>{k.v}</div><div className='klb'>{k.l}</div></div>)}</div>
+
+        {/* v1.17.1 — Top 10 most-played games. The killer "where my time went"
+            insight for big libraries. Visual list with covers + hours bar. */}
+        {topPlayed.length >= 5 && (
+          <div className='ccd' style={{padding:'14px 16px'}}>
+            <div className='ctl' style={{marginBottom:10}}>{t(lang,'topPlayedTitle')}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {(() => {
+                const maxH = +topPlayed[0]?.hours || 1;
+                return topPlayed.map((g, i) => {
+                  const gh = +g.hours || 0;
+                  const pct = Math.round((gh / maxH) * 100);
+                  return (
+                    <div key={g.id || i} style={{display:'flex',gap:8,alignItems:'center'}}>
+                      <div style={{fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,color:G.dim,width:18,textAlign:'right'}}>{i+1}.</div>
+                      {g.cover
+                        ? <div style={{width:24,height:32,borderRadius:4,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${g.cover})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
+                        : <div style={{width:24,height:32,borderRadius:4,background:G.card2,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,border:`1px solid ${G.bdr}`}}>🎮</div>}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:12,fontWeight:700,color:G.txt,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',marginBottom:3}}>{g.title}</div>
+                        <div style={{height:5,background:G.bdr,borderRadius:3,overflow:'hidden'}}>
+                          <div style={{height:'100%',width:`${pct}%`,background:`linear-gradient(90deg,${G.pur},${G.blu})`,borderRadius:3}}/>
+                        </div>
+                      </div>
+                      <div style={{fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,color:G.pur,whiteSpace:'nowrap',minWidth:50,textAlign:'right'}}>{Math.round(gh)}h</div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* v1.16.6 — Library completion gauge (single most insightful stat for big libraries).
             Big number + horizontal progress bar. Color shifts green→amber→red as rate drops.
@@ -1580,6 +1698,81 @@ function Stats({games,lang}){
           </div>
         )}
         {gData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'genreChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
+
+        {/* v1.17.1 — Hours by Platform. Reveals where time actually goes (not
+            just how many games per platform). PSN may have 200 games but PC
+            could have all the playtime. ≥2 platforms with hours required. */}
+        {platformHoursData.length >= 2 && (
+          <div className='ccd'>
+            <div className='ctl'>{t(lang,'platformHoursChart')}</div>
+            <ResponsiveContainer width='100%' height={140}>
+              <BarChart data={platformHoursData} barSize={26} margin={{top:4,left:0,right:0,bottom:4}}>
+                <XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:18,right:18}}/>
+                <YAxis hide/>
+                <Tooltip content={<CTip/>} formatter={(v) => [`${v}h`, '']}/>
+                <Bar dataKey='v' radius={[4,4,0,0]} fill={G.blu} fillOpacity={0.85}/>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* v1.17.1 — Hours by Genre. Different from gData (count) — this shows
+            true preferences. ≥3 genres with hours, ≥50 total game-hours required. */}
+        {genreHoursData.length >= 3 && hrs >= 50 && (
+          <div className='ccd'>
+            <div className='ctl'>{t(lang,'genreHoursChart')}</div>
+            <ResponsiveContainer width='100%' height={140}>
+              <BarChart data={genreHoursData} barSize={20} margin={{top:4,left:0,right:0,bottom:4}}>
+                <XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:14,right:14}}/>
+                <YAxis hide/>
+                <Tooltip content={<CTip/>} formatter={(v) => [`${v}h`, '']}/>
+                <Bar dataKey='v' radius={[4,4,0,0]}>
+                  {genreHoursData.map((_, i) => <Cell key={i} fill={`hsl(${(i * 38 + 270) % 360},75%,60%)`} fillOpacity={0.85}/>)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* v1.17.1 — Backlog Runway. "How long would it take to clear my backlog
+            at my current pace?" — actionable insight for big libraries.
+            Requires ≥30 backlog games + active gaming history (≥2 yearly hours). */}
+        {backlogGames.length >= 30 && yearlyHoursPace >= 2 && backlogYears > 0 && (
+          <div className='ccd' style={{padding:'14px 16px'}}>
+            <div className='ctl' style={{marginBottom:8}}>{t(lang,'backlogRunway')}</div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:28,fontWeight:900,color:backlogYears > 10 ? G.red : backlogYears > 5 ? G.org : G.blu,marginBottom:6}}>
+              {backlogYears} {backlogYears === 1 ? t(lang,'runwayYear') : t(lang,'runwayYears')}
+            </div>
+            <div style={{fontSize:11,color:G.dim,lineHeight:1.5}}>
+              {t(lang,'backlogRunwayDesc',{
+                hours: Math.round(backlogHours),
+                pace: Math.round(yearlyHoursPace),
+                games: backlogGames.length,
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* v1.17.1 — Quick Wins. Short backlog games (≤10h) — actionable
+            "you could finish these this weekend" list. ≥3 quick wins required. */}
+        {quickWins.length >= 3 && (
+          <div className='ccd' style={{padding:'14px 16px'}}>
+            <div className='ctl' style={{marginBottom:4}}>{t(lang,'quickWinsTitle')}</div>
+            <div style={{fontSize:11,color:G.dim,lineHeight:1.4,marginBottom:10}}>{t(lang,'quickWinsSubtitle')}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {quickWins.map((g, i) => (
+                <div key={g.id || i} style={{display:'flex',gap:8,alignItems:'center',padding:'6px 8px',background:G.bg,border:`1px solid ${G.bdr}`,borderRadius:6}}>
+                  {g.cover
+                    ? <div style={{width:20,height:28,borderRadius:3,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${g.cover})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
+                    : <div style={{width:20,height:28,borderRadius:3,background:G.card2,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,border:`1px solid ${G.bdr}`}}>🎮</div>}
+                  <div style={{flex:1,minWidth:0,fontSize:12,color:G.txt,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{g.title}</div>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,color:G.grn,whiteSpace:'nowrap'}}>~{g.targetHours}h</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {rated.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'ratingChart')}</div><ResponsiveContainer width='100%' height={140}><BarChart data={buckets} barSize={20} margin={{top:4,left:0,right:0,bottom:4}}><CartesianGrid vertical={false} stroke={G.bdr} strokeDasharray='3 3'/><XAxis dataKey='n' tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false} padding={{left:20,right:20}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} minPointSize={3}>{buckets.map((b,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={b.v===0?0.2:0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>}
       </>}
       {tab==='time'&&(()=>{
