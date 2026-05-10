@@ -222,6 +222,28 @@ RANK
       expect(r.rows[2].platform).toBe('PS4');
       expect(r.rows[3].platform).toBe('PS5');  // PS5PC → PS5 (first platform)
     });
+
+    // v1.16.15 — Verify the parser still successfully detects + extracts data
+    // (status derivation is in App.jsx, tested below in deriveStatusFromSignals).
+    it('handles unplayed game (no date in block)', () => {
+      const onlyUnplayed = `Some Game
+0 of 30 Trophies
+PS5
+F
+RANK
+0
+0
+0
+0%
+
+5.00%
+\t`;
+      const r = parsePsnProfilesPaste(onlyUnplayed + onlyUnplayed.replace('Some Game', 'Another') + onlyUnplayed.replace('Some Game', 'Third'));
+      expect(r.format).toBe('psn-native');
+      expect(r.count).toBe(3);
+      expect(r.rows[0].lastPlayed).toBe(null);
+      expect(r.rows[0].completionPct).toBe(0);
+    });
   });
 
   describe('partial / dirty input', () => {

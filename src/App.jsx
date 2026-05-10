@@ -2716,22 +2716,50 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
-// v1.16.13/v1.16.14 — Recompute status for an imported game using current logic
-// (mirrors the mapping in PlatformImportOverlay.commit()). Used by Settings →
-// "Recategorize imports". We don't store completionPct on the game (only at
-// import time), so this version infers from g.hours and g.lastPlayed only —
-// less powerful than commit() but still much better than the v1.16.13 version
-// which wrongly defaulted everything-without-recent-date to 'planuje'.
+// v1.16.15 — Smart 4-tier status derivation using ALL available signals.
+// Replaces previous logic that mostly defaulted to 'gram' or 'planuje' and
+// rarely auto-assigned 'porzucone'. Now uses date+completion+hours together:
+//
+//   100% completion              → 'ukonczone' (objective: done)
+//   recent (≤60d) activity       → 'gram' (currently playing)
+//   completion ≥ 30% mid-range   → 'gram' (deep progress, active rotation)
+//   hours ≥ 10h mid-range        → 'gram' (significant time invested)
+//   old (>180d) + has progress   → 'porzucone' (started but moved on)
+//   any progress, no clear signal → 'planuje' (small/uncertain)
+//   no progress at all           → 'planuje' (untouched in library)
+//
+// "Old + progress" is the ONLY auto-porzucone path. User specifically asked for
+// this — they want games like "Days Gone 41% complete, last played 17 months
+// ago" to land in porzucone, not gram (current rotation) or planuje (untouched).
+function deriveStatusFromSignals({ completionPct, hours, lastPlayed }) {
+  const RECENT_MS = 60 * 86400000;   // 2 months — "currently playing"
+  const OLD_MS = 180 * 86400000;     // 6 months — "long abandoned"
+  const c = +completionPct || 0;
+  const h = +hours || 0;
+  const lpTs = lastPlayed ? new Date(lastPlayed).getTime() : null;
+  const isRecent = lpTs && (Date.now() - lpTs) < RECENT_MS;
+  const isOld = lpTs && (Date.now() - lpTs) > OLD_MS;
+
+  if (c === 100) return 'ukonczone';
+  if (c === 0 && h === 0) return 'planuje';      // truly untouched
+  if (isRecent) return 'gram';                    // recent activity = active
+  if (isOld && (c > 5 || h > 2)) return 'porzucone';  // old + progress = abandoned
+  if (c >= 30) return 'gram';                     // deep into game
+  if (h >= 10) return 'gram';                     // significant play time
+  return 'planuje';                               // small progress, uncertain → planning
+}
+
+// Wrapper for recategorize tool (matches stored game shape — no completionPct
+// available since we don't persist it). Falls back to status-based hints.
 function recomputeImportStatus(g) {
-  const RECENT_DAYS = 60;
   if (g.status === 'ukonczone') return g.status;  // don't touch completed
-  const lastPlayedTs = g.lastPlayed ? new Date(g.lastPlayed).getTime() : null;
-  const isRecent = lastPlayedTs && (Date.now() - lastPlayedTs) < RECENT_DAYS * 86400000;
-  const hours = g.hours || 0;
-  if (isRecent && hours > 0) return 'gram';
-  if (hours >= 5) return 'gram';   // significant play time = invested
-  if (hours > 0) return 'gram';    // any time played = active (user can manually move to 'porzucone')
-  return 'planuje';                 // never touched
+  // Synthesize a completion hint: platinum=true → 100%, else unknown (0)
+  const completionPct = g.platinum ? 100 : 0;
+  return deriveStatusFromSignals({
+    completionPct,
+    hours: g.hours,
+    lastPlayed: g.lastPlayed,
+  });
 }
 
 function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openImportUndo,openPrivacy,onWipeOpen}){
@@ -3082,34 +3110,18 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
       if (!row || (m && m.status === 'dup')) continue;
       const rawg = m && m.rawg;
 
-      // v1.16.14 — Status mapping uses 3 signals: completion %, hours, lastPlayed.
-      // PSN exports give completion+date but no hours; Xbox/TA exports often give
-      // hours+completion but no date. Need logic that works for both.
-      //   100% completion                              → 'ukonczone' (objective)
-      //   recent (≤60d) AND (hours>0 OR completion>0)  → 'gram' (active rotation)
-      //   completion ≥ 20% (deep into game)            → 'gram' (in active rotation
-      //                                                  even without recent date)
-      //   hours ≥ 5h                                   → 'gram' (significant play
-      //                                                  time = invested in game)
-      //   else                                         → 'planuje' (untouched / barely)
-      // Never auto-tag 'porzucone' — that's user's deliberate "I gave up" choice.
-      const RECENT_DAYS = 60;
-      let status, completedAt = null;
-      const lastPlayedTs = row.lastPlayed ? new Date(row.lastPlayed).getTime() : null;
-      const isRecent = lastPlayedTs && (Date.now() - lastPlayedTs) < RECENT_DAYS * 86400000;
-      const completionPct = row.completionPct || 0;
-      const hours = row.hours || 0;
-      if (completionPct === 100) {
-        status = 'ukonczone';
+      // v1.16.15 — Use shared deriveStatusFromSignals() (4-tier logic). See
+      // function comment for the full decision matrix. Key new behavior: old
+      // games (>6 months) with progress get auto-tagged 'porzucone' (per user
+      // request — these aren't in active rotation but aren't planning either).
+      const status = deriveStatusFromSignals({
+        completionPct: row.completionPct,
+        hours: row.hours,
+        lastPlayed: row.lastPlayed,
+      });
+      let completedAt = null;
+      if (status === 'ukonczone') {
         completedAt = row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString();
-      } else if (isRecent && (hours > 0 || completionPct > 0)) {
-        status = 'gram';
-      } else if (completionPct >= 20) {
-        status = 'gram';  // deep into game = active rotation regardless of date
-      } else if (hours >= 5) {
-        status = 'gram';  // 5+ hours = invested
-      } else {
-        status = 'planuje';
       }
 
       // v1.16.4 — Detect platinum/full completion from trophy/achievement strings.
@@ -3346,18 +3358,23 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                         {m.status === 'nomatch' && <span style={{color:G.org}}>{t(lang,'psnImportNoMatch')}</span>}
                         {m.status === 'dup' && <span style={{color:G.dim}}>{t(lang,'psnImportDup')}</span>}
                       </div>
-                      {/* v1.16.4 / v1.16.8 — Show predicted status before commit.
-                          Mirrors the logic in commit() — see status mapping comment there. */}
+                      {/* v1.16.4 / v1.16.15 — Show predicted status before commit.
+                          Mirrors deriveStatusFromSignals() — all 4 statuses possible. */}
                       {m.status !== 'dup' && (() => {
-                        const lpTs = row.lastPlayed ? new Date(row.lastPlayed).getTime() : null;
-                        const recent = lpTs && (Date.now() - lpTs) < 60 * 86400000;
-                        const predicted =
-                          row.completionPct === 100         ? { lbl: t(lang,'completed2'), color: G.grn, ico: '✓' }
-                          : ((row.hours || 0) > 0 && recent) ? { lbl: t(lang,'gram'),       color: G.org, ico: '🎮' }
-                          :                                    { lbl: t(lang,'planning'),   color: G.blu, ico: '⏳' };
+                        const status = deriveStatusFromSignals({
+                          completionPct: row.completionPct,
+                          hours: row.hours,
+                          lastPlayed: row.lastPlayed,
+                        });
+                        const meta = {
+                          ukonczone: { lbl: t(lang,'completed2'), color: G.grn, ico: '✓' },
+                          gram:      { lbl: t(lang,'gram'),       color: G.org, ico: '🎮' },
+                          porzucone: { lbl: t(lang,'abandoned'),  color: G.red, ico: '⊘' },
+                          planuje:   { lbl: t(lang,'planning'),   color: G.blu, ico: '⏳' },
+                        }[status];
                         return (
-                          <div style={{fontSize:10,marginTop:3,color:predicted.color,fontWeight:700}}>
-                            {predicted.ico} → {predicted.lbl}
+                          <div style={{fontSize:10,marginTop:3,color:meta.color,fontWeight:700}}>
+                            {meta.ico} → {meta.lbl}
                           </div>
                         );
                       })()}
