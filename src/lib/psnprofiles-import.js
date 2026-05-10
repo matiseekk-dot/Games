@@ -390,6 +390,103 @@ function cellText(td) {
   return td.textContent.replace(/\s+/g, ' ').trim();
 }
 
+// v1.16.14 — Dedicated parser for PSN-Profiles "MyGameCollection" export format.
+// This is the format users get when they Select-All-Copy on the Games page or
+// download the .csv export — it's NOT comma-separated, it's a multi-line block
+// per game with tab characters between games. Format:
+//
+//   Crimson Desert            ← title
+//   2 of 35 Trophies          ← trophies fraction (anchor for game block)
+//   3rd May 2026              ← last activity date (OPTIONAL — missing for unplayed)
+//   PS5                       ← platform string (PS5, PS4, PS5PC, PS5VR, etc.)
+//   E                         ← rank letter (A-F)
+//   RANK                      ← literal text
+//   0                         ← gold trophies earned
+//   0                         ← silver trophies earned
+//   2                         ← bronze trophies earned
+//   3%                        ← personal completion %
+//                             ← (empty line)
+//   2.42%                     ← global rarity %
+//   \t                        ← tab separator between games
+//
+// We anchor on the "X of Y Trophies" line — that's exactly one per game and
+// gives us trophy fraction. Title is the previous line, rest is forward-scanned.
+function parsePsnNativeFormat(text) {
+  const lines = text.split(/\r?\n/);  // keep empties for structure
+  const games = [];
+  for (let i = 1; i < lines.length; i++) {  // start at 1 because we read prev line for title
+    const trim = lines[i].trim();
+    const trophyMatch = /^(\d+)\s+of\s+(\d+)\s+Trophies$/i.exec(trim);
+    if (!trophyMatch) continue;
+
+    const earned = parseInt(trophyMatch[1], 10);
+    const total = parseInt(trophyMatch[2], 10);
+    const title = lines[i - 1].trim();
+    if (!title || title.length < 1 || title.length > 200) continue;
+    if (/^\d+(\.\d+)?%?$/.test(title)) continue;  // previous line was a number, not title
+
+    // Forward-scan for date / platform / completion %
+    let date = null;
+    let platform = 'PS5';
+    let completionPct = null;
+    let scannedLines = 0;
+    const MAX_SCAN = 15;  // each game block is ~12 lines; cap to avoid bleeding into next
+
+    for (let j = i + 1; j < lines.length && scannedLines < MAX_SCAN; j++, scannedLines++) {
+      const line = lines[j].trim();
+      if (!line) continue;
+      // Date in "3rd May 2026" / "1st January 2025" format
+      if (!date && /^\d{1,2}(st|nd|rd|th)?\s+[A-Za-z]+\s+\d{4}$/i.test(line)) {
+        date = line;
+        continue;
+      }
+      // Platform string
+      if (platform === 'PS5' && /^(PS[1-5][\w/]*|PSP|PS\s?Vita|PSN)/i.test(line)) {
+        platform = line;
+        continue;
+      }
+      // Completion % (single integer with %, NOT decimal — that's the rarity stat)
+      if (completionPct === null && /^(\d+)%$/.test(line)) {
+        completionPct = parseInt(/^(\d+)/.exec(line)[1], 10);
+        // After completion %, we usually hit empty line + rarity %; we have what we need.
+        break;
+      }
+    }
+
+    games.push({
+      title,
+      platform: normalizePlatform(platform),
+      hours: 0,  // PSN-Profiles export doesn't include hours played
+      completionPct,
+      lastPlayed: date ? parsePsnDate(date) : null,
+      trophies: `${earned}/${total}`,
+      raw: { source: 'psn-native', earned, total },
+    });
+  }
+  return games;
+}
+
+// "3rd May 2026" → "2026-05-03T00:00:00.000Z"
+function parsePsnDate(str) {
+  const m = /(\d{1,2})(st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})/i.exec(str);
+  if (!m) return null;
+  const day = parseInt(m[1], 10);
+  const monthName = m[3].toLowerCase();
+  const year = parseInt(m[4], 10);
+  const months = {
+    january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
+    july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
+    // Polish month names (PSN-Profiles localized export)
+    styczeń: 0, styczen: 0, luty: 1, marzec: 2, kwiecień: 3, kwiecien: 3,
+    maj: 4, czerwiec: 5, lipiec: 6, sierpień: 7, sierpien: 7, wrzesień: 8, wrzesien: 8,
+    październik: 9, pazdziernik: 9, listopad: 10, grudzień: 11, grudzien: 11,
+  };
+  const month = months[monthName];
+  if (month === undefined) return null;
+  try { return new Date(Date.UTC(year, month, day)).toISOString(); }
+  catch { return null; }
+}
+
 function parseHtmlTable(html) {
   if (typeof DOMParser === 'undefined') return null;
   try {
@@ -445,6 +542,17 @@ export function parsePsnProfilesPaste(text) {
 
   let parsed = null;
   let format = 'unknown';
+
+  // v1.16.14 — 0. Detect PSN-Profiles native multi-line export (the actual format
+  // users get from .csv export or Select-All-Copy). Look for "X of Y Trophies"
+  // pattern — if we see ≥3 of those, it's the native format.
+  const trophyAnchorCount = (trimmed.match(/^\d+\s+of\s+\d+\s+Trophies$/gim) || []).length;
+  if (trophyAnchorCount >= 3) {
+    const games = parsePsnNativeFormat(trimmed);
+    if (games.length >= 3) {
+      return { format: 'psn-native', count: games.length, rows: games };
+    }
+  }
 
   // 1. Try JSON (PSN-Profiles doesn't expose this today, but future-proof)
   if (trimmed.startsWith('[') || trimmed.startsWith('{')) {

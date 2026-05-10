@@ -126,6 +126,104 @@ describe('parsePsnProfilesPaste', () => {
     });
   });
 
+  // v1.16.14 — PSN-Profiles native MyGameCollection export format (multi-line
+  // per game, separated by tabs). User's actual paste from psnprofiles.com.
+  describe('PSN-Profiles native multi-line export format', () => {
+    const REAL_PSN_PASTE = `Crimson Desert
+2 of 35 Trophies
+3rd May 2026
+PS5
+E
+RANK
+0
+0
+2
+3%
+
+2.42%
+\t
+Peppa Pig: World Adventures
+9 of 13 Trophies
+24th April 2026
+PS5
+C
+RANK
+9
+0
+0
+84%
+
+73.15%
+\t
+Car Mechanic Simulator
+0 of 37 Trophies
+PS4
+F
+RANK
+0
+0
+0
+0%
+
+2.03%
+\t
+Ghost of Tsushima
+32 of 77 Trophies
+17th February 2026
+PS5PC
+C
+RANK
+1
+4
+27
+37%
+
+40.25%
+2.94%
+\t`;
+
+    it('detects native format and parses each game block', () => {
+      const r = parsePsnProfilesPaste(REAL_PSN_PASTE);
+      expect(r.format).toBe('psn-native');
+      expect(r.count).toBe(4);
+      expect(r.rows.map(g => g.title)).toEqual([
+        'Crimson Desert', 'Peppa Pig: World Adventures',
+        'Car Mechanic Simulator', 'Ghost of Tsushima',
+      ]);
+    });
+
+    it('parses trophy fractions correctly', () => {
+      const r = parsePsnProfilesPaste(REAL_PSN_PASTE);
+      expect(r.rows[0].trophies).toBe('2/35');
+      expect(r.rows[1].trophies).toBe('9/13');
+      expect(r.rows[2].trophies).toBe('0/37');
+      expect(r.rows[3].trophies).toBe('32/77');
+    });
+
+    it('parses completion %', () => {
+      const r = parsePsnProfilesPaste(REAL_PSN_PASTE);
+      expect(r.rows[0].completionPct).toBe(3);
+      expect(r.rows[1].completionPct).toBe(84);
+      expect(r.rows[2].completionPct).toBe(0);
+      expect(r.rows[3].completionPct).toBe(37);
+    });
+
+    it('parses dates "3rd May 2026" → ISO', () => {
+      const r = parsePsnProfilesPaste(REAL_PSN_PASTE);
+      expect(r.rows[0].lastPlayed).toMatch(/^2026-05-03/);
+      expect(r.rows[1].lastPlayed).toMatch(/^2026-04-24/);
+      expect(r.rows[2].lastPlayed).toBe(null);  // unplayed game has no date
+      expect(r.rows[3].lastPlayed).toMatch(/^2026-02-17/);
+    });
+
+    it('normalizes platform variants', () => {
+      const r = parsePsnProfilesPaste(REAL_PSN_PASTE);
+      expect(r.rows[0].platform).toBe('PS5');
+      expect(r.rows[2].platform).toBe('PS4');
+      expect(r.rows[3].platform).toBe('PS5');  // PS5PC → PS5 (first platform)
+    });
+  });
+
   describe('partial / dirty input', () => {
     it('skips rows without title', () => {
       const csv = 'Title,Hours\n"A","10"\n,"5"\n"C","8"';

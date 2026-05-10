@@ -2716,20 +2716,22 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
-// v1.16.13 — Recompute status for an imported game using the CURRENT logic
-// (matches PlatformImportOverlay.commit()). Used by the "Recategorize imports"
-// settings tool to fix games imported with older versions that used different
-// status-mapping rules (e.g. v1.16.4-1.16.7 mapped hours>0 → 'porzucone' which
-// users found too aggressive).
+// v1.16.13/v1.16.14 — Recompute status for an imported game using current logic
+// (mirrors the mapping in PlatformImportOverlay.commit()). Used by Settings →
+// "Recategorize imports". We don't store completionPct on the game (only at
+// import time), so this version infers from g.hours and g.lastPlayed only —
+// less powerful than commit() but still much better than the v1.16.13 version
+// which wrongly defaulted everything-without-recent-date to 'planuje'.
 function recomputeImportStatus(g) {
   const RECENT_DAYS = 60;
+  if (g.status === 'ukonczone') return g.status;  // don't touch completed
   const lastPlayedTs = g.lastPlayed ? new Date(g.lastPlayed).getTime() : null;
   const isRecent = lastPlayedTs && (Date.now() - lastPlayedTs) < RECENT_DAYS * 86400000;
-  // We don't have completionPct on the stored game (only at import time), so
-  // we infer: status='ukonczone' games stay; non-100% games get re-mapped.
-  if (g.status === 'ukonczone') return g.status;  // don't touch completed
-  if ((g.hours || 0) > 0 && isRecent) return 'gram';
-  return 'planuje';
+  const hours = g.hours || 0;
+  if (isRecent && hours > 0) return 'gram';
+  if (hours >= 5) return 'gram';   // significant play time = invested
+  if (hours > 0) return 'gram';    // any time played = active (user can manually move to 'porzucone')
+  return 'planuje';                 // never touched
 }
 
 function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openImportUndo,openPrivacy,onWipeOpen}){
@@ -3080,26 +3082,32 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
       if (!row || (m && m.status === 'dup')) continue;
       const rawg = m && m.rawg;
 
-      // v1.16.8 — Status mapping uses lastPlayed as a signal, not just hours.
-      // Previous logic put any hours>0 game into 'porzucone' (abandoned), which
-      // was wrong for active games — e.g. a 26h game user is currently playing
-      // got auto-tagged as abandoned. New logic:
-      //   100% completion                    → 'ukonczone' (objective)
-      //   hours>0 + lastPlayed within 60 days → 'gram'      (active rotation)
-      //   everything else                    → 'planuje'   (neutral default)
-      // Never auto-tag 'porzucone' — that's a deliberate user choice ("I gave
-      // up on this"), shouldn't be inferred from data. With the 60-day recency
-      // filter, 'gram' won't get polluted by historical libraries (most games
-      // won't have a recent lastPlayed → they go to 'planuje', not 'gram').
+      // v1.16.14 — Status mapping uses 3 signals: completion %, hours, lastPlayed.
+      // PSN exports give completion+date but no hours; Xbox/TA exports often give
+      // hours+completion but no date. Need logic that works for both.
+      //   100% completion                              → 'ukonczone' (objective)
+      //   recent (≤60d) AND (hours>0 OR completion>0)  → 'gram' (active rotation)
+      //   completion ≥ 20% (deep into game)            → 'gram' (in active rotation
+      //                                                  even without recent date)
+      //   hours ≥ 5h                                   → 'gram' (significant play
+      //                                                  time = invested in game)
+      //   else                                         → 'planuje' (untouched / barely)
+      // Never auto-tag 'porzucone' — that's user's deliberate "I gave up" choice.
       const RECENT_DAYS = 60;
       let status, completedAt = null;
       const lastPlayedTs = row.lastPlayed ? new Date(row.lastPlayed).getTime() : null;
       const isRecent = lastPlayedTs && (Date.now() - lastPlayedTs) < RECENT_DAYS * 86400000;
-      if (row.completionPct === 100) {
+      const completionPct = row.completionPct || 0;
+      const hours = row.hours || 0;
+      if (completionPct === 100) {
         status = 'ukonczone';
         completedAt = row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString();
-      } else if ((row.hours || 0) > 0 && isRecent) {
+      } else if (isRecent && (hours > 0 || completionPct > 0)) {
         status = 'gram';
+      } else if (completionPct >= 20) {
+        status = 'gram';  // deep into game = active rotation regardless of date
+      } else if (hours >= 5) {
+        status = 'gram';  // 5+ hours = invested
       } else {
         status = 'planuje';
       }
