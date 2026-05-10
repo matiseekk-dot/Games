@@ -2716,6 +2716,22 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
+// v1.16.13 — Recompute status for an imported game using the CURRENT logic
+// (matches PlatformImportOverlay.commit()). Used by the "Recategorize imports"
+// settings tool to fix games imported with older versions that used different
+// status-mapping rules (e.g. v1.16.4-1.16.7 mapped hours>0 → 'porzucone' which
+// users found too aggressive).
+function recomputeImportStatus(g) {
+  const RECENT_DAYS = 60;
+  const lastPlayedTs = g.lastPlayed ? new Date(g.lastPlayed).getTime() : null;
+  const isRecent = lastPlayedTs && (Date.now() - lastPlayedTs) < RECENT_DAYS * 86400000;
+  // We don't have completionPct on the stored game (only at import time), so
+  // we infer: status='ukonczone' games stay; non-100% games get re-mapped.
+  if (g.status === 'ukonczone') return g.status;  // don't touch completed
+  if ((g.hours || 0) > 0 && isRecent) return 'gram';
+  return 'planuje';
+}
+
 function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openImportUndo,openPrivacy,onWipeOpen}){
   // importRef removed in v1.2.0 — import now opens via ImportModal
   // v1.13.14 — Removed className='scr' wrapper. Settings is rendered INSIDE the
@@ -2778,6 +2794,33 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             <span className='set-row-ico'>🟢</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'xboxImportRowTitle')}</div><div className='set-row-desc'>{t(lang,'xboxImportRowDesc')}</div></div><span className='set-row-arrow'>›</span>
           </div>
         )}
+        {/* v1.16.13 — Recategorize imported games using current status logic.
+            Only renders if there are imports tagged with importSource AND at
+            least one of them has a status that the current logic wouldn't
+            assign (e.g. 'porzucone' — never auto-assigned anymore). One-shot
+            cleanup for users who imported with older versions. */}
+        {(() => {
+          const importedGames = games.filter(g => g.importSource);
+          const stale = importedGames.filter(g => {
+            const want = recomputeImportStatus(g);
+            return g.status !== want && g.status !== 'ukonczone';
+          });
+          if (stale.length === 0) return null;
+          return (
+            <div className='set-row' onClick={()=>{
+              if (window.confirm(t(lang,'recategorizeConfirm',{n:stale.length}))) {
+                const staleIds = new Set(stale.map(g => g.id));
+                setGames(prev => prev.map(g => staleIds.has(g.id)
+                  ? { ...g, status: recomputeImportStatus(g) }
+                  : g
+                ));
+                flash(t(lang,'recategorizeDone',{n:stale.length}));
+              }
+            }}>
+              <span className='set-row-ico'>🔄</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'recategorizeRowTitle')}</div><div className='set-row-desc'>{t(lang,'recategorizeRowDesc',{n:stale.length})}</div></div><span className='set-row-arrow'>›</span>
+            </div>
+          );
+        })()}
         {/* v1.16.5 — Undo a specific import batch (tagged by importSource OR
             detected via addedAt clustering). Only renders if there's at least
             one detectable batch — keeps Settings clean for users who never
