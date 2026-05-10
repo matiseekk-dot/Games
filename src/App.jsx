@@ -2716,35 +2716,42 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
-// v1.16.17 — Simplified status derivation. Previous version had so many
-// thresholds that Xbox imports (often missing lastPlayed) defaulted everything
-// to 'planuje'. New default: ANY progress (hours OR completion) → 'gram',
-// unless overridden by completion threshold or old-abandoned signal. Untouched
-// games (0+0) stay 'planuje'.
+// v1.16.18 — Status derivation now also uses targetHours (RAWG playtime
+// estimate) as a "completed main story" signal. If user played significantly
+// more than RAWG's estimate, they probably finished — even without 100%
+// achievements. This catches Xbox/Steam users who beat games but never went
+// for completion %, and games where the main story ≠ achievement hunt.
 //
 // Decision matrix (first match wins):
-//   100% completion                    → 'ukonczone' (strict, platinum)
-//   ≥95% completion                    → 'ukonczone' (essentially done — 1 trophy left)
+//   100% completion                    → 'ukonczone' (platinum)
+//   ≥95% completion                    → 'ukonczone' (1 trophy left)
 //   ≥80% completion + old (>90d)       → 'ukonczone' (gave up platinum hunt)
-//   no progress at all (0% + 0h)       → 'planuje' (untouched in library)
-//   old (>180d) + progress (>5%/>2h)   → 'porzucone' (clearly abandoned)
-//   any progress (c>0 OR h>0)          → 'gram' (default for "did play this")
-//   else                               → 'planuje' (no signals)
+//   hours ≥ 1.5× target + tgt≥5h       → 'ukonczone' (clearly beaten + extras)
+//   hours ≥ 1.0× target + comp≥30%     → 'ukonczone' (beat main + got achievements)
+//   no progress at all (0% + 0h)       → 'planuje' (untouched)
+//   old (>180d) + progress             → 'porzucone' (abandoned)
+//   any progress (c>0 OR h>0)          → 'gram' (active rotation)
+//   else                               → 'planuje'
 //
-// Key change: "any progress → gram" is the catch-all. Xbox games with hours but
-// no date now correctly land in 'gram' instead of 'planuje'. PSN games with
-// completion but no hours work the same way. User can manually move shelf'd
-// games to 'porzucone' via the click-cycle override.
-function deriveStatusFromSignals({ completionPct, hours, lastPlayed }) {
+// Play-ratio thresholds are conservative — 1.5× estimate is "definitely beaten"
+// (e.g. RAWG says 30h, played 45h = finished + replay/explore). 1.0× requires
+// completion% confirmation to avoid false positives (live-service grinders).
+function deriveStatusFromSignals({ completionPct, hours, lastPlayed, targetHours }) {
   const c = +completionPct || 0;
   const h = +hours || 0;
+  const tgt = +targetHours || 0;
   const lpTs = lastPlayed ? new Date(lastPlayed).getTime() : null;
   const daysAgo = lpTs ? (Date.now() - lpTs) / 86400000 : null;
+  const playRatio = tgt > 0 ? h / tgt : 0;
 
-  // 1. Completed (3 ways)
+  // 1. Completed (5 ways now — added play-ratio rules)
   if (c === 100) return 'ukonczone';
-  if (c >= 95) return 'ukonczone';                              // 95%+ regardless of date
+  if (c >= 95) return 'ukonczone';
   if (c >= 80 && daysAgo !== null && daysAgo > 90) return 'ukonczone';
+  // v1.16.18 — Play time exceeded RAWG estimate by 50%+ → clearly beaten
+  if (playRatio >= 1.5 && tgt >= 5) return 'ukonczone';
+  // v1.16.18 — Played enough to beat AND got some achievements → finished main story
+  if (playRatio >= 1.0 && c >= 30 && tgt >= 5) return 'ukonczone';
 
   // 2. Untouched
   if (c === 0 && h === 0) return 'planuje';
@@ -2752,7 +2759,7 @@ function deriveStatusFromSignals({ completionPct, hours, lastPlayed }) {
   // 3. Old + progress = abandoned
   if (daysAgo !== null && daysAgo > 180 && (c > 5 || h > 2)) return 'porzucone';
 
-  // 4. Default: any progress → currently active
+  // 4. Default: any progress → active
   if (c > 0 || h > 0) return 'gram';
 
   return 'planuje';
@@ -2764,10 +2771,13 @@ function recomputeImportStatus(g) {
   if (g.status === 'ukonczone') return g.status;  // don't touch completed
   // Synthesize a completion hint: platinum=true → 100%, else unknown (0)
   const completionPct = g.platinum ? 100 : 0;
+  // v1.16.18 — pass targetHours so play-ratio rules can detect "essentially
+  // beaten" games (hours ≥ 1.5× RAWG estimate).
   return deriveStatusFromSignals({
     completionPct,
     hours: g.hours,
     lastPlayed: g.lastPlayed,
+    targetHours: g.targetHours,
   });
 }
 
@@ -3124,13 +3134,13 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
       if (!row || (m && m.status === 'dup')) continue;
       const rawg = m && m.rawg;
 
-      // v1.16.15 / v1.16.16 — Manual override (option E) takes precedence.
-      // If user clicked the predicted-status badge in step 2, statusOverrides[i]
-      // holds their choice; otherwise fall back to deriveStatusFromSignals().
+      // v1.16.15 / v1.16.16 / v1.16.18 — Manual override takes precedence;
+      // otherwise derive from signals including RAWG's playtime estimate.
       const derived = deriveStatusFromSignals({
         completionPct: row.completionPct,
         hours: row.hours,
         lastPlayed: row.lastPlayed,
+        targetHours: rawg?.playtime,
       });
       const status = statusOverrides[i] || derived;
       let completedAt = null;
@@ -3356,6 +3366,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                   completionPct: row.completionPct,
                   hours: row.hours,
                   lastPlayed: row.lastPlayed,
+                  targetHours: matches[i]?.rawg?.playtime,
                 });
                 if (counts[s] !== undefined) counts[s]++;
               });
@@ -3404,14 +3415,14 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                         {m.status === 'nomatch' && <span style={{color:G.org}}>{t(lang,'psnImportNoMatch')}</span>}
                         {m.status === 'dup' && <span style={{color:G.dim}}>{t(lang,'psnImportDup')}</span>}
                       </div>
-                      {/* v1.16.4 / v1.16.15 / v1.16.16 — Predicted status before commit.
-                          Click cycles through 4 statuses (manual override, option E).
-                          Override stored per-index in statusOverrides; commit() reads it. */}
+                      {/* v1.16.4 / v1.16.15 / v1.16.16 / v1.16.18 — Predicted status.
+                          Click cycles through 4 statuses (manual override). */}
                       {m.status !== 'dup' && (() => {
                         const derived = deriveStatusFromSignals({
                           completionPct: row.completionPct,
                           hours: row.hours,
                           lastPlayed: row.lastPlayed,
+                          targetHours: m.rawg?.playtime,
                         });
                         const status = statusOverrides[i] || derived;
                         const isOverridden = statusOverrides[i] && statusOverrides[i] !== derived;
