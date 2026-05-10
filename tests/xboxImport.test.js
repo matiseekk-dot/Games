@@ -134,6 +134,44 @@ describe('parseXboxPaste', () => {
     expect(r.debug.looksLikeBinary).toBe(true);
   });
 
+  // v1.16.12 — Sidebar recommended-games pollution: owned games have hours+%
+  // but sidebar entries only have a fraction. Stricter filter (≥2 signals)
+  // should drop sidebar entries.
+  it('filters out sidebar recommended games (only fraction, no hours/percent)', () => {
+    // 3 owned games with full data, then 5 "recommended" sidebar entries with
+    // only trophy fractions (no hours, no percent, no date)
+    const paste = `Halo Infinite
+Xbox Series X
+50/120
+42h 30m
+42%
+Forza Horizon 5
+Xbox Series X|S
+100/100
+85h
+100%
+Sea of Thieves
+Xbox One
+60/200
+120h 15m
+30%
+Cyberpunk 2077
+Xbox Series X
+0/45
+0h
+0%
+Stalker 2
+Xbox Series X
+0/52
+0h
+0%`;
+    const r = parseXboxPaste(paste);
+    expect(r.count).toBe(5);  // 3 played + 2 owned-not-played, all have ≥2 signals
+    expect(r.rows.map(x => x.title)).toEqual([
+      'Halo Infinite', 'Forza Horizon 5', 'Sea of Thieves', 'Cyberpunk 2077', 'Stalker 2'
+    ]);
+  });
+
   // v1.16.9 — iOS Safari clipboard format (cell-per-line, no delimiters)
   it('parses iOS Safari "one cell per line" plaintext (5-col TA pattern)', () => {
     const safariPaste = `Halo Infinite

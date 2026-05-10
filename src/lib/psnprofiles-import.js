@@ -87,16 +87,26 @@ function isLikelyTitle(line) {
   return true;
 }
 
-// v1.16.11 — A row qualifies as "real game record" only if it contains BOTH:
-//   (a) a title-looking cell (handled by extraction logic upstream), AND
-//   (b) at least one cell with trophy/achievement metadata (X/Y fraction or X%)
-// Recommended-games sidebars / ads usually show only game name + image, no
-// trophies — so this filter cleanly separates owned games from noise.
+// v1.16.12 — A row qualifies as "real owned game" only if it has ≥2 of these
+// signals: trophy fraction (X/Y), hours played (12h or 12h 30m), completion
+// percentage (X%), or last-played date. Recommended-games sidebars on PSN-
+// Profiles show trophy fractions (game's MAX trophies) but no hours/percent/
+// date — so requiring 2+ signals cleanly filters them out.
+//
+// Edge case: owned-but-never-played games might have only fraction + 0% which
+// is technically 2 signals — that's fine, they should be imported.
+function rowOwnedSignalCount(cells) {
+  const hasFraction = cells.some(c => /^\d+\s*\/\s*\d+$/.test(c));
+  const hasHours    = cells.some(c => /^\d+\s*h(\s+\d+\s*m)?$/i.test(c));
+  const hasPercent  = cells.some(c => /^\d+\s*%$/.test(c));
+  const hasDate     = cells.some(c => /^\d{4}-\d{2}-\d{2}/.test(c) || /^\d+\s*(day|hour|min|week|month|year|godz|min|tydz|miesi|godziny|dni|temu|ago)s?\s*ago?/i.test(c));
+  return [hasFraction, hasHours, hasPercent, hasDate].filter(Boolean).length;
+}
+
+// v1.16.11/v1.16.12 — Convenience wrapper. Returns true if row has enough
+// signals to qualify as an owned game.
 function rowHasTrophyMetadata(cells) {
-  return cells.some(c =>
-    /^\d+\s*\/\s*\d+$/.test(c) ||  // "36/36"
-    /^\d+\s*%$/.test(c)             // "100%"
-  );
+  return rowOwnedSignalCount(cells) >= 2;
 }
 
 // Detect repeating-block plaintext pattern. Returns { header, rows, delim }

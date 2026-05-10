@@ -72,11 +72,18 @@ function isLikelyTitle(line) {
   return true;
 }
 
+// v1.16.12 — Require ≥2 signals (fraction + hours/percent/date) to filter out
+// recommended-games sidebars on TA that show fractions without play data.
+function rowOwnedSignalCount(cells) {
+  const hasFraction = cells.some(c => /^\d+\s*\/\s*\d+$/.test(c));
+  const hasHours    = cells.some(c => /^\d+\s*h(\s+\d+\s*m)?$/i.test(c));
+  const hasPercent  = cells.some(c => /^\d+\s*%$/.test(c));
+  const hasDate     = cells.some(c => /^\d{4}-\d{2}-\d{2}/.test(c) || /^\d+\s*(day|hour|min|week|month|year|godz|tydz|miesi|godziny|dni|temu|ago)s?\s*ago?/i.test(c));
+  return [hasFraction, hasHours, hasPercent, hasDate].filter(Boolean).length;
+}
+
 function rowHasTrophyMetadata(cells) {
-  return cells.some(c =>
-    /^\d+\s*\/\s*\d+$/.test(c) ||  // "10/30"
-    /^\d+\s*%$/.test(c)             // "42%"
-  );
+  return rowOwnedSignalCount(cells) >= 2;
 }
 
 function parsePlaintextTable(lines) {
