@@ -1039,7 +1039,12 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
   const backlog=games.filter(g=>g.status==='planuje'&&!g.releaseDate);
-  const upcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
+  // v1.17.3 — Added status==='planuje' filter (same fix as Premieres tab in v1.17.2).
+  // Without it, clicking "Zacznij grać" on the "nearest premiere" card changes
+  // status to 'gram' but the card still shows the same game because the filter
+  // doesn't re-evaluate based on status. With the filter, nextUp advances to the
+  // next planned-and-upcoming game automatically.
+  const upcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0&&g.status==='planuje').sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
   const bought=games.filter(g=>isOwned(g) && !!+g.priceBought);
   const sold=games.filter(g=>isOwned(g) && g.priceSold!=null&&!!+g.priceSold);
   const active=[...current].sort((a,b)=>(b.hours||0)-(a.hours||0))[0]||null;
@@ -4288,7 +4293,9 @@ export default function App(){
   /></>);
 
   const SM2=getSM(lang);
-  const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).length;
+  // v1.17.3 — Same status filter fix (used for tab badge count). Without it,
+  // already-started games inflate the Premieres tab count badge incorrectly.
+  const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0&&g.status==='planuje').length;
 
   // v1.8.0 — Compute hamburger badge triggers (red dot on ⋮ + per-row dots in MenuOverlay).
   // Three signals, each independent. UI shows a dot when ANY is true.
