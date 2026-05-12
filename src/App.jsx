@@ -1235,10 +1235,20 @@ function UpcomingCard({g,d,lang,onOpen,onStatusChange,onToggleNotify,onRequestNo
 }
 
 function Upcoming({games,onOpen,onToggleNotify,onStatusChange,notifPerm,onRequestNotif,lang}){
-  const allUpcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0).sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
+  // v1.17.2 — Two bug fixes:
+  // 1. allUpcoming now also requires status==='planuje'. Without this, clicking
+  //    "Zacznij grać" on a premiere-day card changes status to 'gram' but the
+  //    game still matched releaseDate>=0 → stayed visible in Premieres.
+  // 2. 'released' section limited to games released in last 14 days. Past-
+  //    release games user never started were polluting Premieres tab forever.
+  //    14-day window gives a "hey this just came out, go play it" reminder
+  //    period, then they fall back to regular library (still status='planuje',
+  //    just no longer in Premieres).
+  const allUpcoming=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0&&g.status==='planuje').sort((a,b)=>new Date(a.releaseDate)-new Date(b.releaseDate));
   const preOrdered=allUpcoming.filter(g=>g.preOrdered);
   const watching=allUpcoming.filter(g=>!g.preOrdered);
-  const released=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)<0&&g.status==='planuje').sort((a,b)=>new Date(b.releaseDate)-new Date(a.releaseDate)).slice(0,5);
+  const RECENT_RELEASE_WINDOW = 14;  // days
+  const released=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)<0&&daysUntil(g.releaseDate)>=-RECENT_RELEASE_WINDOW&&g.status==='planuje').sort((a,b)=>new Date(b.releaseDate)-new Date(a.releaseDate)).slice(0,5);
   const tba=games.filter(g=>!g.releaseDate&&g.status==='planuje');
   if(!allUpcoming.length&&!released.length&&!tba.length)return(<div className='scr'><div className='empty'><div className='eic'>📅</div><div className='ett'>{t(lang,'noReleases')}</div><div className='ess'>{t(lang,'noReleasesHint')}</div></div></div>);
   const cardProps = {lang,onOpen,onStatusChange,onToggleNotify,onRequestNotif,notifPerm};
