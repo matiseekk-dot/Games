@@ -520,6 +520,10 @@ const TRANSLATIONS = {
     runwayYears:"lat",
     quickWinsTitle:"⚡ Quick wins — gry do ogrania w weekend",
     quickWinsSubtitle:"Krótkie gry z Twojego backlogu (≤10h estymowanego czasu)",
+    // v1.17.4 — Completed games per year timeline
+    completionsByYear:"Ukończone gry w latach",
+    bestYearLabel:"Najlepszy rok: {year} — ukończonych {n} gier",
+    completionsTotalHint:"Razem {n} gier z datą ukończenia",
     // v1.16.0 — PSN-Profiles paste import
     // v1.17.0 — Playnite import (RECOMMENDED — best path, user-curated statuses).
     playniteImportRowTitle:"🎯 Importuj z Playnite (zalecane)",
@@ -1105,6 +1109,9 @@ const TRANSLATIONS = {
     runwayYears:"years",
     quickWinsTitle:"⚡ Quick wins — beat in a weekend",
     quickWinsSubtitle:"Short games from your backlog (≤10h estimated playtime)",
+    completionsByYear:"Games completed per year",
+    bestYearLabel:"Best year: {year} — {n} games completed",
+    completionsTotalHint:"Total {n} games with completion dates",
     playniteImportRowTitle:"🎯 Import from Playnite (recommended)",
     playniteImportRowDesc:"All platforms in one JSON file + your Playnite statuses mapped 1:1",
     playniteImportTitle:"Import from Playnite",
@@ -1671,6 +1678,9 @@ const TRANSLATIONS = {
     runwayYears:"años",
     quickWinsTitle:"⚡ Victorias rápidas — para acabar en un finde",
     quickWinsSubtitle:"Juegos cortos de tu backlog (≤10h estimadas)",
+    completionsByYear:"Juegos completados por año",
+    bestYearLabel:"Mejor año: {year} — {n} juegos completados",
+    completionsTotalHint:"Total {n} juegos con fecha de finalización",
     playniteImportRowTitle:"🎯 Importar desde Playnite (recomendado)",
     playniteImportRowDesc:"Todas las plataformas en un solo JSON + tus estados de Playnite mapeados 1:1",
     playniteImportTitle:"Importar desde Playnite",

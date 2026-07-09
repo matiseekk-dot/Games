@@ -921,118 +921,9 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
   );
 }
 
-function SessionTimer({game, onSave, lang}) {
-  // Timer state shape in localStorage: {gameId, start, pausedAt?, totalPause?}
-  // - start: Unix ms when session began
-  // - pausedAt: Unix ms of current pause start (null if not paused)
-  // - totalPause: accumulated pause ms from all previous pauses in this session
-  const [active, setActive] = useState(()=>{ const t=timerRead(); return t&&t.gameId===game.id?t:null; });
-  const [elapsed, setElapsed] = useState(0);  // seconds of ACTIVE play time (excluding pauses)
-  const G2 = G;
-
-  // On mount: stale pause guard — if user paused and app was closed >24h ago, auto-stop saving what we have
-  useEffect(()=>{
-    if(!active || !active.pausedAt) return;
-    const pauseDurationMs = Date.now() - active.pausedAt;
-    if(pauseDurationMs > 24*60*60*1000){
-      // Stale pause — save whatever was played before pause, don't count 24h+ as play
-      const totalPauseMs = (active.totalPause||0) + 0; // freeze pause at moment it started
-      const activeMs = active.pausedAt - active.start - totalPauseMs;
-      const hrs = Math.max(0, activeMs/3600000);
-      timerWrite(null); setActive(null); setElapsed(0);
-      if(hrs > 0){
-        onSave(hrs, {startedAt: active.start, endedAt: active.pausedAt, hours: hrs});
-      }
-    }
-  },[]);
-
-  useEffect(()=>{
-    if(!active) return;
-    // Tick only when NOT paused; pause = frozen elapsed counter
-    if(active.pausedAt) return;
-    const iv = setInterval(()=>{
-      const totalPause = active.totalPause || 0;
-      setElapsed(Math.floor((Date.now()-active.start-totalPause)/1000));
-    },1000);
-    return ()=>clearInterval(iv);
-  },[active]);
-
-  // When resumed from pause, recompute elapsed once immediately (don't wait 1s tick)
-  useEffect(()=>{
-    if(!active || active.pausedAt) return;
-    const totalPause = active.totalPause || 0;
-    setElapsed(Math.floor((Date.now()-active.start-totalPause)/1000));
-  },[active]);
-
-  function start(){
-    const t={gameId:game.id, start:Date.now(), pausedAt:null, totalPause:0};
-    timerWrite(t); setActive(t); setElapsed(0);
-  }
-  function pause(){
-    if(!active || active.pausedAt) return;
-    const t={...active, pausedAt: Date.now()};
-    timerWrite(t); setActive(t);
-  }
-  function resume(){
-    if(!active || !active.pausedAt) return;
-    const thisPauseMs = Date.now() - active.pausedAt;
-    const t={...active, pausedAt: null, totalPause: (active.totalPause||0) + thisPauseMs};
-    timerWrite(t); setActive(t);
-  }
-  function stop(){
-    if(!active) return;
-    const endAt = Date.now();
-    // If stopping while paused, don't count current pause duration as play
-    const currentPauseMs = active.pausedAt ? (endAt - active.pausedAt) : 0;
-    const totalPauseMs = (active.totalPause||0) + currentPauseMs;
-    const activeMs = endAt - active.start - totalPauseMs;
-    const hrs = Math.max(0, activeMs/3600000);
-    timerWrite(null); setActive(null); setElapsed(0);
-    // Only save if at least 1 minute of actual play (prevents noise from accidental start/stop)
-    if(hrs * 60 < 1){ return; }
-    onSave(hrs, {startedAt: active.start, endedAt: endAt, hours: hrs, totalPauseMs});
-  }
-
-  const isPaused = active && active.pausedAt;
-  const h=Math.floor(elapsed/3600), m=Math.floor((elapsed%3600)/60), s=elapsed%60;
-  const timerColor = isPaused ? G2.gld : G2.grn;
-  const borderColor = !active ? 'rgba(0,212,255,.2)' : isPaused ? 'rgba(255,209,102,.3)' : 'rgba(57,255,110,.3)';
-  const bgColor = !active ? 'rgba(0,212,255,.06)' : isPaused ? 'rgba(255,209,102,.07)' : 'rgba(57,255,110,.08)';
-
-  return (
-    <div style={{marginTop:8,padding:'10px 12px',background:bgColor,border:'1px solid '+borderColor,borderRadius:10}}>
-      {active&&<div style={{fontFamily:"'Orbitron',monospace",fontSize:22,fontWeight:900,color:timerColor,textAlign:'center',marginBottom:6,letterSpacing:'.05em'}}>
-        {String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}
-        {isPaused && <div style={{fontSize:9,fontWeight:600,color:G2.gld,letterSpacing:'.15em',marginTop:2}}>⏸ {t(lang,'timerPaused')}</div>}
-      </div>}
-      {!active && (
-        <button type='button' onClick={start} style={{width:'100%',padding:'8px 0',border:'none',borderRadius:8,background:G2.blu,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,cursor:'pointer'}}>
-          {t(lang,'timerStartLabel')}
-        </button>
-      )}
-      {active && !isPaused && (
-        <div style={{display:'flex',gap:6}}>
-          <button type='button' onClick={pause} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.gld,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {t(lang,'timerPauseLabel')}
-          </button>
-          <button type='button' onClick={stop} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.grn,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {t(lang,'timerStopLabel')}
-          </button>
-        </div>
-      )}
-      {active && isPaused && (
-        <div style={{display:'flex',gap:6}}>
-          <button type='button' onClick={resume} style={{flex:1,padding:'8px 0',border:'none',borderRadius:8,background:G2.grn,color:'#000',fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {t(lang,'timerResumeLabel')}
-          </button>
-          <button type='button' onClick={stop} style={{flex:1,padding:'8px 0',border:'1px solid '+G2.bdr,borderRadius:8,background:'transparent',color:G2.txt,fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,cursor:'pointer'}}>
-            {t(lang,'timerStopLabel')}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+// v1.17.4 — SessionTimer component removed per user request. Historical sessions
+// (from prior versions when the timer was active) are preserved on each game via
+// g.sessions[]; Stats → Time tab still uses them via collectSessions().
 
 function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen,onRecOpen}){
   const [monthOpen,setMonthOpen]=useState(false);
@@ -1098,19 +989,9 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
                   {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span>{gProg<100&&<span>~{fmtHours(gRem)} {t(lang,'remaining')}</span>}</div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
                 </div>
               </div>
-              <SessionTimer game={g} lang={lang} onSave={(hrs,session)=>{
-                const newHrs=Math.round(((+g.hours||0)+hrs)*10)/10;
-                // Append session to history for time-tracking stats (F07)
-                // Backward compat: existing games have sessions: undefined, coerce to []
-                const newSession={
-                  startedAt: session.startedAt,
-                  endedAt: session.endedAt,
-                  hours: Math.round(session.hours*10000)/10000,  // keep 4 decimals for accuracy
-                  pauseMs: session.totalPauseMs || 0,  // pause duration in ms — for future "active vs idle" analytics
-                };
-                const newSessions=[...(g.sessions||[]),newSession];
-                onStatusChange(g.id,'gram',{hours:newHrs,lastPlayed:new Date().toISOString(),sessions:newSessions});
-              }}/>
+              {/* v1.17.4 — SessionTimer removed per user request. Clicking the
+                  game opens Modal where hours can be edited manually. Existing
+                  sessions[] on games is preserved for legacy Stats → Time tab. */}
             </div>;
           })}
         </div>
@@ -1505,6 +1386,26 @@ function Stats({games,lang}){
     .sort((a, b) => (+a.targetHours || 0) - (+b.targetHours || 0))
     .slice(0, 8);
 
+  // v1.17.4 — Completed games per year timeline. Uses g.completedAt (set on
+  // status transition to 'ukonczone', either at import time from lastPlayed
+  // or when user manually marks completion). Skips games without completedAt.
+  const completionsByYear = {};
+  games.forEach(g => {
+    if (g.status !== 'ukonczone') return;
+    if (!g.completedAt) return;
+    const y = +g.completedAt.slice(0, 4);
+    if (!y || y < 1990 || y > new Date().getFullYear() + 1) return;
+    completionsByYear[y] = (completionsByYear[y] || 0) + 1;
+  });
+  const yearData = Object.entries(completionsByYear)
+    .sort((a, b) => +a[0] - +b[0])
+    .map(([y, count]) => ({ n: String(y), v: count }));
+  const bestYearRow = yearData.length
+    ? yearData.reduce((max, row) => row.v > max.v ? row : max, yearData[0])
+    : null;
+  const bestYear = bestYearRow ? { year: bestYearRow.n, count: bestYearRow.v } : null;
+  const totalWithCompletionDates = yearData.reduce((s, r) => s + r.v, 0);
+
   const kpis=[{l:t(lang,'gamesTotal'),v:games.length,c:G.blu},{l:t(lang,'completed2'),v:games.filter(g=>g.status==='ukonczone').length,c:G.grn},{l:t(lang,'hoursTotal'),v:fmtHours(hrs),c:G.pur},{l:t(lang,'avgRating'),v:avg,c:G.gld}];
   const sData=Object.entries(SM2).map(([k,m])=>({n:m.label,v:games.filter(g=>g.status===k).length,c:m.c})).filter(d=>d.v>0);
   const gMap={}; games.forEach(g=>{if(g.genre)gMap[g.genre]=(gMap[g.genre]||0)+1;});
@@ -1713,6 +1614,35 @@ function Stats({games,lang}){
           </div>
         )}
         {gData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'genreChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
+
+        {/* v1.17.4 — Completed-games timeline (by year). Uses g.completedAt.
+            Highlights the best year with a callout below the chart. Renders
+            when the user has completed games across ≥2 different years. */}
+        {yearData.length >= 2 && (
+          <div className='ccd'>
+            <div className='ctl'>{t(lang,'completionsByYear')}</div>
+            <ResponsiveContainer width='100%' height={140}>
+              <BarChart data={yearData} barSize={26} margin={{top:4,left:0,right:0,bottom:4}}>
+                <XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:14,right:14}}/>
+                <YAxis hide/>
+                <Tooltip content={<CTip/>}/>
+                <Bar dataKey='v' radius={[4,4,0,0]}>
+                  {yearData.map((row, i) => (
+                    <Cell key={i} fill={bestYear && row.n === bestYear.year ? G.grn : G.blu} fillOpacity={0.85}/>
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            {bestYear && bestYear.count >= 2 && (
+              <div style={{marginTop:8,padding:'8px 12px',background:'rgba(57,255,110,.07)',border:'1px solid rgba(57,255,110,.2)',borderRadius:8,fontSize:12,color:G.txt,lineHeight:1.5}}>
+                🏆 {t(lang,'bestYearLabel',{year:bestYear.year, n:bestYear.count})}
+              </div>
+            )}
+            <div style={{marginTop:6,fontSize:11,color:G.dim,textAlign:'center'}}>
+              {t(lang,'completionsTotalHint',{n:totalWithCompletionDates})}
+            </div>
+          </div>
+        )}
 
         {/* v1.17.1 — Hours by Platform. Reveals where time actually goes (not
             just how many games per platform). PSN may have 200 games but PC
