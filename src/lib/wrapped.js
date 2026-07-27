@@ -1,110 +1,109 @@
 // v1.5.0 Year-in-Review (Spotify Wrapped style).
-// Pure derivation of a year's worth of stats. Returns null if there's not enough data.
-// "Enough data" = at least 1 game added or 1 session in the year.
-import { dayKey } from './util.js';
-import { computeLongestStreak } from './sessions.js';
+// v1.17.5 — Rewritten to derive from game-level fields (hours, lastPlayed,
+// completedAt) instead of sessions[]. The SessionTimer was removed in v1.17.4
+// and imported libraries (Playnite / PSN / Xbox) carry `hours` + `lastPlayed`
+// but NO sessions — so the old session-only math reported 0 hours / empty tops
+// for anyone who imported. This version attributes each game's lifetime hours to
+// the year it was last played (best available signal without per-session data).
 import { isOwned } from '../constants.js';
 
-// List of distinct years that contain at least one addedAt or session.
-// Sorted newest-first, sanity-bounded to 2000–2100 (filters out garbage timestamps).
+// Year-attribution helpers. A game "belongs" to a year based on when it was last
+// touched — lastPlayed is the truest signal, then completedAt, then addedAt.
+function activityYear(g) {
+  const ts = g.lastPlayed || g.completedAt || g.addedAt;
+  if (!ts) return null;
+  const y = new Date(ts).getFullYear();
+  return Number.isFinite(y) ? y : null;
+}
+function completionYear(g) {
+  const ts = g.completedAt || g.lastPlayed || g.addedAt;
+  if (!ts) return null;
+  const y = new Date(ts).getFullYear();
+  return Number.isFinite(y) ? y : null;
+}
+function addedYear(g) {
+  if (!g.addedAt) return null;
+  const y = +String(g.addedAt).slice(0, 4);
+  return Number.isFinite(y) ? y : null;
+}
+
+// List of distinct years that contain activity (played / completed / added),
+// newest-first, bounded to 2000–2100 (filters garbage timestamps).
 export function getYearsWithData(games) {
   const years = new Set();
   games.forEach(g => {
-    if (g.addedAt) years.add(+g.addedAt.slice(0, 4));
-    (g.sessions || []).forEach(s => {
-      const ts = s.startedAt || s.endedAt;
-      if (ts) years.add(new Date(ts).getFullYear());
-    });
+    const a = activityYear(g); if (a) years.add(a);
+    const c = completionYear(g); if (c) years.add(c);
+    const d = addedYear(g); if (d) years.add(d);
   });
   return [...years].filter(y => y >= 2000 && y <= 2100).sort((a, b) => b - a);
 }
 
 export function computeYearReview(games, year) {
-  const yStart = new Date(year, 0, 1); yStart.setHours(0,0,0,0);
-  const yEnd = new Date(year, 11, 31); yEnd.setHours(23,59,59,999);
-  const inYear = ts => { if (!ts) return false; const d = new Date(ts); return d >= yStart && d <= yEnd; };
+  // Games "active" in the year = played/finished/last-touched in the year AND
+  // have some hours logged. This is the pool for hours + top-played + top-genre.
+  const activeGames = games.filter(g => (+g.hours || 0) > 0 && activityYear(g) === year);
 
-  // Sessions filtered to the year
-  const allSessions = [];
-  games.forEach(g => {
-    (g.sessions || []).forEach(s => {
-      if (!inYear(s.startedAt)) return;
-      allSessions.push({ ...s, gameId:g.id, gameTitle:g.title, gameCover:g.cover, gameAbbr:g.abbr, gameGenre:g.genre });
-    });
-  });
-  if (!allSessions.length && !games.some(g => inYear(g.addedAt))) {
-    return null; // no data at all for this year
-  }
+  const gamesAdded = games.filter(g => addedYear(g) === year).length;
+  const gamesCompleted = games.filter(g => g.status === 'ukonczone' && completionYear(g) === year).length;
+  const platinums = games.filter(g => g.platinum && completionYear(g) === year).length;
 
-  const totalHours = allSessions.reduce((s, x) => s + (+x.hours || 0), 0);
-  const gamesAdded = games.filter(g => inYear(g.addedAt)).length;
-  // v1.7.0: completedAt is exact (set on status transition). Pre-v1.7 games are
-  // backfilled in lsRead() migration with lastPlayed||addedAt — kept as fallback chain
-  // here as defense in depth.
-  const completionDate = g => g.completedAt || g.lastPlayed || g.addedAt;
-  const gamesCompleted = games.filter(g => g.status === 'ukonczone' && inYear(completionDate(g))).length;
-  const platinums = games.filter(g => g.platinum && inYear(completionDate(g))).length;
+  // Bail only if the year is truly empty across every metric.
+  if (!activeGames.length && !gamesAdded && !gamesCompleted) return null;
 
-  // Per-game hours in year
-  const hrsByGame = new Map();
-  allSessions.forEach(s => { hrsByGame.set(s.gameId, (hrsByGame.get(s.gameId) || 0) + (+s.hours || 0)); });
-  const topPlayed = [...hrsByGame.entries()]
-    .map(([gid, h]) => { const g = games.find(x => x.id === gid); return g ? { game:g, hours:h } : null; })
-    .filter(Boolean)
-    .sort((a, b) => b.hours - a.hours)
-    .slice(0, 3);
+  const totalHours = Math.round(activeGames.reduce((s, g) => s + (+g.hours || 0), 0));
+  const gamesPlayed = activeGames.length;
 
-  // Highest rated this year (games rated AND added or completed in year)
-  const ratedThisYear = games
-    .filter(g => g.rating != null && +g.rating > 0 && (inYear(g.addedAt) || inYear(g.lastPlayed)))
-    .sort((a, b) => (+b.rating || 0) - (+a.rating || 0));
-  const highestRated = ratedThisYear[0] || null;
+  // Top played — by lifetime hours among games active this year.
+  const topPlayed = [...activeGames]
+    .sort((a, b) => (+b.hours || 0) - (+a.hours || 0))
+    .slice(0, 3)
+    .map(g => ({ game: g, hours: +g.hours || 0 }));
 
-  // Genre hours
+  // Highest rated — rated games that were active OR added this year.
+  const highestRated = games
+    .filter(g => g.rating != null && +g.rating > 0 && (activityYear(g) === year || addedYear(g) === year))
+    .sort((a, b) => (+b.rating || 0) - (+a.rating || 0))[0] || null;
+
+  // Top genre — by hours among active games.
   const hrsByGenre = new Map();
-  allSessions.forEach(s => { const g = s.gameGenre || '?'; hrsByGenre.set(g, (hrsByGenre.get(g) || 0) + (+s.hours || 0)); });
-  const topGenreEntry = [...hrsByGenre.entries()].filter(([k]) => k && k !== '?').sort((a, b) => b[1] - a[1])[0];
+  activeGames.forEach(g => {
+    const ge = g.genre || '?';
+    hrsByGenre.set(ge, (hrsByGenre.get(ge) || 0) + (+g.hours || 0));
+  });
+  const topGenreEntry = [...hrsByGenre.entries()]
+    .filter(([k]) => k && k !== '?')
+    .sort((a, b) => b[1] - a[1])[0];
   const topGenre = topGenreEntry ? {
     name: topGenreEntry[0],
     hours: Math.round(topGenreEntry[1]),
-    gamesCount: new Set(allSessions.filter(s => s.gameGenre === topGenreEntry[0]).map(s => s.gameId)).size,
+    gamesCount: activeGames.filter(g => g.genre === topGenreEntry[0]).length,
   } : null;
 
-  // Money in year — use addedAt as proxy for "spent in year".
-  // v1.14.0 — exclude subscription games (only `owned` games contribute to spend totals;
-  // PS Plus / Game Pass / etc. are flat monthly fees unrelated to per-title cost).
+  // Money — owned games only (subscriptions excluded). Spent uses addedAt year;
+  // recovered uses completion year.
   const totalSpent = games
-    .filter(g => isOwned(g) && inYear(g.addedAt))
+    .filter(g => isOwned(g) && addedYear(g) === year)
     .reduce((s, g) => s + (+g.priceBought || 0) + (+g.extraSpend || 0), 0);
   const totalRecovered = games
-    .filter(g => isOwned(g) && g.priceSold != null && +g.priceSold > 0 && inYear(completionDate(g)))
+    .filter(g => isOwned(g) && g.priceSold != null && +g.priceSold > 0 && completionYear(g) === year)
     .reduce((s, g) => s + (+g.priceSold || 0), 0);
 
-  // Streak / active days inside the year
-  const sbd = new Map();
-  allSessions.forEach(s => { const k = dayKey(s.startedAt); if (!sbd.has(k)) sbd.set(k, []); sbd.get(k).push(s); });
-  const activeDays = sbd.size;
-  const totalDaysInYear = ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 366 : 365;
-  const longestStreak = computeLongestStreak(sbd);
-
-  // Longest single session
-  const longestSession = allSessions.reduce((m, s) => Math.max(m, +s.hours || 0), 0);
+  // Average hours per game played this year — a nice derived headline stat.
+  const avgHoursPerGame = gamesPlayed > 0 ? Math.round(totalHours / gamesPlayed) : 0;
 
   return {
     year,
-    totalHours: Math.round(totalHours),
+    totalHours,
+    gamesPlayed,       // NEW — replaces sessionCount / activeDays
+    avgHoursPerGame,   // NEW — derived
     gamesAdded,
     gamesCompleted,
     platinums,
-    topPlayed,        // [{game, hours}]
-    highestRated,     // game or null
-    topGenre,         // { name, hours, gamesCount } or null
+    topPlayed,         // [{game, hours}]
+    highestRated,      // game or null
+    topGenre,          // { name, hours, gamesCount } or null
     totalSpent,
     totalRecovered,
-    activeDays,
-    totalDaysInYear,
-    longestStreak,
-    longestSession: Math.round(longestSession * 10) / 10,
-    sessionCount: allSessions.length,
   };
 }

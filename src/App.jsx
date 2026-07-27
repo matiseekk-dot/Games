@@ -10,7 +10,7 @@ import {
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
 import { uid, mkAbbr, daysUntil, dayKey, weekStart } from './lib/util.js';
-import { fmtDate, fmtShort, pln, gamesWord, hoursWord, platynaWord, sessionsWord, fmtCph, fmtHours } from './lib/format.js';
+import { fmtDate, fmtShort, pln, gamesWord, hoursWord, platynaWord, fmtCph, fmtHours } from './lib/format.js';
 import {
   lsRead, lsWrite,
   budgetRead, budgetWrite, timerRead, timerWrite,
@@ -27,14 +27,12 @@ import { rawgSearch, fetchGameById } from './lib/rawg.js';
 import { eanCacheRead, eanCacheWrite, cleanProductName, eanLookup } from './lib/barcode.js';
 import { collectSessions, computeStreak, computeLongestStreak } from './lib/sessions.js';
 import { ACHIEVEMENTS, computeAchievements, unlockedAchievementIds, getAchievementById } from './lib/achievements.js';
-import { goalsRead, goalsWrite, monthBounds, daysLeftInMonth, GOAL_TYPES, GOAL_TEMPLATES, goalCurrent, goalParams } from './lib/goals.js';
 import { getYearsWithData, computeYearReview } from './lib/wrapped.js';
 import { makeDemoGames, hasDemoGames, removeDemoGames } from './lib/demo.js';
 import { parsePsnProfilesPaste } from './lib/psnprofiles-import.js';
 import { parseSteamPaste } from './lib/steam-import.js';
 import { parseXboxPaste } from './lib/xbox-import.js';
 import { parsePlaynitePaste } from './lib/playnite-import.js';
-import { buildRecommendations, recsCacheStats, recsCacheClear } from './lib/recommend.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -925,7 +923,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
 // (from prior versions when the timer was active) are preserved on each game via
 // g.sessions[]; Stats → Time tab still uses them via collectSessions().
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,onGoalsOpen,onRecOpen}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -950,9 +948,14 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
   const sellable=games.filter(g=>isOwned(g) && g.status==='porzucone'&&!!+g.priceBought&&(g.priceSold==null||!+g.priceSold)).sort((a,b)=>+b.priceBought - +a.priceBought);
   // Monthly purchases — games added in the current local month with a price.
   // Shown as expandable card on Home when purchases exist this month.
+  // v1.17.5 — Exclude still-active pre-orders (preOrdered + future release date).
+  // A pre-order is money committed to a game that hasn't released yet, so it
+  // shouldn't count as a "purchase this month" until it's out. Once it releases
+  // (or the user unchecks preOrdered), it counts normally.
   const monthKey=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})();
+  const isActivePreOrder=g=>g.preOrdered && g.releaseDate && daysUntil(g.releaseDate)>0;
   const monthPurchasesList=games
-    .filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought)
+    .filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought&&!isActivePreOrder(g))
     .sort((a,b)=>(b.addedAt||'').localeCompare(a.addedAt||''));
   const monthSpent=monthPurchasesList.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
   // v1.14.1 — Friendlier empty state. Triggered when user clears all demos and hasn't
@@ -972,8 +975,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
       </div>
-      {/* v1.5.0 — Goals card. Always rendered (empty state is itself a CTA). */}
-      <GoalsCard goals={goals||[]} games={games} sessions={collectSessions(games)} lang={lang} onOpen={onGoalsOpen}/>
+      {/* v1.17.5 — Goals card removed (feature retired per user request). */}
       {current.length>0?(
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>▶️ {t(lang,'continuePlay')}</span><span className='hcard-badge' style={{background:'rgba(0,212,255,.12)',color:G.blu}}>{current.length}</span></div>
@@ -1068,17 +1070,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,goals,
           )}
         </div>
       )}
-      {/* v1.9.0 — Recommendations CTA. Always renders; the overlay handles its own
-          empty/loading states. Tap → opens Recommendations overlay (if rawg-id seeds
-          exist, fetches and shows; otherwise empty CTA pointing at RAWG search). */}
-      <div className='rec-home-card' onClick={onRecOpen}>
-        <div className='rec-home-ico'>✨</div>
-        <div className='rec-home-body'>
-          <div className='rec-home-title'>{t(lang,'recHomeCardTitle')}</div>
-          <div className='rec-home-sub'>{t(lang,'recHomeCardSub')}</div>
-        </div>
-        <span className='rec-home-arrow'>›</span>
-      </div>
+      {/* v1.17.5 — Recommendations CTA removed (feature retired per user request). */}
     </div>
   );
 }
@@ -1445,12 +1437,10 @@ function Stats({games,lang}){
     if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:(+bCph.priceBought/bCph.hours).toFixed(1)}),val:fmtCph(+bCph.priceBought/bCph.hours)});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
-  const subTabs=[[' general',t(lang,'general')],[' time',t(lang,'time')]];
+  // v1.17.5 — Time subtab removed (session-based heatmap is meaningless now that
+  // the timer is gone and libraries are imported). Stats is a single view.
   return(
     <div className='scr'>
-      <div style={{display:'flex',gap:3,background:G.card,border:`1px solid ${G.bdr}`,borderRadius:11,padding:4,marginBottom:14}}>
-        {subTabs.map(([k,l])=><button key={k} type='button' onClick={()=>setTab(k.trim())} style={{flex:1,minHeight:40,padding:'7px 2px',border:'none',borderRadius:8,background:tab===k.trim()?'rgba(0,212,255,.15)':'transparent',color:tab===k.trim()?G.blu:G.dim,fontFamily:"'Syne',sans-serif",fontSize:10,fontWeight:600,cursor:'pointer'}}>{l}</button>)}
-      </div>
       {tab==='general'&&<>
         {/* v1.17.1 — Hero card for big libraries (≥100 games). Frames total hours
             in human time (days non-stop, years at a sane pace). The "wow" moment
@@ -1720,225 +1710,6 @@ function Stats({games,lang}){
 
         {rated.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'ratingChart')}</div><ResponsiveContainer width='100%' height={140}><BarChart data={buckets} barSize={20} margin={{top:4,left:0,right:0,bottom:4}}><CartesianGrid vertical={false} stroke={G.bdr} strokeDasharray='3 3'/><XAxis dataKey='n' tick={{fill:G.dim,fontSize:10}} axisLine={false} tickLine={false} padding={{left:20,right:20}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} minPointSize={3}>{buckets.map((b,i)=><Cell key={i} fill={`hsl(${i*12},88%,55%)`} fillOpacity={b.v===0?0.2:0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>}
       </>}
-      {tab==='time'&&(()=>{
-        const sessions=collectSessions(games);
-        if(!sessions.length){
-          return <div className='empty'><div className='eic'>⏱</div><div className='ett'>{t(lang,'noSessions')}</div><div className='ess'>{t(lang,'noSessionsHint')}</div></div>;
-        }
-        // Group sessions by day
-        const byDay=new Map();
-        sessions.forEach(s=>{
-          const arr=byDay.get(s.dateKey)||[];
-          arr.push(s); byDay.set(s.dateKey,arr);
-        });
-        const todayKey=dayKey(new Date());
-        const todaySessions=byDay.get(todayKey)||[];
-        const todayHours=todaySessions.reduce((a,s)=>a+s.hours,0);
-        // This week (Mon-Sun)
-        const wkStart=weekStart(new Date());
-        const wkDays=[0,1,2,3,4,5,6].map(i=>{
-          const d=new Date(wkStart); d.setDate(d.getDate()+i);
-          const k=dayKey(d);
-          const hrs=(byDay.get(k)||[]).reduce((a,s)=>a+s.hours,0);
-          return {date:d, key:k, hours:hrs};
-        });
-        const weekHours=wkDays.reduce((a,d)=>a+d.hours,0);
-        // Previous week for comparison
-        const prevWkStart=new Date(wkStart); prevWkStart.setDate(prevWkStart.getDate()-7);
-        let prevWkHours=0;
-        for(let i=0;i<7;i++){
-          const d=new Date(prevWkStart); d.setDate(d.getDate()+i);
-          prevWkHours+=(byDay.get(dayKey(d))||[]).reduce((a,s)=>a+s.hours,0);
-        }
-        const weekDelta=weekHours-prevWkHours;
-        // This month — build calendar heatmap
-        const now=new Date();
-        const mStart=new Date(now.getFullYear(),now.getMonth(),1);
-        const mEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
-        const daysInMonth=mEnd.getDate();
-        const monthDays=[];
-        let monthHours=0;
-        for(let i=1;i<=daysInMonth;i++){
-          const d=new Date(now.getFullYear(),now.getMonth(),i);
-          const k=dayKey(d);
-          const hrs=(byDay.get(k)||[]).reduce((a,s)=>a+s.hours,0);
-          monthDays.push({day:i,key:k,hours:hrs,isFuture:d>new Date()});
-          monthHours+=hrs;
-        }
-        // Prev month for comparison
-        const prevMStart=new Date(now.getFullYear(),now.getMonth()-1,1);
-        const prevMEnd=new Date(now.getFullYear(),now.getMonth(),0);
-        let prevMHours=0;
-        for(let d=new Date(prevMStart); d<=prevMEnd; d.setDate(d.getDate()+1)){
-          prevMHours+=(byDay.get(dayKey(d))||[]).reduce((a,s)=>a+s.hours,0);
-        }
-        const monthDelta=monthHours-prevMHours;
-        // Streaks
-        const currentStreak=computeStreak(byDay);
-        const longestStreak=computeLongestStreak(byDay);
-        // Session stats
-        const avgSessionHours=sessions.reduce((a,s)=>a+s.hours,0)/sessions.length;
-        const longestSessionHours=sessions.reduce((m,s)=>Math.max(m,s.hours),0);
-        // v1.3 #5 — Active gaming days this month vs last month
-        const activeDaysThisMonth=monthDays.filter(d=>d.hours>0&&!d.isFuture).length;
-        const daysElapsedThisMonth=monthDays.filter(d=>!d.isFuture).length;
-        let activeDaysPrevMonth=0;
-        for(let d=new Date(prevMStart); d<=prevMEnd; d.setDate(d.getDate()+1)){
-          const k=dayKey(d);
-          if((byDay.get(k)||[]).length>0)activeDaysPrevMonth++;
-        }
-        // Top games by total session hours (this month scope)
-        const monthSessions=sessions.filter(s=>{
-          const d=new Date(s.startedAt);
-          return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
-        });
-        const perGame={};
-        monthSessions.forEach(s=>{
-          perGame[s.gameId]=perGame[s.gameId]||{title:s.gameTitle,abbr:s.gameAbbr,cover:s.gameCover,hours:0,count:0};
-          perGame[s.gameId].hours+=s.hours;
-          perGame[s.gameId].count++;
-        });
-        const topGames=Object.values(perGame).sort((a,b)=>b.hours-a.hours).slice(0,5);
-        // Max hours in any day this month (for heatmap scaling)
-        const maxDayHours=Math.max(1,...monthDays.map(d=>d.hours));
-        // Max hours in week bar chart
-        const maxWkHours=Math.max(0.5,...wkDays.map(d=>d.hours));
-        const dayLabels=[t(lang,'dayMon'),t(lang,'dayTue'),t(lang,'dayWed'),t(lang,'dayThu'),t(lang,'dayFri'),t(lang,'daySat'),t(lang,'daySun')];
-        const deltaLine=(delta,label)=>{
-          if(Math.abs(delta)<0.05)return <span style={{color:G.dim}}>{t(lang,label)}: —</span>;
-          const positive=delta>0;
-          return <span style={{color:positive?G.grn:G.red,fontWeight:700}}>{positive?'↑':'↓'} {fmtHours(Math.abs(delta),{compact:true})} {t(lang,label)}</span>;
-        };
-        return <>
-          {/* KPI Grid */}
-          <div className='kgd'>
-            <div className='kcd' style={{'--c':G.grn}}><div className='kvl' style={{fontSize:currentStreak>=10?24:28}}>🔥 {currentStreak}</div><div className='klb'>{t(lang,'currentStreak')} ({t(lang,'daysStreak')})</div></div>
-            <div className='kcd' style={{'--c':G.gld}}><div className='kvl'>{longestStreak}</div><div className='klb'>{t(lang,'longestStreak')} ({t(lang,'daysStreak')})</div></div>
-            <div className='kcd' style={{'--c':G.blu}}><div className='kvl' style={{fontSize:18}}>{fmtHours(avgSessionHours,{compact:true})}</div><div className='klb'>{t(lang,'avgSession')}</div></div>
-            <div className='kcd' style={{'--c':G.pur}}><div className='kvl' style={{fontSize:18}}>{fmtHours(longestSessionHours,{compact:true})}</div><div className='klb'>{t(lang,'longestSession')}</div></div>
-          </div>
-          <div className='ccd' style={{borderColor:'rgba(167,139,250,.3)',background:'linear-gradient(135deg,rgba(167,139,250,.06),rgba(0,212,255,.04))'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:6}}>
-              <div style={{fontSize:11,fontWeight:700,color:G.pur,letterSpacing:'.05em'}}>{t(lang,'activeDays')}</div>
-              <div style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.pur,lineHeight:1}}>
-                {activeDaysThisMonth}<span style={{fontSize:14,color:G.dim,fontWeight:500}}>/{daysElapsedThisMonth}</span>
-              </div>
-            </div>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11,color:G.dim}}>
-              <span>{t(lang,'activeDaysDesc',{played:activeDaysThisMonth,total:daysElapsedThisMonth})}</span>
-              {activeDaysPrevMonth>0&&<span>{t(lang,'activeDaysVs',{n:activeDaysPrevMonth})}</span>}
-            </div>
-          </div>
-
-          {/* Today */}
-          <div className='ccd'>
-            <div className='ctl'>{t(lang,'today2')}</div>
-            {todaySessions.length===0 ? (
-              <div style={{padding:'16px 0',textAlign:'center',color:G.dim,fontSize:12}}>{t(lang,'noSessionsToday')}</div>
-            ) : (
-              <div>
-                <div style={{display:'flex',alignItems:'baseline',gap:10,marginBottom:8}}>
-                  <span style={{fontFamily:"'Orbitron',monospace",fontSize:28,fontWeight:900,color:G.grn}}>{fmtHours(todayHours)}</span>
-                  <span style={{fontSize:11,color:G.dim}}>{t(lang,'sessionsCount',{n:todaySessions.length, sw:sessionsWord(todaySessions.length,lang)})}</span>
-                </div>
-                <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:6,paddingTop:8,borderTop:'1px solid '+G.bdr}}>
-                  {todaySessions.slice(0,4).map((s,i)=>(
-                    <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:11}}>
-                      <span style={{color:G.txt,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginRight:8}}>{s.gameTitle}</span>
-                      <span style={{color:G.dim,flexShrink:0,fontFamily:"'Orbitron',monospace"}}>{fmtHours(s.hours,{compact:true})}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* This Week — 7 day bar chart */}
-          <div className='ccd'>
-            <div className='ctl'>{t(lang,'thisWeek')}</div>
-            <div style={{display:'flex',alignItems:'baseline',gap:10,marginBottom:12}}>
-              <span style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.pur}}>{fmtHours(weekHours)}</span>
-              {prevWkHours>0 && deltaLine(weekDelta,'vsLastWeek')}
-            </div>
-            <div style={{display:'flex',gap:4,height:80,alignItems:'flex-end'}}>
-              {wkDays.map((d,i)=>{
-                const heightPct=d.hours/maxWkHours*100;
-                const isToday=d.key===todayKey;
-                return (
-                  <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-                    <div style={{flex:1,width:'100%',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
-                      <div style={{width:'100%',height:heightPct+'%',minHeight:d.hours>0?4:0,background:d.hours>0?(isToday?G.grn:G.pur):'transparent',borderRadius:'4px 4px 0 0',opacity:d.hours>0?(isToday?1:0.7):0.2,transition:'height .3s'}}/>
-                    </div>
-                    <div style={{fontSize:9,color:isToday?G.grn:G.dim,fontWeight:isToday?700:500}}>{dayLabels[i]}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* This Month — calendar heatmap */}
-          <div className='ccd'>
-            <div className='ctl'>{t(lang,'thisMonth')}</div>
-            <div style={{display:'flex',alignItems:'baseline',gap:10,marginBottom:12}}>
-              <span style={{fontFamily:"'Orbitron',monospace",fontSize:24,fontWeight:900,color:G.blu}}>{fmtHours(monthHours)}</span>
-              {prevMHours>0 && deltaLine(monthDelta,'vsLastMonth')}
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3}}>
-              {monthDays.map((d,i)=>{
-                const intensity=d.hours/maxDayHours;
-                const isToday=d.key===todayKey;
-                let bg,color=G.dim;
-                if(d.isFuture){ bg='transparent'; color='rgba(90,106,138,.3)'; }
-                else if(d.hours===0){ bg=G.card2; }
-                else {
-                  // Green gradient: light to bright based on intensity
-                  const op=0.2+intensity*0.8;
-                  bg=`rgba(57,255,110,${op})`;
-                  color=intensity>0.5?'#000':G.txt;
-                }
-                return (
-                  <div key={i} title={d.hours>0?fmtHours(d.hours):''} style={{
-                    aspectRatio:'1',
-                    background:bg,
-                    border:'1px solid '+(isToday?G.grn:d.isFuture?'transparent':G.bdr),
-                    borderRadius:4,
-                    display:'flex',
-                    alignItems:'center',
-                    justifyContent:'center',
-                    fontSize:10,
-                    fontWeight:isToday?700:500,
-                    color,
-                    fontFamily:"'Orbitron',monospace",
-                  }}>{d.day}</div>
-                );
-              })}
-            </div>
-            <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:4,marginTop:8,fontSize:9,color:G.dim}}>
-              <span>{t(lang,'showLess')}</span>
-              {[0.2,0.4,0.6,0.8,1.0].map(op=>(
-                <div key={op} style={{width:10,height:10,background:`rgba(57,255,110,${op})`,borderRadius:2}}/>
-              ))}
-              <span>{t(lang,'showMore')}</span>
-            </div>
-          </div>
-
-          {/* Top played games this month */}
-          {topGames.length>0 && (
-            <div className='ccd'>
-              <div className='ctl'>{t(lang,'topGames')}</div>
-              <ul className='top-list'>
-                {topGames.map((g,i)=>(
-                  <li key={i} className='top-item'>
-                    <span className='top-title'>{g.title}</span>
-                    <span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.count}×</span>
-                    <span className='top-val' style={{color:G.grn}}>{fmtHours(g.hours,{compact:true})}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>;
-      })()}
       {/* Finance (tab==='finance') and Insights (tab==='insights') moved to Finance top-level component in v1.2.0 */}
     </div>
   );
@@ -2195,7 +1966,7 @@ function Finance({games,lang}){
 // (Wrapped, Achievements, Goals, Settings) — these used to either be a tab or a
 // modal. Centralizing them here freed a tab slot and gave each feature breathing
 // room behind a single entry point.
-function MenuOverlay({ onClose, onPick, lang, achStats, goalStats, currentYear, triggers }){
+function MenuOverlay({ onClose, onPick, lang, achStats, currentYear, triggers }){
   // v1.8.0: triggers={achievements, goals, wrapped, any} drive per-row red dots.
   // Falls back to no-dots if not provided (defensive — older callsites still work).
   const trig = triggers || { achievements:false, goals:false, wrapped:false };
@@ -2205,9 +1976,7 @@ function MenuOverlay({ onClose, onPick, lang, achStats, goalStats, currentYear, 
     { key:'achievements', ico:'🏆', tk:'menuAchievements',dk:'menuAchievementsDesc',
       vars:{ unlocked:achStats.unlocked, total:achStats.total },
       badge: achStats.unlocked>0 ? `${achStats.unlocked}/${achStats.total}` : null, dot: trig.achievements },
-    { key:'goals',        ico:'🎯', tk:'menuGoals',       dk:'menuGoalsDesc',
-      vars:{ active:goalStats.active, done:goalStats.done },
-      badge: goalStats.active>0 ? String(goalStats.active) : null, dot: trig.goals },
+    // v1.17.5 — Goals menu entry removed (feature retired).
     { key:'settings',     ico:'⚙️', tk:'menuSettings',    dk:'menuSettingsDesc' },
   ];
   return (
@@ -2279,520 +2048,6 @@ function Achievements({ games, longestStreak, lang, onClose }){
             );
           })}
         </div>}
-      </div>
-    </div>
-  );
-}
-
-// ─── v1.5.0 Goals manager overlay ────────────────────────────────────────────
-// Full CRUD on goals list. Adding a goal picks from GOAL_TEMPLATES and snapshots
-// the current month bounds — so a "Complete 3 games this month" goal added on
-// Apr 26 ends Apr 30, and on May 1 a fresh goal needs to be added (or the user
-// re-adds one). Keeps logic dumb and avoids surprise auto-renew.
-function GoalsManager({ goals, setGoals, games, sessions, lang, flash, onClose }){
-  const [picking,setPicking]=useState(false);
-  const active=goals.filter(g=>!g.doneAt);
-  const done=goals.filter(g=>!!g.doneAt);
-  const daysLeft=daysLeftInMonth();
-  function addGoal(tpl){
-    const { startKey, endKey } = monthBounds();
-    const id='gl_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-    const next=[...goals, { id, type:tpl.type, target:tpl.target, periodStart:startKey, periodEnd:endKey, doneAt:null }];
-    setGoals(next); goalsWrite(next);
-    setPicking(false);
-    flash(t(lang,'goalAdded'));
-  }
-  function delGoal(id){
-    const next=goals.filter(g=>g.id!==id);
-    setGoals(next); goalsWrite(next);
-    flash(t(lang,'goalRemoved'));
-  }
-  // Auto-mark goals done when current value reaches target. Persists doneAt.
-  // (App.jsx passes a setGoals that also writes to localStorage, so we don't
-  //  need a separate effect here for that — but we do need to detect crossings.)
-  useEffect(()=>{
-    let dirty=false;
-    const updated=goals.map(gl=>{
-      if(gl.doneAt) return gl;
-      const cur=goalCurrent(gl, games, sessions);
-      if(cur >= gl.target){
-        dirty=true;
-        return { ...gl, doneAt:new Date().toISOString() };
-      }
-      return gl;
-    });
-    if(dirty){
-      setGoals(updated); goalsWrite(updated);
-      const newlyDone = updated.filter((g,i)=>g.doneAt && !goals[i].doneAt);
-      if(newlyDone.length){
-        const gl=newlyDone[0];
-        const tpl=GOAL_TYPES[gl.type];
-        // v1.13.10 — defensive: goalsRead() filters unknown types, but if anything slips
-        // through (in-memory mutation, race), don't crash the toast — just skip it.
-        if(tpl){
-          const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
-          flash(t(lang,'goalDone',{title:titleStr}));
-        }
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[games, sessions]);
-
-  return (
-    <div className='bs-ovr'>
-      <div className='bs-hdr'>
-        <div className='bs-ttl'>{t(lang,'goalsTitle')}</div>
-        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
-      </div>
-      <div className='ach-pn'>
-        <div className='ach-sub'>{t(lang,'goalsSub')}</div>
-
-        {/* Active goals */}
-        <div className='goals-h'>{t(lang,'goalsActive',{n:active.length})}</div>
-        {active.length===0 && <div className='goals-empty'>
-          <div style={{fontSize:32,marginBottom:6}}>🎯</div>
-          <div className='goals-empty-t'>{t(lang,'goalsEmpty')}</div>
-          <div className='goals-empty-h'>{t(lang,'goalsEmptyHint')}</div>
-        </div>}
-        {active.map(gl=>{
-          const tpl=GOAL_TYPES[gl.type];
-          if(!tpl) return null;  // v1.13.10 — defensive: skip unknown goal types
-          const cur=goalCurrent(gl, games, sessions);
-          const pct=Math.min(100, Math.round((cur/gl.target)*100));
-          const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
-          return (
-            <div key={gl.id} className='goal-card'>
-              <div className='goal-row'>
-                <span className='goal-ico'>{tpl.ico}</span>
-                <div className='goal-body'>
-                  <div className='goal-title'>{titleStr}</div>
-                  <div className='goal-meta'>{cur} / {gl.target} · {daysLeft===0?t(lang,'goalLastDay'):t(lang,'goalRemainingDays',{n:daysLeft})}</div>
-                </div>
-                <button type='button' className='goal-del' onClick={()=>delGoal(gl.id)} aria-label={t(lang,'goalDelete')}>✕</button>
-              </div>
-              <div className='goal-bar'><div className='goal-bar-fill' style={{width:`${pct}%`}}/></div>
-            </div>
-          );
-        })}
-        <button type='button' className='acc-btn' style={{margin:'14px 0 6px'}} onClick={()=>setPicking(true)}>{t(lang,'goalsAdd')}</button>
-
-        {/* Done goals — collapsed list */}
-        {done.length>0 && <>
-          <div className='goals-h' style={{marginTop:14}}>{t(lang,'goalsDone',{n:done.length})}</div>
-          {done.map(gl=>{
-            const tpl=GOAL_TYPES[gl.type];
-            if(!tpl) return null;  // v1.13.10 — defensive: skip unknown goal types
-            const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
-            return (
-              <div key={gl.id} className='goal-card goal-card-done'>
-                <div className='goal-row'>
-                  <span className='goal-ico'>✅</span>
-                  <div className='goal-body'>
-                    <div className='goal-title'>{titleStr}</div>
-                    <div className='goal-meta'>{fmtShort(gl.doneAt, lang)}</div>
-                  </div>
-                  <button type='button' className='goal-del' onClick={()=>delGoal(gl.id)} aria-label={t(lang,'goalDelete')}>✕</button>
-                </div>
-              </div>
-            );
-          })}
-        </>}
-      </div>
-
-      {/* Goal template picker */}
-      {picking && (
-        <div className='confirm-ovr' onClick={()=>setPicking(false)}>
-          <div className='confirm-box' onClick={e=>e.stopPropagation()} style={{maxWidth:380}}>
-            <div className='confirm-title'>{t(lang,'goalsAddTitle')}</div>
-            <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:14}}>
-              {GOAL_TEMPLATES.map((tpl,i)=>{
-                const def=GOAL_TYPES[tpl.type];
-                if(!def) return null;  // v1.13.10 — defensive (templates are static, but consistent)
-                return (
-                  <button key={i} type='button' className='goal-tpl' onClick={()=>addGoal(tpl)}>
-                    <span style={{fontSize:20}}>{def.ico}</span>
-                    <span style={{flex:1,textAlign:'left'}}>{t(lang, def.tk, goalParams(tpl.type, tpl.target, lang))}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <button type='button' className='bcn' style={{marginTop:14,width:'100%'}} onClick={()=>setPicking(false)}>{t(lang,'cancel')}</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── v1.5.0 Goals card (Home) ────────────────────────────────────────────────
-// Compact view of active goals on the Home tab. Tap → opens GoalsManager.
-function GoalsCard({ goals, games, sessions, lang, onOpen }){
-  const active=goals.filter(g=>!g.doneAt);
-  if(!active.length){
-    return (
-      <div className='goal-home-empty' onClick={onOpen}>
-        <span className='goal-ico' style={{fontSize:24}}>🎯</span>
-        <div className='goal-body'>
-          <div className='goal-title'>{t(lang,'goalCardTitle')}</div>
-          <div className='goal-meta'>{t(lang,'goalCardEmpty')}</div>
-        </div>
-        <span className='menu-arrow'>{t(lang,'goalCardCta')}</span>
-      </div>
-    );
-  }
-  return (
-    <div className='goal-home' onClick={onOpen}>
-      <div className='goal-home-h'>{t(lang,'goalCardTitle')}</div>
-      {active.slice(0,3).map(gl=>{
-        const tpl=GOAL_TYPES[gl.type];
-        if(!tpl) return null;  // v1.13.10 — defensive: skip unknown goal types
-        const cur=goalCurrent(gl, games, sessions);
-        const pct=Math.min(100, Math.round((cur/gl.target)*100));
-        const titleStr=t(lang, tpl.tk, goalParams(gl.type, gl.target, lang));
-        return (
-          <div key={gl.id} className='goal-mini'>
-            <div className='goal-mini-row'>
-              <span className='goal-ico'>{tpl.ico}</span>
-              <div className='goal-body'>
-                <div className='goal-mini-title'>{titleStr}</div>
-                <div className='goal-mini-meta'>{cur} / {gl.target}</div>
-              </div>
-            </div>
-            <div className='goal-bar'><div className='goal-bar-fill' style={{width:`${pct}%`}}/></div>
-          </div>
-        );
-      })}
-      {active.length>3 && <div className='goal-mini-meta' style={{textAlign:'center',marginTop:6}}>+ {active.length-3}</div>}
-    </div>
-  );
-}
-
-// ─── v1.5.0 Year-in-Review (Spotify Wrapped style) ───────────────────────────
-// Big-numbers card layout. Year picker at top defaults to current year, falls
-// back to most recent year with data. If selected year has no data → empty state.
-function YearInReview({ games, lang, onClose, flash }){
-  const years=getYearsWithData(games);
-  const currentYear=new Date().getFullYear();
-  const defaultYear = years.includes(currentYear) ? currentYear : (years[0] || currentYear);
-  const [year,setYear]=useState(defaultYear);
-  const review=computeYearReview(games, year);
-  const sym=getCurSymbol();
-  // v1.7.0: native share sheet with clipboard fallback. Builds a short text recap
-  // that fits in a tweet/Slack message — title from i18n, body from review's headline numbers.
-  async function handleShare(){
-    if(!review) return;
-    const top = review.topPlayed[0]?.game?.title;
-    const lines = [
-      t(lang,'wrappedShareLine1',{year}),
-      t(lang,'wrappedShareLine2',{hours:review.totalHours, added:review.gamesAdded, completed:review.gamesCompleted}),
-    ];
-    if(top) lines.push(t(lang,'wrappedShareTopPlayed',{title:top}));
-    const text = lines.join('\n');
-    const result = await shareText({
-      title: t(lang,'wrappedShareTitle',{year}),
-      text,
-      url: 'https://matiseekk-dot.github.io/Games/',
-    });
-    if(result==='shared')   { /* OS handled it — no toast needed */ }
-    else if(result==='copied')    { flash && flash(t(lang,'wrappedShareCopied')); }
-    else if(result==='cancelled') { /* user dismissed — silent */ }
-    else                          { flash && flash(t(lang,'wrappedShareFailed')); }
-  }
-  // v1.15.2 — Image share. Generates a 1080×1920 PNG via Canvas, hands it to the
-  // OS share sheet (Android Chrome 89+ canShare files API). Falls back to download
-  // if Web Share files unavailable. Disabled flag prevents double-fire while
-  // generating (image build can take ~200-400ms with cover fetch).
-  const [imgBusy,setImgBusy]=useState(false);
-  async function handleShareImage(){
-    if(!review || imgBusy) return;
-    setImgBusy(true);
-    flash && flash(t(lang,'wrappedShareImgGenerating'));
-    try {
-      const blob = await buildWrappedImage(review, year, lang);
-      if(!blob){ flash && flash(t(lang,'wrappedShareFailed')); return; }
-      const filename = `PS5Vault_${year}_Wrapped.png`;
-      const result = await shareFile({
-        title: t(lang,'wrappedShareTitle',{year}),
-        text: t(lang,'wrappedShareLine1',{year}),
-        blob,
-        filename,
-      });
-      if(result==='downloaded'){ flash && flash(t(lang,'wrappedShareImgDownloaded')); }
-      else if(result==='failed'){ flash && flash(t(lang,'wrappedShareFailed')); }
-      // 'shared' / 'cancelled' → silent
-    } catch {
-      flash && flash(t(lang,'wrappedShareFailed'));
-    } finally {
-      setImgBusy(false);
-    }
-  }
-  return (
-    <div className='bs-ovr'>
-      <div className='bs-hdr'>
-        <div className='bs-ttl'>🎁 {t(lang,'wrappedTitle',{year})}</div>
-        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
-      </div>
-      <div className='wr-pn'>
-        {years.length>1 && (
-          <div className='wr-years'>
-            <span className='wr-years-lbl'>{t(lang,'wrappedYearPicker')}</span>
-            {years.slice(0,5).map(y=>(
-              <button key={y} type='button' className={'wr-year'+(y===year?' on':'')} onClick={()=>setYear(y)}>{y}</button>
-            ))}
-          </div>
-        )}
-
-        {!review && (
-          <div className='empty' style={{padding:'48px 20px'}}>
-            <div className='eic'>🎁</div>
-            <div className='ett'>{t(lang,'wrappedEmpty',{year})}</div>
-            <div className='ess'>{t(lang,'wrappedEmptyHint')}</div>
-          </div>
-        )}
-
-        {review && <>
-          <div className='wr-sub'>{t(lang,'wrappedSub',{year})}</div>
-
-          {/* Big-number hero card */}
-          <div className='wr-hero'>
-            <div className='wr-hero-num'>{review.totalHours}</div>
-            <div className='wr-hero-lbl'>{t(lang,'wrappedTotalHours')}</div>
-            <div className='wr-hero-sub'>{review.sessionCount} {sessionsWord(review.sessionCount, lang)}</div>
-          </div>
-
-          {/* Stats grid */}
-          <div className='wr-grid'>
-            <div className='wr-stat'>
-              <div className='wr-stat-num'>{review.gamesAdded}</div>
-              <div className='wr-stat-lbl'>{t(lang,'wrappedGamesAdded')}</div>
-            </div>
-            <div className='wr-stat'>
-              <div className='wr-stat-num'>{review.gamesCompleted}</div>
-              <div className='wr-stat-lbl'>{t(lang,'wrappedGamesCompleted')}</div>
-            </div>
-            <div className='wr-stat'>
-              <div className='wr-stat-num' style={{color:G.gld}}>{review.platinums}</div>
-              <div className='wr-stat-lbl'>{t(lang,'wrappedPlatinums')}</div>
-            </div>
-            <div className='wr-stat'>
-              <div className='wr-stat-num' style={{color:G.pur}}>{review.activeDays}</div>
-              <div className='wr-stat-lbl'>{t(lang,'wrappedActiveDays')}</div>
-              <div className='wr-stat-sub'>{t(lang,'wrappedActiveDaysDesc',{total:review.totalDaysInYear})}</div>
-            </div>
-          </div>
-
-          {/* Top played */}
-          {review.topPlayed.length>0 && <div className='wr-card'>
-            <div className='wr-card-h'>{t(lang,'wrappedTopPlayed')}</div>
-            {review.topPlayed.map((entry,i)=>{
-              const g=entry.game;
-              return (
-                <div key={g.id} className='wr-row'>
-                  <span className='wr-rank'>#{i+1}</span>
-                  {g.cover ? <img className='wr-cov' src={g.cover} alt='' loading='lazy'/> : <div className='wr-cov0'>{g.abbr||'??'}</div>}
-                  <div className='wr-row-body'>
-                    <div className='wr-row-title'>{g.title}</div>
-                    <div className='wr-row-meta'>{Math.round(entry.hours)}h{g.genre?' · '+g.genre:''}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>}
-
-          {/* Highest rated */}
-          {review.highestRated && <div className='wr-card'>
-            <div className='wr-card-h'>{t(lang,'wrappedHighestRated')}</div>
-            <div className='wr-row'>
-              {review.highestRated.cover ? <img className='wr-cov' src={review.highestRated.cover} alt='' loading='lazy'/> : <div className='wr-cov0'>{review.highestRated.abbr||'??'}</div>}
-              <div className='wr-row-body'>
-                <div className='wr-row-title'>{review.highestRated.title}</div>
-                <div className='wr-row-meta' style={{color:G.gld,fontWeight:700}}>★ {(+review.highestRated.rating).toFixed(1)} / 10</div>
-              </div>
-            </div>
-          </div>}
-
-          {/* Top genre */}
-          {review.topGenre && <div className='wr-card'>
-            <div className='wr-card-h'>{t(lang,'wrappedTopGenre')}</div>
-            <div className='wr-genre-name'>{review.topGenre.name}</div>
-            <div className='wr-genre-meta'>{t(lang,'wrappedTopGenreDesc',{n:review.topGenre.hours, hrs:hoursWord(review.topGenre.hours,lang), games:review.topGenre.gamesCount, gw:gamesWord(review.topGenre.gamesCount,lang)})}</div>
-          </div>}
-
-          {/* Money + records */}
-          <div className='wr-grid'>
-            <div className='wr-stat'>
-              <div className='wr-stat-num' style={{color:G.org}}>{Math.round(review.totalSpent)}{sym}</div>
-              <div className='wr-stat-lbl'>{t(lang,'wrappedSpent')}</div>
-            </div>
-            <div className='wr-stat'>
-              <div className='wr-stat-num' style={{color:G.grn}}>{Math.round(review.totalRecovered)}{sym}</div>
-              <div className='wr-stat-lbl'>{t(lang,'wrappedRecovered')}</div>
-            </div>
-            <div className='wr-stat'>
-              <div className='wr-stat-num'>{review.longestStreak}</div>
-              <div className='wr-stat-lbl'>{t(lang,'wrappedLongestStreak')}</div>
-            </div>
-            <div className='wr-stat'>
-              <div className='wr-stat-num'>{review.longestSession}h</div>
-              <div className='wr-stat-lbl'>{t(lang,'wrappedLongestSession')}</div>
-            </div>
-          </div>
-
-          {/* v1.15.2 — Two share paths: text (Twitter/SMS-friendly) + image (IG Story
-              / TikTok / Discord). Image is the viral mechanic — visual hero number is
-              the whole point of a shareable Wrapped. Text remains as the lighter option. */}
-          <div className='wr-share-row'>
-            <button type='button' className='wr-share-btn wr-share-btn-img' onClick={handleShareImage} disabled={imgBusy}>
-              {imgBusy ? '⏳ ' : '🖼️ '}{t(lang,'wrappedShareImg')}
-            </button>
-            <button type='button' className='wr-share-btn wr-share-btn-txt' onClick={handleShare}>
-              📤 {t(lang,'wrappedShare')}
-            </button>
-          </div>
-        </>}
-      </div>
-    </div>
-  );
-}
-
-// v1.9.0 — Recommendations overlay.
-// Hybrid two-track UI ("Bo lubisz" / "Bo grałeś w") backed by lib/recommend.js.
-// Loading is async (fetch from RAWG with 30-day cache). Empty states are per-track
-// — if a user has rated games but never completed any, only the "Bo lubisz" track
-// has content; the "Bo grałeś w" tab shows a CTA telling them to mark a game completed.
-//
-// Tapping "+ Dodaj do kolekcji" on a recommendation opens the add-Modal pre-filled
-// with the title/cover/genre/year/rawgId/playtime so the user just picks a status
-// and saves. The pre-fill object has no `id`, so Modal's isEdit check correctly
-// treats it as a NEW game.
-function Recommendations({ games, lang, onClose, onAdd }){
-  const [tab,setTab]=useState('rated');  // 'rated' | 'completed'
-  const [data,setData]=useState(null);    // null while loading, then {topRated, completed, hasAnyData}
-  const [error,setError]=useState(false);
-
-  // Pre-check: does the user even have any rawg-id-bearing games to seed from?
-  // If not, skip the fetch entirely and show the bootstrap empty state.
-  const hasSeedableGames = games.some(g => g && g.rawgId);
-
-  useEffect(()=>{
-    if(!hasSeedableGames){ setData({ topRated:{recs:[],seeds:[]}, completed:{recs:[],seeds:[]}, hasAnyData:false }); return; }
-    let cancelled=false;
-    setError(false);
-    buildRecommendations(games)
-      .then(d => { if(!cancelled) setData(d); })
-      .catch(() => { if(!cancelled) setError(true); });
-    return () => { cancelled = true; };
-  },[hasSeedableGames]);// eslint-disable-line — only re-run if seed availability changes
-
-  const track = data ? (tab==='rated' ? data.topRated : data.completed) : null;
-
-  return (
-    <div className='bs-ovr'>
-      <div className='bs-hdr'>
-        <div className='bs-ttl'>✨ {t(lang,'recTitle')}</div>
-        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
-      </div>
-      <div className='rec-pn'>
-        {/* Intent picker tabs */}
-        <div className='rec-tabs'>
-          <button type='button' className={'rec-tab'+(tab==='rated'?' on':'')} onClick={()=>setTab('rated')}>
-            ❤️ {t(lang,'recTabRated')}
-          </button>
-          <button type='button' className={'rec-tab'+(tab==='completed'?' on':'')} onClick={()=>setTab('completed')}>
-            ✅ {t(lang,'recTabCompleted')}
-          </button>
-        </div>
-
-        {/* Bootstrap empty: no rawg-id games to seed from */}
-        {!hasSeedableGames && (
-          <div className='rec-empty'>
-            <div className='eic'>✨</div>
-            <div className='ett'>{t(lang,'recEmptyNoRawg')}</div>
-            <div className='ess'>{t(lang,'recEmptyNoRawgHint')}</div>
-          </div>
-        )}
-
-        {/* Loading state */}
-        {hasSeedableGames && !data && !error && (
-          <div className='rec-loading'>
-            <div className='rec-spinner' aria-hidden='true'/>
-            <div>{t(lang,'recLoading')}</div>
-          </div>
-        )}
-
-        {/* Error state */}
-        {error && (
-          <div className='rec-empty'>
-            <div className='eic'>⚠️</div>
-            <div className='ett'>{t(lang,'recError')}</div>
-            <button type='button' className='rec-retry' onClick={()=>{ setError(false); setData(null); }}>{t(lang,'retry')}</button>
-          </div>
-        )}
-
-        {/* Per-track empty state.
-            v1.13.9 — Distinguish "user not eligible" (no seeds) from "RAWG returned nothing
-            for the seeds we sent" (seeds present but recs empty). Previously both showed the
-            same "Rate ≥8 / Finish more" hint, which lied to users who already had eligible
-            seeds — they'd see the message and assume their data was wrong, not that the
-            external API returned an empty suggested-list. */}
-        {data && track && track.recs.length===0 && (
-          <div className='rec-empty'>
-            {track.seeds.length===0 ? (
-              <>
-                <div className='eic'>{tab==='rated'?'❤️':'✅'}</div>
-                <div className='ett'>{tab==='rated'?t(lang,'recEmptyRated'):t(lang,'recEmptyCompleted')}</div>
-                <div className='ess'>{tab==='rated'?t(lang,'recEmptyRatedHint'):t(lang,'recEmptyCompletedHint')}</div>
-              </>
-            ) : (
-              <>
-                <div className='eic'>🤷</div>
-                <div className='ett'>{t(lang,'recNoMatches')}</div>
-                <div className='ess'>{t(lang,'recNoMatchesHint')}</div>
-                <button type='button' className='rec-retry' onClick={()=>{ setError(false); setData(null); }}>{t(lang,'retry')}</button>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Recommendations grid */}
-        {data && track && track.recs.length>0 && (
-          <>
-            <div className='rec-grid'>
-              {track.recs.map((rec,idx)=>{
-                // Build the "why recommended" line. Show the highest-rated reason first;
-                // if multiple seeds suggested this game, show the strongest one with a "+N" hint.
-                const reasons=[...rec.reasons].sort((a,b)=>(+b.rating||0)-(+a.rating||0));
-                const main=reasons[0];
-                const extras=reasons.length-1;
-                const reasonText = tab==='rated'
-                  ? t(lang,'recReason',{title:main.title, rating:main.rating ?? '?'})
-                  : t(lang,'recReasonCompleted',{title:main.title});
-                return (
-                  <div key={rec.id||idx} className='rec-card'>
-                    {rec.cover
-                      ? <div className='rec-cover' style={{backgroundImage:`url(${rec.cover})`}}/>
-                      : <div className='rec-cover0'>{rec.abbr||'??'}</div>}
-                    <div className='rec-body'>
-                      <div className='rec-title'>{rec.title}</div>
-                      <div className='rec-meta'>{[rec.genre, rec.year].filter(Boolean).join(' · ')}</div>
-                      <div className='rec-reason'>
-                        {reasonText}
-                        {extras>0 && <span className='rec-reason-more'> +{extras}</span>}
-                      </div>
-                      <button type='button' className='rec-add' onClick={()=>onAdd(rec)}>
-                        + {t(lang,'recAdd')}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {/* External link to explore more on RAWG */}
-            <a className='rec-explore' href='https://rawg.io' target='_blank' rel='noopener noreferrer'>
-              {t(lang,'recExploreMore')}
-            </a>
-          </>
-        )}
       </div>
     </div>
   );
@@ -3049,17 +2304,7 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             <span className='set-row-ico'>🧹</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'demoClear')}</div><div className='set-row-desc'>{t(lang,'demoClearDesc',{n:games.filter(g=>g._demo).length})}</div></div><span className='set-row-arrow'>›</span>
           </div>
         )}
-        {/* v1.9.0 — Recommendations cache cleanup (only renders if cache has any entries) */}
-        {(()=>{const stats=recsCacheStats(); if(stats.entries===0) return null; return (
-          <div className='set-row' onClick={()=>{
-            if(window.confirm(t(lang,'recCacheClearConfirm',{n:stats.entries}))){
-              recsCacheClear();
-              flash(t(lang,'recCacheCleared'));
-            }
-          }}>
-            <span className='set-row-ico'>♻️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'recCacheClear')}</div><div className='set-row-desc'>{t(lang,'recCacheClearDesc',{n:stats.entries, kb:Math.round(stats.bytes/1024)})}</div></div><span className='set-row-arrow'>›</span>
-          </div>
-        );})()}
+        {/* v1.17.5 — Recommendations cache cleanup removed (feature retired). */}
         {/* v1.15.0 — Reset onboarding wizard. Useful for users who skipped it accidentally
             or want to revisit the expectation-setting screen. Doesn't touch games or settings.
             Implementation: just clears the LS_ONBOARD flag + reloads. */}
@@ -3760,7 +3005,9 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
   // Note: g.addedAt is stored as toISOString() (UTC), so for users near midnight a game added
   // 1 maja 00:30 local time may slot into "April" budget. Documented limitation, not fixed
   // because g.addedAt schema would need a refactor.
-  const spent=games.filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought)
+  // v1.17.5 — exclude active pre-orders (unreleased) from budget spent, same as
+  // the Home "purchases this month" card.
+  const spent=games.filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought&&!(g.preOrdered&&g.releaseDate&&daysUntil(g.releaseDate)>0))
     .reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
 
   function commit(){
@@ -3866,8 +3113,7 @@ export default function App(){
   const [privacyOpen,setPrivacyOpen]=useState(false);
   // v1.5.0 — Hamburger-driven secondary screens. Single 'overlay' enum keeps mutual
   // exclusion trivial (you can't have Wrapped and Achievements open at once).
-  const [overlay,setOverlay]=useState(null); // 'menu' | 'wrapped' | 'achievements' | 'goals' | 'settings' | null
-  const [goals,setGoals]=useState(()=>goalsRead());
+  const [overlay,setOverlay]=useState(null); // 'menu' | 'wrapped' | 'achievements' | 'settings' | null
   // v1.7.0 — Queue of newly-unlocked achievement IDs not yet acknowledged by user.
   // Render shows the first one as a banner; tap or dismiss pops the queue.
   // Banner auto-dismisses after 6s (handled by useEffect below).
@@ -4238,23 +3484,16 @@ export default function App(){
     const ach=computeAchievements(games, computeLongestStreak(sbd2));
     const unlockedCount=ach.filter(a=>a.unlocked).length;
     const achTrigger = unlockedCount > menuSeen.achievementsCount;
-    // Goals: any goal that completed (doneAt) OR expired (periodEnd in past, no doneAt)
-    // since user last opened the manager. Both deserve attention — a finished goal feels
-    // good to acknowledge, an expired one is feedback for next month.
-    const lastGoalsAt = menuSeen.goalsAt ? new Date(menuSeen.goalsAt) : new Date(0);
+    // v1.17.5 — Goals feature retired; no goals trigger anymore.
     const now = new Date();
-    const goalsTrigger = goals.some(g => {
-      if (g.doneAt) return new Date(g.doneAt) > lastGoalsAt;
-      return g.periodEnd && new Date(g.periodEnd) < now;
-    });
     // Year-in-Review: nudge in December (month 11 zero-indexed) if user hasn't opened
     // Wrapped for the current year yet. Dot disappears the moment they tap it.
     const wrappedTrigger = now.getMonth() === 11 && menuSeen.wrappedYear !== now.getFullYear();
     return {
       achievements: achTrigger,
-      goals: goalsTrigger,
+      goals: false,
       wrapped: wrappedTrigger,
-      any: achTrigger || goalsTrigger || wrappedTrigger,
+      any: achTrigger || wrappedTrigger,
       // Pass current unlocked count along so MenuOverlay's onPick can mark seen
       _unlockedCount: unlockedCount,
     };
@@ -4319,9 +3558,6 @@ export default function App(){
           onAddFirst={()=>setModal('add')}
           onToggleNotify={toggleNotify}
           lang={lang}
-          goals={goals}
-          onGoalsOpen={()=>setOverlay('goals')}
-          onRecOpen={()=>setOverlay('recommendations')}
         />}
 
         {tab==='col'&&<>
@@ -4620,7 +3856,6 @@ export default function App(){
             lang={lang}
             currentYear={new Date().getFullYear()}
             achStats={(()=>{const sbd=new Map();collectSessions(games).forEach(s=>{const k=s.dateKey;if(!sbd.has(k))sbd.set(k,[]);sbd.get(k).push(s);});const ach=computeAchievements(games, computeLongestStreak(sbd));return {unlocked:ach.filter(a=>a.unlocked).length, total:ach.length};})()}
-            goalStats={{active:goals.filter(g=>!g.doneAt).length, done:goals.filter(g=>!!g.doneAt).length}}
             triggers={menuTriggers}
           />
         )}
@@ -4634,41 +3869,7 @@ export default function App(){
           const longest=computeLongestStreak(sbd);
           return <Achievements games={games} longestStreak={longest} lang={lang} onClose={()=>setOverlay('menu')}/>;
         })()}
-        {overlay==='goals' && (
-          <GoalsManager
-            goals={goals}
-            setGoals={setGoals}
-            games={games}
-            sessions={collectSessions(games)}
-            lang={lang}
-            flash={flash}
-            onClose={()=>setOverlay(null)}
-          />
-        )}
-        {overlay==='recommendations' && (
-          <Recommendations
-            games={games}
-            lang={lang}
-            onClose={()=>setOverlay(null)}
-            onAdd={rec=>{
-              // v1.9.0 — Pre-fill add modal from a recommendation. The pre-fill object
-              // intentionally omits `id` so Modal treats this as a NEW game (isEdit=false),
-              // but carries `rawgId` so the new game can itself become a Recommendations seed.
-              setOverlay(null);
-              setModal({
-                title: rec.title,
-                cover: rec.cover || '',
-                year: rec.year || new Date().getFullYear(),
-                genre: rec.genre || '',
-                releaseDate: rec.releaseDate || '',
-                abbr: rec.abbr || mkAbbr(rec.title),
-                rawgId: rec.id || null,
-                // pre-fill targetHours from RAWG playtime (same as fill() in Modal)
-                targetHours: +rec.playtime || '',
-              });
-            }}
-          />
-        )}
+        {/* v1.17.5 — Goals + Recommendations overlays removed (features retired). */}
         {overlay==='wipe' && (
           <WipeConfirm
             games={games}

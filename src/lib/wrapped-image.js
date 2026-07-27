@@ -263,11 +263,13 @@ export async function buildWrappedImage(review, year, lang) {
     ctx.fillText(pillText, W / 2, genreY + pillH / 2 + 2);
   }
 
-  // ── Active days + longest streak (small row) ───────────────────────────────
+  // ── Games played + avg hours/game (small row) ──────────────────────────────
+  // v1.17.5 — replaced session-only active-days/streak (always 0 post-timer)
+  // with game-level derived stats that work for imported libraries.
   const rowY = 1480;
   const rowItems = [
-    { value: `${review.activeDays || 0}`, label: lang === 'pl' ? 'AKTYWNYCH DNI' : lang === 'es' ? 'DÍAS ACTIVOS' : 'ACTIVE DAYS' },
-    { value: `${review.longestStreak || 0}`, label: lang === 'pl' ? 'NAJDŁUŻSZA SERIA' : lang === 'es' ? 'RACHA MÁS LARGA' : 'LONGEST STREAK' },
+    { value: `${review.gamesPlayed || 0}`, label: lang === 'pl' ? 'ZAGRANYCH GIER' : lang === 'es' ? 'JUEGOS JUGADOS' : 'GAMES PLAYED' },
+    { value: `${review.avgHoursPerGame || 0}h`, label: lang === 'pl' ? 'ŚR. NA GRĘ' : lang === 'es' ? 'PROM. POR JUEGO' : 'AVG PER GAME' },
   ];
   rowItems.forEach((it, i) => {
     const cx = (W / rowItems.length) * i + (W / rowItems.length) / 2;
