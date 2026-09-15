@@ -36,6 +36,10 @@ import { parsePlaynitePaste } from './lib/playnite-import.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
+// v1.17.6 — Collection list is rendered in pages of this many cards. Big imported
+// libraries (700+) otherwise mount hundreds of DOM nodes at once and jank.
+const COL_PAGE = 120;
+
 const CTip = ({active,payload,label}) => {
   if(!active||!payload?.length)return null;
   return <div style={{background:G.card2,border:`1px solid ${G.bdr}`,borderRadius:8,padding:'6px 10px',fontSize:11,color:G.txt}}>
@@ -923,7 +927,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
 // (from prior versions when the timer was active) are preserved on each game via
 // g.sessions[]; Stats → Time tab still uses them via collectSessions().
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcomeBack,onWelcomeRoll,onWelcomeDismiss}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -975,6 +979,22 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang}){
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
       </div>
+      {/* v1.17.6 — Welcome-back nudge (returning user + real backlog). */}
+      {welcomeBack>0 && (
+        <div className='hcard' style={{border:`1px solid rgba(167,139,250,.35)`,background:'rgba(167,139,250,.06)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <span style={{fontSize:28}}>👋</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:14,fontWeight:800,color:G.txt,marginBottom:2}}>{t(lang,'welcomeBackTitle')}</div>
+              <div style={{fontSize:12,color:G.dim,lineHeight:1.4}}>{t(lang,'welcomeBackBody',{n:welcomeBack})}</div>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:8,marginTop:12}}>
+            <button type='button' onClick={onWelcomeRoll} style={{flex:1,padding:'10px',border:'none',borderRadius:9,background:G.pur,color:'#000',fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:'pointer'}}>🎲 {t(lang,'randomPick')}</button>
+            <button type='button' onClick={onWelcomeDismiss} style={{padding:'10px 14px',border:`1px solid ${G.bdr}`,borderRadius:9,background:'transparent',color:G.dim,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,cursor:'pointer'}}>{t(lang,'welcomeBackDismiss')}</button>
+          </div>
+        </div>
+      )}
       {/* v1.17.5 — Goals card removed (feature retired per user request). */}
       {current.length>0?(
         <div className='hcard'>
@@ -2053,6 +2073,179 @@ function Achievements({ games, longestStreak, lang, onClose }){
   );
 }
 
+// v1.5.0 Year-in-Review overlay. v1.17.5 — display derives from game-level data
+// (see computeYearReview); session-only cards removed.
+function YearInReview({ games, lang, onClose, flash }){
+  const years=getYearsWithData(games);
+  const currentYear=new Date().getFullYear();
+  const defaultYear = years.includes(currentYear) ? currentYear : (years[0] || currentYear);
+  const [year,setYear]=useState(defaultYear);
+  const review=computeYearReview(games, year);
+  const sym=getCurSymbol();
+  // v1.7.0: native share sheet with clipboard fallback.
+  async function handleShare(){
+    if(!review) return;
+    const top = review.topPlayed[0]?.game?.title;
+    const lines = [
+      t(lang,'wrappedShareLine1',{year}),
+      t(lang,'wrappedShareLine2',{hours:review.totalHours, added:review.gamesAdded, completed:review.gamesCompleted}),
+    ];
+    if(top) lines.push(t(lang,'wrappedShareTopPlayed',{title:top}));
+    const text = lines.join('\n');
+    const result = await shareText({
+      title: t(lang,'wrappedShareTitle',{year}),
+      text,
+      url: 'https://matiseekk-dot.github.io/Games/',
+    });
+    if(result==='shared')   { /* OS handled it */ }
+    else if(result==='copied')    { flash && flash(t(lang,'wrappedShareCopied')); }
+    else if(result==='cancelled') { /* silent */ }
+    else                          { flash && flash(t(lang,'wrappedShareFailed')); }
+  }
+  const [imgBusy,setImgBusy]=useState(false);
+  async function handleShareImage(){
+    if(!review || imgBusy) return;
+    setImgBusy(true);
+    flash && flash(t(lang,'wrappedShareImgGenerating'));
+    try {
+      const blob = await buildWrappedImage(review, year, lang);
+      if(!blob){ flash && flash(t(lang,'wrappedShareFailed')); return; }
+      const filename = `PS5Vault_${year}_Wrapped.png`;
+      const result = await shareFile({
+        title: t(lang,'wrappedShareTitle',{year}),
+        text: t(lang,'wrappedShareLine1',{year}),
+        blob,
+        filename,
+      });
+      if(result==='downloaded'){ flash && flash(t(lang,'wrappedShareImgDownloaded')); }
+      else if(result==='failed'){ flash && flash(t(lang,'wrappedShareFailed')); }
+    } catch {
+      flash && flash(t(lang,'wrappedShareFailed'));
+    } finally {
+      setImgBusy(false);
+    }
+  }
+  return (
+    <div className='bs-ovr'>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>🎁 {t(lang,'wrappedTitle',{year})}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div className='wr-pn'>
+        {years.length>1 && (
+          <div className='wr-years'>
+            <span className='wr-years-lbl'>{t(lang,'wrappedYearPicker')}</span>
+            {years.slice(0,5).map(y=>(
+              <button key={y} type='button' className={'wr-year'+(y===year?' on':'')} onClick={()=>setYear(y)}>{y}</button>
+            ))}
+          </div>
+        )}
+
+        {!review && (
+          <div className='empty' style={{padding:'48px 20px'}}>
+            <div className='eic'>🎁</div>
+            <div className='ett'>{t(lang,'wrappedEmpty',{year})}</div>
+            <div className='ess'>{t(lang,'wrappedEmptyHint')}</div>
+          </div>
+        )}
+
+        {review && <>
+          <div className='wr-sub'>{t(lang,'wrappedSub',{year})}</div>
+
+          {/* Big-number hero card. v1.17.5 — sub shows games played + avg/game
+              (was session count, always 0 for imported libraries). */}
+          <div className='wr-hero'>
+            <div className='wr-hero-num'>{review.totalHours}</div>
+            <div className='wr-hero-lbl'>{t(lang,'wrappedTotalHours')}</div>
+            <div className='wr-hero-sub'>{review.gamesPlayed} {gamesWord(review.gamesPlayed, lang)} · ~{review.avgHoursPerGame}h {t(lang,'wrappedAvgPerGame')}</div>
+          </div>
+
+          {/* Stats grid. v1.17.5 — "games played" replaces session-only "active days". */}
+          <div className='wr-grid'>
+            <div className='wr-stat'>
+              <div className='wr-stat-num' style={{color:G.pur}}>{review.gamesPlayed}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedGamesPlayed')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num'>{review.gamesAdded}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedGamesAdded')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num'>{review.gamesCompleted}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedGamesCompleted')}</div>
+            </div>
+            <div className='wr-stat'>
+              <div className='wr-stat-num' style={{color:G.gld}}>{review.platinums}</div>
+              <div className='wr-stat-lbl'>{t(lang,'wrappedPlatinums')}</div>
+            </div>
+          </div>
+
+          {/* Top played */}
+          {review.topPlayed.length>0 && <div className='wr-card'>
+            <div className='wr-card-h'>{t(lang,'wrappedTopPlayed')}</div>
+            {review.topPlayed.map((entry,i)=>{
+              const g=entry.game;
+              return (
+                <div key={g.id} className='wr-row'>
+                  <span className='wr-rank'>#{i+1}</span>
+                  {g.cover ? <img className='wr-cov' src={g.cover} alt='' loading='lazy'/> : <div className='wr-cov0'>{g.abbr||'??'}</div>}
+                  <div className='wr-row-body'>
+                    <div className='wr-row-title'>{g.title}</div>
+                    <div className='wr-row-meta'>{Math.round(entry.hours)}h{g.genre?' · '+g.genre:''}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>}
+
+          {/* Highest rated */}
+          {review.highestRated && <div className='wr-card'>
+            <div className='wr-card-h'>{t(lang,'wrappedHighestRated')}</div>
+            <div className='wr-row'>
+              {review.highestRated.cover ? <img className='wr-cov' src={review.highestRated.cover} alt='' loading='lazy'/> : <div className='wr-cov0'>{review.highestRated.abbr||'??'}</div>}
+              <div className='wr-row-body'>
+                <div className='wr-row-title'>{review.highestRated.title}</div>
+                <div className='wr-row-meta' style={{color:G.gld,fontWeight:700}}>★ {(+review.highestRated.rating).toFixed(1)} / 10</div>
+              </div>
+            </div>
+          </div>}
+
+          {/* Top genre */}
+          {review.topGenre && <div className='wr-card'>
+            <div className='wr-card-h'>{t(lang,'wrappedTopGenre')}</div>
+            <div className='wr-genre-name'>{review.topGenre.name}</div>
+            <div className='wr-genre-meta'>{t(lang,'wrappedTopGenreDesc',{n:review.topGenre.hours, hrs:hoursWord(review.topGenre.hours,lang), games:review.topGenre.gamesCount, gw:gamesWord(review.topGenre.gamesCount,lang)})}</div>
+          </div>}
+
+          {/* Money. v1.17.5 — dropped session-only streak/session cards. */}
+          {(review.totalSpent>0 || review.totalRecovered>0) && (
+            <div className='wr-grid'>
+              <div className='wr-stat'>
+                <div className='wr-stat-num' style={{color:G.org}}>{Math.round(review.totalSpent)}{sym}</div>
+                <div className='wr-stat-lbl'>{t(lang,'wrappedSpent')}</div>
+              </div>
+              <div className='wr-stat'>
+                <div className='wr-stat-num' style={{color:G.grn}}>{Math.round(review.totalRecovered)}{sym}</div>
+                <div className='wr-stat-lbl'>{t(lang,'wrappedRecovered')}</div>
+              </div>
+            </div>
+          )}
+
+          <div className='wr-share-row'>
+            <button type='button' className='wr-share-btn wr-share-btn-img' onClick={handleShareImage} disabled={imgBusy}>
+              {imgBusy ? '⏳ ' : '🖼️ '}{t(lang,'wrappedShareImg')}
+            </button>
+            <button type='button' className='wr-share-btn wr-share-btn-txt' onClick={handleShare}>
+              📤 {t(lang,'wrappedShare')}
+            </button>
+          </div>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+
 // v1.11.1 — Wipe-all-data confirmation modal.
 // GDPR right-to-deletion + Play Data Safety compliance: user must have an in-app way
 // to delete ALL their data. This is the gate before pulling that trigger.
@@ -3105,6 +3298,16 @@ export default function App(){
   const [flt,setFlt]           = useState('all');
   const [q,setQ]               = useState('');
   const [sortBy,setSortBy]     = useState('added');
+  // v1.17.6 — Collection render cap. Rendering 700+ game cards at once janks
+  // hard on mobile; we render the first COL_PAGE and reveal more on demand.
+  const [colLimit,setColLimit] = useState(COL_PAGE);
+  // v1.17.6 — Backlog randomizer result (null = closed).
+  const [randomPick,setRandomPick] = useState(null);
+  // v1.17.6 — "Welcome back" nudge: if the user hasn't opened the app in a while
+  // and has a real backlog, show a one-tap prompt to re-engage (offer a random
+  // pick). This is the reliable retention hook — true closed-app push would need
+  // a backend, which contradicts the offline/no-account design.
+  const [welcomeBack,setWelcomeBack] = useState(null);
   const [platFilter,setPlatFilter]= useState('all');
   // v1.14.0 — source filter (parallel to platFilter). 'all' or one of SOURCES.
   // Auto-hidden in the UI when every game shares the same source — see filter row below.
@@ -3156,6 +3359,23 @@ export default function App(){
     });
   },[]);
   useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&Notification.permission==='granted')checkReleases(g,lang);});},[]);// eslint-disable-line
+
+  // v1.17.6 — Welcome-back nudge. Compare now against the last recorded open; if
+  // ≥7 days elapsed and the backlog has ≥5 unplayed games, surface a re-engage
+  // prompt on Home. Always stamp the new open time.
+  useEffect(()=>{
+    try{
+      const KEY='ps5vault_last_open';
+      const prev=localStorage.getItem(KEY);
+      const now=Date.now();
+      localStorage.setItem(KEY,String(now));
+      if(prev){
+        const days=(now-+prev)/86400000;
+        const backlog=games.filter(g=>g.status==='planuje'&&!(g.releaseDate&&daysUntil(g.releaseDate)>0)).length;
+        if(days>=7 && backlog>=5) setWelcomeBack(backlog);
+      }
+    }catch{}
+  },[]);// eslint-disable-line
 
   // v1.10.0 — Weekly summary push. Once-per-mount call; the helper internally throttles
   // to ≥7 days between fires + checks permission + activity. We wait until games are
@@ -3512,13 +3732,15 @@ export default function App(){
   // v1.13.8 — back-button intercept hook moved above the `if(!onboarded) return` early
   // return earlier in this component (Rules of Hooks fix). See comment block there.
 
+  // v1.17.6 — `added` now actually sorts by addedAt desc (was a no-op that just
+  // preserved array order). Added `completed` sort (by completedAt desc).
   const sortFn = {
-    added:  (a,b) => 0,
-    title:  (a,b) => a.title.localeCompare(b.title),
-    rating: (a,b) => (b.rating??-1)-(a.rating??-1),
-    hours:  (a,b) => (b.hours||0)-(a.hours||0),
-    price:  (a,b) => (+b.priceBought||0)-(+a.priceBought||0),
-
+    added:     (a,b) => (b.addedAt||'').localeCompare(a.addedAt||''),
+    title:     (a,b) => a.title.localeCompare(b.title),
+    rating:    (a,b) => (b.rating??-1)-(a.rating??-1),
+    hours:     (a,b) => (b.hours||0)-(a.hours||0),
+    price:     (a,b) => (+b.priceBought||0)-(+a.priceBought||0),
+    completed: (a,b) => (b.completedAt||'').localeCompare(a.completedAt||''),
   };
   const visible=games
     .filter(g=>flt==='all'||(flt==='sold'?g.priceSold!=null&&!!+g.priceSold:flt==='platinum'?g.platinum===true:g.status===flt))
@@ -3526,6 +3748,18 @@ export default function App(){
     .filter(g=>srcFilter==='all'||(g.source||'owned')===srcFilter)
     .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
     .sort(sortFn[sortBy]||sortFn.added);
+  // v1.17.6 — reset the render cap whenever the filter/search/sort signature
+  // changes, so a new query always starts from the top page.
+  useEffect(()=>{ setColLimit(COL_PAGE); }, [q, flt, platFilter, srcFilter, sortBy]);
+  const visibleCapped = visible.slice(0, colLimit);
+
+  // v1.17.6 — Backlog randomizer. Pool = unplayed, owned-or-any, not an unreleased
+  // pre-order. Shared by the toolbar button, the re-roll, and the welcome-back nudge.
+  const rollRandom = () => {
+    const pool = games.filter(g => g.status==='planuje' && !(g.releaseDate && daysUntil(g.releaseDate) > 0));
+    if (!pool.length) { flash(t(lang,'randomEmpty')); return; }
+    setRandomPick(pool[Math.floor(Math.random()*pool.length)]);
+  };
 
   return(
     <>
@@ -3558,11 +3792,16 @@ export default function App(){
           onAddFirst={()=>setModal('add')}
           onToggleNotify={toggleNotify}
           lang={lang}
+          welcomeBack={welcomeBack}
+          onWelcomeRoll={()=>{setWelcomeBack(null);rollRandom();}}
+          onWelcomeDismiss={()=>setWelcomeBack(null)}
         />}
 
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
           <div className='toolbar'>
+            {/* v1.17.6 — Backlog randomizer. Picks a random unplayed owned game. */}
+            <button type='button' className='tbtn' style={{borderColor:'rgba(167,139,250,.4)',color:G.pur}} onClick={rollRandom}>🎲 {t(lang,'randomPick')}</button>
             <button type='button' className='tbtn' onClick={()=>exportData(games,lang,()=>flash(t(lang,'backupSaved')))}>{t(lang,'export')}</button>
             <button type='button' className='tbtn' onClick={openImport}>{t(lang,'import')}</button>
           </div>
@@ -3586,14 +3825,16 @@ export default function App(){
           </div>}
           <div className='sort-row'>
             <span className='sort-lbl'>{t(lang,'sortBy')}</span>
-            {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
+            {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['completed',t(lang,'sortCompleted')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
               <button type='button' key={k} className={'sort-btn'+(sortBy===k?' on':'')} onClick={()=>setSortBy(k)}>{l}</button>
             ))}
           </div>
+          {/* v1.17.6 — Result count so users grasp filter scope at a glance (esp. big libraries). */}
+          {visible.length>0&&<div style={{fontSize:11,color:G.dim,padding:'0 2px 8px',fontWeight:600}}>{t(lang,'resultCount',{n:visible.length, gw:gamesWord(visible.length,lang)})}</div>}
           <div className='lst'>
             {visible.length===0
               ?<div className='empty'><div className='eic'>🎮</div><div className='ett'>{q?t(lang,'noResults'):t(lang,'noGames')}</div><div className='ess'>{q?t(lang,'noResultsFor',{q}):t(lang,'addFirst')}</div>{!q&&<button className='empty-cta' onClick={()=>setModal('add')}>{t(lang,'addGame')}</button>}</div>
-              :visible.map(g=>{const m=SM2[g.status]||SM2.planuje;const roi=g.priceSold!=null?+(g.priceSold||0) - +(g.priceBought||0):null;return(
+              :visibleCapped.map(g=>{const m=SM2[g.status]||SM2.planuje;const roi=g.priceSold!=null?+(g.priceSold||0) - +(g.priceBought||0):null;return(
                 <div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>setModal(g)}>
                   {g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
@@ -3611,6 +3852,12 @@ export default function App(){
                 </div>
               );})
             }
+            {/* v1.17.6 — Load-more: reveal the next page of the capped list. */}
+            {visible.length>colLimit&&(
+              <button type='button' className='empty-cta' style={{margin:'12px auto',display:'block'}} onClick={()=>setColLimit(l=>l+COL_PAGE)}>
+                {t(lang,'loadMore',{n:Math.min(COL_PAGE, visible.length-colLimit)})}
+              </button>
+            )}
           </div>
         </>}
 
@@ -3802,6 +4049,30 @@ export default function App(){
             games={games}
             lang={lang}
           />
+        )}
+
+        {/* v1.17.6 — Backlog randomizer result. "Co zagrać?" picks a random unplayed
+            game; user can jump in (→ gram), re-roll, or open details. */}
+        {randomPick&&(
+          <div className='rate-modal' onClick={()=>setRandomPick(null)}>
+            <div className='rate-box' onClick={e=>e.stopPropagation()} style={{textAlign:'center'}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:700,color:G.pur,marginBottom:12,letterSpacing:'.08em'}}>🎲 {t(lang,'randomPickTitle')}</div>
+              {randomPick.cover
+                ? <div style={{width:120,height:160,borderRadius:12,backgroundImage:`url(${randomPick.cover})`,backgroundSize:'cover',backgroundPosition:'center',margin:'0 auto 12px',border:`1px solid ${G.bdr}`}}/>
+                : <div style={{width:120,height:160,borderRadius:12,background:G.card2,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.pur,margin:'0 auto 12px',border:`1px solid ${G.bdr}`}}>{randomPick.abbr||'??'}</div>}
+              <div style={{fontSize:16,fontWeight:800,color:G.txt,marginBottom:4}}>{randomPick.title}</div>
+              <div style={{fontSize:11,color:G.dim,marginBottom:16}}>
+                {[randomPick.platform, randomPick.genre&&localizeGenre(randomPick.genre,lang), +randomPick.targetHours>0&&`~${randomPick.targetHours}h`].filter(Boolean).join(' · ')}
+              </div>
+              <div style={{display:'flex',gap:8,flexDirection:'column'}}>
+                <button type='button' className='confirm-yes' style={{background:G.grn,color:'#000',width:'100%'}} onClick={()=>{handleStatusChange(randomPick.id,'gram');flash(t(lang,'randomStarted',{title:randomPick.title}));setRandomPick(null);setTab('home');}}>▶ {t(lang,'startPlaying')}</button>
+                <div style={{display:'flex',gap:8}}>
+                  <button type='button' className='confirm-no' style={{flex:1}} onClick={rollRandom}>🎲 {t(lang,'randomReroll')}</button>
+                  <button type='button' className='confirm-no' style={{flex:1}} onClick={()=>{const g=randomPick;setRandomPick(null);setModal(g);}}>{t(lang,'details')}</button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {rateModal&&(
