@@ -334,7 +334,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .set-row-desc{font-size:11px;color:${G.dim};margin-top:2px}
 .set-row-arrow{color:${G.dim};font-size:14px}
 .set-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(0,212,255,.12);color:${G.blu}}
-.lang-row{display:flex;gap:6px;padding:0 4px;margin-bottom:20px}
+.lang-row{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px;margin-bottom:20px}
 .lang-btn{flex:1 1 30%;min-width:96px;padding:10px;border-radius:10px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
 .lang-btn.on{border-color:${G.blu};color:${G.blu};background:rgba(0,212,255,.1)}
 .empty{text-align:center;padding:48px 16px;color:${G.dim};animation:fadeIn .3s ease}

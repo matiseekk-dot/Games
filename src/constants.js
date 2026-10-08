@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies - every other module imports from here.
 
-export const APP_VER  = '1.21.0';
+export const APP_VER  = '1.21.1';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 // v1.17.7 - Umami Cloud website ID (public by design, like the Cloudflare beacon token).
 // Empty = funnel analytics fully off (see src/lib/analytics.js).
@@ -91,7 +91,7 @@ export const LANGS = [
 ];
 // Languages users can pick or get auto-detected. Add a code here only once its block
 // exists in i18n.js; until then de/fr/it/pt stay hidden (the rest of the support is in place).
-export const READY_LANGS = ['pl', 'en', 'es'];
+export const READY_LANGS = ['pl', 'en', 'es', 'de', 'fr', 'it', 'pt'];
 export function localeFor(lang) { return (LANGS.find(l => l.code === lang) || LANGS[1]).locale; }
 
 // v1.14.3 - Localize a stored canonical (PL) genre value for display in lang. Returns the
