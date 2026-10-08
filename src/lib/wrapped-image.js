@@ -315,3 +315,6 @@ export async function buildWrappedImage(review, year, lang) {
     }
   });
 }
+
+// v1.20.1 - shared with the pile-of-shame image (shame-image.js)
+export { ensureFonts, roundRect, loadCover, COL };

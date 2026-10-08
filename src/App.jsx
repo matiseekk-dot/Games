@@ -23,6 +23,8 @@ import {
 } from './lib/storage.js';
 import { registerSW, requestNotifPerm, checkReleases, shareText, shareFile } from './lib/platform.js';
 import { buildWrappedImage } from './lib/wrapped-image.js';
+import { buildShameImage } from './lib/shame-image.js';
+import { computeShamePile } from './lib/shame.js';
 import { rawgSearch, fetchGameById } from './lib/rawg.js';
 import { eanCacheRead, cleanProductName, eanLookup } from './lib/barcode.js';
 import { collectSessions, computeLongestStreak } from './lib/sessions.js';
@@ -1000,7 +1002,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
 // (from prior versions when the timer was active) are preserved on each game via
 // g.sessions[]; Stats → Time tab still uses them via collectSessions().
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcomeBack,onWelcomeRoll,onWelcomeDismiss,driveBanner,onDriveBackup}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcomeBack,onWelcomeRoll,onWelcomeDismiss,driveBanner,onDriveBackup,onShareShame}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -1169,6 +1171,16 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
         </div>
       )}
       {/* v1.17.5 - Recommendations CTA removed (feature retired per user request). */}
+      {/* v1.20.1 - pile of shame share card, once there is a real pile (3+ never started) */}
+      {(()=>{ const shame=computeShamePile(games); return shame.count>=3&&(
+        <button type='button' className='hcard' onClick={onShareShame} style={{width:'100%',display:'flex',alignItems:'center',gap:12,textAlign:'left',border:'1px solid rgba(255,159,28,.35)',background:'linear-gradient(135deg,rgba(255,159,28,.07),rgba(255,77,109,.04))',color:G.txt,fontFamily:"'Syne',sans-serif",cursor:'pointer'}}>
+          <span style={{fontSize:26}}>🙈</span>
+          <span style={{flex:1,minWidth:0}}>
+            <span style={{display:'block',fontSize:13,fontWeight:800}}>{t(lang,'shameHomeTitle')}</span>
+            <span style={{display:'block',fontSize:11,color:G.dim,marginTop:2}}>{t(lang,'shameHomeSub',{n:shame.count,gw:gamesWord(shame.count,lang)})}{shame.value>0?' · '+pln(shame.value,lang):''}</span>
+          </span>
+          <span style={{fontSize:12,fontWeight:700,color:G.org,whiteSpace:'nowrap'}}>{t(lang,'shameShareBtn')}</span>
+        </button>); })()}
       <RawgCredit lang={lang}/>
     </div>
   );
@@ -1818,7 +1830,7 @@ function Stats({games,lang}){
 
 // v1.2.0 - Finance as standalone main-tab component
 // Combines former Stats→Finance and Stats→Analysis subtabs
-function Finance({games,lang,proLocked=false,onUnlock}){
+function Finance({games,lang,proLocked=false,onUnlock,onShareShame}){
   const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } = RC;
   const [tab,setTab]=useState('overview');
   if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
@@ -2001,6 +2013,7 @@ function Finance({games,lang,proLocked=false,onUnlock}){
             </div>
             <div style={{fontFamily:"'Orbitron',monospace",fontSize:30,fontWeight:900,color:G.org,lineHeight:1,marginTop:6,marginBottom:4}}>{pln(backlogCost,lang)}</div>
             <div style={{fontSize:11,color:G.dim}}>{t(lang,'backlogCostDesc',{n:backlogGames.length,gamesWord:gamesWord(backlogGames.length,lang)})}</div>
+            {onShareShame&&computeShamePile(games).count>0&&<button type='button' onClick={onShareShame} style={{marginTop:10,minHeight:36,padding:'0 14px',borderRadius:10,border:'1px solid rgba(255,159,28,.45)',background:'transparent',color:G.org,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:'pointer'}}>{t(lang,'shameShareBtn')}</button>}
           </div>}
           {monthlyHasData&&<div className='ccd'>
             <div className='ctl'>{t(lang,'spendingByMonth')}</div>
@@ -3598,6 +3611,7 @@ export default function App(){
   // v1.20.0 - rating sheet: null or what triggered it ('complete' | 'milestone' | 'wrapped')
   const [rateAsk,setRateAsk]   = useState(null);
   const rateTimer=useRef(null);
+  const shameBusy=useRef(false);
   // v1.17.6 - Backlog randomizer result (null = closed).
   const [randomPick,setRandomPick] = useState(null);
   // v1.17.6 - "Welcome back" nudge: if the user hasn't opened the app in a while
@@ -4148,6 +4162,28 @@ export default function App(){
     if(kind==='never') writeRate({never:true});
     setRateAsk(null);
   }
+  // v1.20.1 - pile of shame poster through the system share sheet (download fallback)
+  async function shareShame(from){
+    if(shameBusy.current) return;
+    const pile=computeShamePile(games);
+    if(!pile.count) return;
+    shameBusy.current=true;
+    flash(t(lang,'wrappedShareImgGenerating'));
+    try{
+      const blob=await buildShameImage(pile,lang);
+      if(!blob){ flash(t(lang,'wrappedShareFailed')); return; }
+      const result=await shareFile({
+        title:t(lang,'shameHomeTitle'),
+        text:t(lang,'shameShareText',{n:pile.count,gw:gamesWord(pile.count,lang),url:PLAY_STORE_URL}),
+        blob,
+        filename:'PS5Vault_pile_of_shame.png',
+      });
+      track('shame_share',{from,result});
+      if(result==='downloaded') flash(t(lang,'wrappedShareImgDownloaded'));
+      else if(result==='failed') flash(t(lang,'wrappedShareFailed'));
+    }catch{ flash(t(lang,'wrappedShareFailed')); }
+    finally{ shameBusy.current=false; }
+  }
   function toggleSel(id){
     setSel(s=>{ const n=new Set(s||[]); if(n.has(id)) n.delete(id); else n.add(id); return n; });
   }
@@ -4219,6 +4255,7 @@ export default function App(){
           onWelcomeDismiss={()=>setWelcomeBack(null)}
           driveBanner={driveBanner}
           onDriveBackup={driveBackupTap}
+          onShareShame={()=>shareShame('home')}
         />}
 
         {tab==='col'&&<>
@@ -4296,7 +4333,7 @@ export default function App(){
         </>}
 
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
-        {tab==='fin'&&<WithCharts lang={lang}>{()=><Finance games={games} lang={lang} proLocked={proLocked} onUnlock={()=>openPro('finance')}/>}</WithCharts>}
+        {tab==='fin'&&<WithCharts lang={lang}>{()=><Finance games={games} lang={lang} proLocked={proLocked} onUnlock={()=>openPro('finance')} onShareShame={()=>shareShame('finance')}/>}</WithCharts>}
         {tab==='st'&&<WithCharts lang={lang}>{()=><Stats games={games} lang={lang}/>}</WithCharts>}
         {/* v1.5.0 - Settings/Achievements/Goals/Wrapped now live behind hamburger menu (see overlays below) */}
 

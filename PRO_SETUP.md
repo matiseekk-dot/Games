@@ -85,7 +85,7 @@ Kod jest gotowy i wyłączony. Załóż darmowe konto na umami.is (plan Hobby, b
 stronę `matiseekk-dot.github.io` i przekaż mi jej Website ID. Wtedy wpiszę je w
 `UMAMI_WEBSITE_ID` i wdrożę. Zdarzenia: `first_open`, `onboarding_done`, `first_game_added`,
 `import_done`, `finance_opened`, `paywall_view`, `purchase_start`, `purchase_result`,
-`drive_enabled`, `drive_restore`, `rate_prompt`, `rate_click`.
+`drive_enabled`, `drive_restore`, `rate_prompt`, `rate_click`, `shame_share`.
 Po włączeniu trzeba też zaktualizować formularz Bezpieczeństwo danych w Play Console
 (Aktywność w aplikacji, Interakcje z aplikacją: zbierane, nieudostępniane, anonimowe).
 
