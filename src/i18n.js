@@ -293,6 +293,8 @@ const TRANSLATIONS = {
     rateAskNever:"Nie pytaj więcej",
     rateRowTitle:"Oceń w Google Play",
     rateRowDesc:"Ocena pomaga innym graczom znaleźć apkę",
+    proTestOn:"🧪 Tryb testowy Pro włączony na tym urządzeniu",
+    proTestOff:"Tryb testowy Pro wyłączony",
     // v1.20.1: pile of shame
     shameHomeTitle:"Twoja kupka wstydu",
     shameHomeSub:"Niezagrane: {n} {gw}",
@@ -921,6 +923,8 @@ const TRANSLATIONS = {
     rateAskNever:"Don't ask again",
     rateRowTitle:"Rate on Google Play",
     rateRowDesc:"A rating helps other players find the app",
+    proTestOn:"🧪 Pro test mode on for this device",
+    proTestOff:"Pro test mode off",
     // v1.20.1: pile of shame
     shameHomeTitle:"Your pile of shame",
     shameHomeSub:"Unplayed: {n} {gw}",
@@ -1523,6 +1527,8 @@ const TRANSLATIONS = {
     rateAskNever:"No volver a preguntar",
     rateRowTitle:"Valorar en Google Play",
     rateRowDesc:"Una valoración ayuda a otros jugadores a encontrar la app",
+    proTestOn:"🧪 Modo de prueba Pro activado en este dispositivo",
+    proTestOff:"Modo de prueba Pro desactivado",
     // v1.20.1: pile of shame
     shameHomeTitle:"Tu pila de la vergüenza",
     shameHomeSub:"Sin jugar: {n} {gw}",

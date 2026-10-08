@@ -14,8 +14,18 @@ import { PRO_ENABLED, PRO_SKU, BILLING_API } from '../constants.js';
 export const PLAY_BILLING_METHOD = 'https://play.google.com/billing';
 const LS_PRO = 'ps5vault_pro';
 
+// v1.20.4 - device-only test switch, so a license tester can see and buy Pro before it is
+// on for everyone. Toggled by tapping the version row in Settings 7 times.
+const LS_PRO_TEST = 'ps5vault_pro_test';
+export function proTestMode() {
+  try { return localStorage.getItem(LS_PRO_TEST) === '1'; } catch { return false; }
+}
+export function setProTestMode(on) {
+  try { if (on) localStorage.setItem(LS_PRO_TEST, '1'); else localStorage.removeItem(LS_PRO_TEST); } catch {}
+}
+
 export function proGateActive() {
-  return PRO_ENABLED;
+  return PRO_ENABLED || proTestMode();
 }
 
 export function readCachedPro() {

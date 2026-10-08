@@ -37,7 +37,7 @@ import { parseSteamPaste } from './lib/steam-import.js';
 import { parseXboxPaste } from './lib/xbox-import.js';
 import { parsePlaynitePaste } from './lib/playnite-import.js';
 import { initAnalytics, track, trackOnce, countBucket, getPlatform } from './lib/analytics.js';
-import { proGateActive, readCachedPro, refreshEntitlement, buyPro, getProPrice, getBillingService } from './lib/pro.js';
+import { proTestMode, setProTestMode, proGateActive, readCachedPro, refreshEntitlement, buyPro, getProPrice, getBillingService } from './lib/pro.js';
 import { driveAvailable, readDriveState, backupStale, loadGis, gisReady, hasValidToken, requestToken, buildPayload, backupNow, fetchBackup, disableDrive, markDriveEnabled } from './lib/drivebackup.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 import { applyStatus, setStatusMany, revertMany, removeGames, restoreGames } from './lib/bulk.js';
@@ -2747,6 +2747,17 @@ function recomputeImportStatus(g) {
 }
 
 function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openPlayniteImport,openImportUndo,openPrivacy,onWipeOpen}){
+  // v1.20.4 - 7 taps on the version row toggle Pro test mode on this device (see lib/pro.js)
+  const verTaps=useRef({n:0,at:0});
+  function onVersionTap(){
+    const now=Date.now(); const v=verTaps.current;
+    v.n = now-v.at<1500 ? v.n+1 : 1; v.at=now;
+    if(v.n<7) return;
+    v.n=0;
+    const on=!proTestMode(); setProTestMode(on);
+    flash(t(lang,on?'proTestOn':'proTestOff'));
+    setTimeout(()=>window.location.reload(),1200);
+  }
   // importRef removed in v1.2.0 - import now opens via ImportModal
   // v1.13.14 - Removed className='scr' wrapper. Settings is rendered INSIDE the
   // .bs-ovr's inner scroll div (with its own flex:1/overflow-y:auto/min-height:0).
@@ -2916,7 +2927,7 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='set-row' onClick={()=>openFeedback(lang,games.length)}>
           <span className='set-row-ico'>📧</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'reportProblem')}</div><div className='set-row-desc'>{t(lang,'reportProblemDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        <div className='set-row' style={{cursor:'default'}}>
+        <div className='set-row' style={{cursor:'default'}} onClick={onVersionTap}>
           <span className='set-row-ico'>ℹ️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'appInfo')}</div><div className='set-row-desc'>{t(lang,'appInfoDesc',{ver:APP_VER})}</div></div><span className='set-badge'>v{APP_VER}</span>
         </div>
       </div>
