@@ -25,6 +25,7 @@ import { registerSW, requestNotifPerm, checkReleases, shareText, shareFile } fro
 import { buildWrappedImage } from './lib/wrapped-image.js';
 import { buildShameImage } from './lib/shame-image.js';
 import { computeShamePile } from './lib/shame.js';
+import { wishRead, wishWrite, newWish, sameGame, targetHit, sortWishes, wishToGame, psStoreSearchUrl } from './lib/wishlist.js';
 import { rawgSearch, fetchGameById } from './lib/rawg.js';
 import { eanCacheRead, cleanProductName, eanLookup } from './lib/barcode.js';
 import { collectSessions, computeLongestStreak } from './lib/sessions.js';
@@ -2108,7 +2109,7 @@ function DriveCard({ lang, games, setGames, flash, driveState, setDriveState }){
       .finally(()=>setBusy(false));
   }
   async function save(){
-    try{ setDriveState(await backupNow(buildPayload(games))); flash(t(lang,'driveSaved')); }
+    try{ setDriveState(await backupNow(buildPayload(games,{wishlist:wishRead()}))); flash(t(lang,'driveSaved')); }
     catch{ flash(t(lang,'driveFailed')); }
   }
   const remoteCount=p=>(p.data&&(p.data.count??(Array.isArray(p.data.games)?p.data.games.length:0)))||0;
@@ -2278,7 +2279,7 @@ function ProSheet({ lang, isPro, from, onClose, onOwned, flash }){
 // (Wrapped, Achievements, Goals, Settings) - these used to either be a tab or a
 // modal. Centralizing them here freed a tab slot and gave each feature breathing
 // room behind a single entry point.
-function MenuOverlay({ onClose, onPick, lang, achStats, currentYear, triggers }){
+function MenuOverlay({ onClose, onPick, lang, achStats, currentYear, triggers, wish }){
   // v1.8.0: triggers={achievements, goals, wrapped, any} drive per-row red dots.
   // Falls back to no-dots if not provided (defensive - older callsites still work).
   const trig = triggers || { achievements:false, goals:false, wrapped:false };
@@ -2289,6 +2290,9 @@ function MenuOverlay({ onClose, onPick, lang, achStats, currentYear, triggers })
       vars:{ unlocked:achStats.unlocked, total:achStats.total },
       badge: achStats.unlocked>0 ? `${achStats.unlocked}/${achStats.total}` : null, dot: trig.achievements },
     // v1.17.5 - Goals menu entry removed (feature retired).
+    // v1.20.2 - wishlist; the badge counts reached target prices first
+    { key:'wishlist',     ico:'🎯', tk:'menuWishlist',    dk:'menuWishlistDesc',
+      badge: wish&&wish.hits ? '🎯 '+wish.hits : (wish&&wish.n ? String(wish.n) : null) },
     { key:'settings',     ico:'⚙️', tk:'menuSettings',    dk:'menuSettingsDesc' },
   ];
   return (
@@ -2310,6 +2314,88 @@ function MenuOverlay({ onClose, onPick, lang, achStats, currentYear, triggers })
             <span className='menu-arrow'>›</span>
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── v1.20.2 Wishlist with target prices (logic: lib/wishlist.js) ─────────────
+function WishRow({ w, lang, onPrice, onRemove, onBought }){
+  const [target,setTarget]=useState(w.targetPrice??'');
+  const [now,setNow]=useState(w.lastPrice??'');
+  const hit=targetHit(w);
+  const gap=w.targetPrice!==null&&w.lastPrice!==null?w.lastPrice-w.targetPrice:null;
+  const status=hit?t(lang,'wishHit'):gap!==null?t(lang,'wishGap',{gap:plnExact(gap,lang)}):w.targetPrice===null?t(lang,'wishSetTarget'):t(lang,'wishSetNow');
+  const commit=(field,val)=>onPrice(w.id,field,val);
+  const enter=e=>{ if(e.key==='Enter') e.currentTarget.blur(); };
+  return(
+    <div className='ccd' style={{padding:12,borderColor:hit?G.grn:undefined,background:hit?'rgba(57,255,110,.05)':undefined}}>
+      <div style={{display:'flex',gap:12,alignItems:'center'}}>
+        {w.cover
+          ? <div style={{width:56,height:56,borderRadius:10,flexShrink:0,backgroundImage:`url(${coverThumb(w.cover)})`,backgroundSize:'cover',backgroundPosition:'center'}}/>
+          : <div style={{width:56,height:56,borderRadius:10,flexShrink:0,background:G.card2,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>🎮</div>}
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:14,fontWeight:800,color:G.txt,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{w.title}</div>
+          <div style={{fontSize:12,fontWeight:700,marginTop:3,color:hit?G.grn:gap!==null?G.org:G.dim}}>{status}</div>
+          {w.priceAt&&<div style={{fontSize:10,color:G.dim,marginTop:2}}>{t(lang,'wishPriceAt',{when:fmtDate(w.priceAt,lang)})}</div>}
+        </div>
+      </div>
+      <div style={{display:'flex',gap:8,marginTop:10}}>
+        <div style={{flex:1,minWidth:0}}><label className='fl'>{t(lang,'wishTarget')}</label><input className='fi' inputMode='decimal' value={target} placeholder='-' onChange={e=>setTarget(e.target.value)} onBlur={()=>commit('targetPrice',target)} onKeyDown={enter}/></div>
+        <div style={{flex:1,minWidth:0}}><label className='fl'>{t(lang,'wishNow')}</label><input className='fi' inputMode='decimal' value={now} placeholder='-' onChange={e=>setNow(e.target.value)} onBlur={()=>commit('lastPrice',now)} onKeyDown={enter}/></div>
+      </div>
+      <div style={{display:'flex',gap:8,marginTop:10,flexWrap:'wrap'}}>
+        <a className='tbtn' href={psStoreSearchUrl(w.title)} target='_blank' rel='noopener noreferrer' style={{textDecoration:'none',color:G.blu,borderColor:'rgba(0,212,255,.4)'}}>{t(lang,'wishCheck')}</a>
+        <button type='button' className='tbtn' style={{color:G.grn,borderColor:'rgba(57,255,110,.4)'}} onClick={()=>onBought(w)}>{t(lang,'wishBought')}</button>
+        <button type='button' className='tbtn' style={{marginLeft:'auto'}} onClick={()=>onRemove(w)} aria-label={t(lang,'deleteBtn')}>🗑</button>
+      </div>
+    </div>
+  );
+}
+
+function Wishlist({ lang, flash, games, onClose, onBought }){
+  // sorted once on open, so rows don't jump around while prices are typed
+  const [list,setList]=useState(()=>sortWishes(wishRead()));
+  // storage is the source of truth: writes happen at once, even if this screen closes in the
+  // same tap ("Bought") or an undo arrives after it was closed
+  const update=fn=>{ const next=fn(wishRead()); wishWrite(next); setList(next); };
+  function add(item){
+    const probe={rawgId:item.id,title:item.title};
+    if(games.some(g=>!g._demo&&sameGame({rawgId:g.rawgId,title:g.title},probe))){ flash(t(lang,'wishOwned')); return; }
+    if(list.some(w=>sameGame(w,probe))){ flash(t(lang,'wishDup')); return; }
+    update(prev=>[newWish(item),...prev]);
+    track('wish_added');
+    flash(t(lang,'wishAdded'));
+  }
+  function setPrice(id,field,raw){
+    const v=parseNum(raw);
+    update(prev=>prev.map(w=>{
+      if(w.id!==id||w[field]===v) return w;
+      const next={...w,[field]:v};
+      if(field==='lastPrice') next.priceAt=v===null?null:new Date().toISOString();
+      return next;
+    }));
+  }
+  function remove(w){
+    update(prev=>prev.filter(x=>x.id!==w.id));
+    flash(t(lang,'wishRemoved',{title:w.title}),()=>{ update(prev=>prev.some(x=>x.id===w.id)?prev:[...prev,w]); flash(t(lang,'undone')); });
+  }
+  function bought(w){ update(prev=>prev.filter(x=>x.id!==w.id)); onBought(w); }
+  return(
+    <div className='bs-ovr'>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>{t(lang,'menuWishlist')}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div style={{flex:1,minHeight:0,overflowY:'auto',padding:'12px 16px 120px'}}>
+        <div style={{fontSize:12,color:G.dim,lineHeight:1.5,marginBottom:12}}>{t(lang,'wishIntro')}</div>
+        <RawgSearch onSelect={add} lang={lang}/>
+        <div style={{marginTop:14}}>
+          {list.length===0
+            ? <div className='empty' style={{padding:'28px 8px'}}><div className='eic'>🎯</div><div className='ess'>{t(lang,'wishEmpty')}</div></div>
+            : list.map(w=><WishRow key={w.id} w={w} lang={lang} onPrice={setPrice} onRemove={remove} onBought={bought}/>)}
+        </div>
+        {list.length>0&&<RawgCredit lang={lang}/>}
       </div>
     </div>
   );
@@ -3716,7 +3802,7 @@ export default function App(){
     if(!driveAvailable()||!driveState.enabled||!hasValidToken()) return;
     if(proGateActive()&&!isPro) return;
     clearTimeout(driveTimer.current);
-    driveTimer.current=setTimeout(()=>{ backupNow(buildPayload(games)).then(setDriveState).catch(()=>{}); },15000);
+    driveTimer.current=setTimeout(()=>{ backupNow(buildPayload(games,{wishlist:wishRead()})).then(setDriveState).catch(()=>{}); },15000);
     return ()=>clearTimeout(driveTimer.current);
   },[games]);// eslint-disable-line -- only re-run on collection changes
 
@@ -4206,7 +4292,7 @@ export default function App(){
   }
   function driveBackupTap(){
     withDriveToken(false).then(
-      ()=>backupNow(buildPayload(games)).then(st=>{ setDriveState(st); flash(t(lang,'driveSaved')); }, ()=>flash(t(lang,'driveFailed'))),
+      ()=>backupNow(buildPayload(games,{wishlist:wishRead()})).then(st=>{ setDriveState(st); flash(t(lang,'driveSaved')); }, ()=>flash(t(lang,'driveFailed'))),
       ()=>flash(t(lang,'driveSignInFailed')),
     );
   }
@@ -4640,6 +4726,7 @@ export default function App(){
             currentYear={new Date().getFullYear()}
             achStats={(()=>{const sbd=new Map();collectSessions(games).forEach(s=>{const k=s.dateKey;if(!sbd.has(k))sbd.set(k,[]);sbd.get(k).push(s);});const ach=computeAchievements(games, computeLongestStreak(sbd));return {unlocked:ach.filter(a=>a.unlocked).length, total:ach.length};})()}
             triggers={menuTriggers}
+            wish={(()=>{ const l=wishRead(); return { n:l.length, hits:l.filter(targetHit).length }; })()}
           />
         )}
         {overlay==='wrapped' && (
@@ -4653,6 +4740,10 @@ export default function App(){
           return <Achievements games={games} longestStreak={longest} lang={lang} onClose={()=>setOverlay('menu')}/>;
         })()}
         {/* v1.17.5 - Goals + Recommendations overlays removed (features retired). */}
+        {overlay==='wishlist' && (
+          <Wishlist lang={lang} flash={flash} games={games} onClose={()=>setOverlay('menu')}
+            onBought={w=>{ const g=wishToGame(w); setGames(prev=>[...prev,g]); setOverlay(null); setModal(g); flash(t(lang,'wishMoved',{title:w.title})); track('wish_bought'); }}/>
+        )}
         {overlay==='wipe' && (
           <WipeConfirm
             games={games}

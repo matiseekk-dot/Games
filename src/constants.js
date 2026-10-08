@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies - every other module imports from here.
 
-export const APP_VER  = '1.20.1';
+export const APP_VER  = '1.20.2';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 // v1.17.7 - Umami Cloud website ID (public by design, like the Cloudflare beacon token).
 // Empty = funnel analytics fully off (see src/lib/analytics.js).
@@ -51,6 +51,8 @@ export const LS_LAST_WEEKLY_PUSH = 'ps5vault_last_weekly_push';
 // the user clicks dismiss/clear, OR adds their first non-demo game (auto-dismiss).
 // Stored as the literal string '1' once dismissed; absence = not yet dismissed.
 export const LS_ONBOARDING_BANNER_DISMISSED = 'ps5vault_onboarding_demo_banner_dismissed';
+// v1.20.2 - wishlist with target prices (lib/wishlist.js). Array of wish items.
+export const LS_WISHLIST = 'ps5vault_wishlist';
 
 // ─── Theme ─────────────────────────────────────────────────────────────────
 // Used by both the CSS template literal AND inline JSX styles. Hex strings inside

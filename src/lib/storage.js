@@ -4,6 +4,7 @@
 // feature, keeping this file focused on the canonical games collection.
 import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, LS_ONBOARDING_BANNER_DISMISSED, CURRENCIES } from '../constants.js';
 import { uid, parseNum } from './util.js';
+import { wishRead, wishWrite, cleanWishes, mergeWishlists } from './wishlist.js';
 
 // ─── Games list ────────────────────────────────────────────────────────────
 export function lsRead() {
@@ -210,7 +211,8 @@ export function getDefaultCurrency() {
 //      legacy blob+download flow on browsers without share support.
 export async function exportData(games, lang, onDone) {
   const filename = `PS5Vault_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-  const json = JSON.stringify({ version:1, exported:new Date().toISOString(), count:games.length, games }, null, 2);
+  // v1.20.2 - the wishlist travels with the collection
+  const json = JSON.stringify({ version:1, exported:new Date().toISOString(), count:games.length, games, wishlist:wishRead() }, null, 2);
   // Web Share API path (Android Chrome 89+, supports files via canShare)
   try {
     if (typeof navigator !== 'undefined' && navigator.canShare) {
@@ -289,6 +291,7 @@ export function importMerge(file, existing, onOk, onErr) {
     const cleaned = imported.filter(isValidGameShape).map(g => applyImportDefaults(g.id ? g : { ...g, id:uid() }));
     const existingIds = new Set(existing.map(g => g.id));
     const newGames = cleaned.filter(g => !existingIds.has(g.id));
+    if (!Array.isArray(d) && Array.isArray(d.wishlist)) wishWrite(mergeWishlists(wishRead(), d.wishlist));
     onOk([...existing, ...newGames], newGames.length, cleaned.length - newGames.length);
   } catch (err) { onErr(err.message); } };
   r.readAsText(file);
@@ -304,6 +307,8 @@ export function importReplace(file, onOk, onErr) {
     const d = JSON.parse(e.target.result); const imported = Array.isArray(d) ? d : d.games;
     if (!Array.isArray(imported)) throw new Error('Invalid format');
     const cleaned = imported.filter(isValidGameShape).map(g => applyImportDefaults(g.id ? g : { ...g, id:uid() }));
+    // v1.20.2 - backups made before the wishlist existed leave the current one alone
+    if (!Array.isArray(d) && Array.isArray(d.wishlist)) wishWrite(cleanWishes(d.wishlist));
     onOk(cleaned, cleaned.length);
   } catch (err) { onErr(err.message); } };
   r.readAsText(file);
