@@ -16,7 +16,7 @@ export const UMAMI_WEBSITE_ID = '';
 // (3) the product PRO_SKU exists and is active in Play Console.
 export const PRO_ENABLED = false;
 export const PRO_SKU = 'pro_lifetime';
-export const BILLING_API = '';           // e.g. https://ps5vault-billing.<account>.workers.dev
+export const BILLING_API = 'https://ps5vault-billing.skudev.workers.dev';
 export const FREE_IMPORT_LIMIT = 50;     // imported games (Steam/Xbox/PSN/Playnite) allowed without Pro
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.skudev.ps5vault';
 
