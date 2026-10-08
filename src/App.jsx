@@ -38,6 +38,7 @@ import { proGateActive, readCachedPro, refreshEntitlement, buyPro, getProPrice, 
 import { driveAvailable, readDriveState, backupStale, loadGis, gisReady, hasValidToken, requestToken, buildPayload, backupNow, fetchBackup, disableDrive, markDriveEnabled } from './lib/drivebackup.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 import { applyStatus, setStatusMany, revertMany, removeGames, restoreGames } from './lib/bulk.js';
+import { writeRate, readRate, shouldAskRating, markAsked, PLAY_REVIEW_URL } from './lib/rate.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 // v1.17.6 - Collection list is rendered in pages of this many cards. Big imported
@@ -182,6 +183,38 @@ function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
         ⭐ {t(lang,'wizard4Pro')}
       </div>}
       <button type='button' className='ob-start' onClick={()=>finish(window.__ps5v_pendingDemo===true)}>{t(lang,'wizard4Btn')}</button>
+    </div>
+  );
+}
+
+// Feedback e-mail with version, device and the last crash (from the ErrorBoundary log in
+// main.jsx), so a user who just taps "Report" still sends what is needed to diagnose it.
+function openFeedback(lang, gamesCount){
+  const subject=encodeURIComponent(`PS5 Vault v${APP_VER}: feedback`);
+  let lastErr='';
+  try{
+    const log=JSON.parse(localStorage.getItem('ps5vault_error_log')||'[]');
+    const last=log[log.length-1];
+    if(last) lastErr=`\nLast error (${last.ts||'?'}): ${last.msg||''}`;
+  }catch{}
+  const body=encodeURIComponent(`\n\n---\nDevice: ${navigator.userAgent}\nApp: v${APP_VER}\nLang: ${lang}\nGames: ${gamesCount}${lastErr}`);
+  window.location.href=`mailto:skudev6@gmail.com?subject=${subject}&body=${body}`;
+}
+
+// v1.20.0 - rating sheet (when to show it: lib/rate.js)
+function RateSheet({lang,onClose,games}){
+  const link={display:'block',width:'100%',background:'none',border:'none',color:G.dim,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:600,padding:'12px 4px',cursor:'pointer'};
+  return(
+    <div className='confirm-ovr' onClick={()=>onClose('later')}>
+      <div className='confirm-box' onClick={e=>e.stopPropagation()}>
+        <div className='confirm-ico'>⭐</div>
+        <div className='confirm-title'>{t(lang,'rateAskTitle')}</div>
+        <div className='confirm-body'>{t(lang,'rateAskBody')}</div>
+        <a href={PLAY_REVIEW_URL} onClick={()=>onClose('rated')} style={{display:'block',textAlign:'center',textDecoration:'none',padding:'13px',borderRadius:11,background:`linear-gradient(135deg,${G.gld},#FF9F1C)`,color:'#000',fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:800}}>{t(lang,'rateAskYes')}</a>
+        <button type='button' className='confirm-no' style={{width:'100%',marginTop:8}} onClick={()=>onClose('later')}>{t(lang,'rateAskLater')}</button>
+        <button type='button' style={{...link,marginTop:4}} onClick={()=>{onClose('later');openFeedback(lang,games.length);}}>{t(lang,'rateAskFeedback')}</button>
+        <button type='button' style={{...link,paddingTop:0}} onClick={()=>onClose('never')}>{t(lang,'rateAskNever')}</button>
+      </div>
     </div>
   );
 }
@@ -2769,6 +2802,9 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='set-row' onClick={()=>window.open('https://buycoffee.to/skudev','_blank','noopener,noreferrer')}>
           <span className='set-row-ico'>☕</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'buyCoffee')}</div><div className='set-row-desc'>{t(lang,'buyCoffeeDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
+        {getPlatform()==='play'&&<div className='set-row' onClick={()=>{ writeRate({rated:true}); track('rate_click',{from:'settings'}); window.location.href=PLAY_REVIEW_URL; }}>
+          <span className='set-row-ico'>⭐</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'rateRowTitle')}</div><div className='set-row-desc'>{t(lang,'rateRowDesc')}</div></div><span className='set-row-arrow'>›</span>
+        </div>}
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'info')}</div>
@@ -2778,19 +2814,7 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='set-row' onClick={()=>window.open('https://rawg.io','_blank','noopener,noreferrer')}>
           <span className='set-row-ico'>🎮</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'poweredBy')}</div><div className='set-row-desc'>{t(lang,'poweredByDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        <div className='set-row' onClick={()=>{
-          const subject=encodeURIComponent(`PS5 Vault v${APP_VER}: feedback`);
-          // Pull last error from ErrorBoundary log (main.jsx). Helps diagnose crashes that
-          // user couldn't describe - they just hit "Report" and we get the stack.
-          let lastErr='';
-          try{
-            const log=JSON.parse(localStorage.getItem('ps5vault_error_log')||'[]');
-            const last=log[log.length-1];
-            if(last) lastErr=`\nLast error (${last.ts||'?'}): ${last.msg||''}`;
-          }catch{}
-          const body=encodeURIComponent(`\n\n---\nDevice: ${navigator.userAgent}\nApp: v${APP_VER}\nLang: ${lang}\nGames: ${games.length}${lastErr}`);
-          window.location.href=`mailto:skudev6@gmail.com?subject=${subject}&body=${body}`;
-        }}>
+        <div className='set-row' onClick={()=>openFeedback(lang,games.length)}>
           <span className='set-row-ico'>📧</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'reportProblem')}</div><div className='set-row-desc'>{t(lang,'reportProblemDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
         <div className='set-row' style={{cursor:'default'}}>
@@ -3571,6 +3595,9 @@ export default function App(){
   // and which bulk dialog is open ('status' | 'delete').
   const [sel,setSel]           = useState(null);
   const [bulkSheet,setBulkSheet] = useState(null);
+  // v1.20.0 - rating sheet: null or what triggered it ('complete' | 'milestone' | 'wrapped')
+  const [rateAsk,setRateAsk]   = useState(null);
+  const rateTimer=useRef(null);
   // v1.17.6 - Backlog randomizer result (null = closed).
   const [randomPick,setRandomPick] = useState(null);
   // v1.17.6 - "Welcome back" nudge: if the user hasn't opened the app in a while
@@ -3644,6 +3671,7 @@ export default function App(){
   useEffect(()=>{
     const real=games.filter(g=>!g._demo).length;
     if(realCountRef.current===0 && real>0) trackOnce('first_game_added');
+    if(realCountRef.current!==null && realCountRef.current<10 && real>=10) maybeAskRating('milestone',games);
     // v1.18.1 - the collection exists only in this browser's storage, which Chrome may
     // evict when the phone runs low on space unless the site holds "persistent" storage.
     // Ask once there is something worth keeping (Chrome grants it silently for installed apps).
@@ -3883,6 +3911,7 @@ export default function App(){
     }
     setGames(prev=>isEdit?prev.map(g=>g.id===id?game:g):[...prev,game]);
     setModal(null);flash(isEdit?t(lang,'saved'):t(lang,'added'));
+    if(isCompleted&&!wasCompleted) maybeAskRating('complete',isEdit?games.map(g=>g.id===id?game:g):[...games,game]);
   }
   // v1.19.2 - deletes can be undone from the toast for a few seconds
   function deleteWithUndo(ids,msg){
@@ -3906,6 +3935,7 @@ export default function App(){
     }
     // completedAt (v1.7.0) and lastPlayed (v1.18.1) stamping lives in applyStatus (lib/bulk.js)
     setGames(prev=>prev.map(g=>g.id===id?applyStatus(g,status,extra):g));
+    if(status==='ukonczone') maybeAskRating('complete');
     if(extra.hours!==undefined)flash(t(lang,'sessionSaved',{h:Math.floor(extra.hours),m:Math.round((extra.hours%1)*60)}));
     else flash(t(lang,'statusChanged',{status:SM2[status]?.label}));
   }
@@ -3980,6 +4010,7 @@ export default function App(){
       // Priority 1: innermost overlays (rate prompt, privacy modal, import flow)
       if (proSheet != null)  { setProSheet(null); return; }
       if (bulkSheet != null) { setBulkSheet(null); return; }
+      if (rateAsk != null)   { setRateAsk(null); return; }
       if (rateModal != null) { setRateModal(null); return; }
       if (privacyOpen)        { setPrivacyOpen(false); return; }
       if (importModal != null){ setImportModal(null); return; }
@@ -4009,7 +4040,7 @@ export default function App(){
       window.removeEventListener('popstate', onPop);
       if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
     };
-  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, proSheet, bulkSheet, sel, lang, flash]);
+  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, proSheet, bulkSheet, sel, rateAsk, lang, flash]);
 
   // v1.17.6 - reset the render cap whenever the filter/search/sort signature
   // changes, so a new query always starts from the top page.
@@ -4105,6 +4136,18 @@ export default function App(){
   const driveBanner = driveAllowed && backupStale(driveState)
     ? (driveState.lastBackupAt ? t(lang,'driveStale',{when:fmtWhen(driveState.lastBackupAt,lang)}) : t(lang,'driveStaleNever'))
     : null;
+  // v1.20.0 - shown a moment after the triggering action, so its toast is seen first
+  function maybeAskRating(from,list=games){
+    if(getPlatform()!=='play') return;
+    if(!shouldAskRating(readRate(),list)) return;
+    clearTimeout(rateTimer.current);
+    rateTimer.current=setTimeout(()=>{ markAsked(); setRateAsk(from); track('rate_prompt',{from}); },1500);
+  }
+  function closeRate(kind){
+    if(kind==='rated'){ writeRate({rated:true}); track('rate_click',{from:rateAsk}); }
+    if(kind==='never') writeRate({never:true});
+    setRateAsk(null);
+  }
   function toggleSel(id){
     setSel(s=>{ const n=new Set(s||[]); if(n.has(id)) n.delete(id); else n.add(id); return n; });
   }
@@ -4113,6 +4156,7 @@ export default function App(){
     if(status!=='gram'){ const tmr=timerRead(); if(tmr&&ids.has(tmr.gameId)) timerWrite(null); }
     const {next,before}=setStatusMany(games,ids,status);
     setGames(next);
+    if(status==='ukonczone') maybeAskRating('complete',next);
     setBulkSheet(null); setSel(null);
     const n=ids.size;
     flash(t(lang,'bulkStatusDone',{n,gw:gamesWord(n,lang),status:SM2[status]?.label}),
@@ -4299,6 +4343,7 @@ export default function App(){
             </div>
           </div>
         </div>}
+        {rateAsk&&<RateSheet lang={lang} games={games} onClose={closeRate}/>}
         {bulkSheet==='delete'&&sel&&<Confirm lang={lang} title={t(lang,'bulkDeleteTitle',{n:sel.size,gw:gamesWord(sel.size,lang)})} body={t(lang,'bulkDeleteBody')} onNo={()=>setBulkSheet(null)} onYes={bulkDelete}/>}
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} onBulkScan={()=>{setModal(null); if(proLocked){openPro('scan');return;} setBulkScannerOpen(true);}} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
@@ -4561,7 +4606,7 @@ export default function App(){
           />
         )}
         {overlay==='wrapped' && (
-          <YearInReview games={games} lang={lang} onClose={()=>setOverlay('menu')} flash={flash}/>
+          <YearInReview games={games} lang={lang} onClose={()=>{setOverlay('menu');maybeAskRating('wrapped');}} flash={flash}/>
         )}
         {overlay==='achievements' && (() => {
           // Compute longest streak from sessionsByDay for streak achievements

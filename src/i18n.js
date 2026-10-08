@@ -284,6 +284,15 @@ const TRANSLATIONS = {
     bulkDeleted:"✓ Usunięto {n} {gw}",
     undo:"Cofnij",
     undone:"↩️ Cofnięto",
+    // v1.20.0: rating prompt
+    rateAskTitle:"Masz chwilę na ocenę?",
+    rateAskBody:"PS5 Vault robi jedna osoba, bez reklam. Ocena w Google Play pomaga innym graczom znaleźć apkę.",
+    rateAskYes:"⭐ Oceń w Google Play",
+    rateAskLater:"Później",
+    rateAskFeedback:"Coś nie działa? Napisz do mnie",
+    rateAskNever:"Nie pytaj więcej",
+    rateRowTitle:"Oceń w Google Play",
+    rateRowDesc:"Ocena pomaga innym graczom znaleźć apkę",
     // v1.14.3 - keys backfilled from inline-ternaries in App.jsx so every visible
     // string is reachable through t() and gets full PL/EN/ES coverage.
     rawgSearching:"Szukam...",
@@ -860,6 +869,15 @@ const TRANSLATIONS = {
     bulkDeleted:"✓ Deleted {n} {gw}",
     undo:"Undo",
     undone:"↩️ Undone",
+    // v1.20.0: rating prompt
+    rateAskTitle:"Got a moment to rate it?",
+    rateAskBody:"PS5 Vault is made by one person, with no ads. A rating on Google Play helps other players find it.",
+    rateAskYes:"⭐ Rate on Google Play",
+    rateAskLater:"Later",
+    rateAskFeedback:"Something not working? Write to me",
+    rateAskNever:"Don't ask again",
+    rateRowTitle:"Rate on Google Play",
+    rateRowDesc:"A rating helps other players find the app",
     // v1.14.3 - see PL counterpart for context
     rawgSearching:"Searching...",
     platinumDesc:"I earned the platinum trophy",
@@ -1410,6 +1428,15 @@ const TRANSLATIONS = {
     bulkDeleted:"✓ Eliminados {n} {gw}",
     undo:"Deshacer",
     undone:"↩️ Deshecho",
+    // v1.20.0: rating prompt
+    rateAskTitle:"¿Tienes un momento para valorarla?",
+    rateAskBody:"PS5 Vault lo hace una sola persona, sin anuncios. Una valoración en Google Play ayuda a otros jugadores a encontrarla.",
+    rateAskYes:"⭐ Valorar en Google Play",
+    rateAskLater:"Más tarde",
+    rateAskFeedback:"¿Algo no funciona? Escríbeme",
+    rateAskNever:"No volver a preguntar",
+    rateRowTitle:"Valorar en Google Play",
+    rateRowDesc:"Una valoración ayuda a otros jugadores a encontrar la app",
     // v1.14.3 - keys for previously hardcoded inline ternaries
     rawgSearching:"Buscando...",
     platinumDesc:"Conseguí el trofeo de platino",
