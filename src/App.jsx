@@ -37,6 +37,7 @@ import { initAnalytics, track, trackOnce, countBucket, getPlatform } from './lib
 import { proGateActive, readCachedPro, refreshEntitlement, buyPro, getProPrice, getBillingService } from './lib/pro.js';
 import { driveAvailable, readDriveState, backupStale, loadGis, gisReady, hasValidToken, requestToken, buildPayload, backupNow, fetchBackup, disableDrive, markDriveEnabled } from './lib/drivebackup.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
+import { applyStatus, setStatusMany, revertMany, removeGames, restoreGames } from './lib/bulk.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 // v1.17.6 - Collection list is rendered in pages of this many cards. Big imported
@@ -185,10 +186,10 @@ function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
   );
 }
 
-function Toast({msg}){
+function Toast({msg,onUndo,lang}){
   if(!msg)return null;
   const type=msg.startsWith('❌')?'err':msg.startsWith('ℹ')?'info':'ok';
-  return<div className={`toast toast-${type}`}>{msg}</div>;
+  return<div className={`toast toast-${type}`}>{msg}{onUndo&&<button type='button' className='toast-undo' onClick={onUndo}>{t(lang,'undo')}</button>}</div>;
 }
 
 function Confirm({title,body,onYes,onNo,lang}){
@@ -200,7 +201,7 @@ function Confirm({title,body,onYes,onNo,lang}){
         <div className='confirm-body'>{body}</div>
         <div className='confirm-btns'>
           <button type='button' className='confirm-no' onClick={onNo}>{t(lang||'pl','cancel')}</button>
-          <button type='button' className='confirm-yes' onClick={onYes}>{t(lang||'pl','delete')}</button>
+          <button type='button' className='confirm-yes' onClick={onYes}>{t(lang||'pl','deleteBtn')}</button>
         </div>
       </div>
     </div>
@@ -946,7 +947,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
           <div className='mac'>
             <button type='button' className='bcn' onClick={onClose}>{t(lang,'cancel')}</button>
             <button type='button' className='bpr' onClick={handleSave}>{t(lang,'save')}</button>
-            {isEdit&&<button type='button' className='bdl' onClick={()=>setConfirmDel(true)}>🗑</button>}
+            {isEdit&&<button type='button' className='bdl' onClick={()=>setConfirmDel(true)} aria-label={t(lang,'deleteBtn')}>🗑</button>}
           </div>
         </div>
       </div>
@@ -3557,6 +3558,10 @@ export default function App(){
   // v1.17.6 - Collection render cap. Rendering 700+ game cards at once janks
   // hard on mobile; we render the first COL_PAGE and reveal more on demand.
   const [colLimit,setColLimit] = useState(COL_PAGE);
+  // v1.19.2 - multi-select in the collection: Set of game ids (null = not selecting),
+  // and which bulk dialog is open ('status' | 'delete').
+  const [sel,setSel]           = useState(null);
+  const [bulkSheet,setBulkSheet] = useState(null);
   // v1.17.6 - Backlog randomizer result (null = closed).
   const [randomPick,setRandomPick] = useState(null);
   // v1.17.6 - "Welcome back" nudge: if the user hasn't opened the app in a while
@@ -3717,7 +3722,17 @@ export default function App(){
     return () => { if ('serviceWorker' in navigator) navigator.serviceWorker.removeEventListener('message', handler); };
   },[]);// eslint-disable-line -- mount-only
 
-  const flash=useCallback(msg=>{setToast(msg);setTimeout(()=>setToast(null),2200);},[]);
+  // v1.19.2 - optional undo action, shown as a button for 6 s. One shared timer, so an
+  // older toast's timeout no longer cuts a newer toast short.
+  const [undoFn,setUndoFn]=useState(null);
+  const toastTimer=useRef(null);
+  const flash=useCallback((msg,onUndo)=>{
+    const withUndo=typeof onUndo==='function';
+    clearTimeout(toastTimer.current);
+    setToast(msg);
+    setUndoFn(withUndo?()=>onUndo:null);
+    toastTimer.current=setTimeout(()=>{ setToast(null); setUndoFn(null); },withUndo?6000:2200);
+  },[]);
   // Register a global callback so top-level lsWrite/timerWrite can signal storage failures
   // (quota exceeded, storage disabled) and surface them as a toast - instead of silent loss.
   useEffect(()=>{
@@ -3860,12 +3875,19 @@ export default function App(){
     setGames(prev=>isEdit?prev.map(g=>g.id===id?game:g):[...prev,game]);
     setModal(null);flash(isEdit?t(lang,'saved'):t(lang,'added'));
   }
+  // v1.19.2 - deletes can be undone from the toast for a few seconds
+  function deleteWithUndo(ids,msg){
+    const set=new Set(ids);
+    // Clean up timer if a deleted game had an active session
+    const tmr=timerRead(); if(tmr&&set.has(tmr.gameId)) timerWrite(null);
+    const {kept,removed}=removeGames(games,set);
+    setGames(kept);
+    flash(msg,()=>{ setGames(cur=>restoreGames(cur,removed)); flash(t(lang,'undone')); });
+  }
   function handleDel(id){
     const title=games.find(g=>g.id===id)?.title||'';
-    // Clean up timer if the deleted game had an active session
-    const tmr=timerRead(); if(tmr&&tmr.gameId===id) timerWrite(null);
-    setGames(prev=>prev.filter(g=>g.id!==id));
-    setModal(null);flash(t(lang,'deleted',{title}));
+    setModal(null);
+    deleteWithUndo([id],t(lang,'deleted',{title}));
   }
   function handleStatusChange(id,status,extra={}){
     const SM2=getSM(lang);
@@ -3873,21 +3895,8 @@ export default function App(){
     if(status!=='gram'){
       const tmr=timerRead(); if(tmr&&tmr.gameId===id) timerWrite(null);
     }
-    setGames(prev=>prev.map(g=>{
-      if(g.id!==id) return g;
-      // v1.7.0: stamp completedAt on transition INTO 'ukonczone' (only if not already set -
-      // we don't reset it on toggle off→on, since a re-completion isn't really a new completion).
-      // This is what lets Goals/Wrapped count completions accurately by date.
-      const next={...g,status,...extra};
-      if(status==='ukonczone' && g.status!=='ukonczone' && !next.completedAt){
-        next.completedAt=new Date().toISOString();
-      }
-      // v1.18.1 - see handleSave: keep Year in Review attribution right for quick changes
-      if((status==='gram'||status==='ukonczone') && g.status!==status && extra.lastPlayed===undefined){
-        next.lastPlayed=new Date().toISOString();
-      }
-      return next;
-    }));
+    // completedAt (v1.7.0) and lastPlayed (v1.18.1) stamping lives in applyStatus (lib/bulk.js)
+    setGames(prev=>prev.map(g=>g.id===id?applyStatus(g,status,extra):g));
     if(extra.hours!==undefined)flash(t(lang,'sessionSaved',{h:Math.floor(extra.hours),m:Math.round((extra.hours%1)*60)}));
     else flash(t(lang,'statusChanged',{status:SM2[status]?.label}));
   }
@@ -3961,6 +3970,7 @@ export default function App(){
 
       // Priority 1: innermost overlays (rate prompt, privacy modal, import flow)
       if (proSheet != null)  { setProSheet(null); return; }
+      if (bulkSheet != null) { setBulkSheet(null); return; }
       if (rateModal != null) { setRateModal(null); return; }
       if (privacyOpen)        { setPrivacyOpen(false); return; }
       if (importModal != null){ setImportModal(null); return; }
@@ -3968,6 +3978,7 @@ export default function App(){
       if (modal != null)      { setModal(null); return; }
       // Priority 3: hamburger overlay screens (settings, wrapped, achievements, etc.)
       if (overlay != null)    { setOverlay(null); return; }
+      if (sel)                { setSel(null); return; }
 
       // Priority 4: root screen - arm exit on first press, allow exit on second
       if (backExitArmed.current) {
@@ -3989,7 +4000,7 @@ export default function App(){
       window.removeEventListener('popstate', onPop);
       if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
     };
-  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, proSheet, lang, flash]);
+  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, proSheet, bulkSheet, sel, lang, flash]);
 
   // v1.17.6 - reset the render cap whenever the filter/search/sort signature
   // changes, so a new query always starts from the top page.
@@ -3997,6 +4008,10 @@ export default function App(){
   // so finishing the onboarding wizard rendered one more hook than the previous render
   // and every new user hit React error #310 ("Coś się zepsuło"). No hooks below this line.
   useEffect(()=>{ setColLimit(COL_PAGE); }, [q, flt, platFilter, srcFilter, sortBy]);
+  // v1.19.2 - a new filter or search starts a fresh selection, so bulk actions never hit
+  // games the user can no longer see; leaving the collection ends selecting.
+  useEffect(()=>{ setSel(s=>s?new Set():s); }, [q, flt, platFilter, srcFilter]);
+  useEffect(()=>{ if(tab!=='col'){ setSel(null); setBulkSheet(null); } }, [tab]);
 
   if(!onboarded)return(<><style>{CSS}</style><Onboarding
     onSkip={()=>{setOnboarded(true);setOnboard(true);trackOnce('onboarding_done',{demo:window.__ps5v_pendingDemo===true?'yes':'no'});}}
@@ -4081,6 +4096,25 @@ export default function App(){
   const driveBanner = driveAllowed && backupStale(driveState)
     ? (driveState.lastBackupAt ? t(lang,'driveStale',{when:fmtWhen(driveState.lastBackupAt,lang)}) : t(lang,'driveStaleNever'))
     : null;
+  function toggleSel(id){
+    setSel(s=>{ const n=new Set(s||[]); if(n.has(id)) n.delete(id); else n.add(id); return n; });
+  }
+  function bulkSetStatus(status){
+    const ids=sel; if(!ids||!ids.size) return;
+    if(status!=='gram'){ const tmr=timerRead(); if(tmr&&ids.has(tmr.gameId)) timerWrite(null); }
+    const {next,before}=setStatusMany(games,ids,status);
+    setGames(next);
+    setBulkSheet(null); setSel(null);
+    const n=ids.size;
+    flash(t(lang,'bulkStatusDone',{n,gw:gamesWord(n,lang),status:SM2[status]?.label}),
+      before.size?()=>{ setGames(cur=>revertMany(cur,before)); flash(t(lang,'undone')); }:undefined);
+  }
+  function bulkDelete(){
+    const ids=sel; if(!ids||!ids.size) return;
+    const n=ids.size;
+    setBulkSheet(null); setSel(null);
+    deleteWithUndo(ids,t(lang,'bulkDeleted',{n,gw:gamesWord(n,lang)}));
+  }
   function driveBackupTap(){
     withDriveToken(false).then(
       ()=>backupNow(buildPayload(games)).then(st=>{ setDriveState(st); flash(t(lang,'driveSaved')); }, ()=>flash(t(lang,'driveFailed'))),
@@ -4137,10 +4171,12 @@ export default function App(){
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
           <div className='toolbar'>
+            {!sel&&<>
             {/* v1.17.6 - Backlog randomizer. Picks a random unplayed owned game. */}
             <button type='button' className='tbtn' style={{borderColor:'rgba(167,139,250,.4)',color:G.pur}} onClick={rollRandom}>🎲 {t(lang,'randomPick')}</button>
             <button type='button' className='tbtn' onClick={()=>exportData(games,lang,()=>flash(t(lang,'backupSaved')))}>{t(lang,'export')}</button>
             <button type='button' className='tbtn' onClick={openImport}>{t(lang,'import')}</button>
+            </>}
           </div>
           <div className='chips'>{chips.map(ch=><button type='button' key={ch.k} className={'chip'+(flt===ch.k?' on':'')} onClick={()=>setFlt(ch.k)}>{ch.l}</button>)}</div>
           {[...new Set(games.map(g=>g.platform||'PS5'))].filter(p=>p!=='PS5').length>0&&<div className='sort-row'>
@@ -4167,12 +4203,18 @@ export default function App(){
             ))}
           </div>
           {/* v1.17.6 - Result count so users grasp filter scope at a glance (esp. big libraries). */}
-          {visible.length>0&&<div style={{fontSize:11,color:G.dim,padding:'0 2px 8px',fontWeight:600}}>{t(lang,'resultCount',{n:visible.length, gw:gamesWord(visible.length,lang)})}</div>}
+          {visible.length>0&&<div style={{flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'0 16px 8px'}}>
+            <span style={{fontSize:11,color:G.dim,fontWeight:600}}>{t(lang,'resultCount',{n:visible.length, gw:gamesWord(visible.length,lang)})}</span>
+            {/* v1.19.2 - multi-select (also: long-press a game) */}
+            <button type='button' className='tbtn' style={sel?{borderColor:G.blu,color:G.blu}:undefined} onClick={()=>setSel(s=>s?null:new Set())}>{sel?t(lang,'cancel'):t(lang,'selectMode')}</button>
+          </div>}
           <div className='lst'>
             {visible.length===0
               ?<div className='empty'><div className='eic'>🎮</div><div className='ett'>{q?t(lang,'noResults'):t(lang,'noGames')}</div><div className='ess'>{q?t(lang,'noResultsFor',{q}):t(lang,'addFirst')}</div>{!q&&<button className='empty-cta' onClick={()=>setModal('add')}>{t(lang,'addGame')}</button>}</div>
               :visibleCapped.map(g=>{const m=SM2[g.status]||SM2.planuje;const roi=g.priceSold!=null?+(g.priceSold||0) - +(g.priceBought||0):null;return(
-                <div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>setModal(g)}>
+                <div key={g.id} className={'gc'+(sel&&sel.has(g.id)?' gc-sel':'')} style={{'--c':m.c,'--bg':m.bg}} onClick={()=>sel?toggleSel(g.id):setModal(g)}
+                  onContextMenu={e=>{ e.preventDefault(); if(sel){ toggleSel(g.id); return; } setSel(new Set([g.id])); try{ navigator.vibrate&&navigator.vibrate(15); }catch{} }}>
+                  {sel&&<span className={'gc-check'+(sel.has(g.id)?' on':'')} aria-hidden='true'>{sel.has(g.id)?'✓':''}</span>}
                   {g.cover?<div className='gcov' style={{backgroundImage:`url(${coverThumb(g.cover)})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
                     <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 - subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
@@ -4183,12 +4225,14 @@ export default function App(){
                       {g.platinum&&<span style={{fontSize:13}} title={t(lang,'platinum')}>🏆</span>}
                       {!!+g.extraSpend&&<span style={{fontSize:10,color:G.red,fontWeight:700}}>+{pln(+g.extraSpend,lang)} DLC</span>}
                       {roi!==null?<span className={'gprice-roi '+(roi>=0?'roi-pos':'roi-neg')}>{roi>=0?'+':''}{pln(roi,lang)}</span>:!!+g.priceBought&&<span className='gprice'>{pln(+g.priceBought,lang)}</span>}
-                      {g.status==='ukonczone'&&g.rating==null&&<span style={{fontSize:11,color:G.gld,cursor:'pointer',fontWeight:700}} onClick={e=>{e.stopPropagation();setRateModal({id:g.id,title:g.title});}} title={t(lang,'rateGame')}>★?</span>}
+                      {g.status==='ukonczone'&&g.rating==null&&<span style={{fontSize:11,color:G.gld,cursor:'pointer',fontWeight:700}} onClick={e=>{e.stopPropagation();if(sel){toggleSel(g.id);return;}setRateModal({id:g.id,title:g.title});}} title={t(lang,'rateGame')}>★?</span>}
                     </div>
                   </div>
                 </div>
               );})
             }
+            {/* v1.19.2 - room for the selection bar */}
+            {sel&&<div style={{height:96}}/>}
             {/* v1.17.6 - Load-more: reveal the next page of the capped list. */}
             {visible.length>colLimit&&(
               <button type='button' className='empty-cta' style={{margin:'12px auto',display:'block'}} onClick={()=>setColLimit(l=>l+COL_PAGE)}>
@@ -4209,7 +4253,7 @@ export default function App(){
             to bottom-right with the same env(safe-area-inset-bottom) clearance the rest
             of the layout uses, plus a baseline 24px so it sits above the nav bar even on
             non-edge-to-edge devices where env() returns 0. Aria-labeled for screen readers. */}
-        {(tab==='home'||tab==='col') && (
+        {(tab==='home'||(tab==='col'&&!sel)) && (
           <button
             type='button'
             className='fab'
@@ -4221,6 +4265,32 @@ export default function App(){
             <span className='fab-lbl'>{t(lang,'add_game_label')}</span>
           </button>
         )}
+
+        {/* v1.19.2 - multi-select action bar + its two dialogs */}
+        {tab==='col'&&sel&&(()=>{
+          const allOn=visible.length>0&&visible.every(g=>sel.has(g.id));
+          return <div className='selbar'>
+            <div className='selbar-row'>
+              <span className='selbar-n'>{t(lang,'selCount',{n:sel.size})}</span>
+              <button type='button' className='selbar-link' onClick={()=>setSel(allOn?new Set():new Set(visible.map(g=>g.id)))}>{allOn?t(lang,'selNone'):t(lang,'selAll',{n:visible.length})}</button>
+              <button type='button' className='selbar-x' onClick={()=>setSel(null)} aria-label={t(lang,'cancel')}>✕</button>
+            </div>
+            <div className='selbar-row'>
+              <button type='button' className='selbar-btn' disabled={!sel.size} onClick={()=>setBulkSheet('status')}>{t(lang,'bulkChangeStatus')}</button>
+              <button type='button' className='selbar-btn danger' disabled={!sel.size} onClick={()=>setBulkSheet('delete')}>{t(lang,'deleteBtn')}</button>
+            </div>
+          </div>;
+        })()}
+        {bulkSheet==='status'&&sel&&<div className='confirm-ovr' onClick={()=>setBulkSheet(null)}>
+          <div className='confirm-box' onClick={e=>e.stopPropagation()}>
+            <div className='confirm-title'>{t(lang,'bulkStatusTitle',{n:sel.size,gw:gamesWord(sel.size,lang)})}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:14}}>
+              {Object.entries(SM2).map(([k,m])=><button type='button' key={k} onClick={()=>bulkSetStatus(k)} style={{padding:'12px',borderRadius:11,border:`1px solid ${m.c}`,background:m.bg,color:m.c,fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:700,cursor:'pointer'}}>{m.label}</button>)}
+              <button type='button' className='confirm-no' onClick={()=>setBulkSheet(null)}>{t(lang,'cancel')}</button>
+            </div>
+          </div>
+        </div>}
+        {bulkSheet==='delete'&&sel&&<Confirm lang={lang} title={t(lang,'bulkDeleteTitle',{n:sel.size,gw:gamesWord(sel.size,lang)})} body={t(lang,'bulkDeleteBody')} onNo={()=>setBulkSheet(null)} onYes={bulkDelete}/>}
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} onBulkScan={()=>{setModal(null); if(proLocked){openPro('scan');return;} setBulkScannerOpen(true);}} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
         {/* v1.15.1 - Bulk barcode scanner. Renders at App level (not inside Modal) so it
@@ -4344,7 +4414,7 @@ export default function App(){
             setImportUndoOpen(false);
           }}
         />}
-        <Toast msg={toast}/>
+        <Toast msg={toast} onUndo={undoFn} lang={lang}/>
         {achQueue.length>0 && (
           <AchievementBanner
             ach={getAchievementById(achQueue[0])}

@@ -110,8 +110,8 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .chip{padding:7px 14px;border-radius:20px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
 .chip.on{border-color:${G.blu};color:${G.blu};background:rgba(0,212,255,.1)}
 .chip.sold-on{border-color:${G.grn};color:${G.grn};background:rgba(57,255,110,.1)}
-.toolbar{flex-shrink:0;display:flex;gap:8px;padding:0 16px 8px;justify-content:flex-end}
-.tbtn{padding:6px 12px;border:1px solid ${G.bdr};border-radius:8px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.toolbar{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 8px;justify-content:flex-end}
+.tbtn{white-space:nowrap;padding:6px 12px;border:1px solid ${G.bdr};border-radius:8px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
 .sort-row{flex-shrink:0;display:flex;gap:6px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:center}
 .sort-row::-webkit-scrollbar{display:none}
 .sort-lbl{font-size:10px;color:${G.dim};font-weight:600;white-space:nowrap;flex-shrink:0}
@@ -134,6 +134,19 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .gc{width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:9px;display:flex;align-items:stretch;cursor:pointer;position:relative;overflow:hidden;animation:fadeIn .25s ease;transition:border-color .15s}
 .gc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c);opacity:.75;z-index:1}
 .gc:active{opacity:.75;transform:scale(.99)}
+/* v1.19.2 - multi-select. No text selection or callout, so a long press reaches contextmenu. */
+.gc{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.gc-sel{border-color:${G.blu};box-shadow:0 0 0 1px ${G.blu} inset;background:rgba(0,212,255,.06)}
+.gc-check{position:absolute;top:8px;left:8px;z-index:2;width:22px;height:22px;border-radius:50%;border:2px solid ${G.dim};background:rgba(8,11,20,.85);color:#000;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.gc-check.on{background:${G.blu};border-color:${G.blu}}
+.selbar{position:fixed;left:12px;right:12px;bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 8px);z-index:99998;background:${G.card2};border:1px solid ${G.blu};border-radius:16px;padding:8px 10px 10px;box-shadow:0 8px 28px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:6px;max-width:520px;margin:0 auto;animation:scaleIn .2s ease}
+.selbar-row{display:flex;align-items:center;gap:8px}
+.selbar-n{flex:1;font-size:13px;font-weight:800;color:${G.txt}}
+.selbar-link{background:none;border:none;color:${G.blu};font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;padding:0 8px;min-height:44px}
+.selbar-x{flex-shrink:0;background:none;border:1px solid ${G.bdr};border-radius:10px;color:${G.dim};width:44px;height:44px;font-size:16px;cursor:pointer}
+.selbar-btn{flex:1;min-height:46px;border-radius:11px;border:none;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.selbar-btn.danger{background:rgba(255,77,109,.12);border:1px solid ${G.red};color:${G.red}}
+.selbar-btn:disabled{opacity:.4;cursor:default}
 .gcov{width:56px;flex-shrink:0;background-size:cover;background-position:center;background-color:${G.card2}}
 .gcov0{width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${G.card2}}
 .gab{font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:var(--c)}
@@ -247,6 +260,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .bdl{min-height:50px;padding:13px 14px;border:1px solid rgba(255,77,109,.3);border-radius:11px;background:rgba(255,77,109,.1);color:${G.red};font-size:16px;cursor:pointer}
 .toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:10px 18px;border-radius:14px;z-index:99999;max-width:calc(100vw - 32px);white-space:normal;text-align:center;line-height:1.45;pointer-events:none;animation:toastIn .25s ease;display:flex;align-items:center;gap:6px}
 .toast-ok{background:${G.grn};color:#000}
+.toast-undo{pointer-events:auto;flex-shrink:0;margin-left:8px;padding:0 12px;min-height:36px;border-radius:9px;border:1.5px solid currentColor;background:transparent;color:inherit;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer}
 .toast-err{background:${G.red};color:#fff}
 .toast-info{background:${G.blu};color:#000}
 /* v1.7.0 - Achievement unlock banner. Top-of-screen, dismissible, gold accent for rare. */
