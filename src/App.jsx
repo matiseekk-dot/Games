@@ -33,6 +33,7 @@ import { parsePsnProfilesPaste } from './lib/psnprofiles-import.js';
 import { parseSteamPaste } from './lib/steam-import.js';
 import { parseXboxPaste } from './lib/xbox-import.js';
 import { parsePlaynitePaste } from './lib/playnite-import.js';
+import { initAnalytics, track, trackOnce, countBucket } from './lib/analytics.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -3359,6 +3360,21 @@ export default function App(){
     });
   },[]);
   useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&Notification.permission==='granted')checkReleases(g,lang);});},[]);// eslint-disable-line
+  // v1.17.7 — Funnel analytics (no-op until UMAMI_WEBSITE_ID is set). first_open only for
+  // fresh installs: anyone already past onboarding is an existing user, not a new one.
+  useEffect(()=>{
+    initAnalytics();
+    if(!isOnboarded()) trackOnce('first_open',{lang});
+  },[]);// eslint-disable-line -- mount-only
+  // first_game_added: the real (non-demo) collection goes from empty to non-empty. The ref
+  // starts at the mount-time count, so an existing collection never fires it.
+  const realCountRef=useRef(null);
+  useEffect(()=>{
+    const real=games.filter(g=>!g._demo).length;
+    if(realCountRef.current===0 && real>0) trackOnce('first_game_added');
+    realCountRef.current=real;
+  },[games]);
+  useEffect(()=>{ if(tab==='fin') trackOnce('finance_opened'); },[tab]);
 
   // v1.17.6 — Welcome-back nudge. Compare now against the last recorded open; if
   // ≥7 days elapsed and the backlog has ≥5 unplayed games, surface a re-engage
@@ -3682,7 +3698,7 @@ export default function App(){
   useEffect(()=>{ setColLimit(COL_PAGE); }, [q, flt, platFilter, srcFilter, sortBy]);
 
   if(!onboarded)return(<><style>{CSS}</style><Onboarding
-    onSkip={()=>{setOnboarded(true);setOnboard(true);}}
+    onSkip={()=>{setOnboarded(true);setOnboard(true);trackOnce('onboarding_done',{demo:window.__ps5v_pendingDemo===true?'yes':'no'});}}
     onCurrencyPick={setCurrencyPersist}
     onLoadDemo={()=>{
       // v1.15.0 — Demo loads ONLY if user picked "Show examples" in wizard step 3.
@@ -3922,6 +3938,7 @@ export default function App(){
                 addedAt: new Date().toISOString(),
               }));
               setGames(prev => [...prev, ...withIds]);
+              track('import_done',{source:'psn',size:countBucket(withIds.length)});
               flash(t(lang,'psnImportSuccess',{n:withIds.length, gw:gamesWord(withIds.length,lang)}));
             }
             setPsnImportOpen(false);
@@ -3941,6 +3958,7 @@ export default function App(){
                 addedAt: new Date().toISOString(),
               }));
               setGames(prev => [...prev, ...withIds]);
+              track('import_done',{source:'steam',size:countBucket(withIds.length)});
               flash(t(lang,'steamImportSuccess',{n:withIds.length, gw:gamesWord(withIds.length,lang)}));
             }
             setSteamImportOpen(false);
@@ -3960,6 +3978,7 @@ export default function App(){
                 addedAt: new Date().toISOString(),
               }));
               setGames(prev => [...prev, ...withIds]);
+              track('import_done',{source:'xbox',size:countBucket(withIds.length)});
               flash(t(lang,'xboxImportSuccess',{n:withIds.length, gw:gamesWord(withIds.length,lang)}));
             }
             setXboxImportOpen(false);
@@ -3981,6 +4000,7 @@ export default function App(){
                 addedAt: new Date().toISOString(),
               }));
               setGames(prev => [...prev, ...withIds]);
+              track('import_done',{source:'playnite',size:countBucket(withIds.length)});
               flash(t(lang,'playniteImportSuccess',{n:withIds.length, gw:gamesWord(withIds.length,lang)}));
             }
             setPlayniteImportOpen(false);
@@ -4030,6 +4050,7 @@ export default function App(){
                 importMerge(file,games,(merged,added,dupes)=>{
                   setGames(merged);
                   closeImport();
+                  track('import_done',{source:'backup',size:countBucket(added)});
                   if(dupes===0){
                     flash(t(lang,'importedMergeNoSkip',{added}));
                   } else {
@@ -4047,6 +4068,7 @@ export default function App(){
               importReplace(file,(games2,n)=>{
                 setGames(games2);
                 closeImport();
+                track('import_done',{source:'backup',size:countBucket(n)});
                 flash(t(lang,'importedReplace',{n}));
               },err=>{closeImport();flash('❌ '+err);});
             }}
