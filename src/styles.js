@@ -259,6 +259,8 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .bcn{min-height:50px;padding:13px 14px;border:1px solid ${G.bdr};border-radius:11px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .bdl{min-height:50px;padding:13px 14px;border:1px solid rgba(255,77,109,.3);border-radius:11px;background:rgba(255,77,109,.1);color:${G.red};font-size:16px;cursor:pointer}
 .toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:10px 18px;border-radius:14px;z-index:99999;max-width:calc(100vw - 32px);white-space:normal;text-align:center;line-height:1.45;pointer-events:none;animation:toastIn .25s ease;display:flex;align-items:center;gap:6px}
+.rawg-credit{text-align:center;font-size:10px;color:${G.dim};padding:16px 0 4px;opacity:.85}
+.rawg-credit a{color:inherit;text-decoration:underline}
 .toast-ok{background:${G.grn};color:#000}
 .toast-undo{pointer-events:auto;flex-shrink:0;margin-left:8px;padding:0 12px;min-height:36px;border-radius:9px;border:1.5px solid currentColor;background:transparent;color:inherit;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer}
 .toast-err{background:${G.red};color:#fff}

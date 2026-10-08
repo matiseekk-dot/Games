@@ -5,13 +5,82 @@
 import { RAWG_KEY, RMAP } from '../constants.js';
 import { mkAbbr } from './util.js';
 
+// v1.19.3 - RAWG's free plan is 20,000 requests a month for the whole app, so searches are
+// reused: identical searches in flight share one request, and answers are kept for 14 days
+// (1 day when nothing matched) in memory and in Cache Storage, which survives restarts
+// without using localStorage space. Failed requests are never cached.
+export const RAWG_CACHE = 'ps5vault-rawg';
+const SEARCH_TTL = 14 * 24 * 3600 * 1000;
+const EMPTY_TTL = 24 * 3600 * 1000;
+const DISK_MAX = 600;
+const MEM_MAX = 300;
+const mem = new Map();      // normalized query -> { at, results }
+const inflight = new Map(); // normalized query -> Promise<results>
+
+export function normQuery(q) {
+  return String(q || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+const cacheUrl = k => 'https://ps5vault.cache/rawg/search?q=' + encodeURIComponent(k);
+const isFresh = e => !!e && Array.isArray(e.results) && Date.now() - e.at < (e.results.length ? SEARCH_TTL : EMPTY_TTL);
+
+function memPut(k, e) {
+  mem.delete(k);
+  mem.set(k, e);
+  if (mem.size > MEM_MAX) mem.delete(mem.keys().next().value);
+}
+async function diskGet(k) {
+  if (typeof caches === 'undefined') return null;
+  try {
+    const res = await (await caches.open(RAWG_CACHE)).match(cacheUrl(k));
+    return res ? await res.json() : null;
+  } catch { return null; }
+}
+async function diskPut(k, e) {
+  if (typeof caches === 'undefined') return;
+  try {
+    const c = await caches.open(RAWG_CACHE);
+    await c.put(cacheUrl(k), new Response(JSON.stringify(e), { headers: { 'Content-Type': 'application/json' } }));
+    // Trim now and then; keys() lists oldest first.
+    if (Math.random() < 0.05) {
+      const keys = await c.keys();
+      if (keys.length > DISK_MAX) await Promise.all(keys.slice(0, keys.length - DISK_MAX).map(r => c.delete(r)));
+    }
+  } catch {}
+}
+
 export async function rawgSearch(q) {
+  const k = normQuery(q);
+  if (!k) return [];
+  const m = mem.get(k);
+  if (isFresh(m)) return m.results;
+  if (inflight.has(k)) return inflight.get(k);
+  const p = (async () => {
+    const d = await diskGet(k);
+    if (isFresh(d)) { memPut(k, d); return d.results; }
+    const results = await fetchSearch(k);
+    if (!results) return [];
+    const e = { at: Date.now(), results };
+    memPut(k, e);
+    diskPut(k, e);
+    return results;
+  })().finally(() => inflight.delete(k));
+  inflight.set(k, p);
+  return p;
+}
+
+export function _resetRawgCacheForTests() {
+  mem.clear();
+  inflight.clear();
+}
+
+// null = request failed (not cached), [] = RAWG answered with no matches
+async function fetchSearch(q) {
   const ctrl = new AbortController();
   const tm = setTimeout(() => ctrl.abort(), 8000);
   try {
     const r = await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(q)}&page_size=10&key=${RAWG_KEY}`, { signal:ctrl.signal });
-    if (!r.ok) return [];
-    return (await r.json()).results.map(g => ({
+    if (!r.ok) return null;
+    return ((await r.json()).results || []).map(g => ({
       id: g.id,
       title: g.name,
       year: g.released ? +g.released.slice(0, 4) : new Date().getFullYear(),
@@ -21,7 +90,7 @@ export async function rawgSearch(q) {
       abbr: mkAbbr(g.name),
       playtime: Number.isFinite(+g.playtime) ? +g.playtime : 0,
     }));
-  } catch { return []; }
+  } catch { return null; }
   finally { clearTimeout(tm); }
 }
 

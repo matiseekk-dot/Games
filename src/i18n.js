@@ -107,6 +107,7 @@ const TRANSLATIONS = {
     addGameTitle:"+ DODAJ GRĘ", editGameTitle:"✎ EDYTUJ GRĘ",
     searchRawg:"🔍 Szukaj w RAWG", rawgPlaceholder:"Wpisz nazwę gry...",
     rawgHint:"Wybierz grę żeby auto-uzupełnić pola + datę premiery",
+    rawgCredit:"Dane o grach i okładki:",
     rawgNotFound:"Nie znaleziono", rawgNotFoundHint:"Sprawdź pisownię albo dodaj grę ręcznie w formularzu poniżej",
     // v1.3.0 - Barcode scanner
     scanBarcodeAria:"Skanuj kod kreskowy",
@@ -803,6 +804,7 @@ const TRANSLATIONS = {
     addGameTitle:"+ ADD GAME", editGameTitle:"✎ EDIT GAME",
     searchRawg:"🔍 Search RAWG", rawgPlaceholder:"Type game name...",
     rawgHint:"Select a game to auto-fill fields + release date",
+    rawgCredit:"Game data and covers:",
     rawgNotFound:"Not found", rawgNotFoundHint:"Check spelling or add the game manually in the form below",
     // v1.3.0 - Barcode scanner
     scanBarcodeAria:"Scan barcode",
@@ -1478,6 +1480,7 @@ const TRANSLATIONS = {
     addGameTitle:"+ AÑADIR JUEGO", editGameTitle:"✎ EDITAR JUEGO",
     searchRawg:"🔍 Buscar en RAWG", rawgPlaceholder:"Escribe el nombre del juego...",
     rawgHint:"Selecciona un juego para autocompletar campos + fecha de lanzamiento",
+    rawgCredit:"Datos de juegos y portadas:",
     rawgNotFound:"No encontrado", rawgNotFoundHint:"Verifica la ortografía o añade el juego manualmente abajo",
     scanBarcodeAria:"Escanear código de barras",
     scanTitle:"Escanear código del juego", scanHint:"Apunta al EAN/UPC en la parte trasera de la caja",

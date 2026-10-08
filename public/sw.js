@@ -1,5 +1,5 @@
-// PS5 Vault: Service Worker v1.19.2 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
-const CACHE = "ps5vault-v68";
+// PS5 Vault: Service Worker v1.19.3 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v69";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -47,7 +47,7 @@ self.addEventListener("activate", e => {
   e.waitUntil(
     Promise.all([
       caches.keys().then(keys =>
-        Promise.all(keys.filter(k => k !== CACHE && k !== "ps5vault-notifs").map(k => caches.delete(k)))
+        Promise.all(keys.filter(k => k !== CACHE && k !== "ps5vault-notifs" && k !== "ps5vault-rawg").map(k => caches.delete(k)))
       ),
       self.clients.claim()
     ])

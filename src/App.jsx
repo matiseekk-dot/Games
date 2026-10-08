@@ -186,6 +186,11 @@ function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
   );
 }
 
+// v1.19.3 - RAWG's terms ask for a link on every screen that shows their data or covers
+function RawgCredit({lang}){
+  return <div className='rawg-credit'>{t(lang,'rawgCredit')} <a href='https://rawg.io' target='_blank' rel='noopener noreferrer'>RAWG</a></div>;
+}
+
 function Toast({msg,onUndo,lang}){
   if(!msg)return null;
   const type=msg.startsWith('❌')?'err':msg.startsWith('ℹ')?'info':'ok';
@@ -626,6 +631,8 @@ function RawgSearch({onSelect,lang}){
     setQ(val);
     clearTimeout(timer.current);
     if(!val.trim()){setOpen(false);setBusy(false);setRes([]);return;}
+    // v1.19.3 - one letter matches thousands of games and costs RAWG quota; wait for two
+    if(val.trim().length<2){setBusy(false);return;}
     setBusy(true);
     setOpen(true);
     const myReq=++reqId.current;
@@ -1129,6 +1136,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
         </div>
       )}
       {/* v1.17.5 - Recommendations CTA removed (feature retired per user request). */}
+      <RawgCredit lang={lang}/>
     </div>
   );
 }
@@ -1203,6 +1211,7 @@ function Upcoming({games,onOpen,onToggleNotify,onStatusChange,notifPerm,onReques
       {tba.length>0&&<><div className='sec-hdr' style={{marginTop:16}}><span className='sec-title'>{t(lang,'tba')}</span><span className='sec-count'>{tba.length}</span></div>
         {tba.map(g=>{const SM2=getSM(lang);const m=SM2[g.status]||SM2.planuje;return(<div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>onOpen(g)}>{g.cover?<div className='gcov' style={{backgroundImage:`url(${coverThumb(g.cover)})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}<div className='gcnt'><div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='rbdg-tba'>TBA</span>{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}</div></div></div></div>);})}
       </>}
+      <RawgCredit lang={lang}/>
     </div>
   );
 }
@@ -4231,6 +4240,7 @@ export default function App(){
                 </div>
               );})
             }
+            {visible.length>0&&<RawgCredit lang={lang}/>}
             {/* v1.19.2 - room for the selection bar */}
             {sel&&<div style={{height:96}}/>}
             {/* v1.17.6 - Load-more: reveal the next page of the capped list. */}
@@ -4253,7 +4263,7 @@ export default function App(){
             to bottom-right with the same env(safe-area-inset-bottom) clearance the rest
             of the layout uses, plus a baseline 24px so it sits above the nav bar even on
             non-edge-to-edge devices where env() returns 0. Aria-labeled for screen readers. */}
-        {(tab==='home'||(tab==='col'&&!sel)) && (
+        {(tab==='home'||(tab==='col'&&!sel)) && !modal && (
           <button
             type='button'
             className='fab'
