@@ -1,50 +1,20 @@
-# Google Play: teksty do sklepu (wersja 1.21, październik 2026)
+// marketing/listing.mjs
+//
+// Teksty do Google Play Console w 7 językach apki. Źródło dla PLAY_STORE_LISTING.md:
+// `node marketing/listing.mjs` sprawdza limity znaków (tytuł 30, krótki opis 80,
+// pełny opis 4000, "Co nowego" 500) i wypisuje gotowy Markdown.
 
-Gotowe do wklejenia w Play Console. Plik jest generowany: teksty edytuj w `marketing/listing.mjs`,
-potem `node marketing/listing.mjs` (sprawdza limity znaków i długie myślniki) i
-`node marketing/build-listing.mjs` (składa ten plik).
-
-Co się zmieniło względem starego opisu:
-- Usunięte funkcje, których już nie ma: Cele, Rekomendacje, timer sesji, „brak telemetrii”, „100% open source”, rozmiar pliku.
-- Dodane: PS5 Vault Pro (jednorazowo), import Steam / PSN / Xbox / Playnite, lista życzeń z ceną docelową,
-  obrazek „kupka wstydu”, losowanie „Co zagrać?”, PS Plus i Game Pass jako źródło, 7 języków, 12 walut.
-- Bez nazwy „Spotify Wrapped” (cudza marka w opisie łamie zasady Google Play dotyczące metadanych).
-- Na końcu każdego opisu zdanie, że apka nie jest powiązana z Sony. Nazwa zawiera „PS5”, więc to chroni przed zgłoszeniem.
-
-## Jak wkleić
-
-1. Play Console → PS5 Vault → **Zwiększanie liczby użytkowników** → **Strona aplikacji w sklepie** → **Główna strona aplikacji**.
-2. Język domyślny: polski. Wklej nazwę, krótki i pełny opis z sekcji PL.
-3. **Zarządzaj tłumaczeniami** → **Dodaj własne tłumaczenia** i zaznacz: `en-US`, `en-GB`, `es-419`, `es-ES`, `de-DE`, `fr-FR`, `it-IT`, `pt-BR`.
-   en-GB dostaje ten sam tekst co en-US, a es-ES ten sam co es-419.
-4. Dla każdego języka wgraj zrzuty z `marketing/store/{język}/` (patrz niżej).
-5. „Co nowego” wklejasz przy wysyłaniu kolejnej wersji: **Wersje** → wersja → **Informacje o wersji**.
-
-Nazwa w sklepie: „PS5 Vault: Tracker Gier” zamiast samego „PS5 Vault”. Dopisek pomaga w wyszukiwaniu
-(ludzie wpisują „tracker gier”, „game tracker”), a apka nadal nazywa się PS5 Vault.
-
-Kategoria: **Rozrywka**. Tagi w Play Console: Gry wideo, Narzędzia, Finanse osobiste.
-
----
-
-## Polski (pl-PL)
-
-**Nazwa aplikacji** (23/30)
-
-```
-PS5 Vault: Tracker Gier
-```
-
-**Krótki opis** (66/80)
-
-```
-Kolekcja gier, wydatki i podsumowanie roku. Bez konta, bez reklam.
-```
-
-**Pełny opis** (2668/4000)
-
-```
-Ile naprawdę wydałeś na gry? Ile godzin w nie wsiąkło? I ile gier wciąż czeka w folii?
+export const LISTING = {
+  pl: {
+    name: 'Polski (pl-PL)',
+    title: 'PS5 Vault: Tracker Gier',
+    short: 'Kolekcja gier, wydatki i podsumowanie roku. Bez konta, bez reklam.',
+    whatsNew: `Nowość: PS5 Vault Pro, jednorazowy zakup bez subskrypcji.
+• Import całej biblioteki ze Steam, PSN, Xboxa i Playnite bez limitu
+• Koszt na godzinę, ROI, prognoza roku i analiza wydatków
+• Budżet miesięczny z alertem i skaner wielu pudełek pod rząd
+Do tego lista życzeń z ceną docelową, obrazek „kupka wstydu” i 7 języków.`,
+    full: `Ile naprawdę wydałeś na gry? Ile godzin w nie wsiąkło? I ile gier wciąż czeka w folii?
 
 PS5 Vault to prywatny tracker kolekcji gier. Dodajesz gry, a apka liczy godziny, pieniądze i postępy, a na koniec roku robi z tego podsumowanie do udostępnienia.
 
@@ -94,39 +64,19 @@ Apka pyta zewnętrzne serwisy tylko o informacje o grach (RAWG, baza kodów kres
 
 PS5 Vault robi jedna osoba po godzinach. Masz pomysł albo znalazłeś błąd? Napisz w opinii, czytam wszystkie.
 
-PS5 Vault nie jest powiązany z Sony Interactive Entertainment. „PS5” i „PlayStation” są znakami towarowymi Sony Interactive Entertainment Inc.
-```
+PS5 Vault nie jest powiązany z Sony Interactive Entertainment. „PS5” i „PlayStation” są znakami towarowymi Sony Interactive Entertainment Inc.`,
+  },
 
-**Co nowego w tej wersji** (320/500)
-
-```
-Nowość: PS5 Vault Pro, jednorazowy zakup bez subskrypcji.
-• Import całej biblioteki ze Steam, PSN, Xboxa i Playnite bez limitu
-• Koszt na godzinę, ROI, prognoza roku i analiza wydatków
-• Budżet miesięczny z alertem i skaner wielu pudełek pod rząd
-Do tego lista życzeń z ceną docelową, obrazek „kupka wstydu” i 7 języków.
-```
-
----
-
-## English (en-US, also en-GB)
-
-**Nazwa aplikacji** (23/30)
-
-```
-PS5 Vault: Game Tracker
-```
-
-**Krótki opis** (75/80)
-
-```
-Track your games, spending and backlog. Year in review. No account, no ads.
-```
-
-**Pełny opis** (2719/4000)
-
-```
-How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
+  en: {
+    name: 'English (en-US, also en-GB)',
+    title: 'PS5 Vault: Game Tracker',
+    short: 'Track your games, spending and backlog. Year in review. No account, no ads.',
+    whatsNew: `New: PS5 Vault Pro, a one-time purchase with no subscription.
+• Import your whole Steam, PSN, Xbox or Playnite library with no limit
+• Cost per hour, ROI, yearly forecast and spending analysis
+• Monthly budget with an alert and a scanner for many boxes in a row
+Plus a wishlist with target prices, the pile of shame image and 7 languages.`,
+    full: `How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
 
 PS5 Vault is a private tracker for your game collection. Add your games and the app counts hours, money and progress, then turns your year into a recap you can share.
 
@@ -176,39 +126,19 @@ The app only asks outside services about games (RAWG, a barcode database), never
 
 PS5 Vault is made by one person in their spare time. Have an idea or found a bug? Leave a review, I read every one.
 
-PS5 Vault is not affiliated with Sony Interactive Entertainment. "PS5" and "PlayStation" are trademarks of Sony Interactive Entertainment Inc.
-```
+PS5 Vault is not affiliated with Sony Interactive Entertainment. "PS5" and "PlayStation" are trademarks of Sony Interactive Entertainment Inc.`,
+  },
 
-**Co nowego w tej wersji** (338/500)
-
-```
-New: PS5 Vault Pro, a one-time purchase with no subscription.
-• Import your whole Steam, PSN, Xbox or Playnite library with no limit
-• Cost per hour, ROI, yearly forecast and spending analysis
-• Monthly budget with an alert and a scanner for many boxes in a row
-Plus a wishlist with target prices, the pile of shame image and 7 languages.
-```
-
----
-
-## Español (es-419 y es-ES)
-
-**Nazwa aplikacji** (28/30)
-
-```
-PS5 Vault: Tracker de Juegos
-```
-
-**Krótki opis** (70/80)
-
-```
-Tu colección, tus gastos y tu resumen del año. Sin cuenta ni anuncios.
-```
-
-**Pełny opis** (2888/4000)
-
-```
-¿Cuánto has gastado de verdad en juegos? ¿Cuántas horas les has dedicado? ¿Y cuántos siguen sin abrir?
+  es: {
+    name: 'Español (es-419 y es-ES)',
+    title: 'PS5 Vault: Tracker de Juegos',
+    short: 'Tu colección, tus gastos y tu resumen del año. Sin cuenta ni anuncios.',
+    whatsNew: `Novedad: PS5 Vault Pro, una compra única sin suscripción.
+• Importa toda tu biblioteca de Steam, PSN, Xbox o Playnite sin límite
+• Coste por hora, ROI, previsión del año y análisis de gastos
+• Presupuesto mensual con aviso y escáner de varias cajas seguidas
+Además: lista de deseos con precio objetivo, la imagen de tu pila de la vergüenza y 7 idiomas.`,
+    full: `¿Cuánto has gastado de verdad en juegos? ¿Cuántas horas les has dedicado? ¿Y cuántos siguen sin abrir?
 
 PS5 Vault es un tracker privado para tu colección de juegos. Añade tus juegos y la app cuenta horas, dinero y progreso, y al final del año te da un resumen para compartir.
 
@@ -258,39 +188,19 @@ La app solo pregunta a servicios externos por los juegos (RAWG, una base de cód
 
 PS5 Vault lo hace una sola persona en su tiempo libre. ¿Tienes una idea o encontraste un error? Déjalo en una reseña, las leo todas.
 
-PS5 Vault no está afiliado a Sony Interactive Entertainment. "PS5" y "PlayStation" son marcas comerciales de Sony Interactive Entertainment Inc.
-```
+PS5 Vault no está afiliado a Sony Interactive Entertainment. "PS5" y "PlayStation" son marcas comerciales de Sony Interactive Entertainment Inc.`,
+  },
 
-**Co nowego w tej wersji** (352/500)
-
-```
-Novedad: PS5 Vault Pro, una compra única sin suscripción.
-• Importa toda tu biblioteca de Steam, PSN, Xbox o Playnite sin límite
-• Coste por hora, ROI, previsión del año y análisis de gastos
-• Presupuesto mensual con aviso y escáner de varias cajas seguidas
-Además: lista de deseos con precio objetivo, la imagen de tu pila de la vergüenza y 7 idiomas.
-```
-
----
-
-## Deutsch (de-DE)
-
-**Nazwa aplikacji** (25/30)
-
-```
-PS5 Vault: Spiele-Tracker
-```
-
-**Krótki opis** (71/80)
-
-```
-Spielesammlung, Ausgaben und Jahresrückblick. Ohne Konto, ohne Werbung.
-```
-
-**Pełny opis** (2975/4000)
-
-```
-Wie viel hast du wirklich für Spiele ausgegeben? Wie viele Stunden stecken darin? Und wie viele liegen noch eingeschweißt im Regal?
+  de: {
+    name: 'Deutsch (de-DE)',
+    title: 'PS5 Vault: Spiele-Tracker',
+    short: 'Spielesammlung, Ausgaben und Jahresrückblick. Ohne Konto, ohne Werbung.',
+    whatsNew: `Neu: PS5 Vault Pro, ein einmaliger Kauf ohne Abo.
+• Importiere deine ganze Steam-, PSN-, Xbox- oder Playnite-Bibliothek ohne Limit
+• Kosten pro Stunde, ROI, Jahresprognose und Ausgabenanalyse
+• Monatsbudget mit Warnung und Scanner für viele Hüllen am Stück
+Außerdem: Wunschliste mit Zielpreis, das Pile-of-Shame-Bild und 7 Sprachen.`,
+    full: `Wie viel hast du wirklich für Spiele ausgegeben? Wie viele Stunden stecken darin? Und wie viele liegen noch eingeschweißt im Regal?
 
 PS5 Vault ist ein privater Tracker für deine Spielesammlung. Du trägst deine Spiele ein, die App zählt Stunden, Geld und Fortschritt und macht am Jahresende einen Rückblick zum Teilen daraus.
 
@@ -340,39 +250,19 @@ Die App fragt externe Dienste nur nach Spielen (RAWG, eine Barcode-Datenbank), n
 
 PS5 Vault entsteht in der Freizeit einer einzelnen Person. Du hast eine Idee oder einen Fehler gefunden? Schreib es in eine Bewertung, ich lese alle.
 
-PS5 Vault steht in keiner Verbindung zu Sony Interactive Entertainment. „PS5“ und „PlayStation“ sind Marken der Sony Interactive Entertainment Inc.
-```
+PS5 Vault steht in keiner Verbindung zu Sony Interactive Entertainment. „PS5“ und „PlayStation“ sind Marken der Sony Interactive Entertainment Inc.`,
+  },
 
-**Co nowego w tej wersji** (332/500)
-
-```
-Neu: PS5 Vault Pro, ein einmaliger Kauf ohne Abo.
-• Importiere deine ganze Steam-, PSN-, Xbox- oder Playnite-Bibliothek ohne Limit
-• Kosten pro Stunde, ROI, Jahresprognose und Ausgabenanalyse
-• Monatsbudget mit Warnung und Scanner für viele Hüllen am Stück
-Außerdem: Wunschliste mit Zielpreis, das Pile-of-Shame-Bild und 7 Sprachen.
-```
-
----
-
-## Français (fr-FR)
-
-**Nazwa aplikacji** (25/30)
-
-```
-PS5 Vault : Suivi de Jeux
-```
-
-**Krótki opis** (72/80)
-
-```
-Ta collection, tes dépenses et ton bilan de l’année. Sans compte ni pub.
-```
-
-**Pełny opis** (2989/4000)
-
-```
-Combien as-tu vraiment dépensé en jeux ? Combien d’heures y as-tu passé ? Et combien sont encore sous blister ?
+  fr: {
+    name: 'Français (fr-FR)',
+    title: 'PS5 Vault : Suivi de Jeux',
+    short: 'Ta collection, tes dépenses et ton bilan de l’année. Sans compte ni pub.',
+    whatsNew: `Nouveau : PS5 Vault Pro, un achat unique sans abonnement.
+• Importe toute ta bibliothèque Steam, PSN, Xbox ou Playnite sans limite
+• Coût par heure, ROI, prévision de l’année et analyse des dépenses
+• Budget mensuel avec alerte et scanner de plusieurs boîtes à la suite
+Et aussi : liste de souhaits avec prix cible, l’image de ta pile de la honte et 7 langues.`,
+    full: `Combien as-tu vraiment dépensé en jeux ? Combien d’heures y as-tu passé ? Et combien sont encore sous blister ?
 
 PS5 Vault est un suivi privé pour ta collection de jeux. Ajoute tes jeux, l’app compte les heures, l’argent et ta progression, puis transforme ton année en bilan à partager.
 
@@ -422,39 +312,19 @@ L’app ne demande aux services externes que des infos sur les jeux (RAWG, une b
 
 PS5 Vault est développé par une seule personne sur son temps libre. Une idée, un bug ? Dis-le dans un avis, je les lis tous.
 
-PS5 Vault n’est pas affilié à Sony Interactive Entertainment. « PS5 » et « PlayStation » sont des marques de Sony Interactive Entertainment Inc.
-```
+PS5 Vault n’est pas affilié à Sony Interactive Entertainment. « PS5 » et « PlayStation » sont des marques de Sony Interactive Entertainment Inc.`,
+  },
 
-**Co nowego w tej wersji** (360/500)
-
-```
-Nouveau : PS5 Vault Pro, un achat unique sans abonnement.
-• Importe toute ta bibliothèque Steam, PSN, Xbox ou Playnite sans limite
-• Coût par heure, ROI, prévision de l’année et analyse des dépenses
-• Budget mensuel avec alerte et scanner de plusieurs boîtes à la suite
-Et aussi : liste de souhaits avec prix cible, l’image de ta pile de la honte et 7 langues.
-```
-
----
-
-## Italiano (it-IT)
-
-**Nazwa aplikacji** (25/30)
-
-```
-PS5 Vault: Tracker Giochi
-```
-
-**Krótki opis** (69/80)
-
-```
-Collezione, spese e riepilogo dell’anno. Senza account né pubblicità.
-```
-
-**Pełny opis** (2922/4000)
-
-```
-Quanto hai speso davvero in giochi? Quante ore ci hai passato? E quanti sono ancora nel cellophane?
+  it: {
+    name: 'Italiano (it-IT)',
+    title: 'PS5 Vault: Tracker Giochi',
+    short: 'Collezione, spese e riepilogo dell’anno. Senza account né pubblicità.',
+    whatsNew: `Novità: PS5 Vault Pro, un acquisto unico senza abbonamento.
+• Importa tutta la tua libreria Steam, PSN, Xbox o Playnite senza limiti
+• Costo per ora, ROI, previsione dell’anno e analisi delle spese
+• Budget mensile con avviso e scanner per più confezioni di fila
+In più: lista desideri con prezzo obiettivo, l’immagine della tua pila della vergogna e 7 lingue.`,
+    full: `Quanto hai speso davvero in giochi? Quante ore ci hai passato? E quanti sono ancora nel cellophane?
 
 PS5 Vault è un tracker privato per la tua collezione di giochi. Aggiungi i tuoi giochi e l’app conta ore, soldi e progressi, poi trasforma il tuo anno in un riepilogo da condividere.
 
@@ -504,39 +374,19 @@ L’app chiede ai servizi esterni solo informazioni sui giochi (RAWG, un databas
 
 PS5 Vault è fatto da una sola persona nel tempo libero. Hai un’idea o hai trovato un errore? Scrivilo in una recensione, le leggo tutte.
 
-PS5 Vault non è affiliato a Sony Interactive Entertainment. "PS5" e "PlayStation" sono marchi di Sony Interactive Entertainment Inc.
-```
+PS5 Vault non è affiliato a Sony Interactive Entertainment. "PS5" e "PlayStation" sono marchi di Sony Interactive Entertainment Inc.`,
+  },
 
-**Co nowego w tej wersji** (360/500)
-
-```
-Novità: PS5 Vault Pro, un acquisto unico senza abbonamento.
-• Importa tutta la tua libreria Steam, PSN, Xbox o Playnite senza limiti
-• Costo per ora, ROI, previsione dell’anno e analisi delle spese
-• Budget mensile con avviso e scanner per più confezioni di fila
-In più: lista desideri con prezzo obiettivo, l’immagine della tua pila della vergogna e 7 lingue.
-```
-
----
-
-## Português do Brasil (pt-BR)
-
-**Nazwa aplikacji** (28/30)
-
-```
-PS5 Vault: Controle de Jogos
-```
-
-**Krótki opis** (76/80)
-
-```
-Sua coleção, seus gastos e a retrospectiva do ano. Sem conta e sem anúncios.
-```
-
-**Pełny opis** (2813/4000)
-
-```
-Quanto você realmente gastou com jogos? Quantas horas passou neles? E quantos ainda estão lacrados?
+  pt: {
+    name: 'Português do Brasil (pt-BR)',
+    title: 'PS5 Vault: Controle de Jogos',
+    short: 'Sua coleção, seus gastos e a retrospectiva do ano. Sem conta e sem anúncios.',
+    whatsNew: `Novidade: PS5 Vault Pro, uma compra única sem assinatura.
+• Importe toda a sua biblioteca da Steam, PSN, Xbox ou Playnite sem limite
+• Custo por hora, ROI, previsão do ano e análise de gastos
+• Orçamento mensal com alerta e scanner de várias caixas seguidas
+E mais: lista de desejos com preço-alvo, a imagem da sua pilha da vergonha e 7 idiomas.`,
+    full: `Quanto você realmente gastou com jogos? Quantas horas passou neles? E quantos ainda estão lacrados?
 
 PS5 Vault é um controle particular da sua coleção de jogos. Você adiciona seus jogos e o app conta horas, dinheiro e progresso, e no fim do ano transforma tudo numa retrospectiva para compartilhar.
 
@@ -586,63 +436,23 @@ O app só pergunta a serviços externos sobre jogos (RAWG, uma base de códigos 
 
 O PS5 Vault é feito por uma pessoa só, no tempo livre. Tem uma ideia ou achou um bug? Conte numa avaliação, eu leio todas.
 
-O PS5 Vault não é afiliado à Sony Interactive Entertainment. "PS5" e "PlayStation" são marcas registradas da Sony Interactive Entertainment Inc.
-```
+O PS5 Vault não é afiliado à Sony Interactive Entertainment. "PS5" e "PlayStation" são marcas registradas da Sony Interactive Entertainment Inc.`,
+  },
+}
 
-**Co nowego w tej wersji** (345/500)
+export const LIMITS = { title: 30, short: 80, full: 4000, whatsNew: 500 }
 
-```
-Novidade: PS5 Vault Pro, uma compra única sem assinatura.
-• Importe toda a sua biblioteca da Steam, PSN, Xbox ou Playnite sem limite
-• Custo por hora, ROI, previsão do ano e análise de gastos
-• Orçamento mensal com alerta e scanner de várias caixas seguidas
-E mais: lista de desejos com preço-alvo, a imagem da sua pilha da vergonha e 7 idiomas.
-```
-
----
-
-## Zrzuty ekranu do sklepu
-
-Pliki: `marketing/store/{pl,en,es,de,fr,it,pt}/01..08-*.png`, 1080×1920, generuje `marketing/build-store-shots.mjs`
-z prawdziwych ekranów apki (przykładowa kolekcja 48 gier z `marketing/seed.mjs`).
-Kolejność ma znaczenie: pierwsze 3 widać w wynikach wyszukiwania bez przewijania.
-
-1. Kupka wstydu: ile pieniędzy leży na półce
-2. Finanse: ile naprawdę wydajesz
-3. Rok w grach
-4. Kolekcja i „Teraz gram”
-5. Import ze Steam, PSN, Xboxa i Playnite
-6. Lista życzeń z ceną docelową
-7. Statystyki: gdzie poszedł Twój czas
-8. Pro: jednorazowo, bez subskrypcji
-
-Okładki gier: w tym środowisku skrypt nie miał dostępu do RAWG, więc gry mają kafelki z inicjałami.
-Z okładkami (jak na starym zrzucie „Screen 2” w katalogu głównym repo) uruchom u siebie:
-`npx vite --port 5199`, a w drugim oknie `COVERS=1 node marketing/shots.mjs` i `node marketing/build-store-shots.mjs`.
-
-## Feature graphic
-
-`public/feature-graphic.png` (1024×500) zostaje. Nie może zawierać przycisku „Pobierz” ani cen.
-
-## Klasyfikacja treści (kwestionariusz IARC)
-
-Zmiana po wprowadzeniu Pro: na pytanie o **zakupy cyfrowe** (digital purchases) odpowiedz **Tak**.
-Reszta bez zmian: brak przemocy, hazardu, treści użytkowników i udostępniania lokalizacji. Oczekiwana kategoria: PEGI 3, z dopiskiem „Zakupy w aplikacji”.
-
-## Polityka prywatności
-
-`https://matiseekk-dot.github.io/Games/privacy.html` (aktualna: opisuje Cloudflare Web Analytics, Umami i weryfikację zakupu Pro).
-
-## Bezpieczeństwo danych (Data safety): do sprawdzenia
-
-Stary opis zakładał „aplikacja nic nie zbiera”. Od 1.18 to już nie do końca prawda, więc sprawdź formularz:
-- **Zakup Pro:** token zakupu idzie do serwera weryfikacji (Cloudflare Worker). Google traktuje to zwykle jako
-  „Informacje finansowe → Historia zakupów”, zbierane, nieudostępniane, cel: funkcje aplikacji, przesyłane szyfrowane.
-- **Cloudflare Web Analytics** działa też w aplikacji z Google Play (to ta sama strona w TWA):
-  „Aktywność w aplikacji → Interakcje z aplikacją”, anonimowe, cel: analityka.
-- **Umami** jest wyłączony (`UMAMI_WEBSITE_ID` puste). Gdy go włączysz, dochodzi ta sama kategoria.
-- Usuwanie danych: tak, Ustawienia → Usuń wszystkie dane.
-
-## Reklamy
-
-Zawiera reklamy: **Nie**. Dostęp do aplikacji: wszystkie funkcje bez logowania.
+// Uruchomione bezpośrednio: sprawdza limity i wypisuje tabelę długości.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  let bad = 0
+  for (const [lang, L] of Object.entries(LISTING)) {
+    const row = Object.entries(LIMITS).map(([k, max]) => {
+      const n = [...L[k]].length
+      if (n > max) bad++
+      return `${k} ${n}/${max}${n > max ? ' ZA DŁUGI' : ''}`
+    })
+    if (/[\u2013\u2014]/.test(Object.values(L).join(''))) { bad++; row.push('MA DŁUGI MYŚLNIK') }
+    console.log(lang.padEnd(3), row.join('  '))
+  }
+  process.exit(bad ? 1 : 0)
+}

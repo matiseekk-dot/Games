@@ -4,3 +4,7 @@ dist
 .env
 .env.local
 .env.production
+
+# marketing: pliki robocze generatora shortów
+marketing/shorts/.tmp
+marketing/shots/*/*.png
