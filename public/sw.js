@@ -1,5 +1,5 @@
-// PS5 Vault: Service Worker v1.20.2 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
-const CACHE = "ps5vault-v74";
+// PS5 Vault: Service Worker v1.20.3 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v75";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -21,6 +21,47 @@ const NOTIF_I18N = {
     monthTitle: "📅 One month to release",
     monthBody: t => `${t} - in one month!`,
     daysTitle: d => `⏳ ${d} days to release`,
+    daysBody: t => `${t}`
+  },
+  // v1.21.0
+  de: {
+    todayTitle: "🎮 Heute erschienen!",
+    todayBody: t => `${t} ist jetzt erhältlich!`,
+    weekTitle: "⏳ Noch eine Woche bis zum Release!",
+    weekBody: t => `${t} - in 7 Tagen!`,
+    monthTitle: "📅 Noch ein Monat bis zum Release",
+    monthBody: t => `${t} - in einem Monat!`,
+    daysTitle: d => `⏳ Noch ${d} Tage bis zum Release`,
+    daysBody: t => `${t}`
+  },
+  fr: {
+    todayTitle: "🎮 Sortie aujourd'hui !",
+    todayBody: t => `${t} est disponible !`,
+    weekTitle: "⏳ Plus qu'une semaine avant la sortie !",
+    weekBody: t => `${t} - dans 7 jours !`,
+    monthTitle: "📅 Plus qu'un mois avant la sortie",
+    monthBody: t => `${t} - dans un mois !`,
+    daysTitle: d => `⏳ Sortie dans ${d} jours`,
+    daysBody: t => `${t}`
+  },
+  it: {
+    todayTitle: "🎮 Esce oggi!",
+    todayBody: t => `${t} è ora disponibile!`,
+    weekTitle: "⏳ Manca una settimana all'uscita!",
+    weekBody: t => `${t} - tra 7 giorni!`,
+    monthTitle: "📅 Manca un mese all'uscita",
+    monthBody: t => `${t} - tra un mese!`,
+    daysTitle: d => `⏳ ${d} giorni all'uscita`,
+    daysBody: t => `${t}`
+  },
+  pt: {
+    todayTitle: "🎮 Lançamento hoje!",
+    todayBody: t => `${t} já está disponível!`,
+    weekTitle: "⏳ Falta uma semana para o lançamento!",
+    weekBody: t => `${t} - em 7 dias!`,
+    monthTitle: "📅 Falta um mês para o lançamento",
+    monthBody: t => `${t} - em um mês!`,
+    daysTitle: d => `⏳ Faltam ${d} dias para o lançamento`,
     daysBody: t => `${t}`
   },
   // v1.14.2 - Spanish (es-419 neutral)
@@ -80,7 +121,8 @@ self.addEventListener("message", async event => {
   const games = event.data.games || [];
   // v1.14.2 - accept es alongside pl/en. Anything else (or undefined) defaults to pl
   // for backward-compat with pre-v1.14.2 scheduled notifications.
-  const lang = event.data.lang === "en" ? "en" : event.data.lang === "es" ? "es" : "pl";
+  // v1.21.0 - any language with texts here; unknown/undefined stays Polish (old app versions)
+  const lang = NOTIF_I18N[event.data.lang] ? event.data.lang : "pl";
   const i18n = NOTIF_I18N[lang];
   const today = new Date(); today.setHours(0,0,0,0);
   for (const game of games) {

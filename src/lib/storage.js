@@ -2,7 +2,7 @@
 // onboarding, language, currency). Plus export/import helpers that act on the games array.
 // Per-feature persistence (e.g. the EAN cache in lib/barcode.js) lives next to its
 // feature, keeping this file focused on the canonical games collection.
-import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, LS_ONBOARDING_BANNER_DISMISSED, CURRENCIES } from '../constants.js';
+import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, LS_ONBOARDING_BANNER_DISMISSED, CURRENCIES, READY_LANGS } from '../constants.js';
 import { uid, parseNum } from './util.js';
 import { wishRead, wishWrite, cleanWishes, mergeWishlists } from './wishlist.js';
 
@@ -170,10 +170,12 @@ export function menuSeenUpdate(patch) {
 // pl/es/en-* defaults to EN since EN has full string coverage.
 export function getLang() {
   const saved = localStorage.getItem(LS_LANG);
-  if (saved) return saved;
+  if (saved) return READY_LANGS.includes(saved) ? saved : 'en';
   const nav = (navigator.language || '').toLowerCase();
   if (nav.startsWith('pl')) return 'pl';
   if (nav.startsWith('es')) return 'es';
+  // v1.21.0
+  for (const l of ['de', 'fr', 'it', 'pt']) if (nav.startsWith(l) && READY_LANGS.includes(l)) return l;
   return 'en';
 }
 export function getCurrency() {
@@ -191,7 +193,8 @@ export function getDefaultCurrency() {
     const l = (navigator.language || '').toLowerCase();
     if (l.startsWith('pl')) return 'PLN';
     if (l === 'es-mx' || l === 'es-419') return 'MXN';
-    if (l === 'es-es' || /^(de|fr|it)/.test(l)) return 'EUR';
+    if (l === 'pt-br') return 'BRL';
+    if (l === 'es-es' || /^(de|fr|it|pt)/.test(l)) return 'EUR';
     if (l.startsWith('es')) return 'USD';  // Latin America fallback (AR/CL/PE/CO without explicit MXN)
     if (l === 'en-us') return 'USD';
     if (l === 'en-gb') return 'GBP';

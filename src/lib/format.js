@@ -9,20 +9,28 @@ import { parseDay } from './util.js';
 const MONTHS_PL = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-function monthsFor(lang) { return lang === 'es' ? MONTHS_ES : lang === 'en' ? MONTHS_EN : MONTHS_PL; }
+// v1.21.0
+const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const MONTHS_FR = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const MONTHS_IT = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+const MONTHS_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MONTHS = { pl: MONTHS_PL, en: MONTHS_EN, es: MONTHS_ES, de: MONTHS_DE, fr: MONTHS_FR, it: MONTHS_IT, pt: MONTHS_PT };
+function monthsFor(lang) { return MONTHS[lang] || MONTHS_PL; }
+// German writes the day with a dot: "12. Jan 2026"
+const dayOf = (dt, lang) => lang === 'de' ? `${dt.getDate()}.` : String(dt.getDate());
 
 // "12 sty 2026" / "12 Jan 2026" / "12 ene 2026"
 export function fmtDate(d, lang) {
   if (!d) return '';
   const dt = parseDay(d); if (isNaN(dt)) return '';
-  return `${dt.getDate()} ${monthsFor(lang)[dt.getMonth()]} ${dt.getFullYear()}`;
+  return `${dayOf(dt, lang)} ${monthsFor(lang)[dt.getMonth()]} ${dt.getFullYear()}`;
 }
 
 // "12 sty" / "12 Jan" / "12 ene" (no year)
 export function fmtShort(d, lang) {
   if (!d) return '';
   const dt = parseDay(d); if (isNaN(dt)) return '';
-  return `${dt.getDate()} ${monthsFor(lang)[dt.getMonth()]}`;
+  return `${dayOf(dt, lang)} ${monthsFor(lang)[dt.getMonth()]}`;
 }
 
 // Money formatter. Uses active currency (read from localStorage on every call).
@@ -45,11 +53,24 @@ export function plnExact(v, lang) {
 
 // Polish has 3-form plural: 1 gra, 2-4 gry, 5+ gier (also 12-14 → "gier", 22-24 → "gry")
 // English uses simpler 1 game / 2+ games. v1.14.3 - Spanish: juego / juegos.
+// v1.21.0 - singular/plural words for the languages with two forms. French also uses the
+// singular for 0 ("0 jeu").
+const TWO_FORMS = {
+  en: { game: ['game', 'games'], hour: ['hour', 'hours'], plat: ['platinum', 'platinums'], session: ['session', 'sessions'] },
+  es: { game: ['juego', 'juegos'], hour: ['hora', 'horas'], plat: ['platino', 'platinos'], session: ['sesión', 'sesiones'] },
+  de: { game: ['Spiel', 'Spiele'], hour: ['Stunde', 'Stunden'], plat: ['Platin', 'Platin'], session: ['Session', 'Sessions'] },
+  fr: { game: ['jeu', 'jeux'], hour: ['heure', 'heures'], plat: ['platine', 'platines'], session: ['session', 'sessions'] },
+  it: { game: ['gioco', 'giochi'], hour: ['ora', 'ore'], plat: ['platino', 'platini'], session: ['sessione', 'sessioni'] },
+  pt: { game: ['jogo', 'jogos'], hour: ['hora', 'horas'], plat: ['platina', 'platinas'], session: ['sessão', 'sessões'] },
+};
+const isOne = (n, lang) => (lang === 'fr' ? Math.abs(n) < 2 : Math.abs(n) === 1);
+function twoForm(n, lang, word) { const f = TWO_FORMS[lang][word]; return isOne(n, lang) ? f[0] : f[1]; }
+
 // v1.19.4 - pick a plural form from "one|few|many" (Polish) or "one|other" (EN/ES).
 export function pluralForm(n, lang, forms) {
   const f = String(forms).split('|');
   const abs = Math.abs(n);
-  if (lang === 'en' || lang === 'es') return abs === 1 ? f[0] : f[1];
+  if (lang !== 'pl') return isOne(n, lang) ? f[0] : f[1];
   if (abs === 1) return f[0];
   const last = abs % 10, lastTwo = abs % 100;
   return last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20) ? f[1] : f[2];
@@ -57,8 +78,7 @@ export function pluralForm(n, lang, forms) {
 
 export function gamesWord(n, lang) {
   const abs = Math.abs(n);
-  if (lang === 'es') return abs === 1 ? 'juego' : 'juegos';
-  if (lang === 'en') return abs === 1 ? 'game' : 'games';
+  if (TWO_FORMS[lang]) return twoForm(n, lang, 'game');
   if (abs === 1) return 'gra';
   const last = abs % 10, lastTwo = abs % 100;
   if (last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20)) return 'gry';
@@ -73,8 +93,7 @@ export function gamesWord(n, lang) {
 // the forms differ slightly but accusative is what we need for goal CTAs.
 export function hoursWord(n, lang) {
   const abs = Math.abs(n);
-  if (lang === 'es') return abs === 1 ? 'hora' : 'horas';
-  if (lang === 'en') return abs === 1 ? 'hour' : 'hours';
+  if (TWO_FORMS[lang]) return twoForm(n, lang, 'hour');
   if (abs === 1) return 'godzinę';
   const last = abs % 10, lastTwo = abs % 100;
   if (last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20)) return 'godziny';
@@ -85,8 +104,7 @@ export function hoursWord(n, lang) {
 // EN: 1 platinum / 2+ platinums. PL: 1 platynę / 2-4 platyny / 5+ platyn.
 export function platynaWord(n, lang) {
   const abs = Math.abs(n);
-  if (lang === 'es') return abs === 1 ? 'platino' : 'platinos';
-  if (lang === 'en') return abs === 1 ? 'platinum' : 'platinums';
+  if (TWO_FORMS[lang]) return twoForm(n, lang, 'plat');
   if (abs === 1) return 'platynę';
   const last = abs % 10, lastTwo = abs % 100;
   if (last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20)) return 'platyny';
@@ -98,8 +116,7 @@ export function platynaWord(n, lang) {
 // EN: 1 session / 2+ sessions.
 export function sessionsWord(n, lang) {
   const abs = Math.abs(n);
-  if (lang === 'es') return abs === 1 ? 'sesión' : 'sesiones';
-  if (lang === 'en') return abs === 1 ? 'session' : 'sessions';
+  if (TWO_FORMS[lang]) return twoForm(n, lang, 'session');
   if (abs === 1) return 'sesja';
   const last = abs % 10, lastTwo = abs % 100;
   if (last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20)) return 'sesje';
@@ -109,9 +126,9 @@ export function sessionsWord(n, lang) {
 // Cost-per-hour with dynamic symbol. Format always "1.9 sym/h" regardless of before/after.
 // Named fmtCph (NOT cph) to avoid collision with local `const cph` inside Stats/Finance.
 export function fmtCph(v) {
-  // v1.18.1 - decimal comma for Polish and Spanish ("3,2 zł/h", not "3.2 zł/h")
+  // v1.18.1 - decimal comma ("3,2 zł/h"); every app language but English uses one
   let num = (+v || 0).toFixed(1);
-  try { const l = getLang(); if (l === 'pl' || l === 'es') num = num.replace('.', ','); } catch {}
+  try { if (getLang() !== 'en') num = num.replace('.', ','); } catch {}
   const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
   return `${num} ${def.symbol}/h`;
 }

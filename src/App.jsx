@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   APP_VER,
   LS_LANG, LS_CURRENCY,
-  G, GENRES_PL, GENRES_EN, GENRES_ES, localizeGenre, STORES, PLATFORMS, SOURCES, isOwned, CURRENCIES, EF,
+  G, GENRES_PL, GENRES_EN, GENRES_BY_LANG, LANGS, READY_LANGS, localeFor, localizeGenre, STORES, PLATFORMS, SOURCES, isOwned, CURRENCIES, EF,
   PRO_ENABLED, FREE_IMPORT_LIMIT, PLAY_STORE_URL,
 } from './constants.js';
 import { CSS } from './styles.js';
@@ -740,7 +740,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
   // still the PL canonical (RMAP+legacy data), so cross-language collections stay
   // consistent. The Modal's <select> uses GENRES_PL as values + this localized
   // array as visible labels (see render below).
-  const genres=lang==='es'?GENRES_ES:lang==='en'?GENRES_EN:GENRES_PL;
+  const genres=GENRES_BY_LANG[lang]||GENRES_EN;
   // upd auto-regenerates abbr from title on every keystroke (abbr field is hidden in UI now).
   const upd=(k,v)=>setF(p=>{
     const n={...p,[k]:v};
@@ -2763,11 +2763,11 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'language')}</div>
         <div className='lang-row'>
-          <button type='button' className={'lang-btn'+(lang==='pl'?' on':'')} onClick={()=>{setLang('pl');localStorage.setItem(LS_LANG,'pl');}}>🇵🇱 Polski</button>
-          <button type='button' className={'lang-btn'+(lang==='en'?' on':'')} onClick={()=>{setLang('en');localStorage.setItem(LS_LANG,'en');}}>🇬🇧 English</button>
-          {/* v1.14.2 - Spanish (es-419 neutral). Globe emoji used instead of a single
-              flag - picking 🇪🇸 vs 🇲🇽 vs 🇦🇷 would alienate users from other regions. */}
-          <button type='button' className={'lang-btn'+(lang==='es'?' on':'')} onClick={()=>{setLang('es');localStorage.setItem(LS_LANG,'es');}}>🌎 Español</button>
+          {/* v1.14.2 - Spanish uses a globe, not one country's flag (es-419 neutral).
+              v1.21.0 - seven languages, wrapping two or three per row. */}
+          {LANGS.filter(l=>READY_LANGS.includes(l.code)).map(l=>(
+            <button key={l.code} type='button' className={'lang-btn'+(lang===l.code?' on':'')} onClick={()=>{setLang(l.code);localStorage.setItem(LS_LANG,l.code);}}>{l.label}</button>
+          ))}
         </div>
       </div>
       <div className='set-section'>
@@ -3523,12 +3523,12 @@ function ImportUndoOverlay({ games, onClose, onRemoveBatch, lang }){
     const now = new Date();
     const sameDay = d.toDateString() === now.toDateString();
     const yesterday = new Date(now.getTime() - 86400000);
-    const TODAY    = lang === 'pl' ? 'Dziś'    : lang === 'es' ? 'Hoy'  : 'Today';
-    const YDAY     = lang === 'pl' ? 'Wczoraj' : lang === 'es' ? 'Ayer' : 'Yesterday';
+    const TODAY    = t(lang,'timeToday');
+    const YDAY     = t(lang,'timeYesterday');
     const hhmm     = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     if (sameDay) return `${TODAY} ${hhmm}`;
     if (d.toDateString() === yesterday.toDateString()) return `${YDAY} ${hhmm}`;
-    return d.toLocaleDateString(lang === 'pl' ? 'pl-PL' : (lang === 'es' ? 'es-ES' : 'en-US'), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString(localeFor(lang), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
   return (
@@ -3781,6 +3781,8 @@ export default function App(){
     realCountRef.current=real;
   },[games]);
   useEffect(()=>{ if(tab==='fin') trackOnce('finance_opened'); },[tab]);
+  // v1.21.0 - screen readers and the browser's translate offer follow the app language
+  useEffect(()=>{ try{ document.documentElement.lang=localeFor(lang); }catch{} },[lang]);
   // v1.19.1 - fetch the chart chunk once the first screen is up (see loadCharts)
   useEffect(()=>{
     const idle=window.requestIdleCallback||(cb=>setTimeout(cb,2000));

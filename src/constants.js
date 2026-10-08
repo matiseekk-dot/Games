@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies - every other module imports from here.
 
-export const APP_VER  = '1.20.2';
+export const APP_VER  = '1.20.3';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 // v1.17.7 - Umami Cloud website ID (public by design, like the Cloudflare beacon token).
 // Empty = funnel analytics fully off (see src/lib/analytics.js).
@@ -72,6 +72,27 @@ export const GENRES_EN = ['Action','RPG','FPS','Horror','Sports','Racing','Platf
 // v1.14.3 - Spanish genre labels. Keep keys identical to PL so RMAP / persisted
 // genre values keep working - this list is for *display* only.
 export const GENRES_ES = ['Acción','RPG','FPS','Terror','Deportes','Carreras','Plataformas','Puzles','Aventura','Estrategia','Lucha','Indie','Otros'];
+// v1.21.0 - German, French, Italian, Brazilian Portuguese (display only, same order as PL)
+export const GENRES_DE = ['Action','RPG','FPS','Horror','Sport','Rennspiel','Plattformer','Puzzle','Adventure','Strategie','Kampfspiel','Indie','Andere'];
+export const GENRES_FR = ['Action','RPG','FPS','Horreur','Sport','Course','Plateforme','Puzzle','Aventure','Stratégie','Combat','Indé','Autre'];
+export const GENRES_IT = ['Azione','RPG','FPS','Horror','Sport','Corse','Platform','Puzzle','Avventura','Strategia','Picchiaduro','Indie','Altro'];
+export const GENRES_PT = ['Ação','RPG','FPS','Terror','Esporte','Corrida','Plataforma','Quebra-cabeça','Aventura','Estratégia','Luta','Indie','Outros'];
+export const GENRES_BY_LANG = { pl: GENRES_PL, en: GENRES_EN, es: GENRES_ES, de: GENRES_DE, fr: GENRES_FR, it: GENRES_IT, pt: GENRES_PT };
+
+// v1.21.0 - app languages: code, picker label, locale for dates. pt = Brazilian Portuguese.
+export const LANGS = [
+  { code:'pl', label:'🇵🇱 Polski',    locale:'pl-PL' },
+  { code:'en', label:'🇬🇧 English',   locale:'en-US' },
+  { code:'es', label:'🌎 Español',    locale:'es-ES' },
+  { code:'de', label:'🇩🇪 Deutsch',   locale:'de-DE' },
+  { code:'fr', label:'🇫🇷 Français',  locale:'fr-FR' },
+  { code:'it', label:'🇮🇹 Italiano',  locale:'it-IT' },
+  { code:'pt', label:'🇧🇷 Português', locale:'pt-BR' },
+];
+// Languages users can pick or get auto-detected. Add a code here only once its block
+// exists in i18n.js; until then de/fr/it/pt stay hidden (the rest of the support is in place).
+export const READY_LANGS = ['pl', 'en', 'es'];
+export function localeFor(lang) { return (LANGS.find(l => l.code === lang) || LANGS[1]).locale; }
 
 // v1.14.3 - Localize a stored canonical (PL) genre value for display in lang. Returns the
 // input unchanged if it isn't in the canonical list (e.g. legacy/imported game with a free-form
@@ -80,9 +101,7 @@ export function localizeGenre(stored, lang) {
   if (!stored) return stored;
   const idx = GENRES_PL.indexOf(stored);
   if (idx < 0) return stored;
-  if (lang === 'es') return GENRES_ES[idx];
-  if (lang === 'en') return GENRES_EN[idx];
-  return GENRES_PL[idx];
+  return (GENRES_BY_LANG[lang] || GENRES_EN)[idx];
 }
 export const RMAP = {'action':'Action','role-playing-games-rpg':'RPG','shooter':'FPS','horror':'Horror','sports':'Sport','racing':'Racing','platformer':'Platformer','puzzle':'Puzzle','adventure':'Adventure','strategy':'Strategia','fighting':'Fighting','indie':'Indie'};
 
@@ -94,18 +113,20 @@ export const PLATFORMS = ['PS5','PS4','Xbox Series X/S','Xbox One','PC','Nintend
 // after:true  → "100 zł"  (PLN/CZK/SEK/NOK)
 // after:false → "$100"    (EUR/USD/GBP)
 export const CURRENCIES = {
-  PLN: { code:'PLN', symbol:'zł', after:true,  name:{pl:'Polski złoty',      en:'Polish złoty',     es:'Złoty polaco'} },
-  EUR: { code:'EUR', symbol:'€',  after:false, name:{pl:'Euro',              en:'Euro',             es:'Euro'} },
-  USD: { code:'USD', symbol:'$',  after:false, name:{pl:'Dolar amerykański', en:'US dollar',        es:'Dólar estadounidense'} },
-  GBP: { code:'GBP', symbol:'£',  after:false, name:{pl:'Funt brytyjski',    en:'British pound',    es:'Libra esterlina'} },
+  PLN: { code:'PLN', symbol:'zł', after:true,  name:{pl:'Polski złoty',      en:'Polish złoty',     es:'Złoty polaco', de:'Polnischer Złoty', fr:'Złoty polonais', it:'Złoty polacco', pt:'Zloty polonês'} },
+  EUR: { code:'EUR', symbol:'€',  after:false, name:{pl:'Euro',              en:'Euro',             es:'Euro', de:'Euro', fr:'Euro', it:'Euro', pt:'Euro'} },
+  USD: { code:'USD', symbol:'$',  after:false, name:{pl:'Dolar amerykański', en:'US dollar',        es:'Dólar estadounidense', de:'US-Dollar', fr:'Dollar américain', it:'Dollaro statunitense', pt:'Dólar americano'} },
+  GBP: { code:'GBP', symbol:'£',  after:false, name:{pl:'Funt brytyjski',    en:'British pound',    es:'Libra esterlina', de:'Britisches Pfund', fr:'Livre sterling', it:'Sterlina britannica', pt:'Libra esterlina'} },
   // v1.14.0 - North American / Australian markets requested by users
-  CAD: { code:'CAD', symbol:'C$', after:false, name:{pl:'Dolar kanadyjski',  en:'Canadian dollar', es:'Dólar canadiense'} },
-  AUD: { code:'AUD', symbol:'A$', after:false, name:{pl:'Dolar australijski',en:'Australian dollar', es:'Dólar australiano'} },
+  CAD: { code:'CAD', symbol:'C$', after:false, name:{pl:'Dolar kanadyjski',  en:'Canadian dollar', es:'Dólar canadiense', de:'Kanadischer Dollar', fr:'Dollar canadien', it:'Dollaro canadese', pt:'Dólar canadense'} },
+  AUD: { code:'AUD', symbol:'A$', after:false, name:{pl:'Dolar australijski',en:'Australian dollar', es:'Dólar australiano', de:'Australischer Dollar', fr:'Dollar australien', it:'Dollaro australiano', pt:'Dólar australiano'} },
   // v1.14.2 - Mexican peso for the growing es-MX userbase
-  MXN: { code:'MXN', symbol:'$',  after:false, name:{pl:'Peso meksykańskie', en:'Mexican peso',     es:'Peso mexicano'} },
-  CZK: { code:'CZK', symbol:'Kč', after:true,  name:{pl:'Korona czeska',     en:'Czech koruna',     es:'Corona checa'} },
-  SEK: { code:'SEK', symbol:'kr', after:true,  name:{pl:'Korona szwedzka',   en:'Swedish krona',    es:'Corona sueca'} },
-  NOK: { code:'NOK', symbol:'kr', after:true,  name:{pl:'Korona norweska',   en:'Norwegian krone',  es:'Corona noruega'} },
+  MXN: { code:'MXN', symbol:'$',  after:false, name:{pl:'Peso meksykańskie', en:'Mexican peso',     es:'Peso mexicano', de:'Mexikanischer Peso', fr:'Peso mexicain', it:'Peso messicano', pt:'Peso mexicano'} },
+  CZK: { code:'CZK', symbol:'Kč', after:true,  name:{pl:'Korona czeska',     en:'Czech koruna',     es:'Corona checa', de:'Tschechische Krone', fr:'Couronne tchèque', it:'Corona ceca', pt:'Coroa tcheca'} },
+  SEK: { code:'SEK', symbol:'kr', after:true,  name:{pl:'Korona szwedzka',   en:'Swedish krona',    es:'Corona sueca', de:'Schwedische Krone', fr:'Couronne suédoise', it:'Corona svedese', pt:'Coroa sueca'} },
+  // v1.21.0 - Brazilian real for the Portuguese (Brazil) translation
+  BRL: { code:'BRL', symbol:'R$', after:false, name:{pl:'Real brazylijski', en:'Brazilian real', es:'Real brasileño', de:'Brasilianischer Real', fr:'Réal brésilien', it:'Real brasiliano', pt:'Real brasileiro'} },
+  NOK: { code:'NOK', symbol:'kr', after:true,  name:{pl:'Korona norweska',   en:'Norwegian krone',  es:'Corona noruega', de:'Norwegische Krone', fr:'Couronne norvégienne', it:'Corona norvegese', pt:'Coroa norueguesa'} },
 };
 
 // ─── Game source ──────────────────────────────────────────────────────────

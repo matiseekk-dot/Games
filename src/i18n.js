@@ -325,6 +325,17 @@ const TRANSLATIONS = {
     wishOwned:"ℹ️ Ta gra jest już w kolekcji",
     wishRemoved:"✓ Usunięto {title} z listy",
     wishMoved:"✓ {title} trafia do kolekcji. Uzupełnij szczegóły.",
+    // v1.21.0: texts moved out of code
+    timeToday:"Dziś",
+    timeYesterday:"Wczoraj",
+    wImgTitle:"MÓJ {year} W GRACH",
+    wImgHours:"{hw} GRANIA",
+    wImgAdded:"DODANYCH",
+    wImgCompleted:"UKOŃCZONYCH",
+    wImgPlatinums:"PLATYN",
+    wImgTopPlayed:"🏆 NAJWIĘCEJ GRANE",
+    wImgGamesPlayed:"ZAGRANYCH GIER",
+    wImgAvgPerGame:"ŚR. NA GRĘ",
     // v1.14.3 - keys backfilled from inline-ternaries in App.jsx so every visible
     // string is reachable through t() and gets full PL/EN/ES coverage.
     rawgSearching:"Szukam...",
@@ -942,6 +953,17 @@ const TRANSLATIONS = {
     wishOwned:"ℹ️ Already in your collection",
     wishRemoved:"✓ Removed {title}",
     wishMoved:"✓ {title} moved to your collection. Fill in the details.",
+    // v1.21.0: texts moved out of code
+    timeToday:"Today",
+    timeYesterday:"Yesterday",
+    wImgTitle:"MY {year} IN GAMES",
+    wImgHours:"{hw} PLAYED",
+    wImgAdded:"ADDED",
+    wImgCompleted:"COMPLETED",
+    wImgPlatinums:"PLATINUMS",
+    wImgTopPlayed:"🏆 MOST PLAYED",
+    wImgGamesPlayed:"GAMES PLAYED",
+    wImgAvgPerGame:"AVG PER GAME",
     // v1.14.3 - see PL counterpart for context
     rawgSearching:"Searching...",
     platinumDesc:"I earned the platinum trophy",
@@ -1533,6 +1555,17 @@ const TRANSLATIONS = {
     wishOwned:"ℹ️ Ya está en tu colección",
     wishRemoved:"✓ Eliminado {title}",
     wishMoved:"✓ {title} pasa a tu colección. Completa los detalles.",
+    // v1.21.0: texts moved out of code
+    timeToday:"Hoy",
+    timeYesterday:"Ayer",
+    wImgTitle:"MI {year} EN JUEGOS",
+    wImgHours:"{hw} JUGADAS",
+    wImgAdded:"AÑADIDOS",
+    wImgCompleted:"COMPLETADOS",
+    wImgPlatinums:"PLATINOS",
+    wImgTopPlayed:"🏆 MÁS JUGADO",
+    wImgGamesPlayed:"JUEGOS JUGADOS",
+    wImgAvgPerGame:"PROM. POR JUEGO",
     // v1.14.3 - keys for previously hardcoded inline ternaries
     rawgSearching:"Buscando...",
     platinumDesc:"Conseguí el trofeo de platino",
@@ -1832,7 +1865,8 @@ const TRANSLATIONS = {
 };
 
 export function t(lang, key, vars = {}) {
-  let str = TRANSLATIONS[lang]?.[key] || TRANSLATIONS.pl[key] || key;
+  // v1.21.0 - a key missing in a translation falls back to English (Polish only for pl)
+  let str = TRANSLATIONS[lang]?.[key] || (lang !== 'pl' && TRANSLATIONS.en[key]) || TRANSLATIONS.pl[key] || key;
   // Auto-inject {cur} from active currency symbol when caller didn't supply it.
   // Pre-extraction this had a typeof guard for hoisting safety. With ES modules
   // CURRENCIES is statically resolved at evaluation time - guard removed as dead code.

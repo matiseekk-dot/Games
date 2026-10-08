@@ -15,6 +15,7 @@
 // Returns a Promise<Blob> (image/png). Caller pipes into shareFile().
 
 import { hoursWord, gamesWord, platynaWord } from './format.js';
+import { t } from '../i18n.js';
 
 // Brand colors duplicated here (avoids importing the full G object - small win,
 // but keeps this module self-contained and free to be tree-shaken if someone strips
@@ -153,8 +154,7 @@ export async function buildWrappedImage(review, year, lang) {
   // i18n title - language-aware
   ctx.font = "700 38px 'Syne', Arial, sans-serif";
   ctx.fillStyle = COL.dim;
-  const titleByLang = { pl: `MÓJ ${year} W GRACH`, en: `MY ${year} IN GAMES`, es: `MI ${year} EN JUEGOS` };
-  ctx.fillText(titleByLang[lang] || titleByLang.en, W / 2, 200);
+  ctx.fillText(t(lang, 'wImgTitle', { year }), W / 2, 200);
 
   // ── Hero number: total hours ───────────────────────────────────────────────
   // Big Orbitron 192px - anchor visual.
@@ -171,20 +171,15 @@ export async function buildWrappedImage(review, year, lang) {
   ctx.font = "700 36px 'Syne', Arial, sans-serif";
   ctx.fillStyle = COL.txt;
   const hourWord = hoursWord(review.totalHours || 0, lang).toUpperCase();
-  const heroLabelByLang = {
-    pl: `${hourWord} GRANIA`,
-    en: `${hourWord} PLAYED`,
-    es: `${hourWord} JUGADAS`,
-  };
-  ctx.fillText(heroLabelByLang[lang] || heroLabelByLang.en, W / 2, heroY + 140);
+  ctx.fillText(t(lang, 'wImgHours', { hw: hourWord }), W / 2, heroY + 140);
 
   // ── 3-column secondary stats ───────────────────────────────────────────────
   const colY = 720;
   const colSpacing = W / 3;
   const cols = [
-    { value: review.gamesAdded || 0,     label: lang === 'pl' ? 'DODANYCH' : lang === 'es' ? 'AÑADIDOS' : 'ADDED', color: COL.pur },
-    { value: review.gamesCompleted || 0, label: lang === 'pl' ? 'UKOŃCZONYCH' : lang === 'es' ? 'COMPLETADOS' : 'COMPLETED', color: COL.grn },
-    { value: review.platinums || 0,      label: lang === 'pl' ? 'PLATYN' : lang === 'es' ? 'PLATINOS' : 'PLATINUMS', color: COL.gld },
+    { value: review.gamesAdded || 0,     label: t(lang, 'wImgAdded'), color: COL.pur },
+    { value: review.gamesCompleted || 0, label: t(lang, 'wImgCompleted'), color: COL.grn },
+    { value: review.platinums || 0,      label: t(lang, 'wImgPlatinums'), color: COL.gld },
   ];
   cols.forEach((c, i) => {
     const cx = colSpacing * i + colSpacing / 2;
@@ -211,7 +206,7 @@ export async function buildWrappedImage(review, year, lang) {
   ctx.textAlign = 'left';
   ctx.font = "700 24px 'Syne', Arial, sans-serif";
   ctx.fillStyle = COL.dim;
-  const topPlayedLabel = lang === 'pl' ? '🏆 NAJWIĘCEJ GRANE' : lang === 'es' ? '🏆 MÁS JUGADO' : '🏆 MOST PLAYED';
+  const topPlayedLabel = t(lang, 'wImgTopPlayed');
   ctx.fillText(topPlayedLabel, cardX + 32, cardY + 50);
 
   const top = review.topPlayed && review.topPlayed[0];
@@ -236,7 +231,7 @@ export async function buildWrappedImage(review, year, lang) {
     });
     ctx.font = "700 30px 'Orbitron', Arial, sans-serif";
     ctx.fillStyle = COL.blu;
-    const hrsLabel = lang === 'pl' ? `${Math.round(top.hours)} h` : lang === 'es' ? `${Math.round(top.hours)} h` : `${Math.round(top.hours)} h`;
+    const hrsLabel = `${Math.round(top.hours)} h`;
     ctx.fillText(hrsLabel, textX, cardY + cardH - 60);
   } else {
     ctx.font = "700 32px 'Syne', Arial, sans-serif";
@@ -268,8 +263,8 @@ export async function buildWrappedImage(review, year, lang) {
   // with game-level derived stats that work for imported libraries.
   const rowY = 1480;
   const rowItems = [
-    { value: `${review.gamesPlayed || 0}`, label: lang === 'pl' ? 'ZAGRANYCH GIER' : lang === 'es' ? 'JUEGOS JUGADOS' : 'GAMES PLAYED' },
-    { value: `${review.avgHoursPerGame || 0}h`, label: lang === 'pl' ? 'ŚR. NA GRĘ' : lang === 'es' ? 'PROM. POR JUEGO' : 'AVG PER GAME' },
+    { value: `${review.gamesPlayed || 0}`, label: t(lang, 'wImgGamesPlayed') },
+    { value: `${review.avgHoursPerGame || 0}h`, label: t(lang, 'wImgAvgPerGame') },
   ];
   rowItems.forEach((it, i) => {
     const cx = (W / rowItems.length) * i + (W / rowItems.length) / 2;

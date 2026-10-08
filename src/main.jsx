@@ -42,7 +42,7 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       const lang = (typeof localStorage !== 'undefined' && localStorage.getItem('ps5vault_lang')) || 'pl';
-      const isEn = lang === 'en';
+      const isEn = lang !== 'pl';
       return (
         <div style={{
           minHeight: '100vh',
