@@ -15,10 +15,10 @@ z modułem płatności (uprawnienie `BILLING`).
 ## 1. Podpisz i wgraj AAB 1.18.0 (versionCode 50)
 
 AAB z modułem Play Billing (biblioteka 8.3.0, wymagana przez Google od 31.08.2026) jest zbudowany,
-ale niepodpisany. Podpisz go swoim keystore (jarsigner zapyta o hasło, nikt inny go nie widzi):
+ale niepodpisany. Od 8.10.2026 klucz do przesyłania to `upload-2026.keystore` (alias `upload`, SHA-256 zaczyna się od 53:D9:77:97); stary `android.keystore` (9B:85) jest nieaktualny, bo zgubiło się do niego hasło. Hasło trzymaj w menedżerze haseł. Podpisz plik (jarsigner zapyta o hasło, nikt inny go nie widzi), ale dopiero gdy Google zatwierdzi reset klucza:
 
 ```
-"C:/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot/bin/jarsigner.exe" -keystore "C:/Users/kinga/ps5vault-twa-build/android.keystore" -signedjar "C:/Users/kinga/Desktop/Aplikacje/Gry/Archiwum/PS5 Vault - Google Play package v1.18.0/PS5 Vault v1.18.0.aab" "C:/Users/kinga/ps5vault-twa-build/app/build/outputs/bundle/release/app-release.aab" my-key-alias
+"C:/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot/bin/jarsigner.exe" -keystore "C:/Users/kinga/ps5vault-twa-build/upload-2026.keystore" -signedjar "C:/Users/kinga/Desktop/Aplikacje/Gry/Archiwum/PS5 Vault - Google Play package v1.18.0/PS5 Vault v1.18.0.aab" "C:/Users/kinga/ps5vault-twa-build/app/build/outputs/bundle/release/app-release.aab" upload
 ```
 
 Wgraj podpisany plik najpierw na **test wewnętrzny** (Testowanie, Test wewnętrzny).
