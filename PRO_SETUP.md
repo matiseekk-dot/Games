@@ -40,13 +40,13 @@ dodać mu dostęp do PS5 Vault i użyć tego samego klucza.
 
 ## 3. Serwer na Cloudflare
 
-W folderze `worker/` repozytorium:
+W folderze `worker/` repozytorium (PowerShell; znak `<` tam nie działa, stąd Get-Content):
 
 ```
 cd worker
 npx wrangler login
 npx wrangler deploy
-npx wrangler secret put GOOGLE_SA_JSON < "C:/sciezka/do/klucza.json"
+Get-Content "C:/sciezka/do/klucza.json" -Raw | npx wrangler secret put GOOGLE_SA_JSON
 ```
 
 `wrangler deploy` wypisze adres, np. `https://ps5vault-billing.<twoje-konto>.workers.dev`.
