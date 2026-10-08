@@ -107,15 +107,15 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .sx{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none}
 .chips{flex-shrink:0;display:flex;gap:6px;padding:6px 16px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .chips::-webkit-scrollbar{display:none}
-.chip{padding:7px 14px;border-radius:20px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
+.chip{min-height:36px;padding:7px 14px;border-radius:20px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
 .chip.on{border-color:${G.blu};color:${G.blu};background:rgba(0,212,255,.1)}
 .chip.sold-on{border-color:${G.grn};color:${G.grn};background:rgba(57,255,110,.1)}
 .toolbar{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 8px;justify-content:flex-end}
-.tbtn{white-space:nowrap;padding:6px 12px;border:1px solid ${G.bdr};border-radius:8px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.tbtn{white-space:nowrap;min-height:36px;padding:6px 12px;border:1px solid ${G.bdr};border-radius:8px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
 .sort-row{flex-shrink:0;display:flex;gap:6px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:center}
 .sort-row::-webkit-scrollbar{display:none}
 .sort-lbl{font-size:10px;color:${G.dim};font-weight:600;white-space:nowrap;flex-shrink:0}
-.sort-btn{padding:5px 10px;border-radius:16px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
+.sort-btn{min-height:32px;padding:5px 11px;border-radius:16px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
 .sort-btn.on{border-color:${G.pur};color:${G.pur};background:rgba(167,139,250,.1)}
 /* v1.13.15 - bumped z-index from 19999 to 299999 so modals using this class
    (Privacy, Rating quick-rate) sit *above* .bs-ovr (Settings overlay, 199999).
@@ -260,7 +260,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .bdl{min-height:50px;padding:13px 14px;border:1px solid rgba(255,77,109,.3);border-radius:11px;background:rgba(255,77,109,.1);color:${G.red};font-size:16px;cursor:pointer}
 .toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:10px 18px;border-radius:14px;z-index:99999;max-width:calc(100vw - 32px);white-space:normal;text-align:center;line-height:1.45;pointer-events:none;animation:toastIn .25s ease;display:flex;align-items:center;gap:6px}
 .rawg-credit{text-align:center;font-size:10px;color:${G.dim};padding:16px 0 4px;opacity:.85}
-.rawg-credit a{color:inherit;text-decoration:underline}
+.rawg-credit a{color:inherit;text-decoration:underline;display:inline-block;padding:12px 6px}
 .toast-ok{background:${G.grn};color:#000}
 .toast-undo{pointer-events:auto;flex-shrink:0;margin-left:8px;padding:0 12px;min-height:36px;border-radius:9px;border:1.5px solid currentColor;background:transparent;color:inherit;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer}
 .toast-err{background:${G.red};color:#fff}

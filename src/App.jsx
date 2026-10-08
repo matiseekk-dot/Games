@@ -10,7 +10,7 @@ import {
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
 import { uid, mkAbbr, daysUntil, dayKey, parseNum, coverThumb } from './lib/util.js';
-import { fmtDate, fmtShort, pln, gamesWord, hoursWord, platynaWord, fmtCph, fmtHours } from './lib/format.js';
+import { fmtDate, fmtShort, pln, plnExact, gamesWord, pluralForm, hoursWord, platynaWord, fmtCph, fmtHours } from './lib/format.js';
 import {
   lsRead, lsWrite,
   budgetRead, budgetWrite, timerRead, timerWrite,
@@ -1017,7 +1017,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
           wizard step 3) are now self-explanatory because user opted in. */}
       <div style={{marginBottom:16}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
-        <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
+        <div style={{fontSize:11,color:G.dim}}>{games.length} {gamesWord(games.length,lang)} · {current.length} {pluralForm(current.length,lang,t(lang,'activeForms'))} · {upcoming.length} {pluralForm(upcoming.length,lang,t(lang,'releaseForms'))}</div>
       </div>
       {/* v1.19.0 - Drive backup older than a day: one tap re-authorizes and saves */}
       {driveBanner&&<button type='button' className='hcard' onClick={onDriveBackup} style={{width:'100%',display:'flex',alignItems:'center',gap:12,textAlign:'left',border:'1px solid rgba(0,212,255,.35)',background:'rgba(0,212,255,.06)',color:G.txt,fontFamily:"'Syne',sans-serif",cursor:'pointer'}}>
@@ -1117,7 +1117,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
                     {g.storeBought && <div style={{fontSize:10,color:G.dim}}>{g.storeBought}</div>}
                   </div>
                   <div style={{fontSize:11,fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.org,flexShrink:0}}>
-                    {pln(+g.priceBought + +(g.extraSpend||0),lang)}
+                    {plnExact(+g.priceBought + +(g.extraSpend||0),lang)}
                   </div>
                 </div>
               ))}
@@ -2015,7 +2015,7 @@ function Finance({games,lang,proLocked=false,onUnlock}){
               <span className='top-val' style={{color:i===0?G.grn:G.blu}}>{fmtCph(d.cph)}</span>
             </li>)}</ul>
           </div>}
-          {soldG.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'roi')}</div><ul className='top-list'>{soldG.map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{pln(+g.priceBought,lang)}→{pln(+g.priceSold,lang)}</span><span className={'top-val '+(g.roi>=0?'roi-pos':'roi-neg')}>{g.roi>=0?'+':''}{pln(g.roi,lang)}</span></li>)}</ul></div>}
+          {soldG.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'roi')}</div><ul className='top-list'>{soldG.map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{plnExact(+g.priceBought,lang)}→{plnExact(+g.priceSold,lang)}</span><span className={'top-val '+(g.roi>=0?'roi-pos':'roi-neg')}>{g.roi>=0?'+':''}{plnExact(g.roi,lang)}</span></li>)}</ul></div>}
           {yearROIHasData&&<div className='ccd'>
             <div className='ctl'>{t(lang,'yearROI')}</div>
             <ul className='top-list'>{yearROIData.map((d,i)=><li key={i} className='top-item' style={{display:'grid',gridTemplateColumns:'48px 1fr auto',gap:8,alignItems:'baseline'}}>
@@ -2024,7 +2024,7 @@ function Finance({games,lang,proLocked=false,onUnlock}){
               <span style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:d.pct>=60?G.grn:d.pct>=40?G.org:G.red}}>{d.pct}%</span>
             </li>)}</ul>
           </div>}
-          <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{pln(+g.priceBought,lang)}</span></li>)}</ul></div>
+          <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{plnExact(+g.priceBought,lang)}</span></li>)}</ul></div>
           {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{fmtHours(g.hours,{compact:true})}</span><span className='top-val' style={{color:G.grn}}>{fmtCph(+g.priceBought/g.hours)}</span></li>)}</ul></div>}
           </>}
         </>}
@@ -4230,10 +4230,9 @@ export default function App(){
                     <div className='grt'>
                       {g.rating!=null?<><span className='grn'>{g.rating}</span><span className='grd'>/10</span></>:<span style={{color:G.dim,fontSize:17}}>-</span>}
                       {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
-                      {g.status==='psplus'&&<span style={{fontSize:11,fontWeight:700,color:G.gld}}>PS+</span>}
                       {g.platinum&&<span style={{fontSize:13}} title={t(lang,'platinum')}>🏆</span>}
-                      {!!+g.extraSpend&&<span style={{fontSize:10,color:G.red,fontWeight:700}}>+{pln(+g.extraSpend,lang)} DLC</span>}
-                      {roi!==null?<span className={'gprice-roi '+(roi>=0?'roi-pos':'roi-neg')}>{roi>=0?'+':''}{pln(roi,lang)}</span>:!!+g.priceBought&&<span className='gprice'>{pln(+g.priceBought,lang)}</span>}
+                      {!!+g.extraSpend&&<span style={{fontSize:10,color:G.red,fontWeight:700}}>+{plnExact(+g.extraSpend,lang)} DLC</span>}
+                      {roi!==null?<span className={'gprice-roi '+(roi>=0?'roi-pos':'roi-neg')}>{roi>=0?'+':''}{plnExact(roi,lang)}</span>:!!+g.priceBought&&<span className='gprice'>{plnExact(+g.priceBought,lang)}</span>}
                       {g.status==='ukonczone'&&g.rating==null&&<span style={{fontSize:11,color:G.gld,cursor:'pointer',fontWeight:700}} onClick={e=>{e.stopPropagation();if(sel){toggleSel(g.id);return;}setRateModal({id:g.id,title:g.title});}} title={t(lang,'rateGame')}>★?</span>}
                     </div>
                   </div>

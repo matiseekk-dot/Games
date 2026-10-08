@@ -32,8 +32,29 @@ export function pln(v, lang) {
   return def.after ? `${num} ${def.symbol}` : `${def.symbol}${num}`;
 }
 
+// v1.19.4 - one game's price as typed: 59,99 zł keeps its cents (pln() rounds, which is
+// right for totals but showed 59.99 as "60 zł" on cards). Whole amounts stay short.
+export function plnExact(v, lang) {
+  const n = +v || 0;
+  const cents = Math.abs(n * 100 - Math.round(n) * 100) >= 0.5;
+  let num = cents ? n.toFixed(2) : n.toFixed(0);
+  if (cents && (lang || getLang()) !== 'en') num = num.replace('.', ',');
+  const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
+  return def.after ? `${num} ${def.symbol}` : `${def.symbol}${num}`;
+}
+
 // Polish has 3-form plural: 1 gra, 2-4 gry, 5+ gier (also 12-14 → "gier", 22-24 → "gry")
 // English uses simpler 1 game / 2+ games. v1.14.3 - Spanish: juego / juegos.
+// v1.19.4 - pick a plural form from "one|few|many" (Polish) or "one|other" (EN/ES).
+export function pluralForm(n, lang, forms) {
+  const f = String(forms).split('|');
+  const abs = Math.abs(n);
+  if (lang === 'en' || lang === 'es') return abs === 1 ? f[0] : f[1];
+  if (abs === 1) return f[0];
+  const last = abs % 10, lastTwo = abs % 100;
+  return last >= 2 && last <= 4 && (lastTwo < 10 || lastTwo >= 20) ? f[1] : f[2];
+}
+
 export function gamesWord(n, lang) {
   const abs = Math.abs(n);
   if (lang === 'es') return abs === 1 ? 'juego' : 'juegos';

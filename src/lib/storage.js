@@ -55,6 +55,8 @@ export function lsRead() {
       // schema didn't track pre-orders at all - safe default is false (no game was
       // implicitly pre-ordered). Idempotent.
       if (typeof next.preOrdered !== 'boolean') { dirty = true; next = { ...next, preOrdered: false }; }
+      // Migration (v1.19.4): see psPlusStatusToSource.
+      if (next.status === 'psplus') { dirty = true; next = psPlusStatusToSource(next); }
       // Migration (v1.18.1): money typed with a decimal comma ("89,99", "1 299,99") was
       // stored verbatim and read as NaN, so those prices silently dropped out of every
       // total. Normalize to a dot string; the original amount is recovered. Idempotent.
@@ -262,7 +264,17 @@ function applyImportDefaults(g) {
   let out = g;
   if (out.source == null) out = { ...out, source: 'owned' };
   if (typeof out.preOrdered !== 'boolean') out = { ...out, preOrdered: false };
+  if (out.status === 'psplus') out = psPlusStatusToSource(out);
   return out;
+}
+
+// v1.19.4 - "PS Plus" used to be both a status and (since v1.14) a source. It is where the
+// game came from, not how far you are with it, so the old status becomes status
+// "Planning" + source "PS Plus" (a subscription source set by hand is kept). This also
+// takes those games out of money totals, which the status never did.
+export function psPlusStatusToSource(g) {
+  const source = !g.source || g.source === 'owned' ? 'psplus' : g.source;
+  return { ...g, status: 'planuje', source };
 }
 
 export function importMerge(file, existing, onOk, onErr) {
