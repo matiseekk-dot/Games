@@ -2,4 +2,4 @@ name = "ps5vault-billing"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
-# Secret, never committed. PowerShell: Get-Content path	oservice-account.json -Raw | npx wrangler secret put GOOGLE_SA_JSON
+# Secret, never committed. PowerShell: Get-Content path/to/service-account.json -Raw | npx wrangler secret put GOOGLE_SA_JSON
