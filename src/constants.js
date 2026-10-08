@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies - every other module imports from here.
 
-export const APP_VER  = '1.20.5';
+export const APP_VER  = '1.21.0';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 // v1.17.7 - Umami Cloud website ID (public by design, like the Cloudflare beacon token).
 // Empty = funnel analytics fully off (see src/lib/analytics.js).
@@ -14,7 +14,7 @@ export const UMAMI_WEBSITE_ID = '';
 // and no Pro UI shows. Flip it only after (1) the billing Worker is deployed and
 // BILLING_API points at it, (2) an AAB with the Play Billing module is live, and
 // (3) the product PRO_SKU exists and is active in Play Console.
-export const PRO_ENABLED = false;
+export const PRO_ENABLED = true;
 export const PRO_SKU = 'pro_lifetime';
 export const BILLING_API = 'https://ps5vault-billing.skudev.workers.dev';
 export const FREE_IMPORT_LIMIT = 50;     // imported games (Steam/Xbox/PSN/Playnite) allowed without Pro

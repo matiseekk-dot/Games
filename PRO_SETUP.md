@@ -67,7 +67,7 @@ Zarabianie, Produkty, Produkty w aplikacji, Utwórz produkt:
 Play Console, Ustawienia, Testowanie licencji: dodaj swój adres Gmail. Zainstaluj wersję z testu
 wewnętrznego i kup Pro. Konta testowe płacą testową kartą, bez prawdziwych pieniędzy.
 
-## 6. Włączenie
+## 6. Włączenie (zrobione 8.10.2026, wersja 1.21.0)
 
 Po podaniu adresu serwera ustawiam `BILLING_API` i `PRO_ENABLED = true`, wdrażam i razem
 sprawdzamy zakup testowy. Na koniec wersja 1.18.0 idzie na produkcję w Play.
