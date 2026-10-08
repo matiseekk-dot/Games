@@ -36,6 +36,7 @@ import { parseXboxPaste } from './lib/xbox-import.js';
 import { parsePlaynitePaste } from './lib/playnite-import.js';
 import { initAnalytics, track, trackOnce, countBucket, getPlatform } from './lib/analytics.js';
 import { proGateActive, readCachedPro, refreshEntitlement, buyPro, getProPrice, getBillingService } from './lib/pro.js';
+import { driveAvailable, readDriveState, backupStale, loadGis, gisReady, hasValidToken, requestToken, buildPayload, backupNow, fetchBackup, disableDrive, markDriveEnabled } from './lib/drivebackup.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -933,7 +934,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
 // (from prior versions when the timer was active) are preserved on each game via
 // g.sessions[]; Stats → Time tab still uses them via collectSessions().
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcomeBack,onWelcomeRoll,onWelcomeDismiss}){
+function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcomeBack,onWelcomeRoll,onWelcomeDismiss,driveBanner,onDriveBackup}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -985,6 +986,11 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
       </div>
+      {/* v1.19.0 - Drive backup older than a day: one tap re-authorizes and saves */}
+      {driveBanner&&<button type='button' className='hcard' onClick={onDriveBackup} style={{width:'100%',display:'flex',alignItems:'center',gap:12,textAlign:'left',border:'1px solid rgba(0,212,255,.35)',background:'rgba(0,212,255,.06)',color:G.txt,fontFamily:"'Syne',sans-serif",cursor:'pointer'}}>
+        <span style={{fontSize:24}}>☁️</span>
+        <span style={{fontSize:13,lineHeight:1.4}}>{driveBanner}</span>
+      </button>}
       {/* v1.17.6 - Welcome-back nudge (returning user + real backlog). */}
       {welcomeBack>0 && (
         <div className='hcard' style={{border:`1px solid rgba(167,139,250,.35)`,background:'rgba(167,139,250,.06)'}}>
@@ -1992,6 +1998,101 @@ function Finance({games,lang,proLocked=false,onUnlock}){
   );
 }
 
+// ─── v1.19.0 Google Drive backup ─────────────────────────────────────────────
+// "9 paź 2026 14:05"
+function fmtWhen(iso, lang){
+  if(!iso) return '';
+  const d=new Date(iso); if(isNaN(d)) return '';
+  return fmtDate(iso,lang)+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+// Google needs the sign-in popup to open inside the tap, so the token request runs
+// synchronously when Google's script is already loaded (it is preloaded on mount).
+function withDriveToken(consent){
+  if(hasValidToken()) return Promise.resolve();
+  return gisReady() ? requestToken({consent}) : loadGis().then(()=>requestToken({consent}));
+}
+
+function DriveCard({ lang, games, setGames, flash, driveState, setDriveState }){
+  const [busy,setBusy]=useState(false);
+  const [pending,setPending]=useState(null); // { data, modifiedTime, mode:'choose'|'confirm' }
+  useEffect(()=>{ loadGis().catch(()=>{}); },[]);
+  function run(consent, fn){
+    if(busy) return;
+    setBusy(true);
+    withDriveToken(consent)
+      .then(fn, ()=>flash(t(lang,'driveSignInFailed')))
+      .finally(()=>setBusy(false));
+  }
+  async function save(){
+    try{ setDriveState(await backupNow(buildPayload(games))); flash(t(lang,'driveSaved')); }
+    catch{ flash(t(lang,'driveFailed')); }
+  }
+  const remoteCount=p=>(p.data&&(p.data.count??(Array.isArray(p.data.games)?p.data.games.length:0)))||0;
+  function onEnable(){
+    run(true, async()=>{
+      try{
+        const remote=await fetchBackup();
+        track('drive_enabled');
+        // Never overwrite an existing Drive backup silently (it may come from another phone).
+        if(remote&&remoteCount(remote)>0) setPending({...remote,mode:'choose'});
+        else await save();
+      }catch{ flash(t(lang,'driveFailed')); }
+    });
+  }
+  function onRestore(){
+    run(false, async()=>{
+      try{
+        const remote=await fetchBackup();
+        if(!remote){ flash(t(lang,'driveNoBackup')); return; }
+        setPending({...remote,mode:'confirm'});
+      }catch{ flash(t(lang,'driveFailed')); }
+    });
+  }
+  function applyRemote(){
+    const r=pending; setPending(null);
+    importReplace(new Blob([JSON.stringify(r.data)],{type:'application/json'}),(games2,n)=>{
+      setGames(games2);
+      setDriveState(markDriveEnabled({lastBackupAt:r.modifiedTime||new Date().toISOString(),lastCount:n}));
+      track('drive_restore');
+      flash(t(lang,'driveRestored',{n,gw:gamesWord(n,lang)}));
+    },()=>flash(t(lang,'driveFailed')));
+  }
+  function keepLocal(){ setPending(null); run(false, save); }
+  const st=driveState;
+  const btn={padding:'10px 12px',borderRadius:10,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:'pointer'};
+  const primary={...btn,border:'none',background:`linear-gradient(135deg,${G.blu},#0060FF)`,color:'#fff'};
+  const secondary={...btn,border:`1px solid ${G.bdr}`,background:'transparent',color:G.txt};
+  const n=pending?remoteCount(pending):0;
+  return(
+    <div style={{padding:'12px 16px 0'}}>
+      <div style={{background:G.card,border:`1px solid ${G.bdr}`,borderRadius:14,padding:14}}>
+        <div style={{fontSize:14,fontWeight:800,color:G.txt,marginBottom:6}}>{t(lang,'driveTitle')}</div>
+        <div style={{fontSize:12,color:G.dim,lineHeight:1.5,marginBottom:10}}>{t(lang,'driveDesc')}</div>
+        {st.enabled&&<div style={{fontSize:12,color:G.grn,marginBottom:10}}>{st.lastBackupAt?t(lang,'driveLast',{when:fmtWhen(st.lastBackupAt,lang),n:st.lastCount??0,gw:gamesWord(st.lastCount||0,lang)}):t(lang,'driveNever')}</div>}
+        {pending&&<div style={{fontSize:13,color:G.txt,lineHeight:1.5,marginBottom:10,padding:'10px 12px',background:'rgba(0,212,255,.07)',border:`1px solid ${G.bdr}`,borderRadius:10}}>
+          {pending.mode==='choose'
+            ? t(lang,'driveFoundChoose',{when:fmtWhen(pending.modifiedTime,lang),n,gw:gamesWord(n,lang)})
+            : t(lang,'driveConfirmRestore',{when:fmtWhen(pending.modifiedTime,lang),n,gw:gamesWord(n,lang)})}
+          <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:10}}>
+            <button type='button' style={primary} onClick={applyRemote}>{pending.mode==='choose'?t(lang,'driveUseRemote'):t(lang,'driveRestoreConfirmBtn')}</button>
+            {pending.mode==='choose'
+              ? <button type='button' style={secondary} onClick={keepLocal}>{t(lang,'driveKeepLocal')}</button>
+              : <button type='button' style={secondary} onClick={()=>setPending(null)}>{t(lang,'cancel')}</button>}
+          </div>
+        </div>}
+        {!pending&&(!st.enabled
+          ? <button type='button' style={{...primary,width:'100%',opacity:busy?.6:1}} onClick={onEnable} disabled={busy}>{busy?t(lang,'driveBusy'):t(lang,'driveEnable')}</button>
+          : <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              <button type='button' style={{...primary,flex:'1 1 140px',opacity:busy?.6:1}} onClick={()=>run(false,save)} disabled={busy}>{busy?t(lang,'driveBusy'):t(lang,'driveBackupNow')}</button>
+              <button type='button' style={{...secondary,flex:'1 1 140px'}} onClick={onRestore} disabled={busy}>{t(lang,'driveRestore')}</button>
+              <button type='button' style={{...secondary,color:G.dim}} onClick={()=>{setPending(null);setDriveState(disableDrive());}}>{t(lang,'driveDisable')}</button>
+            </div>)}
+      </div>
+    </div>
+  );
+}
+
 // ─── v1.18.0 PS5 Vault Pro ───────────────────────────────────────────────────
 // Small gold card shown in place of a Pro-only section.
 function ProTeaser({ title, body, lang, onUnlock }){
@@ -2054,6 +2155,7 @@ function ProSheet({ lang, isPro, from, onClose, onOwned, flash }){
     ['💰',t(lang,'proBenefitFinance')],
     ['💳',t(lang,'proBenefitBudget')],
     ['📷',t(lang,'proBenefitScan')],
+    ...(driveAvailable()?[['☁️',t(lang,'proBenefitDrive')]]:[]),
     ['❤️',t(lang,'proBenefitSupport')],
   ];
   const primary={width:'100%',padding:'14px 12px',border:'none',borderRadius:12,background:`linear-gradient(135deg,${G.gld},#FF9F1C)`,color:'#1A1200',fontFamily:"'Syne',sans-serif",fontSize:15,fontWeight:800,cursor:'pointer'};
@@ -3515,6 +3617,20 @@ export default function App(){
     refreshEntitlement().then(v=>{ if(v!==null) setIsPro(v); });
   },[]);// eslint-disable-line -- mount-only
   const openPro=useCallback(from=>{ setProSheet(from); track('paywall_view',{from}); },[]);
+  // v1.19.0 - Google Drive backup: state, script preload, and quiet auto-upload while a
+  // Google token from a recent tap is still valid.
+  const [driveState,setDriveState]=useState(()=>readDriveState());
+  const driveTimer=useRef(null);
+  useEffect(()=>{
+    if(driveAvailable()&&driveState.enabled) loadGis().catch(()=>{});
+  },[driveState.enabled]);
+  useEffect(()=>{
+    if(!driveAvailable()||!driveState.enabled||!hasValidToken()) return;
+    if(proGateActive()&&!isPro) return;
+    clearTimeout(driveTimer.current);
+    driveTimer.current=setTimeout(()=>{ backupNow(buildPayload(games)).then(setDriveState).catch(()=>{}); },15000);
+    return ()=>clearTimeout(driveTimer.current);
+  },[games]);// eslint-disable-line -- only re-run on collection changes
 
   // v1.17.6 - Welcome-back nudge. Compare now against the last recorded open; if
   // ≥7 days elapsed and the backlog has ≥5 unplayed games, surface a re-engage
@@ -3928,6 +4044,17 @@ export default function App(){
   // v1.18.0 - Pro gating. proLocked is false whenever the PRO_ENABLED switch is off.
   const proLocked = proGateActive() && !isPro;
   const importFreeLeft = proLocked ? Math.max(0, FREE_IMPORT_LIMIT - games.filter(g=>g.importSource).length) : Infinity;
+  // v1.19.0 - Drive backup: available to everyone while Pro is off, Pro-only once it is on
+  const driveAllowed = driveAvailable() && !proLocked;
+  const driveBanner = driveAllowed && backupStale(driveState)
+    ? (driveState.lastBackupAt ? t(lang,'driveStale',{when:fmtWhen(driveState.lastBackupAt,lang)}) : t(lang,'driveStaleNever'))
+    : null;
+  function driveBackupTap(){
+    withDriveToken(false).then(
+      ()=>backupNow(buildPayload(games)).then(st=>{ setDriveState(st); flash(t(lang,'driveSaved')); }, ()=>flash(t(lang,'driveFailed'))),
+      ()=>flash(t(lang,'driveSignInFailed')),
+    );
+  }
 
   // v1.17.6 - Backlog randomizer. Pool = unplayed, owned-or-any, not an unreleased
   // pre-order. Shared by the toolbar button, the re-roll, and the welcome-back nudge.
@@ -3971,6 +4098,8 @@ export default function App(){
           welcomeBack={welcomeBack}
           onWelcomeRoll={()=>{setWelcomeBack(null);rollRandom();}}
           onWelcomeDismiss={()=>setWelcomeBack(null)}
+          driveBanner={driveBanner}
+          onDriveBackup={driveBackupTap}
         />}
 
         {tab==='col'&&<>
@@ -4355,6 +4484,9 @@ export default function App(){
                   <span style={{fontSize:12,fontWeight:700,color:isPro?G.grn:G.txt}}>{isPro?'✓ '+t(lang,'proSettingsActive'):t(lang,'proUnlockBtn')+' →'}</span>
                 </button>
               </div>}
+              {driveAvailable()&&(driveAllowed
+                ? <DriveCard lang={lang} games={games} setGames={setGames} flash={flash} driveState={driveState} setDriveState={setDriveState}/>
+                : <div style={{padding:'12px 16px 0'}}><ProTeaser title={t(lang,'driveTitle')} body={t(lang,'driveProLocked')} lang={lang} onUnlock={()=>openPro('backup')}/></div>)}
               <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPsnImport={()=>{setOverlay(null);setPsnImportOpen(true);}} openSteamImport={()=>{setOverlay(null);setSteamImportOpen(true);}} openXboxImport={()=>{setOverlay(null);setXboxImportOpen(true);}} openPlayniteImport={()=>{setOverlay(null);setPlayniteImportOpen(true);}} openImportUndo={()=>{setOverlay(null);setImportUndoOpen(true);}} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
               <div style={{padding:'0 16px 8px'}}>
                 <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>

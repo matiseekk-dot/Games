@@ -26,7 +26,7 @@
   <p>PS5 Vault ("Aplikacja") to osobisty tracker gier na PlayStation 5. Aplikacja jest dostępna bezpłatnie i nie wymaga rejestracji ani logowania. Twórca aplikacji: SkuDev (Polska).</p>
 
   <h2>2. Jakie dane przechowujemy</h2>
-  <p>Wszystkie dane (lista gier, statusy, oceny, notatki, dane finansowe, sesje grania, budżet) są przechowywane <strong>wyłącznie lokalnie</strong> na Twoim urządzeniu w pamięci przeglądarki (localStorage). Dane te nigdy nie są przesyłane na żadne serwery zewnętrzne.</p>
+  <p>Wszystkie dane (lista gier, statusy, oceny, notatki, dane finansowe, sesje grania, budżet) są przechowywane <strong>wyłącznie lokalnie</strong> na Twoim urządzeniu w pamięci przeglądarki (localStorage). Dane te nie są przesyłane na serwery twórcy ani nikomu innemu. Jedyny wyjątek to kopia zapasowa na Twoim własnym Dysku Google, jeśli sam ją włączysz (sekcja 4d).</p>
 
   <h2>3. Dane które NIE są zbierane</h2>
   <p>Aplikacja nie zbiera, nie przechowuje ani nie przekazuje żadnych danych osobowych, w tym: imienia i nazwiska, adresu e-mail, numeru telefonu, lokalizacji, danych finansowych, identyfikatorów urządzenia ani identyfikatorów reklamowych. Aplikacja nie używa Google Analytics, Facebook Pixel ani żadnych innych identyfikujących narzędzi analitycznych. Strona hostująca aplikację (`matiseekk-dot.github.io/Games/`) korzysta z anonimowej statystyki ruchu i użycia, patrz sekcje 4b i 4c.</p>
@@ -38,7 +38,13 @@
   <p>Strona hostująca aplikację korzysta z usługi Cloudflare Web Analytics (operator: Cloudflare, Inc., USA) w celu liczenia anonimowych odwiedzin. Cloudflare Web Analytics jest zaprojektowane z myślą o prywatności: <strong>nie używa plików cookie, nie tworzy profili użytkowników, nie identyfikuje osób, nie śledzi między stronami</strong>. Zbierane dane: liczba wizyt, kraj (przybliżony, na podstawie IP, które nie jest przechowywane), przeglądarka, system operacyjny, źródło ruchu (np. Google), ścieżka strony. Te dane służą wyłącznie do oceny popularności apki i nie są łączone z Twoimi danymi w aplikacji (kolekcja gier pozostaje wyłącznie lokalna). Polityka Cloudflare: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">cloudflare.com/privacypolicy</a>. Możesz zablokować to śledzenie używając rozszerzeń typu uBlock Origin lub Privacy Badger, a aplikacja nadal będzie działać normalnie.</p>
 
   <h2>4c. Umami (anonimowe statystyki użycia)</h2>
-  <p>Aby wiedzieć, czy nowi użytkownicy kończą konfigurację i z których funkcji korzystają, aplikacja może wysyłać do usługi Umami Cloud (operator: Umami Software, Inc., USA) kilka anonimowych zdarzeń: pierwsze uruchomienie, zakończenie konfiguracji, dodanie pierwszej gry, import biblioteki (z jakiej platformy i w przybliżonym rozmiarze, np. „50-199 gier”), pierwsze otwarcie zakładki Finanse oraz rodzaj instalacji (Google Play, aplikacja z przeglądarki lub zwykła strona). <strong>Umami nie używa plików cookie ani identyfikatorów zapisywanych na urządzeniu, nie tworzy profili i nie zbiera danych osobowych.</strong> Do zdarzeń nie trafiają tytuły gier, kwoty, notatki ani żadna inna zawartość Twojej kolekcji. Jeśli przeglądarka ma włączone „Do Not Track”, zdarzenia nie są wysyłane. Polityka Umami: <a href="https://umami.is/privacy" target="_blank" rel="noopener noreferrer">umami.is/privacy</a>.</p>
+  <p>Aby wiedzieć, czy nowi użytkownicy kończą konfigurację i z których funkcji korzystają, aplikacja może wysyłać do usługi Umami Cloud (operator: Umami Software, Inc., USA) kilka anonimowych zdarzeń: pierwsze uruchomienie, zakończenie konfiguracji, dodanie pierwszej gry, import biblioteki (z jakiej platformy i w przybliżonym rozmiarze, np. „50-199 gier”), pierwsze otwarcie zakładki Finanse, otwarcie ekranu Pro i zakup Pro, włączenie kopii na Dysku oraz rodzaj instalacji (Google Play, aplikacja z przeglądarki lub zwykła strona). <strong>Umami nie używa plików cookie ani identyfikatorów zapisywanych na urządzeniu, nie tworzy profili i nie zbiera danych osobowych.</strong> Do zdarzeń nie trafiają tytuły gier, kwoty, notatki ani żadna inna zawartość Twojej kolekcji. Jeśli przeglądarka ma włączone „Do Not Track”, zdarzenia nie są wysyłane. Polityka Umami: <a href="https://umami.is/privacy" target="_blank" rel="noopener noreferrer">umami.is/privacy</a>.</p>
+
+  <h2>4d. Kopia zapasowa na Dysku Google (opcjonalna)</h2>
+  <p>W Opcjach możesz włączyć kopię zapasową na Dysku Google. Po zalogowaniu się w oknie Google aplikacja zapisuje plik z Twoją kolekcją (ten sam, który tworzy przycisk "Eksportuj dane") w <strong>ukrytym folderze aplikacji na Twoim własnym Dysku Google</strong>. Aplikacja prosi wyłącznie o uprawnienie <code>drive.appdata</code>: widzi tylko ten jeden folder, a nie Twoje inne pliki, i nie poznaje Twojego hasła. Plik jest przesyłany bezpośrednio z Twojego urządzenia do Google, nie przechodzi przez serwery twórcy, a twórca nie ma do niego dostępu. Dostęp od Google wygasa po około godzinie i nie jest zapisywany na urządzeniu. Kopię wyłączysz w Opcjach, a dostęp odbierzesz na stronie <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">myaccount.google.com/permissions</a>. Plik kopii usuniesz na Dysku Google (Ustawienia, Zarządzaj aplikacjami, PS5 Vault, Usuń ukryte dane aplikacji). Polityka Google: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">policies.google.com/privacy</a>.</p>
+
+  <h2>4e. Zakup PS5 Vault Pro (Google Play)</h2>
+  <p>Wersję Pro kupujesz jednorazowo przez Google Play. Płatność obsługuje wyłącznie Google: aplikacja ani twórca nie widzą danych karty ani konta płatniczego. Aby potwierdzić zakup, aplikacja wysyła do serwera weryfikacji twórcy (Cloudflare Workers, operator: Cloudflare, Inc., USA) identyfikator produktu i token zakupu z Google Play. Serwer sprawdza go w Google Play i potwierdza zakup. Token nie jest zapisywany ani łączony z Twoją kolekcją.</p>
 
   <h2>5. Linki do stron trzecich</h2>
   <p>Sekcja "Wsparcie" w aplikacji zawiera link do platformy <a href="https://buycoffee.to/skudev" target="_blank" rel="noopener noreferrer">buycoffee.to/skudev</a> umożliwiającej dobrowolne wsparcie finansowe twórcy. Kliknięcie linku otwiera stronę zewnętrzną w przeglądarce. Aplikacja nie przekazuje żadnych Twoich danych do tej platformy. Jeśli zdecydujesz się dokonać wpłaty, podlegasz polityce prywatności buycoffee.to.</p>
@@ -54,7 +60,7 @@
 
   <h2>9. Prawa użytkownika (RODO)</h2>
   <p>Ponieważ nie przechowujemy żadnych Twoich danych poza Twoim urządzeniem, masz pełną kontrolę nad swoimi danymi. Masz prawo do:</p>
-  <p>• <strong>dostępu</strong>: dane są widoczne w aplikacji;<br/>• <strong>przenoszenia</strong>: przycisk "Eksportuj dane" tworzy plik JSON z całą Twoją kolekcją;<br/>• <strong>usunięcia</strong>: przycisk "🗑️ Usuń wszystkie dane" w Opcjach → Dane (wymaga wpisania słowa USUŃ aby potwierdzić), lub odinstalowanie aplikacji.</p>
+  <p>• <strong>dostępu</strong>: dane są widoczne w aplikacji;<br/>• <strong>przenoszenia</strong>: przycisk "Eksportuj dane" tworzy plik JSON z całą Twoją kolekcją;<br/>• <strong>usunięcia</strong>: przycisk "🗑️ Usuń wszystkie dane" w Opcjach → Dane (wymaga wpisania słowa USUŃ aby potwierdzić), lub odinstalowanie aplikacji. Kopię na Dysku Google usuwasz zgodnie z sekcją 4d.</p>
 
   <h2>10. Bezpieczeństwo</h2>
   <p>Dane są przechowywane w localStorage przeglądarki na Twoim urządzeniu. Bezpieczeństwo tych danych zależy od zabezpieczenia Twojego urządzenia (PIN, biometria, szyfrowanie systemu).</p>
@@ -68,7 +74,7 @@
   <h2>13. Kontakt</h2>
   <p>W razie pytań dotyczących prywatności skontaktuj się: <a href="mailto:skudev6@gmail.com">skudev6@gmail.com</a> lub przez funkcję "Zgłoś problem" w aplikacji.</p>
 
-  <p class="updated">Ostatnia aktualizacja: 8 października 2026 · Wersja aplikacji: 1.17.7</p>
+  <p class="updated">Ostatnia aktualizacja: 8 października 2026 · Wersja aplikacji: 1.19.0</p>
 
   <hr style="margin:60px 0 40px; border:none; border-top:1px solid #1F2937;"/>
 
@@ -79,7 +85,7 @@
   <p>PS5 Vault ("Application") is a personal game tracker for PlayStation 5. The application is free of charge and requires no registration or login. Application creator: SkuDev (Poland).</p>
 
   <h2>2. What data we store</h2>
-  <p>All data (games list, statuses, ratings, notes, financial data, play sessions, budget) is stored <strong>locally only</strong> on your device in browser localStorage. This data is never transmitted to any external servers.</p>
+  <p>All data (games list, statuses, ratings, notes, financial data, play sessions, budget) is stored <strong>locally only</strong> on your device in browser localStorage. This data is never sent to the creator's servers or to anyone else. The only exception is a backup to your own Google Drive, if you turn it on yourself (section 4d).</p>
 
   <h2>3. Data we do NOT collect</h2>
   <p>The application does not collect, store or transmit any personal data, including: name, email address, phone number, location, financial data, device identifiers, or advertising IDs. The application does not use Google Analytics, Facebook Pixel or any other identifying analytics tools. The hosting site (`matiseekk-dot.github.io/Games/`) uses anonymous traffic and usage analytics, see sections 4b and 4c.</p>
@@ -91,7 +97,13 @@
   <p>The hosting site uses Cloudflare Web Analytics (operator: Cloudflare, Inc., USA) to count anonymous visits. Cloudflare Web Analytics is privacy-respecting by design: <strong>no cookies, no user profiles, no personal identification, no cross-site tracking</strong>. Data collected: visit count, country (approximate, based on IP, which is not stored), browser, OS, traffic source (e.g. Google), page path. This data is used solely to assess app popularity and is never combined with your in-app data (your game collection stays strictly local). Cloudflare privacy policy: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">cloudflare.com/privacypolicy</a>. You can block this tracking with extensions like uBlock Origin or Privacy Badger, and the application will continue to work normally.</p>
 
   <h2>4c. Umami (anonymous usage statistics)</h2>
-  <p>To learn whether new users finish setup and which features they use, the app may send a few anonymous events to Umami Cloud (operator: Umami Software, Inc., USA): first launch, setup finished, first game added, library import (which platform and a rough size, e.g. "50-199 games"), first visit to the Finance tab, and the install type (Google Play, browser-installed app, or plain website). <strong>Umami uses no cookies and no identifiers stored on your device, builds no profiles and collects no personal data.</strong> Events never include game titles, amounts, notes or any other content of your collection. If your browser has "Do Not Track" enabled, no events are sent. Umami privacy policy: <a href="https://umami.is/privacy" target="_blank" rel="noopener noreferrer">umami.is/privacy</a>.</p>
+  <p>To learn whether new users finish setup and which features they use, the app may send a few anonymous events to Umami Cloud (operator: Umami Software, Inc., USA): first launch, setup finished, first game added, library import (which platform and a rough size, e.g. "50-199 games"), first visit to the Finance tab, opening the Pro screen and buying Pro, turning on Drive backup, and the install type (Google Play, browser-installed app, or plain website). <strong>Umami uses no cookies and no identifiers stored on your device, builds no profiles and collects no personal data.</strong> Events never include game titles, amounts, notes or any other content of your collection. If your browser has "Do Not Track" enabled, no events are sent. Umami privacy policy: <a href="https://umami.is/privacy" target="_blank" rel="noopener noreferrer">umami.is/privacy</a>.</p>
+
+  <h2>4d. Google Drive backup (optional)</h2>
+  <p>In Settings you can turn on a backup to Google Drive. After you sign in through Google's own window, the app saves a file with your collection (the same file the "Export data" button creates) in a <strong>hidden app folder in your own Google Drive</strong>. The app asks only for the <code>drive.appdata</code> permission: it can see that one folder and none of your other files, and it never learns your password. The file goes directly from your device to Google, never through the creator's servers, and the creator cannot access it. Google's access expires after about an hour and is not stored on your device. Turn the backup off in Settings and revoke access at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">myaccount.google.com/permissions</a>. Delete the backup file in Google Drive (Settings, Manage apps, PS5 Vault, Delete hidden app data). Google privacy policy: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">policies.google.com/privacy</a>.</p>
+
+  <h2>4e. Buying PS5 Vault Pro (Google Play)</h2>
+  <p>Pro is a one-time purchase through Google Play. Payment is handled entirely by Google: neither the app nor the creator sees your card or payment account. To confirm the purchase, the app sends the product ID and the Google Play purchase token to the creator's verification server (Cloudflare Workers, operator: Cloudflare, Inc., USA), which checks it with Google Play and acknowledges the purchase. The token is not stored or linked to your collection.</p>
 
   <h2>5. Third-party links</h2>
   <p>The "Support" section in the application contains a link to <a href="https://buycoffee.to/skudev" target="_blank" rel="noopener noreferrer">buycoffee.to/skudev</a>, a platform allowing voluntary financial support for the creator. Clicking the link opens an external page in your browser. The application does not transmit any of your data to this platform. If you choose to make a donation, you become subject to buycoffee.to's privacy policy.</p>
@@ -107,7 +119,7 @@
 
   <h2>9. User rights (GDPR)</h2>
   <p>Since we don't store any of your data outside your device, you have full control over your data. You have the right to:</p>
-  <p>• <strong>access</strong>: data is visible in the application;<br/>• <strong>portability</strong>: the "Export data" button creates a JSON file with your entire collection;<br/>• <strong>deletion</strong>: the "🗑️ Delete all data" button in Settings → Data (requires typing DELETE to confirm), or by uninstalling the application.</p>
+  <p>• <strong>access</strong>: data is visible in the application;<br/>• <strong>portability</strong>: the "Export data" button creates a JSON file with your entire collection;<br/>• <strong>deletion</strong>: the "🗑️ Delete all data" button in Settings → Data (requires typing DELETE to confirm), or by uninstalling the application. Delete a Google Drive backup as described in section 4d.</p>
 
   <h2>10. Security</h2>
   <p>Data is stored in browser localStorage on your device. The security of this data depends on the security of your device (PIN, biometrics, system encryption).</p>
@@ -121,6 +133,6 @@
   <h2>13. Contact</h2>
   <p>For privacy questions, please contact: <a href="mailto:skudev6@gmail.com">skudev6@gmail.com</a> or use the "Report a problem" feature in the application.</p>
 
-  <p class="updated">Last updated: October 8, 2026 · App version: 1.17.7</p>
+  <p class="updated">Last updated: October 8, 2026 · App version: 1.19.0</p>
 </body>
 </html>

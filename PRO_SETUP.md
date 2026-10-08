@@ -84,6 +84,33 @@ Library 7, odrzucana przez Google). Po każdym `bubblewrap update` sprawdź w `a
 Kod jest gotowy i wyłączony. Załóż darmowe konto na umami.is (plan Hobby, bez karty), dodaj
 stronę `matiseekk-dot.github.io` i przekaż mi jej Website ID. Wtedy wpiszę je w
 `UMAMI_WEBSITE_ID` i wdrożę. Zdarzenia: `first_open`, `onboarding_done`, `first_game_added`,
-`import_done`, `finance_opened`, `paywall_view`, `purchase_start`, `purchase_result`.
+`import_done`, `finance_opened`, `paywall_view`, `purchase_start`, `purchase_result`,
+`drive_enabled`, `drive_restore`.
 Po włączeniu trzeba też zaktualizować formularz Bezpieczeństwo danych w Play Console
 (Aktywność w aplikacji, Interakcje z aplikacją: zbierane, nieudostępniane, anonimowe).
+
+## Kopia na Dysku Google (1.19.0)
+
+Kod jest gotowy i ukryty, dopóki `DRIVE_CLIENT_ID` w `src/constants.js` jest pusty. Kopia trafia
+do ukrytego folderu apki na Dysku użytkownika (uprawnienie `drive.appdata`, Google uznaje je za
+niewrażliwe, więc nie ma płatnego audytu bezpieczeństwa). Po włączeniu Pro kopia jest w Pro.
+
+1. Google Cloud Console (może być ten sam projekt co konto usługi): Interfejsy API i usługi,
+   Biblioteka, włącz **Google Drive API**.
+2. Google Auth Platform, Branding: nazwa `PS5 Vault`, e-mail pomocy, strona główna
+   `https://skudev.pl/ps5-vault/`, polityka prywatności
+   `https://matiseekk-dot.github.io/Games/privacy.html`, autoryzowane domeny `skudev.pl` i
+   `matiseekk-dot.github.io`.
+3. Odbiorcy: typ Zewnętrzny, stan publikacji **W produkcji** (w trybie testowym działa tylko dla
+   dodanych kont testowych).
+4. Dostęp do danych: dodaj zakres `https://www.googleapis.com/auth/drive.appdata`.
+5. Klienty: Utwórz klienta, typ **Aplikacja internetowa**, Autoryzowane źródła JavaScriptu:
+   `https://matiseekk-dot.github.io` (bez ścieżki). Identyfikatory URI przekierowania nie są
+   potrzebne.
+6. Przekaż mi identyfikator klienta (kończy się na `.apps.googleusercontent.com`, jest jawny,
+   to nie hasło). Wpiszę go, wdrożę i razem sprawdzimy na telefonie w wersji z Google Play.
+   To ważne: okno logowania Google musi poprawnie wrócić do apki w TWA. Jeśli nie wróci,
+   przełączę logowanie na tryb przekierowania.
+
+Google może poprosić o weryfikację marki (potwierdzenie domen w Search Console). Jest bezpłatna
+i zwykle trwa kilka dni. Zdarzenia analityki: `drive_enabled`, `drive_restore`.
