@@ -258,7 +258,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .bpr:active{opacity:.75}
 .bcn{min-height:50px;padding:13px 14px;border:1px solid ${G.bdr};border-radius:11px;background:${G.card};color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .bdl{min-height:50px;padding:13px 14px;border:1px solid rgba(255,77,109,.3);border-radius:11px;background:rgba(255,77,109,.1);color:${G.red};font-size:16px;cursor:pointer}
-.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:10px 18px;border-radius:14px;z-index:99999;max-width:calc(100vw - 32px);white-space:normal;text-align:center;line-height:1.45;pointer-events:none;animation:toastIn .25s ease;display:flex;align-items:center;gap:6px}
+.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:10px 18px;border-radius:14px;z-index:300000;max-width:calc(100vw - 32px);white-space:normal;text-align:center;line-height:1.45;pointer-events:none;animation:toastIn .25s ease;display:flex;align-items:center;gap:6px}
 .rawg-credit{text-align:center;font-size:10px;color:${G.dim};padding:16px 0 4px;opacity:.85}
 .rawg-credit a{color:inherit;text-decoration:underline;display:inline-block;padding:12px 6px}
 .toast-ok{background:${G.grn};color:#000}

@@ -2245,7 +2245,7 @@ function ProSheet({ lang, isPro, from, onClose, onOwned, flash }){
   const primary={width:'100%',padding:'14px 12px',border:'none',borderRadius:12,background:`linear-gradient(135deg,${G.gld},#FF9F1C)`,color:'#1A1200',fontFamily:"'Syne',sans-serif",fontSize:15,fontWeight:800,cursor:'pointer'};
   const secondary={width:'100%',marginTop:10,padding:'11px 12px',background:'transparent',border:`1px solid ${G.bdr}`,borderRadius:11,color:G.dim,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,cursor:'pointer'};
   return(
-    <div className='bs-ovr' style={{zIndex:400}}>
+    <div className='bs-ovr' style={{zIndex:250000}}>{/* v1.20.5 - above Settings and other full-screen sheets (199999); it was hidden under them */}
       <div className='bs-hdr'>
         <div className='bs-ttl'>⭐ {t(lang,'proName')}</div>
         <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
