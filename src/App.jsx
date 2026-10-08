@@ -3385,7 +3385,7 @@ export default function App(){
   useEffect(()=>{
     if(!games.length) return;
     maybePushWeeklySummary(games, lang, t).catch(()=>{});
-  },[games.length, lang]);// eslint-disable-line — intentional: only re-run on count change, not on every games mutation
+  },[games.length, lang]);// eslint-disable-line -- intentional: only re-run on count change, not on every games mutation
 
   // v1.10.0 — URL-driven initial tab + SW message handler for weekly push clicks.
   // SW's notificationclick may openWindow('/Games/?tab=st') OR postMessage to existing tab.
@@ -3411,7 +3411,7 @@ export default function App(){
     };
     if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', handler);
     return () => { if ('serviceWorker' in navigator) navigator.serviceWorker.removeEventListener('message', handler); };
-  },[]);// eslint-disable-line — mount-only
+  },[]);// eslint-disable-line -- mount-only
 
   const flash=useCallback(msg=>{setToast(msg);setTimeout(()=>setToast(null),2200);},[]);
   // Register a global callback so top-level lsWrite/timerWrite can signal storage failures
@@ -3674,6 +3674,13 @@ export default function App(){
     };
   }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, lang, flash]);
 
+  // v1.17.6 — reset the render cap whenever the filter/search/sort signature
+  // changes, so a new query always starts from the top page.
+  // v1.17.7 — must stay ABOVE the `if(!onboarded) return` below. It used to sit after it,
+  // so finishing the onboarding wizard rendered one more hook than the previous render
+  // and every new user hit React error #310 ("Coś się zepsuło"). No hooks below this line.
+  useEffect(()=>{ setColLimit(COL_PAGE); }, [q, flt, platFilter, srcFilter, sortBy]);
+
   if(!onboarded)return(<><style>{CSS}</style><Onboarding
     onSkip={()=>{setOnboarded(true);setOnboard(true);}}
     onCurrencyPick={setCurrencyPersist}
@@ -3748,9 +3755,6 @@ export default function App(){
     .filter(g=>srcFilter==='all'||(g.source||'owned')===srcFilter)
     .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
     .sort(sortFn[sortBy]||sortFn.added);
-  // v1.17.6 — reset the render cap whenever the filter/search/sort signature
-  // changes, so a new query always starts from the top page.
-  useEffect(()=>{ setColLimit(COL_PAGE); }, [q, flt, platFilter, srcFilter, sortBy]);
   const visibleCapped = visible.slice(0, colLimit);
 
   // v1.17.6 — Backlog randomizer. Pool = unplayed, owned-or-any, not an unreleased

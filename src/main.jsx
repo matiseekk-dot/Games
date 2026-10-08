@@ -2,7 +2,7 @@ import { Component } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 
-// ErrorBoundary — wraps whole app, catches white-screen crashes
+// ErrorBoundary: wraps the whole app, catches white-screen crashes
 // Shows user-friendly fallback + reset button instead of blank screen
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -78,8 +78,8 @@ class ErrorBoundary extends Component {
               marginBottom: 24,
             }}>
               {isEn
-                ? 'The app hit an unexpected error. Your data is safe in localStorage. Try resetting the view first — if that fails, reload the app.'
-                : 'Apka trafiła na nieoczekiwany błąd. Twoje dane są bezpieczne w localStorage. Spróbuj najpierw zresetować widok — jeśli to nie pomoże, przeładuj apkę.'}
+                ? 'The app hit an unexpected error. Your data is safe in localStorage. Try resetting the view first. If that fails, reload the app.'
+                : 'Apka trafiła na nieoczekiwany błąd. Twoje dane są bezpieczne w localStorage. Spróbuj najpierw zresetować widok. Jeśli to nie pomoże, przeładuj apkę.'}
             </p>
             {this.state.error?.message && (
               <div style={{
