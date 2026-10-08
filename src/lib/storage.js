@@ -3,7 +3,7 @@
 // Per-feature persistence (eanCache, goals) lives next to its feature in lib/barcode.js
 // and lib/goals.js — keeping this file focused on the canonical games collection.
 import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, LS_ONBOARDING_BANNER_DISMISSED, CURRENCIES } from '../constants.js';
-import { uid } from './util.js';
+import { uid, parseNum } from './util.js';
 
 // ─── Games list ────────────────────────────────────────────────────────────
 export function lsRead() {
@@ -55,11 +55,29 @@ export function lsRead() {
       // schema didn't track pre-orders at all — safe default is false (no game was
       // implicitly pre-ordered). Idempotent.
       if (typeof next.preOrdered !== 'boolean') { dirty = true; next = { ...next, preOrdered: false }; }
+      // Migration (v1.18.1): money typed with a decimal comma ("89,99", "1 299,99") was
+      // stored verbatim and read as NaN, so those prices silently dropped out of every
+      // total. Normalize to a dot string; the original amount is recovered. Idempotent.
+      for (const key of ['priceBought', 'priceSold', 'extraSpend']) {
+        const v = next[key];
+        if (typeof v === 'string' && v !== '' && !Number.isFinite(Number(v))) {
+          const n = parseNum(v);
+          if (n !== null) { dirty = true; next = { ...next, [key]: String(n) }; }
+        }
+      }
       return next;
     });
     if (dirty) { try { localStorage.setItem(LS_KEY, JSON.stringify(migrated)); } catch {} }
     return migrated;
-  } catch { return []; }
+  } catch {
+    // v1.18.1 — Unreadable collection. The app starts empty and the next save would
+    // overwrite the stored string for good, so keep a one-off copy for manual recovery.
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw && !localStorage.getItem(LS_KEY + '_unreadable')) localStorage.setItem(LS_KEY + '_unreadable', raw);
+    } catch {}
+    return [];
+  }
 }
 
 export function lsWrite(g) {

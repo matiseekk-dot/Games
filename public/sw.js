@@ -1,5 +1,5 @@
-// PS5 Vault: Service Worker v1.18.0 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
-const CACHE = "ps5vault-v63";
+// PS5 Vault: Service Worker v1.18.1 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v64";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -85,7 +85,11 @@ self.addEventListener("message", async event => {
   const today = new Date(); today.setHours(0,0,0,0);
   for (const game of games) {
     if (!game.releaseDate || !game.notifyEnabled) continue;
-    const rel = new Date(game.releaseDate); rel.setHours(0,0,0,0);
+    // v1.18.1 — read "YYYY-MM-DD" as a local calendar day (UTC parsing fired "release today"
+    // a day early in the Americas)
+    const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(game.releaseDate);
+    const rel = ymd ? new Date(+ymd[1], +ymd[2] - 1, +ymd[3]) : new Date(game.releaseDate);
+    rel.setHours(0,0,0,0);
     if (isNaN(rel)) continue;
     const diff = Math.round((rel - today) / 86400000);
     const key = `${game.id}_${game.releaseDate}_${diff}`;

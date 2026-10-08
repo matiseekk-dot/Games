@@ -2,7 +2,8 @@
 // Pure-pure helpers (uid/mkAbbr/dayKey/weekStart/daysUntil) live in util.js to keep
 // this file's dependency on storage from creating a cycle.
 import { CURRENCIES } from '../constants.js';
-import { getCurrency } from './storage.js';
+import { getCurrency, getLang } from './storage.js';
+import { parseDay } from './util.js';
 
 // v1.14.3 — Spanish month names added. Was binary lang==='en'?EN:PL — now 3-way.
 const MONTHS_PL = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
@@ -13,14 +14,14 @@ function monthsFor(lang) { return lang === 'es' ? MONTHS_ES : lang === 'en' ? MO
 // "12 sty 2026" / "12 Jan 2026" / "12 ene 2026"
 export function fmtDate(d, lang) {
   if (!d) return '';
-  const dt = new Date(d); if (isNaN(dt)) return '';
+  const dt = parseDay(d); if (isNaN(dt)) return '';
   return `${dt.getDate()} ${monthsFor(lang)[dt.getMonth()]} ${dt.getFullYear()}`;
 }
 
 // "12 sty" / "12 Jan" / "12 ene" (no year)
 export function fmtShort(d, lang) {
   if (!d) return '';
-  const dt = new Date(d); if (isNaN(dt)) return '';
+  const dt = parseDay(d); if (isNaN(dt)) return '';
   return `${dt.getDate()} ${monthsFor(lang)[dt.getMonth()]}`;
 }
 
@@ -87,7 +88,9 @@ export function sessionsWord(n, lang) {
 // Cost-per-hour with dynamic symbol. Format always "1.9 sym/h" regardless of before/after.
 // Named fmtCph (NOT cph) to avoid collision with local `const cph` inside Stats/Finance.
 export function fmtCph(v) {
-  const num = (+v || 0).toFixed(1);
+  // v1.18.1 — decimal comma for Polish and Spanish ("3,2 zł/h", not "3.2 zł/h")
+  let num = (+v || 0).toFixed(1);
+  try { const l = getLang(); if (l === 'pl' || l === 'es') num = num.replace('.', ','); } catch {}
   const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
   return `${num} ${def.symbol}/h`;
 }

@@ -10,7 +10,7 @@ import {
 } from './constants.js';
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
-import { uid, mkAbbr, daysUntil, dayKey, weekStart } from './lib/util.js';
+import { uid, mkAbbr, daysUntil, dayKey, parseNum, coverThumb } from './lib/util.js';
 import { fmtDate, fmtShort, pln, gamesWord, hoursWord, platynaWord, fmtCph, fmtHours } from './lib/format.js';
 import {
   lsRead, lsWrite,
@@ -462,7 +462,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
           ) : bulkQueue.slice(0,12).map(item => (
             <div key={item.id} className={'bs-bulk-card bs-bulk-card-'+item.status}>
               {item.cover
-                ? <div className='bs-bulk-cover' style={{backgroundImage:`url(${item.cover})`}}/>
+                ? <div className='bs-bulk-cover' style={{backgroundImage:`url(${coverThumb(item.cover)})`}}/>
                 : <div className='bs-bulk-cover0'>{item.status==='pending'?'⏳':item.status==='err'?'❌':'🎮'}</div>}
               <div className='bs-bulk-title'>{item.title}</div>
             </div>
@@ -519,7 +519,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
             <div className='rdd' style={{position:'relative',marginTop:0}}>
               {results.map(r=>(
                 <div key={r.id} className='rit' onClick={()=>{ stopCam(); onPick(r); }}>
-                  {r.cover ? <img className='rthm' src={r.cover} alt='' loading='lazy'/> : <div className='rph'>🎮</div>}
+                  {r.cover ? <img className='rthm' src={coverThumb(r.cover)} alt='' loading='lazy' onError={e=>{e.currentTarget.style.visibility='hidden';}}/> : <div className='rph'>🎮</div>}
                   <div className='rinf'>
                     <div className='rnm'>{r.title}</div>
                     <div className='rmt'>{r.year}{r.genre?' · '+r.genre:''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div>
@@ -627,7 +627,7 @@ function RawgSearch({onSelect,lang}){
         <button type='button' className='rscan' onClick={()=>setScanOpen(true)} aria-label={t(lang,'scanBarcodeAria')} title={t(lang,'scanBarcodeAria')}>📷</button>
         {busy?<span style={{flexShrink:0,display:'inline-block',animation:'spin .8s linear infinite'}}>⏳</span>:<span className='rbdg2'>RAWG</span>}
       </div>
-      <div className='rhnt'>{t(lang,'rawgHint')}</div>
+      <div className='rhnt'>{t(lang,'rawgHint')} · <a href='https://rawg.io' target='_blank' rel='noopener noreferrer' style={{color:'inherit'}}>RAWG.io</a></div>
       {open&&<div className='rdd'>
         {busy&&res.length===0&&<div style={{padding:'14px',textAlign:'center',color:'#8B93A7',fontSize:11}}>{t(lang,'rawgSearching')}</div>}
         {!busy&&res.length===0&&q.trim()&&<div style={{padding:'14px 12px',textAlign:'center'}}>
@@ -637,7 +637,7 @@ function RawgSearch({onSelect,lang}){
         </div>}
         {res.map(r=>(
         <div key={r.id} className='rit' onClick={()=>pick(r)}>
-          {r.cover?<img className='rthm' src={r.cover} alt='' loading='lazy'/>:<div className='rph'>🎮</div>}
+          {r.cover?<img className='rthm' src={coverThumb(r.cover)} alt='' loading='lazy' onError={e=>{e.currentTarget.style.visibility='hidden';}}/>:<div className='rph'>🎮</div>}
           <div className='rinf'><div className='rnm'>{r.title}</div><div className='rmt'>{r.year}{r.genre?' · '+r.genre:''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div></div>
         </div>
       ))}</div>}
@@ -772,13 +772,14 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
     // Rating: only clamp if user actually typed something. Previously `+null = 0` coerced to 1
     // via Math.max(1,0), which magically assigned rating=1 every time an unrated game was saved
     // (e.g. after a status change). Guard against null/undefined/empty/non-finite before clamping.
-    const rRaw=f.rating;
-    const rNum=(rRaw===null||rRaw===undefined||rRaw==='')?NaN:+rRaw;
-    const rating=Number.isFinite(rNum)&&rNum>0?Math.min(10,Math.max(1,rNum)):null;
+    const rNum=parseNum(f.rating);
+    const rating=rNum!==null&&rNum>0?Math.min(10,Math.max(1,rNum)):null;
+    // v1.18.1 — accept "89,99" / "12,5" from Polish and Spanish keyboards (was NaN → dropped)
+    const money=v=>{const n=parseNum(v);return n===null?'':String(n);};
     // priceSold UX: single input where empty string = not sold (no toggle anymore).
     // Anything else gets coerced to a number string at the storage layer.
-    const priceSold = (f.priceSold===null||f.priceSold==='') ? null : f.priceSold;
-    onSave({...f,abbr,year:+f.year||new Date().getFullYear(),hours:+f.hours||0,rating,targetHours:+f.targetHours||0,priceSold});
+    const priceSold = (f.priceSold===null||f.priceSold==='') ? null : (money(f.priceSold)||null);
+    onSave({...f,abbr,year:+f.year||new Date().getFullYear(),hours:parseNum(f.hours)||0,rating,targetHours:parseNum(f.targetHours)||0,priceSold,priceBought:money(f.priceBought),extraSpend:money(f.extraSpend)});
   }
   const days=daysUntil(f.releaseDate);
   return(
@@ -801,7 +802,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
           )}
           {/* ── Quick add core: search → cover → title → status ─────────────────── */}
           <RawgSearch onSelect={fill} lang={lang}/>
-          {f.cover&&<img className='covp' src={f.cover} alt=''/>}
+          {f.cover&&<img className='covp' src={coverThumb(f.cover,640)} alt='' onError={e=>{e.currentTarget.style.visibility='hidden';}}/>}
           <div className='fg'>
             <label className='fl'>{t(lang,'titleField')}</label>
             <input ref={titleRef} className={`fi${shake?' shake':''}`} value={f.title} onChange={e=>upd('title',e.target.value)} placeholder='God of War Ragnarök'/>
@@ -1009,7 +1010,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
             const gRem=g.targetHours?Math.max(0,g.targetHours-(g.hours||0)):0;
             return <div key={g.id} style={{marginTop:idx>0?14:0,paddingTop:idx>0?14:0,borderTop:idx>0?'1px solid '+G.bdr:'none'}}>
               <div className='cont-game' onClick={()=>onOpen(g)} style={{cursor:'pointer'}}>
-                {g.cover?<div className='cont-cover' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='cont-cover0'>{g.abbr||'??'}</div>}
+                {g.cover?<div className='cont-cover' style={{backgroundImage:`url(${coverThumb(g.cover)})`}}/>:<div className='cont-cover0'>{g.abbr||'??'}</div>}
                 <div className='cont-body'>
                   <div className='cont-title'>{g.title}</div>
                   <div className='cont-meta'>{[g.genre,g.hours&&t(lang,'hoursPlayed',{h:fmtHours(g.hours)})].filter(Boolean).join(' · ')}</div>
@@ -1033,7 +1034,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>📅 {t(lang,'nextRelease')}</span>{days===0?<span className='hcard-badge' style={{background:'rgba(57,255,110,.12)',color:G.grn,animation:'pulse 1s infinite'}}>{t(lang,'today')}</span>:<span className='hcard-badge' style={{background:'rgba(255,159,28,.12)',color:G.org}}>{days}d</span>}</div>
           <div className='cnt-game-row'>
-            {nextUp.cover?<div className='cnt-cover' style={{backgroundImage:`url(${nextUp.cover})`}}/>:<div style={{width:44,height:44,borderRadius:8,background:G.card2,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.pur,flexShrink:0}}>{nextUp.abbr||'??'}</div>}
+            {nextUp.cover?<div className='cnt-cover' style={{backgroundImage:`url(${coverThumb(nextUp.cover)})`}}/>:<div style={{width:44,height:44,borderRadius:8,background:G.card2,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.pur,flexShrink:0}}>{nextUp.abbr||'??'}</div>}
             <div><div style={{fontSize:13,fontWeight:700,marginBottom:2}}>{nextUp.title}</div><div style={{fontSize:11,color:G.dim}}>{days===0?t(lang,'releaseToday'):days===1?t(lang,'releaseTomorrow'):fmtDate(nextUp.releaseDate,lang)}</div></div>
           </div>
           {days>0&&<><div className='cnt-big'>{days}</div><div className='cnt-label'>{days===1?t(lang,'dayToRelease'):t(lang,'daysToRelease')}</div></>}
@@ -1070,7 +1071,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
                 <div key={g.id} onClick={e=>{e.stopPropagation();onOpen(g);}}
                   style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',background:G.card2,borderRadius:8,cursor:'pointer'}}>
                   {g.cover
-                    ? <div style={{width:32,height:32,borderRadius:6,backgroundImage:`url(${g.cover})`,backgroundSize:'cover',backgroundPosition:'center',flexShrink:0}}/>
+                    ? <div style={{width:32,height:32,borderRadius:6,backgroundImage:`url(${coverThumb(g.cover)})`,backgroundSize:'cover',backgroundPosition:'center',flexShrink:0}}/>
                     : <div style={{width:32,height:32,borderRadius:6,background:G.card,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontFamily:"'Orbitron',monospace",fontWeight:900,color:G.pur,flexShrink:0}}>{g.abbr||'??'}</div>}
                   <div style={{flex:1,overflow:'hidden'}}>
                     <div style={{fontSize:12,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{g.title}</div>
@@ -1109,7 +1110,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
 function UpcomingCard({g,d,lang,onOpen,onStatusChange,onToggleNotify,onRequestNotif,notifPerm}){
   return (
     <div key={g.id} className='upc-card'>
-      <div className='upc-banner' style={g.cover?{backgroundImage:`url(${g.cover})`}:{}}>
+      <div className='upc-banner' style={g.cover?{backgroundImage:`url(${coverThumb(g.cover,640)})`}:{}}>
         <div className='upc-ov'/>
         {/* v1.15.3 — pre-order badge in banner top-left. Gold accent matches the form
             checkbox tone. Stacks with the days countdown on the right. */}
@@ -1165,10 +1166,10 @@ function Upcoming({games,onOpen,onToggleNotify,onStatusChange,notifPerm,onReques
         {watching.map(g=><UpcomingCard key={g.id} g={g} d={daysUntil(g.releaseDate)} {...cardProps}/>)}
       </>}
       {released.length>0&&<><div className='sec-hdr' style={{marginTop:16}}><span className='sec-title'>{t(lang,'alreadyOut')}</span><span className='sec-count'>{released.length}</span></div>
-        {released.map(g=>(<div key={g.id} className='upc-card'><div className='upc-banner' style={g.cover?{backgroundImage:`url(${g.cover})`}:{}}><div className='upc-ov'/><div className='upc-bt'>{g.title}</div><div className='upc-bd' style={{color:G.grn,background:'rgba(57,255,110,.2)',borderColor:'rgba(57,255,110,.4)'}}>{t(lang,'out')}</div></div><div className='upc-body'><div className='upc-date'>{t(lang,'premiere')} {fmtDate(g.releaseDate,lang)}</div><div className='upc-acts'><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></div></div></div>))}
+        {released.map(g=>(<div key={g.id} className='upc-card'><div className='upc-banner' style={g.cover?{backgroundImage:`url(${coverThumb(g.cover,640)})`}:{}}><div className='upc-ov'/><div className='upc-bt'>{g.title}</div><div className='upc-bd' style={{color:G.grn,background:'rgba(57,255,110,.2)',borderColor:'rgba(57,255,110,.4)'}}>{t(lang,'out')}</div></div><div className='upc-body'><div className='upc-date'>{t(lang,'premiere')} {fmtDate(g.releaseDate,lang)}</div><div className='upc-acts'><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></div></div></div>))}
       </>}
       {tba.length>0&&<><div className='sec-hdr' style={{marginTop:16}}><span className='sec-title'>{t(lang,'tba')}</span><span className='sec-count'>{tba.length}</span></div>
-        {tba.map(g=>{const SM2=getSM(lang);const m=SM2[g.status]||SM2.planuje;return(<div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>onOpen(g)}>{g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}<div className='gcnt'><div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='rbdg-tba'>TBA</span>{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}</div></div></div></div>);})}
+        {tba.map(g=>{const SM2=getSM(lang);const m=SM2[g.status]||SM2.planuje;return(<div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>onOpen(g)}>{g.cover?<div className='gcov' style={{backgroundImage:`url(${coverThumb(g.cover)})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}<div className='gcnt'><div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='rbdg-tba'>TBA</span>{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}</div></div></div></div>);})}
       </>}
     </div>
   );
@@ -1458,8 +1459,8 @@ function Stats({games,lang}){
     const bCph=[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours))[0];
     if(worst)insights.push({ico:'📉',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:worst.title,amount:pln(Math.abs(worst.roi),lang)}),val:'-'+pln(Math.abs(worst.roi),lang)});
     if(best)insights.push({ico:'📈',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestDesc',{title:best.title,amount:pln(best.roi,lang)}),val:'+'+pln(best.roi,lang)});
-    if(wCph&&wCph.hours>0)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,28,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:wCph.title,cph:(+wCph.priceBought/wCph.hours).toFixed(1)}),val:fmtCph(+wCph.priceBought/wCph.hours)});
-    if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:(+bCph.priceBought/bCph.hours).toFixed(1)}),val:fmtCph(+bCph.priceBought/bCph.hours)});
+    if(wCph&&wCph.hours>0)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,28,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:wCph.title,cph:fmtCph(+wCph.priceBought/wCph.hours).replace('/h','')}),val:fmtCph(+wCph.priceBought/wCph.hours)});
+    if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:fmtCph(+bCph.priceBought/bCph.hours).replace('/h','')}),val:fmtCph(+bCph.priceBought/bCph.hours)});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
   // v1.17.5 — Time subtab removed (session-based heatmap is meaningless now that
@@ -1512,7 +1513,7 @@ function Stats({games,lang}){
                     <div key={g.id || i} style={{display:'flex',gap:8,alignItems:'center'}}>
                       <div style={{fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,color:G.dim,width:18,textAlign:'right'}}>{i+1}.</div>
                       {g.cover
-                        ? <div style={{width:24,height:32,borderRadius:4,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${g.cover})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
+                        ? <div style={{width:24,height:32,borderRadius:4,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${coverThumb(g.cover)})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
                         : <div style={{width:24,height:32,borderRadius:4,background:G.card2,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,border:`1px solid ${G.bdr}`}}>🎮</div>}
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontSize:12,fontWeight:700,color:G.txt,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',marginBottom:3}}>{g.title}</div>
@@ -1723,7 +1724,7 @@ function Stats({games,lang}){
               {quickWins.map((g, i) => (
                 <div key={g.id || i} style={{display:'flex',gap:8,alignItems:'center',padding:'6px 8px',background:G.bg,border:`1px solid ${G.bdr}`,borderRadius:6}}>
                   {g.cover
-                    ? <div style={{width:20,height:28,borderRadius:3,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${g.cover})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
+                    ? <div style={{width:20,height:28,borderRadius:3,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${coverThumb(g.cover)})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
                     : <div style={{width:20,height:28,borderRadius:3,background:G.card2,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,border:`1px solid ${G.bdr}`}}>🎮</div>}
                   <div style={{flex:1,minWidth:0,fontSize:12,color:G.txt,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{g.title}</div>
                   <div style={{fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,color:G.grn,whiteSpace:'nowrap'}}>~{g.targetHours}h</div>
@@ -1894,8 +1895,8 @@ function Finance({games,lang,proLocked=false,onUnlock}){
     if(totalPotentialSavings>0)insights.push({ico:'💡',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'potentialSaving'),body:t(lang,'savingsDesc',{amount:pln(totalPotentialSavings,lang)}),val:pln(totalPotentialSavings,lang),big:true});
     if(biggestLossGame)insights.push({ico:'🚨',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:biggestLossGame.title,amount:pln(+biggestLossGame.priceBought,lang)}),val:'-'+pln(+biggestLossGame.priceBought,lang),actionKey:'avoidLoss'});
     if(bestInvestGame)insights.push({ico:'✅',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestmentDesc',{title:bestInvestGame.title,amount:pln(bestInvestGame.roi,lang)}),val:'+'+pln(bestInvestGame.roi,lang),actionKey:'buyBetter'});
-    if(mostExpHour)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,64,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:mostExpHour.title,cph:(+mostExpHour.priceBought/mostExpHour.hours).toFixed(1)}),val:fmtCph(+mostExpHour.priceBought/mostExpHour.hours),actionKey:'optimizeBacklog'});
-    if(bestValGame)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bestValGame.title,cph:(+bestValGame.priceBought/bestValGame.hours).toFixed(1)}),val:fmtCph(+bestValGame.priceBought/bestValGame.hours),actionKey:'findSimilar'});
+    if(mostExpHour)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,64,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:mostExpHour.title,cph:fmtCph(+mostExpHour.priceBought/mostExpHour.hours).replace('/h','')}),val:fmtCph(+mostExpHour.priceBought/mostExpHour.hours),actionKey:'optimizeBacklog'});
+    if(bestValGame)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bestValGame.title,cph:fmtCph(+bestValGame.priceBought/bestValGame.hours).replace('/h','')}),val:fmtCph(+bestValGame.priceBought/bestValGame.hours),actionKey:'findSimilar'});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
 
@@ -2294,7 +2295,7 @@ function YearInReview({ games, lang, onClose, flash }){
               return (
                 <div key={g.id} className='wr-row'>
                   <span className='wr-rank'>#{i+1}</span>
-                  {g.cover ? <img className='wr-cov' src={g.cover} alt='' loading='lazy'/> : <div className='wr-cov0'>{g.abbr||'??'}</div>}
+                  {g.cover ? <img className='wr-cov' src={coverThumb(g.cover)} alt='' loading='lazy' onError={e=>{e.currentTarget.style.visibility='hidden';}}/> : <div className='wr-cov0'>{g.abbr||'??'}</div>}
                   <div className='wr-row-body'>
                     <div className='wr-row-title'>{g.title}</div>
                     <div className='wr-row-meta'>{Math.round(entry.hours)}h{g.genre?' · '+g.genre:''}</div>
@@ -2308,7 +2309,7 @@ function YearInReview({ games, lang, onClose, flash }){
           {review.highestRated && <div className='wr-card'>
             <div className='wr-card-h'>{t(lang,'wrappedHighestRated')}</div>
             <div className='wr-row'>
-              {review.highestRated.cover ? <img className='wr-cov' src={review.highestRated.cover} alt='' loading='lazy'/> : <div className='wr-cov0'>{review.highestRated.abbr||'??'}</div>}
+              {review.highestRated.cover ? <img className='wr-cov' src={coverThumb(review.highestRated.cover)} alt='' loading='lazy' onError={e=>{e.currentTarget.style.visibility='hidden';}}/> : <div className='wr-cov0'>{review.highestRated.abbr||'??'}</div>}
               <div className='wr-row-body'>
                 <div className='wr-row-title'>{review.highestRated.title}</div>
                 <div className='wr-row-meta' style={{color:G.gld,fontWeight:700}}>★ {(+review.highestRated.rating).toFixed(1)} / 10</div>
@@ -3116,7 +3117,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                       style={{width:18,height:18,accentColor:G.blu,flexShrink:0}}
                     />
                     {m.rawg && m.rawg.cover
-                      ? <div style={{width:36,height:48,borderRadius:6,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${m.rawg.cover})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
+                      ? <div style={{width:36,height:48,borderRadius:6,backgroundSize:'cover',backgroundPosition:'center',backgroundImage:`url(${coverThumb(m.rawg.cover)})`,flexShrink:0,border:`1px solid ${G.bdr}`}}/>
                       : <div style={{width:36,height:48,borderRadius:6,background:G.card2,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,border:`1px solid ${G.bdr}`}}>{platformConfig?.icon || '🎮'}</div>}
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:G.txt,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{m.rawg?.title || row.title}</div>
@@ -3330,7 +3331,7 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
     .reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
 
   function commit(){
-    const v=+draft;
+    const v=parseNum(draft) ?? NaN;
     if(!Number.isFinite(v) || v<=0){
       flash(t(lang,'budgetInvalidAmount'));
       return;
@@ -3500,6 +3501,12 @@ export default function App(){
   useEffect(()=>{
     const real=games.filter(g=>!g._demo).length;
     if(realCountRef.current===0 && real>0) trackOnce('first_game_added');
+    // v1.18.1 — the collection exists only in this browser's storage, which Chrome may
+    // evict when the phone runs low on space unless the site holds "persistent" storage.
+    // Ask once there is something worth keeping (Chrome grants it silently for installed apps).
+    if(real>0 && realCountRef.current!==real){
+      try{ navigator.storage?.persisted?.().then(p=>{ if(!p) navigator.storage.persist?.(); }).catch(()=>{}); }catch{}
+    }
     realCountRef.current=real;
   },[games]);
   useEffect(()=>{ if(tab==='fin') trackOnce('finance_opened'); },[tab]);
@@ -3689,7 +3696,15 @@ export default function App(){
     const isCompleted  = form.status === 'ukonczone';
     let completedAt = form.completedAt || null;
     if(isCompleted && !wasCompleted && !completedAt){ completedAt = new Date().toISOString(); }
-    const game={...form,id,addedAt:form.addedAt||new Date().toISOString(),completedAt};
+    // v1.18.1 — Year in Review files hours under lastPlayed's year (falling back to addedAt).
+    // Manual edits never set it, so a game bought in 2024 and played now counted for 2024.
+    // Stamp it when the user logs more hours or starts/finishes the game.
+    const now = new Date().toISOString();
+    const playedNow = (+form.hours||0) > (+prevGame?.hours||0)
+      || (form.status==='gram' && prevGame?.status!=='gram')
+      || (isCompleted && !wasCompleted);
+    const lastPlayed = playedNow ? now : (form.lastPlayed||null);
+    const game={...form,id,addedAt:form.addedAt||now,completedAt,lastPlayed};
     // Fix zombie timer: if edit sets status away from 'gram' while this game's timer is active, clean it up
     if(isEdit && game.status!=='gram'){
       const t=timerRead(); if(t&&t.gameId===id) timerWrite(null);
@@ -3718,6 +3733,10 @@ export default function App(){
       const next={...g,status,...extra};
       if(status==='ukonczone' && g.status!=='ukonczone' && !next.completedAt){
         next.completedAt=new Date().toISOString();
+      }
+      // v1.18.1 — see handleSave: keep Year in Review attribution right for quick changes
+      if((status==='gram'||status==='ukonczone') && g.status!==status && extra.lastPlayed===undefined){
+        next.lastPlayed=new Date().toISOString();
       }
       return next;
     }));
@@ -3993,7 +4012,7 @@ export default function App(){
               ?<div className='empty'><div className='eic'>🎮</div><div className='ett'>{q?t(lang,'noResults'):t(lang,'noGames')}</div><div className='ess'>{q?t(lang,'noResultsFor',{q}):t(lang,'addFirst')}</div>{!q&&<button className='empty-cta' onClick={()=>setModal('add')}>{t(lang,'addGame')}</button>}</div>
               :visibleCapped.map(g=>{const m=SM2[g.status]||SM2.planuje;const roi=g.priceSold!=null?+(g.priceSold||0) - +(g.priceBought||0):null;return(
                 <div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>setModal(g)}>
-                  {g.cover?<div className='gcov' style={{backgroundImage:`url(${g.cover})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
+                  {g.cover?<div className='gcov' style={{backgroundImage:`url(${coverThumb(g.cover)})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
                     <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 — subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
                     <div className='grt'>
