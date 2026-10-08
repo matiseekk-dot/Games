@@ -371,6 +371,7 @@ const TRANSLATIONS = {
     recCacheClearConfirm:"Wyczyścić cache {n} zestawów rekomendacji? Następnym razem pobiorą się świeże dane z RAWG.io.",
     recCacheCleared:"✓ Cache rekomendacji wyczyszczony",
     retry:"Spróbuj ponownie",
+    chartsLoadFailed:"Nie udało się wczytać wykresów. Sprawdź połączenie z internetem.",
     // v1.14.3 - keys backfilled from inline-ternaries in App.jsx so every visible
     // string is reachable through t() and gets full PL/EN/ES coverage.
     rawgSearching:"Szukam...",
@@ -1043,6 +1044,7 @@ const TRANSLATIONS = {
     recCacheClearConfirm:"Clear cache for {n} recommendation bundles? Next time fresh data will be fetched from RAWG.io.",
     recCacheCleared:"✓ Recommendations cache cleared",
     retry:"Retry",
+    chartsLoadFailed:"Charts could not be loaded. Check your internet connection.",
     // v1.14.3 - see PL counterpart for context
     rawgSearching:"Searching...",
     platinumDesc:"I earned the platinum trophy",
@@ -1686,6 +1688,7 @@ const TRANSLATIONS = {
     recCacheClearConfirm:"¿Borrar caché de {n} paquetes de recomendaciones? La próxima vez se descargarán datos nuevos de RAWG.io.",
     recCacheCleared:"✓ Caché de recomendaciones borrada",
     retry:"Reintentar",
+    chartsLoadFailed:"No se pudieron cargar los gráficos. Revisa tu conexión a internet.",
     // v1.14.3 - keys for previously hardcoded inline ternaries
     rawgSearching:"Buscando...",
     platinumDesc:"Conseguí el trofeo de platino",

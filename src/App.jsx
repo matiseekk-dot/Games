@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
 // v1.6.0 - extracted modules. App.jsx is now a thin orchestrator + components shell.
 import {
@@ -43,6 +42,32 @@ import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 // v1.17.6 - Collection list is rendered in pages of this many cards. Big imported
 // libraries (700+) otherwise mount hundreds of DOM nodes at once and jank.
 const COL_PAGE = 120;
+
+// v1.19.1 - recharts is about half of the app's JavaScript and only Stats and Finance
+// draw charts, so it lives in its own chunk. The first start parses much less code; the
+// chunk is fetched in idle time right after start-up (so the tabs still open instantly and
+// the service worker caches it for offline use). Stats and Finance render inside
+// <WithCharts>, which guarantees RC is set before they read it.
+let RC = null;
+let rcPromise = null;
+function loadCharts(){
+  if(!rcPromise) rcPromise = import('./lib/charts.js').then(m=>{ RC=m; return m; }, e=>{ rcPromise=null; throw e; });
+  return rcPromise;
+}
+function WithCharts({lang,children}){
+  const [ready,setReady]=useState(()=>!!RC);
+  const [failed,setFailed]=useState(false);
+  const [attempt,setAttempt]=useState(0);
+  useEffect(()=>{
+    if(ready) return;
+    let live=true;
+    loadCharts().then(()=>{ if(live) setReady(true); },()=>{ if(live) setFailed(true); });
+    return ()=>{ live=false; };
+  },[ready,attempt]);
+  if(ready) return children();
+  if(!failed) return <div className='scr'/>;
+  return <div className='scr'><div className='empty'><div className='eic'>📊</div><div className='ess'>{t(lang,'chartsLoadFailed')}</div><button type='button' className='empty-cta' onClick={()=>{setFailed(false);setAttempt(a=>a+1);}}>{t(lang,'retry')}</button></div></div>;
+}
 
 const CTip = ({active,payload,label}) => {
   if(!active||!payload?.length)return null;
@@ -1310,6 +1335,7 @@ function ImportModal({onClose,onPickFile,mode,onPickMode,games,lang,pendingFile,
 }
 
 function Stats({games,lang}){
+  const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } = RC;
   const [tab,setTab]=useState('general');
   if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>📈</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
   const hrs=games.reduce((s,g)=>s+(g.hours||0),0);
@@ -1750,6 +1776,7 @@ function Stats({games,lang}){
 // v1.2.0 - Finance as standalone main-tab component
 // Combines former Stats→Finance and Stats→Analysis subtabs
 function Finance({games,lang,proLocked=false,onUnlock}){
+  const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } = RC;
   const [tab,setTab]=useState('overview');
   if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
 
@@ -3612,6 +3639,11 @@ export default function App(){
     realCountRef.current=real;
   },[games]);
   useEffect(()=>{ if(tab==='fin') trackOnce('finance_opened'); },[tab]);
+  // v1.19.1 - fetch the chart chunk once the first screen is up (see loadCharts)
+  useEffect(()=>{
+    const idle=window.requestIdleCallback||(cb=>setTimeout(cb,2000));
+    idle(()=>{ loadCharts().catch(()=>{}); },{timeout:5000});
+  },[]);
   useEffect(()=>{
     if(!proGateActive())return;
     refreshEntitlement().then(v=>{ if(v!==null) setIsPro(v); });
@@ -4167,8 +4199,8 @@ export default function App(){
         </>}
 
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
-        {tab==='fin'&&<Finance games={games} lang={lang} proLocked={proLocked} onUnlock={()=>openPro('finance')}/>}
-        {tab==='st'&&<Stats games={games} lang={lang}/>}
+        {tab==='fin'&&<WithCharts lang={lang}>{()=><Finance games={games} lang={lang} proLocked={proLocked} onUnlock={()=>openPro('finance')}/>}</WithCharts>}
+        {tab==='st'&&<WithCharts lang={lang}>{()=><Stats games={games} lang={lang}/>}</WithCharts>}
         {/* v1.5.0 - Settings/Achievements/Goals/Wrapped now live behind hamburger menu (see overlays below) */}
 
         {/* v1.14.1 - Floating action button (FAB) for adding games. Standard Material
