@@ -1,5 +1,5 @@
-// PS5 Vault: Service Worker v1.17.7 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
-const CACHE = "ps5vault-v62";
+// PS5 Vault: Service Worker v1.18.0 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v63";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {

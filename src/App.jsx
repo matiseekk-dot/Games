@@ -6,6 +6,7 @@ import {
   APP_VER,
   LS_LANG, LS_CURRENCY,
   G, GENRES_PL, GENRES_EN, GENRES_ES, localizeGenre, STORES, PLATFORMS, SOURCES, isOwned, CURRENCIES, EF,
+  PRO_ENABLED, FREE_IMPORT_LIMIT, PLAY_STORE_URL,
 } from './constants.js';
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
@@ -33,7 +34,8 @@ import { parsePsnProfilesPaste } from './lib/psnprofiles-import.js';
 import { parseSteamPaste } from './lib/steam-import.js';
 import { parseXboxPaste } from './lib/xbox-import.js';
 import { parsePlaynitePaste } from './lib/playnite-import.js';
-import { initAnalytics, track, trackOnce, countBucket } from './lib/analytics.js';
+import { initAnalytics, track, trackOnce, countBucket, getPlatform } from './lib/analytics.js';
+import { proGateActive, readCachedPro, refreshEntitlement, buyPro, getProPrice, getBillingService } from './lib/pro.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -147,9 +149,11 @@ function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
       <div className='ob-logo' style={{fontSize:36}}>📋</div>
       <div className='ob-title'>{t(lang,'wizard4Title')}</div>
       <div className='ob-sub'>{t(lang,'wizard4Body')}</div>
-      <div style={{margin:'14px 0',padding:'12px 14px',background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.3)',borderRadius:12,fontSize:12,color:'#E8EDF8',lineHeight:1.5}}>
-        {t(lang,'wizard4Premium')}
-      </div>
+      {/* v1.18.0 — was a "PSN sync coming in Premium" promise that never shipped. Now an
+          honest note about the one-time Pro, shown only once Pro is live. */}
+      {PRO_ENABLED&&<div style={{margin:'14px 0',padding:'12px 14px',background:'rgba(255,209,102,.08)',border:'1px solid rgba(255,209,102,.3)',borderRadius:12,fontSize:12,color:'#E8EDF8',lineHeight:1.5}}>
+        ⭐ {t(lang,'wizard4Pro')}
+      </div>}
       <button type='button' className='ob-start' onClick={()=>finish(window.__ps5v_pendingDemo===true)}>{t(lang,'wizard4Btn')}</button>
     </div>
   );
@@ -1738,7 +1742,7 @@ function Stats({games,lang}){
 
 // v1.2.0 — Finance as standalone main-tab component
 // Combines former Stats→Finance and Stats→Analysis subtabs
-function Finance({games,lang}){
+function Finance({games,lang,proLocked=false,onUnlock}){
   const [tab,setTab]=useState('overview');
   if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
 
@@ -1870,7 +1874,7 @@ function Finance({games,lang}){
     {l:t(lang,'earnedBack'),   v:pln(totalEarned,lang), c:G.grn, bg:'rgba(57,255,110,.07)'},
     {l:t(lang,'realCostShort'),v:pln(netCost,lang),     c:G.org, bg:'rgba(255,159,64,.07)'},
   ];
-  if(cph!==null){fkpis.push({l:t(lang,'costPerHour'),v:fmtCph(cph),c:G.blu,bg:'rgba(0,212,255,.07)'});}
+  if(cph!==null&&!proLocked){fkpis.push({l:t(lang,'costPerHour'),v:fmtCph(cph),c:G.blu,bg:'rgba(0,212,255,.07)'});}
 
   // === Insights (copied from Stats) ===
   const insights=[];
@@ -1938,6 +1942,9 @@ function Finance({games,lang}){
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.red}}>{pln(maxMonth.v,lang)}</span>
             </div>}
           </div>}
+          {/* v1.18.0 — everything below the monthly chart is Pro */}
+          {proLocked&&<ProTeaser title={t(lang,'proFinanceTeaserTitle')} body={t(lang,'proFinanceTeaserBody')} lang={lang} onUnlock={onUnlock}/>}
+          {!proLocked&&<>
           {projectionHasData&&<div className='ccd' style={{borderColor:'rgba(0,212,255,.3)'}}>
             <div className='ctl'>{t(lang,'yearProjection')}</div>
             <div style={{fontSize:12,color:G.dim,lineHeight:1.5,marginBottom:8}}>
@@ -1975,9 +1982,107 @@ function Finance({games,lang}){
           </div>}
           <div className='ccd'><div className='ctl'>{t(lang,'mostExpensive')}</div><ul className='top-list'>{[...bought].sort((a,b)=>+b.priceBought - +a.priceBought).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span>{g.storeBought&&<span style={{fontSize:10,color:G.dim,flexShrink:0}}>{g.storeBought}</span>}<span className='top-val' style={{color:G.org}}>{pln(+g.priceBought,lang)}</span></li>)}</ul></div>
           {withHrs.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'bestValue')}</div><ul className='top-list'>{[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours)).slice(0,5).map(g=><li key={g.id} className='top-item'><span className='top-title'>{g.title}</span><span style={{fontSize:10,color:G.dim,flexShrink:0}}>{fmtHours(g.hours,{compact:true})}</span><span className='top-val' style={{color:G.grn}}>{fmtCph(+g.priceBought/g.hours)}</span></li>)}</ul></div>}
+          </>}
         </>}
       </>}
-      {tab==='insights'&&<>{!insights.length?<div className='empty'><div className='eic'>💡</div><div className='ett'>{t(lang,'noInsights')}</div><div className='ess'>{t(lang,'addPricesAndHours')}</div></div>:<InsightsTab insights={insights} games={games} lang={lang}/>}</>}
+      {tab==='insights'&&proLocked&&<ProTeaser title={t(lang,'proFinanceTeaserTitle')} body={t(lang,'proInsightsTeaserBody')} lang={lang} onUnlock={onUnlock}/>}
+      {tab==='insights'&&!proLocked&&<>{!insights.length?<div className='empty'><div className='eic'>💡</div><div className='ett'>{t(lang,'noInsights')}</div><div className='ess'>{t(lang,'addPricesAndHours')}</div></div>:<InsightsTab insights={insights} games={games} lang={lang}/>}</>}
+    </div>
+  );
+}
+
+// ─── v1.18.0 PS5 Vault Pro ───────────────────────────────────────────────────
+// Small gold card shown in place of a Pro-only section.
+function ProTeaser({ title, body, lang, onUnlock }){
+  return(
+    <div className='ccd' style={{borderColor:'rgba(255,209,102,.35)',background:'linear-gradient(135deg,rgba(255,209,102,.07),rgba(167,139,250,.05))'}}>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+        <span style={{fontSize:9,fontWeight:800,letterSpacing:'.1em',color:'#000',background:G.gld,borderRadius:6,padding:'2px 7px'}}>{t(lang,'proBadge')}</span>
+        {title&&<span style={{fontSize:13,fontWeight:700,color:G.txt}}>{title}</span>}
+      </div>
+      <div style={{fontSize:12,color:G.dim,lineHeight:1.5,marginBottom:10}}>{body}</div>
+      <button type='button' onClick={onUnlock} style={{width:'100%',padding:'11px 12px',border:'none',borderRadius:10,background:`linear-gradient(135deg,${G.gld},#FF9F1C)`,color:'#1A1200',fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:800,cursor:'pointer'}}>⭐ {t(lang,'proUnlockBtn')}</button>
+    </div>
+  );
+}
+
+// Paywall + status sheet. Purchase works only inside the Play app (TWA with the Play
+// Billing module); elsewhere it explains how to get it. `from` is for analytics only.
+function ProSheet({ lang, isPro, from, onClose, onOwned, flash }){
+  const [price,setPrice]=useState(null);
+  const [mode,setMode]=useState('checking'); // checking | buy | update | web
+  const [busy,setBusy]=useState(false);
+  useEffect(()=>{
+    let alive=true;
+    (async()=>{
+      const svc=await getBillingService();
+      if(!alive)return;
+      if(svc){
+        setMode('buy');
+        const p=await getProPrice();
+        if(alive)setPrice(p);
+      } else {
+        setMode(getPlatform()==='play'?'update':'web');
+      }
+    })();
+    return()=>{alive=false;};
+  },[]);
+  async function onBuy(){
+    if(busy)return;
+    setBusy(true);
+    track('purchase_start',{from});
+    const r=await buyPro();
+    setBusy(false);
+    track('purchase_result',{from,result:r.status});
+    if(r.status==='owned'||r.status==='owned_retry'){ onOwned(); flash(t(lang,'proThanks')); onClose(); }
+    else if(r.status==='pending') flash(t(lang,'proPending'));
+    else if(r.status==='unavailable') setMode(getPlatform()==='play'?'update':'web');
+    else if(r.status!=='cancelled') flash(t(lang,'proError'));
+  }
+  async function onRestore(){
+    if(busy)return;
+    setBusy(true);
+    const v=await refreshEntitlement();
+    setBusy(false);
+    if(v===null) flash(t(lang,'proRestoreUnavailable'));
+    else if(v){ onOwned(); flash(t(lang,'proRestored')); onClose(); }
+    else flash(t(lang,'proRestoreNone'));
+  }
+  const benefits=[
+    ['📥',t(lang,'proBenefitImport',{n:FREE_IMPORT_LIMIT})],
+    ['💰',t(lang,'proBenefitFinance')],
+    ['💳',t(lang,'proBenefitBudget')],
+    ['📷',t(lang,'proBenefitScan')],
+    ['❤️',t(lang,'proBenefitSupport')],
+  ];
+  const primary={width:'100%',padding:'14px 12px',border:'none',borderRadius:12,background:`linear-gradient(135deg,${G.gld},#FF9F1C)`,color:'#1A1200',fontFamily:"'Syne',sans-serif",fontSize:15,fontWeight:800,cursor:'pointer'};
+  const secondary={width:'100%',marginTop:10,padding:'11px 12px',background:'transparent',border:`1px solid ${G.bdr}`,borderRadius:11,color:G.dim,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,cursor:'pointer'};
+  return(
+    <div className='bs-ovr' style={{zIndex:400}}>
+      <div className='bs-hdr'>
+        <div className='bs-ttl'>⭐ {t(lang,'proName')}</div>
+        <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
+      </div>
+      <div style={{flex:1,minHeight:0,overflowY:'auto',padding:'18px 16px',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 40px)'}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:20,fontWeight:900,color:G.gld,marginBottom:6}}>{isPro?t(lang,'proOwned'):t(lang,'proTitle')}</div>
+        <div style={{fontSize:13,color:G.dim,lineHeight:1.5,marginBottom:16}}>{t(lang,'proSubtitle')}</div>
+        <div style={{background:G.card,border:`1px solid ${G.bdr}`,borderRadius:14,padding:'6px 14px',marginBottom:18}}>
+          {benefits.map(([ico,txt],i)=>(
+            <div key={ico} style={{display:'flex',gap:12,alignItems:'flex-start',padding:'10px 0',borderBottom:i<benefits.length-1?`1px solid ${G.bdr}`:'none'}}>
+              <span style={{fontSize:18,lineHeight:1.2}}>{ico}</span>
+              <span style={{fontSize:13,color:G.txt,lineHeight:1.45}}>{txt}</span>
+            </div>
+          ))}
+        </div>
+        {!isPro&&mode==='checking'&&<button type='button' style={{...primary,opacity:.6}} disabled>⏳</button>}
+        {!isPro&&mode==='buy'&&<button type='button' style={{...primary,opacity:busy?.6:1}} onClick={onBuy} disabled={busy}>{busy?t(lang,'proBuying'):(price?t(lang,'proBuy',{price}):t(lang,'proBuyNoPrice'))}</button>}
+        {!isPro&&(mode==='update'||mode==='web')&&<>
+          <div style={{fontSize:13,color:G.txt,lineHeight:1.5,marginBottom:12,padding:'10px 12px',background:'rgba(0,212,255,.07)',border:`1px solid ${G.bdr}`,borderRadius:10}}>{t(lang,mode==='update'?'proUpdateApp':'proUnavailableWeb')}</div>
+          <a href={PLAY_STORE_URL} target='_blank' rel='noopener' style={{...primary,display:'block',textAlign:'center',textDecoration:'none'}}>{t(lang,'proOpenPlay')}</a>
+        </>}
+        {!isPro&&<button type='button' style={secondary} onClick={onRestore} disabled={busy}>{t(lang,'proRestore')}</button>}
+        {isPro&&<button type='button' style={secondary} onClick={onClose}>OK</button>}
+      </div>
     </div>
   );
 }
@@ -2581,8 +2686,10 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
 //
 // Dedup: existingTitles set built from current library (lowercase title match).
 // Duplicates rendered as 'dup' status and excluded from default-selected set.
-function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommit, lang }){
+function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommit, lang, freeLeft=Infinity, onUnlock }){
   const [step, setStep] = useState(1);
+  // v1.18.0 — free tier imports up to FREE_IMPORT_LIMIT games in total; gate = limit prompt
+  const [gate, setGate] = useState(false);
   const [pasteText, setPasteText] = useState('');
   const [parsed, setParsed] = useState(null);  // { format, count, rows }
   const [matches, setMatches] = useState({});  // index → { status, rawg?, error? }
@@ -2711,11 +2818,17 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
     });
   }
 
-  function commit(){
+  function onCommitClick(){
+    if (selected.size > freeLeft) { setGate(true); track('paywall_view',{from:'import_limit'}); return; }
+    commit();
+  }
+
+  function commit(max = Infinity){
     if (committing || selected.size === 0) return;
     setCommitting(true);
     const games = [];
     for (const i of selected) {
+      if (games.length >= max) break;
       const row = parsed.rows[i];
       const m = matches[i];
       if (!row || (m && m.status === 'dup')) continue;
@@ -2780,6 +2893,17 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
   }
 
   const selectedCount = selected.size;
+  const gatePanel = gate && (
+    <div style={{position:'fixed',inset:0,zIndex:350,background:'rgba(0,0,0,.6)',display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setGate(false)}>
+      <div onClick={e=>e.stopPropagation()} style={{width:'100%',maxWidth:520,background:G.card2,borderTop:`1px solid ${G.bdr}`,borderRadius:'18px 18px 0 0',padding:'20px 16px',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 20px), 28px)'}}>
+        <div style={{fontSize:16,fontWeight:800,color:G.gld,marginBottom:8}}>⭐ {t(lang,'proImportGateTitle',{n:FREE_IMPORT_LIMIT})}</div>
+        <div style={{fontSize:13,color:G.txt,lineHeight:1.5,marginBottom:16}}>{freeLeft>0?t(lang,'proImportGateBody',{sel:selected.size,left:freeLeft}):t(lang,'proImportGateNone')}</div>
+        <button type='button' onClick={()=>{setGate(false);onUnlock&&onUnlock();}} style={{width:'100%',padding:'13px 12px',border:'none',borderRadius:12,background:`linear-gradient(135deg,${G.gld},#FF9F1C)`,color:'#1A1200',fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:800,cursor:'pointer'}}>⭐ {t(lang,'proUnlockBtn')}</button>
+        {freeLeft>0&&<button type='button' onClick={()=>{setGate(false);commit(freeLeft);}} style={{width:'100%',marginTop:10,padding:'12px',background:'transparent',border:`1px solid ${G.bdr}`,borderRadius:11,color:G.txt,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:'pointer'}}>{t(lang,'proImportFree',{left:freeLeft})}</button>}
+        <button type='button' onClick={()=>setGate(false)} style={{width:'100%',marginTop:8,padding:'10px',background:'transparent',border:'none',color:G.dim,fontFamily:"'Syne',sans-serif",fontSize:12,cursor:'pointer'}}>{t(lang,'cancel')}</button>
+      </div>
+    </div>
+  );
   const matchedSummary = parsed
     ? Object.values(matches).reduce((acc, m) => {
         acc[m.status] = (acc[m.status] || 0) + 1;
@@ -2789,6 +2913,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
 
   return (
     <div className='bs-ovr'>
+      {gatePanel}
       <div className='bs-hdr'>
         <div className='bs-ttl'>📥 {t(lang, k('Title'))}</div>
         <button type='button' className='bs-x' onClick={onClose} aria-label={t(lang,'cancel')}>✕</button>
@@ -2931,7 +3056,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                 <button type='button' onClick={()=>setStep(1)} style={{padding:'8px 12px',background:'transparent',color:G.dim,border:`1px solid ${G.bdr}`,borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}>← {t(lang,'cancel2')}</button>
                 <button
                   type='button'
-                  onClick={commit}
+                  onClick={onCommitClick}
                   disabled={selectedCount === 0 || committing}
                   style={{padding:'9px 14px',background:selectedCount>0?`linear-gradient(135deg,${G.blu},#0060FF)`:G.card,color:'#fff',border:'none',borderRadius:8,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,cursor:selectedCount>0?'pointer':'not-allowed',opacity:selectedCount>0?1:.55}}
                 >{committing ? '⏳' : `+ ${t(lang,'add_game_label') || 'Add'} (${selectedCount})`}</button>
@@ -3046,7 +3171,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
               <button type='button' onClick={()=>setStep(1)} style={{flex:1,padding:12,background:'transparent',color:G.txt,border:`1px solid ${G.bdr}`,borderRadius:10,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:600,cursor:'pointer'}}>{t(lang, k('BackBtn'))}</button>
               <button
                 type='button'
-                onClick={commit}
+                onClick={onCommitClick}
                 disabled={selectedCount === 0 || committing}
                 style={{flex:2,padding:12,background:selectedCount>0?`linear-gradient(135deg,${G.blu},#0060FF)`:G.card,color:'#fff',border:'none',borderRadius:10,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:selectedCount>0?'pointer':'not-allowed',opacity:selectedCount>0?1:.55}}
               >{committing ? t(lang,'psnImportCommitting') : t(lang, k('CommitBtn'),{n:selectedCount})}</button>
@@ -3349,6 +3474,9 @@ export default function App(){
   // v1.16.5 — Undo-import overlay (Settings → "Cofnij import")
   const [importUndoOpen,setImportUndoOpen] = useState(false);
   const [toast,setToast]       = useState(null);
+  // v1.18.0 — Pro. Cached answer first (instant, works offline), then reconciled with Play.
+  const [isPro,setIsPro]       = useState(()=>readCachedPro());
+  const [proSheet,setProSheet] = useState(null); // null | what opened it (analytics)
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
 
   const setGames=useCallback(val=>{
@@ -3375,6 +3503,11 @@ export default function App(){
     realCountRef.current=real;
   },[games]);
   useEffect(()=>{ if(tab==='fin') trackOnce('finance_opened'); },[tab]);
+  useEffect(()=>{
+    if(!proGateActive())return;
+    refreshEntitlement().then(v=>{ if(v!==null) setIsPro(v); });
+  },[]);// eslint-disable-line -- mount-only
+  const openPro=useCallback(from=>{ setProSheet(from); track('paywall_view',{from}); },[]);
 
   // v1.17.6 — Welcome-back nudge. Compare now against the last recorded open; if
   // ≥7 days elapsed and the backlog has ≥5 unplayed games, surface a re-engage
@@ -3660,6 +3793,7 @@ export default function App(){
       try { window.history.pushState({ ps5vault: true }, ''); } catch {}
 
       // Priority 1: innermost overlays (rate prompt, privacy modal, import flow)
+      if (proSheet != null)  { setProSheet(null); return; }
       if (rateModal != null) { setRateModal(null); return; }
       if (privacyOpen)        { setPrivacyOpen(false); return; }
       if (importModal != null){ setImportModal(null); return; }
@@ -3688,7 +3822,7 @@ export default function App(){
       window.removeEventListener('popstate', onPop);
       if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
     };
-  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, lang, flash]);
+  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, proSheet, lang, flash]);
 
   // v1.17.6 — reset the render cap whenever the filter/search/sort signature
   // changes, so a new query always starts from the top page.
@@ -3772,6 +3906,9 @@ export default function App(){
     .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
     .sort(sortFn[sortBy]||sortFn.added);
   const visibleCapped = visible.slice(0, colLimit);
+  // v1.18.0 — Pro gating. proLocked is false whenever the PRO_ENABLED switch is off.
+  const proLocked = proGateActive() && !isPro;
+  const importFreeLeft = proLocked ? Math.max(0, FREE_IMPORT_LIMIT - games.filter(g=>g.importSource).length) : Infinity;
 
   // v1.17.6 — Backlog randomizer. Pool = unplayed, owned-or-any, not an unreleased
   // pre-order. Shared by the toolbar button, the re-roll, and the welcome-back nudge.
@@ -3882,7 +4019,7 @@ export default function App(){
         </>}
 
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
-        {tab==='fin'&&<Finance games={games} lang={lang}/>}
+        {tab==='fin'&&<Finance games={games} lang={lang} proLocked={proLocked} onUnlock={()=>openPro('finance')}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
         {/* v1.5.0 — Settings/Achievements/Goals/Wrapped now live behind hamburger menu (see overlays below) */}
 
@@ -3905,7 +4042,7 @@ export default function App(){
           </button>
         )}
 
-        {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} onBulkScan={()=>{setModal(null);setBulkScannerOpen(true);}} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
+        {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} onBulkScan={()=>{setModal(null); if(proLocked){openPro('scan');return;} setBulkScannerOpen(true);}} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
         {/* v1.15.1 — Bulk barcode scanner. Renders at App level (not inside Modal) so it
             takes over the full screen. onBulkAdd receives RAWG game objects from the queue
             and pushes them all to library in one batch. */}
@@ -3928,6 +4065,8 @@ export default function App(){
           platform='psn'
           existingGames={games}
           lang={lang}
+          freeLeft={importFreeLeft}
+          onUnlock={()=>openPro('import')}
           onClose={()=>setPsnImportOpen(false)}
           onCommit={(newGames)=>{
             if(newGames && newGames.length){
@@ -3948,6 +4087,8 @@ export default function App(){
           platform='steam'
           existingGames={games}
           lang={lang}
+          freeLeft={importFreeLeft}
+          onUnlock={()=>openPro('import')}
           onClose={()=>setSteamImportOpen(false)}
           onCommit={(newGames)=>{
             if(newGames && newGames.length){
@@ -3968,6 +4109,8 @@ export default function App(){
           platform='xbox'
           existingGames={games}
           lang={lang}
+          freeLeft={importFreeLeft}
+          onUnlock={()=>openPro('import')}
           onClose={()=>setXboxImportOpen(false)}
           onCommit={(newGames)=>{
             if(newGames && newGames.length){
@@ -3990,6 +4133,8 @@ export default function App(){
           platform='playnite'
           existingGames={games}
           lang={lang}
+          freeLeft={importFreeLeft}
+          onUnlock={()=>openPro('import')}
           onClose={()=>setPlayniteImportOpen(false)}
           onCommit={(newGames)=>{
             if(newGames && newGames.length){
@@ -4185,16 +4330,26 @@ export default function App(){
                 padding-bottom max() floor so the last setting row clears the Android nav
                 bar even when env(safe-area-inset-bottom) is 0. */}
             <div style={{flex:1,minHeight:0,overflowY:'auto',WebkitOverflowScrolling:'touch',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)'}}>
+              {proGateActive()&&<div style={{padding:'12px 16px 0'}}>
+                <button type='button' onClick={()=>openPro('settings')} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'14px',background:'linear-gradient(135deg,rgba(255,209,102,.10),rgba(167,139,250,.06))',border:'1px solid rgba(255,209,102,.35)',borderRadius:14,cursor:'pointer',fontFamily:"'Syne',sans-serif"}}>
+                  <span style={{fontSize:14,fontWeight:800,color:G.gld}}>⭐ {t(lang,'proName')}</span>
+                  <span style={{fontSize:12,fontWeight:700,color:isPro?G.grn:G.txt}}>{isPro?'✓ '+t(lang,'proSettingsActive'):t(lang,'proUnlockBtn')+' →'}</span>
+                </button>
+              </div>}
               <Settings games={games} setGames={setGames} flash={flash} lang={lang} setLang={setLang} currency={currency} setCurrency={changeCurrency} openImport={openImport} openPsnImport={()=>{setOverlay(null);setPsnImportOpen(true);}} openSteamImport={()=>{setOverlay(null);setSteamImportOpen(true);}} openXboxImport={()=>{setOverlay(null);setXboxImportOpen(true);}} openPlayniteImport={()=>{setOverlay(null);setPlayniteImportOpen(true);}} openImportUndo={()=>{setOverlay(null);setImportUndoOpen(true);}} openPrivacy={()=>setPrivacyOpen(true)} onWipeOpen={()=>setOverlay('wipe')}/>
               <div style={{padding:'0 16px 8px'}}>
                 <div style={{fontSize:10,fontWeight:700,color:G.org,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10,marginTop:4}}>{t(lang,'budget')}</div>
                 <div style={{background:G.card,border:'1px solid '+G.bdr,borderRadius:14,padding:14}}>
-                  <BudgetEditor budget={budget} setBudget={setBudget} games={games} flash={flash} lang={lang}/>
+                  {proLocked
+                    ? <ProTeaser body={t(lang,'proBudgetLocked')} lang={lang} onUnlock={()=>openPro('budget')}/>
+                    : <BudgetEditor budget={budget} setBudget={setBudget} games={games} flash={flash} lang={lang}/>}
                 </div>
               </div>
             </div>
           </div>
         )}
+        {/* v1.18.0 — last in the tree so it sits above the overlays that open it */}
+        {proSheet!=null && <ProSheet lang={lang} isPro={isPro} from={proSheet} onClose={()=>setProSheet(null)} onOwned={()=>setIsPro(true)} flash={flash}/>}
       </div>
     </>
   );

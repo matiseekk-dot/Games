@@ -2,11 +2,23 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies — every other module imports from here.
 
-export const APP_VER  = '1.17.7';
+export const APP_VER  = '1.18.0';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 // v1.17.7 — Umami Cloud website ID (public by design, like the Cloudflare beacon token).
 // Empty = funnel analytics fully off (see src/lib/analytics.js).
 export const UMAMI_WEBSITE_ID = '';
+
+// ─── PS5 Vault Pro (v1.18.0) ──────────────────────────────────────────────
+// One-time in-app product sold through Google Play Billing (Digital Goods API inside
+// the TWA). PRO_ENABLED is the master switch: while false nothing is locked anywhere
+// and no Pro UI shows. Flip it only after (1) the billing Worker is deployed and
+// BILLING_API points at it, (2) an AAB with the Play Billing module is live, and
+// (3) the product PRO_SKU exists and is active in Play Console.
+export const PRO_ENABLED = false;
+export const PRO_SKU = 'pro_lifetime';
+export const BILLING_API = '';           // e.g. https://ps5vault-billing.<account>.workers.dev
+export const FREE_IMPORT_LIMIT = 50;     // imported games (Steam/Xbox/PSN/Playnite) allowed without Pro
+export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.skudev.ps5vault';
 
 // localStorage keys (single source of truth — DON'T inline these)
 export const LS_KEY       = 'ps5vault_v1';
