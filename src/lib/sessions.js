@@ -1,6 +1,6 @@
 // Session aggregation and streak computation.
 // `dayKey` (YYYY-MM-DD in local time) is the join key for everything time-series.
-// Streak math is exact-day-based — gaps of any size break the streak.
+// Streak math is exact-day-based - gaps of any size break the streak.
 import { dayKey } from './util.js';
 
 export function collectSessions(games) {
@@ -16,7 +16,7 @@ export function collectSessions(games) {
         endedAt: s.endedAt,
         hours: s.hours,
         // Use startedAt date as the "session date" (YYYY-MM-DD in LOCAL time).
-        // Critical for heatmap/streak correctness — see dayKey() comment.
+        // Critical for heatmap/streak correctness - see dayKey() comment.
         dateKey: dayKey(s.startedAt),
       });
     });

@@ -1,7 +1,7 @@
 // CSS as a template literal. Imports G to interpolate theme colors at evaluation time
 // (keeps everything in one consistent palette source). Mounted in App.jsx via <style>{CSS}</style>.
 //
-// Heavy file (~390 lines) — extracted from App.jsx in the v1.6 refactor.
+// Heavy file (~390 lines) - extracted from App.jsx in the v1.6 refactor.
 import { G } from './constants.js';
 
 export const CSS = `
@@ -16,24 +16,24 @@ export const CSS = `
 @keyframes tabSlide{ from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)} }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-/* v1.13.11 — html/body/#root locked to the visible viewport. We use position:fixed on
+/* v1.13.11 - html/body/#root locked to the visible viewport. We use position:fixed on
    .app below to anchor it; html/body still need 100% so they don't collapse to 0 when
    .app is taken out of normal flow. overflow:hidden on body kills any chance of the
    page itself scrolling (only .scr/.lst should). */
 html,body,#root{height:100%;width:100%;overflow:hidden;max-width:100%}
 html{-webkit-text-size-adjust:100%}
-/* v1.13.2 — A3 fix: disable pull-to-refresh on body. Without this, swipe-down on
+/* v1.13.2 - A3 fix: disable pull-to-refresh on body. Without this, swipe-down on
    any modal at scroll-top (or any page when scrolled to top) triggers browser's
    pull-to-refresh, reloading the app and losing in-flight modal data. */
 body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-/* v1.13.12 — Definitive Android-edge-to-edge fix. v1.13.11 used position:fixed inset:0,
+/* v1.13.12 - Definitive Android-edge-to-edge fix. v1.13.11 used position:fixed inset:0,
    but in Android 15+ (and any TWA running edge-to-edge), the WebView's "viewport" extends
-   *behind* the system nav bar — so bottom:0 anchors .app to the bottom of the screen,
+   *behind* the system nav bar - so bottom:0 anchors .app to the bottom of the screen,
    meaning the last ~50-100px of any scroll surface lives behind the nav bar where the user
    can swipe but can't see. The padding-bottom floor on .scr/.lst tried to compensate, but
    3-button nav bars on high-density displays (~144px on 3x) and persistent gesture pills
    on some OEMs (Samsung One UI) push past anything the floor can guarantee.
-   Fix: anchor .app's bottom to env(safe-area-inset-bottom) — i.e. shift .app's bottom edge
+   Fix: anchor .app's bottom to env(safe-area-inset-bottom) - i.e. shift .app's bottom edge
    *up* by the system-bar height, so .app's visible rectangle never extends behind it. iOS
    Safari/PWA does the same naturally because env() returns the home-indicator inset; Android
    WebView in TWA (with viewport-fit=cover, which we have) returns the nav-bar height for the
@@ -41,17 +41,17 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
    0px → behavior identical to v1.13.11 (still works on non-edge-to-edge devices). */
 .app{position:fixed;top:0;right:0;bottom:env(safe-area-inset-bottom,0px);left:0;display:flex;flex-direction:column;max-width:100%}
 
-/* v1.13.6 — flex-shrink:0 so header keeps its full height even when .app is fixed-height. */
+/* v1.13.6 - flex-shrink:0 so header keeps its full height even when .app is fixed-height. */
 .hdr{flex-shrink:0;overflow:hidden;padding-top:calc(env(safe-area-inset-top,0px) + 44px);padding-bottom:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .htop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
 .logo{display:flex;align-items:center;gap:10px;min-width:0}
 .lico{width:34px;height:34px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,${G.blu},#0060FF);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#fff;box-shadow:0 0 12px rgba(0,212,255,.35)}
 .lnm{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;letter-spacing:.1em;white-space:nowrap}
 .lsb{font-size:10px;color:${G.dim};letter-spacing:.2em;text-transform:uppercase}
-/* v1.13.2 — A2 fix: padding 0 14px → 4px 14px + line-height:1.4 so descenders
+/* v1.13.2 - A2 fix: padding 0 14px → 4px 14px + line-height:1.4 so descenders
    ("g" in "grę"/"game") are not clipped. Issue: tightly-fitted flex container with
    default line-height was cropping the lower portion of descender glyphs. */
-/* v1.13.2 — A2 fix: replaced fixed height:44px + padding:4px with min-height:48 +
+/* v1.13.2 - A2 fix: replaced fixed height:44px + padding:4px with min-height:48 +
    padding:13px 14px 14px. Existing 4px top/bottom padding wasn't enough room for
    descenders in "grę"/"game" (letters g, j, p, q, y) at font-size:14 + line-height:1.4.
    New layout: 14px font * 1.4 lh = 19.6px content, 13+14 padding = 27px, total ≥48px. */
@@ -59,17 +59,17 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .abtn:active{opacity:.7;transform:scale(.95)}
 
 .tabs{display:flex;gap:2px;background:${G.card};border:1px solid ${G.bdr};border-radius:13px;padding:4px}
-/* v1.13.2 — A1 fix: bumped tab font from 9px → 11px (+22%) and min-height 42→46 to better
+/* v1.13.2 - A1 fix: bumped tab font from 9px → 11px (+22%) and min-height 42→46 to better
    match Material Design 14sp/48dp recommendation. Cannot hit 14sp exactly with 5 tabs on
    narrow screens (would clip "Premiery"/"Releases"), but +22% font is significant readability win. */
 .tab{flex:1;min-height:46px;padding:8px 2px;border:none;border-radius:9px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;position:relative;line-height:1.3;transition:all .18s}
 .tab.on{background:rgba(0,212,255,.15);color:${G.blu}}
 .tab-dot{position:absolute;top:5px;right:4px;width:5px;height:5px;border-radius:50%;background:${G.org};animation:pulse 1.5s infinite}
 
-/* v1.13.6 — min-height:0 unlocks flex-child overflow scroll (default min-height:auto blocks it).
-   v1.13.7 — Android TWA: env(safe-area-inset-bottom) returns 0 (no edge-to-edge), so fixed 24px
+/* v1.13.6 - min-height:0 unlocks flex-child overflow scroll (default min-height:auto blocks it).
+   v1.13.7 - Android TWA: env(safe-area-inset-bottom) returns 0 (no edge-to-edge), so fixed 24px
    padding leaves last ~50-70px of content under the system nav bar. max(...,80px) guarantees the
-   content always clears the nav bar — on iPhone PWA, env() is non-zero so the calc-branch wins. */
+   content always clears the nav bar - on iPhone PWA, env() is non-zero so the calc-branch wins. */
 .scr{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px);max-width:100%;animation:tabSlide .2s ease;overscroll-behavior:contain}
 
 .hcard{background:${G.card};border:1px solid ${G.bdr};border-radius:16px;padding:16px;margin-bottom:12px;overflow:hidden;max-width:100%;animation:fadeIn .3s ease}
@@ -99,7 +99,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .cnt-btn{padding:8px 10px;border-radius:9px;border:1px solid ${G.bdr};background:${G.card2};color:${G.txt};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex:1;text-align:center}
 .cnt-btn-primary{background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;border-color:transparent}
 .cnt-btn-success{background:linear-gradient(135deg,${G.grn},#00a040);color:#000;border-color:transparent;font-weight:700}
-/* v1.13.6 — flex-shrink:0 on all .app's row-children (search/toolbar/chips/sort) so .lst
+/* v1.13.6 - flex-shrink:0 on all .app's row-children (search/toolbar/chips/sort) so .lst
    gets the full remaining flex:1 height instead of every row being squeezed proportionally. */
 .sw{flex-shrink:0;position:relative;padding:10px 16px 6px}
 .si{display:block;width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;padding:11px 12px 11px 36px;color:${G.txt};font-family:'Syne',sans-serif;font-size:16px;outline:none;-webkit-appearance:none}
@@ -117,7 +117,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .sort-lbl{font-size:10px;color:${G.dim};font-weight:600;white-space:nowrap;flex-shrink:0}
 .sort-btn{padding:5px 10px;border-radius:16px;border:1px solid ${G.bdr};background:${G.card};color:${G.dim};font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
 .sort-btn.on{border-color:${G.pur};color:${G.pur};background:rgba(167,139,250,.1)}
-/* v1.13.15 — bumped z-index from 19999 to 299999 so modals using this class
+/* v1.13.15 - bumped z-index from 19999 to 299999 so modals using this class
    (Privacy, Rating quick-rate) sit *above* .bs-ovr (Settings overlay, 199999).
    Previously these modals opened beneath the opaque Settings backdrop and were
    completely hidden until the user closed Settings. */
@@ -128,8 +128,8 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .rate-star{width:42px;height:42px;border-radius:10px;border:1px solid ${G.bdr};background:${G.card};color:${G.txt};font-family:'Orbitron',monospace;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
 .rate-star.on{border-color:${G.gld};background:rgba(255,209,102,.15);color:${G.gld}}
 .rate-btns{display:flex;gap:8px}
-/* v1.13.6 — min-height:0 unlocks flex-child overflow scroll (same as .scr).
-   v1.13.7 — same nav-bar clearance as .scr. */
+/* v1.13.6 - min-height:0 unlocks flex-child overflow scroll (same as .scr).
+   v1.13.7 - same nav-bar clearance as .scr. */
 .lst{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:4px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)}
 .gc{width:100%;background:${G.card};border:1px solid ${G.bdr};border-radius:14px;margin-bottom:9px;display:flex;align-items:stretch;cursor:pointer;position:relative;overflow:hidden;animation:fadeIn .25s ease;transition:border-color .15s}
 .gc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c);opacity:.75;z-index:1}
@@ -193,7 +193,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .fkv{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--c);line-height:1;margin-bottom:4px}
 .fkl{font-size:9px;color:${G.dim};font-weight:600;letter-spacing:.07em;text-transform:uppercase}
 .ins-card{border-radius:13px;padding:14px;margin-bottom:10px;border:1px solid transparent;animation:fadeIn .35s ease}
-/* v1.13.13 — same edge-to-edge fix; .ovr is the dimmed backdrop+container for the
+/* v1.13.13 - same edge-to-edge fix; .ovr is the dimmed backdrop+container for the
    game-detail modal which slides up from the bottom. Anchoring its bottom to env() makes
    the modal's slide-up endpoint sit above the nav bar. */
 .ovr{position:fixed;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);background:rgba(4,6,14,.9);z-index:9999;display:flex;align-items:flex-end}
@@ -249,7 +249,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .toast-ok{background:${G.grn};color:#000}
 .toast-err{background:${G.red};color:#fff}
 .toast-info{background:${G.blu};color:#000}
-/* v1.7.0 — Achievement unlock banner. Top-of-screen, dismissible, gold accent for rare. */
+/* v1.7.0 - Achievement unlock banner. Top-of-screen, dismissible, gold accent for rare. */
 .ach-banner{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;right:12px;z-index:99998;display:flex;align-items:center;gap:12px;padding:12px 14px;background:linear-gradient(135deg,${G.card2},${G.card});border:1px solid ${G.blu};border-radius:14px;box-shadow:0 8px 32px rgba(0,212,255,.35),0 0 0 1px rgba(0,212,255,.2) inset;animation:achBannerIn .35s cubic-bezier(.2,.7,.3,1.2);cursor:pointer;max-width:480px;margin:0 auto}
 .ach-banner.rare{border-color:${G.gld};box-shadow:0 8px 32px rgba(255,209,102,.4),0 0 0 1px rgba(255,209,102,.25) inset}
 .ach-banner-ico{font-size:28px;flex-shrink:0;filter:drop-shadow(0 0 12px rgba(0,212,255,.5))}
@@ -262,7 +262,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .ach-banner-x{flex-shrink:0;width:28px;height:28px;border:none;border-radius:50%;background:rgba(255,255,255,.06);color:${G.dim};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .ach-banner-x:active{transform:scale(.92)}
 @keyframes achBannerIn{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
-/* v1.13.15 — same z-index bump as .rate-modal (was 19999, < .bs-ovr's 199999, so
+/* v1.13.15 - same z-index bump as .rate-modal (was 19999, < .bs-ovr's 199999, so
    wipe-data confirmation invoked from Settings was hidden). Now sits at 299999
    above all overlays. Bottom anchored to safe-area for nav-bar parity. */
 .confirm-ovr{position:fixed;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);background:rgba(4,6,14,.88);z-index:299999;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -282,7 +282,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .ob-feat-ico{font-size:20px;flex-shrink:0;width:28px;text-align:center}
 .ob-feat-title{font-size:13px;font-weight:700;margin-bottom:1px}
 .ob-feat-desc{font-size:11px;color:${G.dim}}
-/* v1.10.0 — Onboarding flip: features carousel (single card auto-advance) */
+/* v1.10.0 - Onboarding flip: features carousel (single card auto-advance) */
 .ob-carousel{position:relative}
 .ob-carousel-skip{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);right:20px;background:transparent;border:none;color:${G.dim};font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px;text-decoration:underline;text-underline-offset:3px}
 .ob-carousel-card{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:320px;animation:obCarFade .4s ease}
@@ -302,7 +302,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .cur-btn-code{font-size:11px;font-weight:700;letter-spacing:.08em}
 .cur-btn-name{font-size:10px;color:${G.dim};line-height:1.2;text-align:center}
 .cur-btn.on .cur-btn-code{color:${G.blu}}
-/* v1.7.0 onboard step 3 — demo data prompt */
+/* v1.7.0 onboard step 3 - demo data prompt */
 .ob-demo-list{width:100%;max-width:320px;background:${G.card};border:1px solid ${G.bdr};border-radius:12px;padding:14px 16px;margin-bottom:14px}
 .ob-demo-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-family:'Syne',sans-serif;font-size:13px;color:${G.txt}}
 .ob-demo-bullet{color:${G.blu};font-weight:900}
@@ -330,18 +330,18 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .flow-step:last-child{border-bottom:none}
 .flow-ico{font-size:22px;flex-shrink:0;width:32px;text-align:center}
 
-/* v1.3.0 — Barcode scanner */
+/* v1.3.0 - Barcode scanner */
 .rscan{flex-shrink:0;width:38px;height:38px;border:1px solid ${G.blu};border-radius:9px;background:rgba(0,212,255,.08);color:${G.blu};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .12s,background .12s}
 .rscan:active{transform:scale(.92);background:rgba(0,212,255,.2)}
-/* v1.4.0 — Quick add accordion */
+/* v1.4.0 - Quick add accordion */
 .acc-btn{width:100%;padding:11px 14px;margin:6px 0 12px;border:1px dashed ${G.bdr};border-radius:10px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:color .15s,border-color .15s,background .15s}
 .acc-btn:hover,.acc-btn:active{color:${G.blu};border-color:${G.blu};background:rgba(0,212,255,.04)}
 .acc-body{animation:fadeIn .2s ease}
 .fhnt{font-size:10px;color:${G.dim};margin-top:4px;line-height:1.4}
-/* v1.13.13 — Same Android-edge-to-edge fix as .app (v1.13.12): anchor bottom to
+/* v1.13.13 - Same Android-edge-to-edge fix as .app (v1.13.12): anchor bottom to
    safe-area-inset-bottom so the overlay (Settings, Achievements, Wrapped, Recommendations)
-   doesn't extend behind the system nav bar. Without this, Settings — the only overlay with
-   a flex:1 inner scroller — lost its last ~50-150px to the nav bar. This was the
+   doesn't extend behind the system nav bar. Without this, Settings - the only overlay with
+   a flex:1 inner scroller - lost its last ~50-150px to the nav bar. This was the
    "scroll doesn't reach the end in Ustawienia" report from production. */
 .bs-ovr{position:fixed;top:0;right:0;bottom:env(safe-area-inset-bottom,0px);left:0;background:#000;z-index:199999;display:flex;flex-direction:column;animation:fadeIn .18s ease;overscroll-behavior:contain}
 .bs-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(12px,env(safe-area-inset-top,0px)) 14px 10px;background:${G.bg};border-bottom:1px solid ${G.bdr};padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
@@ -382,23 +382,23 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .bs-retry:active{opacity:.7}
 .bs-results-h{font-size:9px;font-weight:700;color:${G.dim};letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px}
 
-/* v1.5.0 — Hamburger button */
-/* v1.13.2 — A1 fix: bumped hamburger 44→48 to exactly hit Material 48dp tap target. */
+/* v1.5.0 - Hamburger button */
+/* v1.13.2 - A1 fix: bumped hamburger 44→48 to exactly hit Material 48dp tap target. */
 .hmb{flex-shrink:0;width:48px;height:48px;border:1px solid ${G.bdr};border-radius:10px;background:${G.card};color:${G.txt};font-size:22px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:background .15s;position:relative}
-/* v1.8.0 — red dot trigger on hamburger when any menu section has unseen content */
+/* v1.8.0 - red dot trigger on hamburger when any menu section has unseen content */
 .hmb-pulse{border-color:rgba(255,77,109,.4)}
 .hmb-dot{position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:50%;background:${G.red};box-shadow:0 0 0 2px ${G.card},0 0 8px rgba(255,77,109,.6);animation:hmbDotPulse 2s ease-in-out infinite}
 @keyframes hmbDotPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.85}}
 .hmb:active{background:${G.card2};opacity:.8}
 
-/* v1.5.0 — Hamburger menu drawer (bottom sheet style) */
+/* v1.5.0 - Hamburger menu drawer (bottom sheet style) */
 .menu-ovr{align-items:flex-end}
 .menu-pn{width:100%;background:${G.card2};border-top:1px solid ${G.bdr};border-radius:20px 20px 0 0;padding:18px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px);max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .22s ease}
 .menu-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
 .menu-row{width:100%;display:flex;align-items:center;gap:14px;padding:14px 14px;background:${G.bg};border:1px solid ${G.bdr};border-radius:12px;cursor:pointer;font-family:'Syne',sans-serif;text-align:left;margin-bottom:8px;transition:border-color .15s,background .15s}
 .menu-row:hover,.menu-row:active{border-color:${G.blu};background:rgba(0,212,255,.04)}
 .menu-ico{font-size:24px;flex-shrink:0;width:32px;text-align:center;line-height:1;position:relative;display:inline-block}
-/* v1.8.0 — per-row red dot in hamburger menu (positioned over the icon) */
+/* v1.8.0 - per-row red dot in hamburger menu (positioned over the icon) */
 .menu-row-dot{position:absolute;top:-2px;right:-4px;width:9px;height:9px;border-radius:50%;background:${G.red};box-shadow:0 0 0 2px ${G.bg}}
 .menu-body{flex:1;min-width:0}
 .menu-title{font-size:14px;font-weight:700;color:${G.txt};margin-bottom:2px}
@@ -406,7 +406,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .menu-badge{flex-shrink:0;font-size:11px;font-weight:700;color:${G.blu};padding:3px 8px;border-radius:10px;background:rgba(0,212,255,.12);font-family:'Orbitron',monospace;letter-spacing:.04em}
 .menu-arrow{flex-shrink:0;font-size:20px;color:${G.dim};margin-left:4px}
 
-/* v1.5.0 — Achievements grid */
+/* v1.5.0 - Achievements grid */
 .ach-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)}
 .ach-sub{font-size:12px;color:${G.dim};margin-bottom:14px;padding:10px 12px;background:${G.bg};border:1px solid ${G.bdr};border-radius:10px;text-align:center;font-family:'Orbitron',monospace;letter-spacing:.04em}
 .ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -421,7 +421,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .ach-bar-fill{height:100%;background:${G.blu};transition:width .3s ease}
 .ach-progress{font-size:10px;font-weight:600;color:${G.dim};text-align:center;font-family:'Orbitron',monospace;letter-spacing:.04em}
 
-/* v1.5.0 — Goals manager + Home card */
+/* v1.5.0 - Goals manager + Home card */
 .goals-h{font-size:11px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin:8px 0 8px}
 .goals-empty{padding:24px 16px;text-align:center;color:${G.dim}}
 .goals-empty-t{font-size:13px;font-weight:700;color:${G.txt};margin-bottom:4px}
@@ -454,7 +454,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .goal-mini-title{font-size:12px;font-weight:600;color:${G.txt};line-height:1.3}
 .goal-mini-meta{font-size:10px;color:${G.dim};font-family:'Orbitron',monospace;letter-spacing:.04em}
 
-/* v1.5.0 — Year-in-Review */
+/* v1.5.0 - Year-in-Review */
 .wr-pn{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)}
 .wr-years{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .wr-years-lbl{font-size:10px;font-weight:700;color:${G.dim};letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
@@ -482,7 +482,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .wr-row-meta{font-size:11px;color:${G.dim};margin-top:2px}
 .wr-genre-name{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:${G.gld};text-align:center;letter-spacing:-.02em}
 .wr-genre-meta{font-size:11px;color:${G.dim};text-align:center;margin-top:4px}
-/* v1.15.2 — Two-button share row. Image (primary, accent gradient) + text (secondary,
+/* v1.15.2 - Two-button share row. Image (primary, accent gradient) + text (secondary,
    outlined). Stacks on narrow screens, side-by-side at >340px. The image button is
    slightly more visually prominent because it's the share path that drives virality. */
 .wr-share-row{display:flex;gap:8px;width:100%;margin-top:18px;flex-wrap:wrap}
@@ -493,7 +493,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .wr-share-btn-img:active{box-shadow:0 2px 12px rgba(0,212,255,.25)}
 .wr-share-btn-txt{background:transparent;color:${G.txt};border:1px solid ${G.bdr}}
 .wr-share-btn-txt:active{background:${G.card}}
-/* v1.9.0 — Recommendations engine UI */
+/* v1.9.0 - Recommendations engine UI */
 .rec-home-card{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-top:14px;background:linear-gradient(135deg,rgba(167,139,250,.10),rgba(0,212,255,.06));border:1px solid rgba(167,139,250,.3);border-radius:14px;cursor:pointer;transition:transform .15s,border-color .15s}
 .rec-home-card:active{transform:scale(.99)}
 .rec-home-ico{font-size:24px;flex-shrink:0;width:36px;text-align:center;filter:drop-shadow(0 0 10px rgba(167,139,250,.5))}
@@ -527,7 +527,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .rec-add:active{transform:scale(.97);background:rgba(0,212,255,.18)}
 .rec-explore{display:block;text-align:center;margin-top:18px;padding:11px;color:${G.dim};font-family:'Syne',sans-serif;font-size:12px;font-weight:600;text-decoration:none;border-top:1px solid ${G.bdr};transition:color .15s}
 .rec-explore:active{color:${G.txt}}
-/* v1.11.1 — Wipe-all-data confirm modal + danger row styling */
+/* v1.11.1 - Wipe-all-data confirm modal + danger row styling */
 .set-row-danger{border-color:rgba(255,77,109,.25)}
 .set-row-danger .set-row-title{color:${G.red}}
 .wipe-box{max-width:340px}
@@ -536,31 +536,31 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .wipe-input:focus{border-color:${G.red};box-shadow:0 0 0 3px rgba(255,77,109,.15)}
 .wipe-yes.disabled{background:${G.bdr};color:${G.dim};cursor:not-allowed;opacity:.6}
 .wipe-yes.disabled:active{transform:none}
-/* v1.13.1 — Refresh-from-RAWG button (Modal edit only) */
+/* v1.13.1 - Refresh-from-RAWG button (Modal edit only) */
 .rawg-refresh{margin-top:8px;width:100%;padding:10px 12px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:9px;color:${G.blu};font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
 .rawg-refresh:active{transform:scale(.99);background:rgba(0,212,255,.16)}
 .rawg-refresh:disabled{opacity:.6;cursor:not-allowed}
 .rawg-refresh:disabled:active{transform:none}
 .rawg-refresh-spin{width:13px;height:13px;border:2px solid rgba(0,212,255,.3);border-top-color:${G.blu};border-radius:50%;animation:spin .8s linear infinite}
 
-/* v1.13.14 — Settings panel inner padding only — NO overflow / scroll. The actual
+/* v1.13.14 - Settings panel inner padding only - NO overflow / scroll. The actual
    scroll container is the outer flex:1 div in App.jsx around <Settings>. Wrapping
    Settings in another overflow-y:auto element broke Android touch handling
    (WebView routes touch to first overflow-y:auto ancestor and eats it even if that
    element doesn't actually overflow). */
 .set-pn{padding:8px 16px 0;max-width:100%}
 
-/* v1.14.0 — Disclaimer shown under the Finance KPI grid when the user has at least
+/* v1.14.0 - Disclaimer shown under the Finance KPI grid when the user has at least
    one subscription game. Explains why total spent / cost-per-hour exclude those games.
    Styled as a low-emphasis info pill so it doesn't compete with the KPIs above. */
 .cph-note{font-size:11px;color:${G.dim};line-height:1.5;padding:8px 12px;margin:0 0 12px;background:rgba(123,138,173,.06);border:1px solid ${G.bdr};border-radius:10px;display:flex;align-items:center;gap:6px}
 
-/* v1.14.1 demo banner styles removed in v1.15.0 — banner replaced by setup wizard. */
+/* v1.14.1 demo banner styles removed in v1.15.0 - banner replaced by setup wizard. */
 
-/* v1.15.1 — Multi-EAN bulk scan UI.
+/* v1.15.1 - Multi-EAN bulk scan UI.
    Layout: header counter + camera + queue strip below camera + Done button.
    Queue strip is horizontally scrollable so the user can see what was just scanned
-   without taking the camera off the next box. Cards are 80×96 thumbnails — small
+   without taking the camera off the next box. Cards are 80×96 thumbnails - small
    enough to fit 4-5 on a 375px viewport, big enough for the cover art to be
    recognizable. */
 .bs-bulk-queue{flex-shrink:0;display:flex;gap:8px;padding:10px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:${G.card};border-bottom:1px solid ${G.bdr};min-height:120px}
@@ -575,22 +575,22 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .bs-bulk-title{font-size:10px;color:${G.txt};text-align:center;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;max-width:80px}
 .bs-bulk-card-err .bs-bulk-title{color:${G.dim}}
 
-/* Transient toast overlaid on the camera viewport — bottom-center, 3 color variants. */
+/* Transient toast overlaid on the camera viewport - bottom-center, 3 color variants. */
 .bs-bulk-flash{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);padding:8px 16px;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;animation:scaleIn .18s ease;max-width:calc(100% - 32px);text-align:center;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bs-bulk-flash-ok{background:rgba(57,255,110,.95);color:#000}
 .bs-bulk-flash-err{background:rgba(255,159,28,.95);color:#000}
 .bs-bulk-flash-dup{background:rgba(167,139,250,.95);color:#000}
 
-/* v1.15.0 — small step counter chip rendered top-right on wizard steps 2-4. Helps
+/* v1.15.0 - small step counter chip rendered top-right on wizard steps 2-4. Helps
    users see where they are in the flow ("Step 2 of 4") so they don't feel like the
-   wizard is going on forever. Step 1 (welcome) doesn't show it — single-CTA screens
+   wizard is going on forever. Step 1 (welcome) doesn't show it - single-CTA screens
    should feel inviting, not procedural. */
 .ob-step-chip{position:absolute;top:max(16px,env(safe-area-inset-top,0px));right:16px;padding:6px 12px;background:rgba(123,138,173,.12);border:1px solid ${G.bdr};border-radius:999px;font-size:10px;font-weight:600;color:${G.dim};letter-spacing:.04em;text-transform:uppercase}
 
-/* v1.14.1 — Floating action button. Material 3 spec: 56dp container, 24dp ripple area,
+/* v1.14.1 - Floating action button. Material 3 spec: 56dp container, 24dp ripple area,
    bottom-right corner with 16dp screen edge inset. We use position:fixed (consistent
    with other overlays) plus env(safe-area-inset-bottom) to avoid the Android nav bar.
-   Extended FAB variant: includes a label next to the icon for max discoverability —
+   Extended FAB variant: includes a label next to the icon for max discoverability -
    per Material guidelines, that's the right call when the action is the primary screen
    action. Solid accent gradient + soft shadow so it visually pops above content cards. */
 .fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 16px);z-index:99998;display:flex;align-items:center;gap:8px;padding:14px 20px 14px 16px;background:linear-gradient(135deg,${G.blu},#0060FF);color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:.02em;border:none;border-radius:28px;box-shadow:0 4px 14px rgba(0,212,255,.4),0 2px 6px rgba(0,0,0,.3);cursor:pointer;animation:scaleIn .22s ease;transition:transform .12s,box-shadow .15s}
@@ -598,9 +598,9 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .fab-ico{font-size:22px;line-height:1;font-weight:900}
 .fab-lbl{white-space:nowrap}
 
-/* v1.13.15 — ImportModal styles. .mbg/.mwr/.mhd/.mtt/.mcb/.mbd were referenced in
+/* v1.13.15 - ImportModal styles. .mbg/.mwr/.mhd/.mtt/.mcb/.mbd were referenced in
    App.jsx (function ImportModal) since the v1.2.0 refactor but never had matching
-   CSS rules — meaning every time a user clicked "Importuj dane" in Settings, the
+   CSS rules - meaning every time a user clicked "Importuj dane" in Settings, the
    modal rendered as an unstyled inline-flow div with no positioning, no background,
    no z-index. Visually nothing happened, hence the user report "nic się nie dzieje".
    z-index:299999 sits above .bs-ovr (Settings, 199999) so the modal is visible
@@ -613,7 +613,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .mcb:active{background:${G.card}}
 .mbd{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px}
 
-/* v1.13.9 — Landscape on phones: portrait .hdr (status-bar inset + 44 + ~46 tabs + 12 + 14 ≈ 130-180px)
+/* v1.13.9 - Landscape on phones: portrait .hdr (status-bar inset + 44 + ~46 tabs + 12 + 14 ≈ 130-180px)
    eats ~50% of a 375h screen, leaving the scroll surface tiny and effectively useless. Compress
    the top inset and gaps in landscape so .scr/.lst gets a usable share of the viewport. Threshold
    max-height:500px catches typical phone landscape (375-414h) without affecting tablets. */

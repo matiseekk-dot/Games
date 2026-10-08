@@ -5,18 +5,18 @@
 // recent regardless of when the demo is loaded. Every game carries `_demo:true` so
 // Settings can selectively delete only the demos and leave user-added games alone.
 //
-// Composition (carefully chosen — see CHANGELOG-v1.7.0.md):
+// Composition (carefully chosen - see CHANGELOG-v1.7.0.md):
 // - Status mix: 2× ukonczone, 2× gram, 1× planuje
 // - Genres: Action, RPG, Sport, Action, Platformer (4 unique → motivates 5th for genre_hopper)
 // - Hours: 0, 35, 50, 120, 200 (showcases all hour-formatting cases)
 // - Ratings: null + 7,9,9,10 (one unrated → motivates Critic achievement)
-// - Money: 80–330 (~1050 total to populate Finance tab)
+// - Money: 80-330 (~1050 total to populate Finance tab)
 // - Active days: rolling 5-day streak via FC + GTA recent sessions
 // - Years: spans 2 calendar years → Year-in-Review picker has 2+ entries
 // - Achievements unlocked: ~5 of 19 (collector_1, finisher_1, trophy_1, marathoner, sprinter)
 // - rawgId set on 3 of 5 games (Spider-Man 2 / Elden Ring / GTA V) so the v1.10.0
 //   demo onboarding can showcase Recommendations immediately. FC 25 + Crash 4 left
-//   as null (their RAWG IDs are uncertain — better to skip than hardcode wrong ones
+//   as null (their RAWG IDs are uncertain - better to skip than hardcode wrong ones
 //   and waste cache slots on 404s). Three RAWG-id seeds is enough to populate both
 //   tracks of Recommendations (top-rated: 9/10/9 ratings, completed: SP2 + ER).
 //
@@ -57,7 +57,7 @@ export function makeDemoGames() {
       priceBought: 330, priceSold: null, storeBought: 'PS Store',
       targetHours: 30, extraSpend: '',
       platform: 'PS5', platinum: false,
-      // v1.10.0 — RAWG ID for Recommendations seed. Verified against rawg.io public catalog.
+      // v1.10.0 - RAWG ID for Recommendations seed. Verified against rawg.io public catalog.
       rawgId: 58175,
       lastPlayed: daysAgoISO(120),
       completedAt: daysAgoISO(120),

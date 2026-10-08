@@ -1,13 +1,13 @@
-// v1.16.1 — Parser for Steam library exports (paste flow).
+// v1.16.1 - Parser for Steam library exports (paste flow).
 //
 // Steam Web API is CORS-blocked from browsers, so we go via paste. User opens
 // https://steamcommunity.com/id/{username}/games?tab=all in their browser, gets
-// the rgGames JS array (multiple paths — see below), pastes into our app.
+// the rgGames JS array (multiple paths - see below), pastes into our app.
 //
 // Accepted input formats (most-permissive-first):
-//   1. `var rgGames = [{...}, ...];` — direct from page source (Ctrl+U)
-//   2. Raw JSON array `[{...}, ...]` — user extracted just the array
-//   3. JSON object `{ rgGames: [...] }` — wrapped form
+//   1. `var rgGames = [{...}, ...];` - direct from page source (Ctrl+U)
+//   2. Raw JSON array `[{...}, ...]` - user extracted just the array
+//   3. JSON object `{ rgGames: [...] }` - wrapped form
 //   4. Newline-separated game titles (last-resort fallback for users who
 //      gave up on JSON and just typed game names)
 //
@@ -61,11 +61,11 @@ function normalizeSteamGame(g) {
 // Public entry. Returns { format, count, rows }.
 //
 // format: 'js' | 'json-array' | 'json-object' | 'plaintext' | 'unknown'
-//   js          — parsed from "var rgGames = [...]" syntax
-//   json-array  — parsed from raw "[...]"
-//   json-object — parsed from "{ rgGames: [...] }" or "{ games: [...] }"
-//   plaintext   — fallback: newline-separated title list (no hours/etc)
-//   unknown     — couldn't parse
+//   js          - parsed from "var rgGames = [...]" syntax
+//   json-array  - parsed from raw "[...]"
+//   json-object - parsed from "{ rgGames: [...] }" or "{ games: [...] }"
+//   plaintext   - fallback: newline-separated title list (no hours/etc)
+//   unknown     - couldn't parse
 //
 // rows: array of { title, platform:'PC', hours, completionPct:null, lastPlayed, raw }
 export function parseSteamPaste(text) {
@@ -102,7 +102,7 @@ export function parseSteamPaste(text) {
   }
 
   // 4. Fallback: newline-separated titles. Last-resort for users who couldn't
-  //    figure out JSON extraction. Titles only — hours/platform default.
+  //    figure out JSON extraction. Titles only - hours/platform default.
   const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0 && l.length < 200);
   if (lines.length > 0 && lines.length < 5000) {
     // Reject if any line looks like JSON garbage (common when user pasted partial)

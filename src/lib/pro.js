@@ -1,4 +1,4 @@
-// v1.18.0 — PS5 Vault Pro: one-time purchase through Google Play Billing.
+// v1.18.0 - PS5 Vault Pro: one-time purchase through Google Play Billing.
 //
 // Inside the TWA, Chrome exposes the Digital Goods API (catalog + entitlements) and the
 // Payment Request API (checkout). The Digital Goods API has NO way to acknowledge a

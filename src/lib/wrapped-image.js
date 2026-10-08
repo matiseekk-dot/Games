@@ -1,14 +1,14 @@
-// v1.15.2 — Wrapped share image generator.
+// v1.15.2 - Wrapped share image generator.
 // Renders a 1080×1920 (9:16, Instagram Story / TikTok) PNG summarizing the user's
 // year recap. Pure Canvas 2D, no DOM rasterization (html2canvas was considered and
 // rejected: 60 KB extra bundle for one screen, plus rendering quirks with our flex
-// layouts). The drawback: we re-implement the layout in canvas calls — that's fine
+// layouts). The drawback: we re-implement the layout in canvas calls - that's fine
 // because the share image is a fixed-format poster, not a live rendering of the UI.
 //
 // Design tone matches PS5 Vault brand:
 //   - Background: deep blue-black gradient (G.bg → midnight blue)
 //   - Accent: Orbitron font for headers, Syne for body (web fonts must be ready
-//     before rendering — we await document.fonts.ready)
+//     before rendering - we await document.fonts.ready)
 //   - Hero stat is the headline number (most-played hours), with secondary stats
 //     in a 3-column row underneath
 //
@@ -16,7 +16,7 @@
 
 import { hoursWord, gamesWord, platynaWord } from './format.js';
 
-// Brand colors duplicated here (avoids importing the full G object — small win,
+// Brand colors duplicated here (avoids importing the full G object - small win,
 // but keeps this module self-contained and free to be tree-shaken if someone strips
 // the share feature later).
 const COL = {
@@ -34,7 +34,7 @@ const COL = {
   org:'#FF9F1C',
 };
 
-// Fixed canvas size — 9:16 portrait, native Story / Reels resolution.
+// Fixed canvas size - 9:16 portrait, native Story / Reels resolution.
 const W = 1080;
 const H = 1920;
 
@@ -46,7 +46,7 @@ async function ensureFonts() {
   try {
     if (document.fonts && document.fonts.ready) {
       await document.fonts.ready;
-      // Belt + suspenders — explicit load() for the specific weights we'll draw.
+      // Belt + suspenders - explicit load() for the specific weights we'll draw.
       // load() is a no-op if already loaded; on cold start it awaits the actual fetch.
       await Promise.all([
         document.fonts.load("900 96px 'Orbitron'"),
@@ -69,7 +69,7 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Wrap text within maxWidth, returns array of lines. Greedy — splits on spaces only.
+// Wrap text within maxWidth, returns array of lines. Greedy - splits on spaces only.
 function wrapText(ctx, text, maxWidth) {
   const words = (text || '').split(/\s+/);
   const lines = [];
@@ -88,7 +88,7 @@ function wrapText(ctx, text, maxWidth) {
 }
 
 // Optional: load top-game cover into an HTMLImageElement. Skipped silently on CORS
-// failure (some RAWG image hosts don't set CORS) — share image just won't have a cover
+// failure (some RAWG image hosts don't set CORS) - share image just won't have a cover
 // in that case. Returns null on any failure.
 async function loadCover(url) {
   if (!url) return null;
@@ -100,7 +100,7 @@ async function loadCover(url) {
       img.onload = () => resolve(img);
       img.onerror = () => resolve(null);
       img.src = url;
-      // Hard timeout — if the network stalls, don't hold up the whole share flow
+      // Hard timeout - if the network stalls, don't hold up the whole share flow
       setTimeout(() => resolve(null), 4000);
     });
   } catch {
@@ -150,14 +150,14 @@ export async function buildWrappedImage(review, year, lang) {
   ctx.fillStyle = COL.blu;
   ctx.fillText('PS5 VAULT', W / 2, 130);
 
-  // i18n title — language-aware
+  // i18n title - language-aware
   ctx.font = "700 38px 'Syne', Arial, sans-serif";
   ctx.fillStyle = COL.dim;
   const titleByLang = { pl: `MÓJ ${year} W GRACH`, en: `MY ${year} IN GAMES`, es: `MI ${year} EN JUEGOS` };
   ctx.fillText(titleByLang[lang] || titleByLang.en, W / 2, 200);
 
   // ── Hero number: total hours ───────────────────────────────────────────────
-  // Big Orbitron 192px — anchor visual.
+  // Big Orbitron 192px - anchor visual.
   const heroY = 380;
   ctx.font = "900 220px 'Orbitron', Arial, sans-serif";
   // Gradient fill on the hero number
@@ -241,7 +241,7 @@ export async function buildWrappedImage(review, year, lang) {
   } else {
     ctx.font = "700 32px 'Syne', Arial, sans-serif";
     ctx.fillStyle = COL.dim;
-    ctx.fillText('—', cardX + 32, cardY + 200);
+    ctx.fillText('-', cardX + 32, cardY + 200);
   }
 
   // ── Top genre badge (smaller, pill) ────────────────────────────────────────
@@ -264,7 +264,7 @@ export async function buildWrappedImage(review, year, lang) {
   }
 
   // ── Games played + avg hours/game (small row) ──────────────────────────────
-  // v1.17.5 — replaced session-only active-days/streak (always 0 post-timer)
+  // v1.17.5 - replaced session-only active-days/streak (always 0 post-timer)
   // with game-level derived stats that work for imported libraries.
   const rowY = 1480;
   const rowItems = [
@@ -301,7 +301,7 @@ export async function buildWrappedImage(review, year, lang) {
     if (canvas.toBlob) {
       canvas.toBlob((b) => resolve(b), 'image/png', 0.95);
     } else {
-      // Fallback for very old canvases — convert dataURL → blob manually
+      // Fallback for very old canvases - convert dataURL → blob manually
       try {
         const dataUrl = canvas.toDataURL('image/png');
         const byteString = atob(dataUrl.split(',')[1]);

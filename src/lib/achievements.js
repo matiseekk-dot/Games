@@ -1,10 +1,10 @@
 // v1.5.0 Achievements.
-// Pure derivation from games[] + longestStreak. No persistence — recomputed on every render.
-// Multi-tier achievements (Collector I/II/III) are separate entries — keeps logic flat
+// Pure derivation from games[] + longestStreak. No persistence - recomputed on every render.
+// Multi-tier achievements (Collector I/II/III) are separate entries - keeps logic flat
 // and lets the UI show all tiers including locked ones in the grid.
 // Bilingual title/desc strings live INSIDE the entries so this module is self-contained
 // (no i18n.js import needed). Trade-off: editing labels means editing this file vs.
-// the global TRANSLATIONS table — fine since it's a closed set of 19 entries.
+// the global TRANSLATIONS table - fine since it's a closed set of 19 entries.
 
 export const ACHIEVEMENTS = [
   // Collector tiers

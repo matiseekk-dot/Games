@@ -1,9 +1,9 @@
-// v1.17.0 — Parser for Playnite library exports (JSON).
+// v1.17.0 - Parser for Playnite library exports (JSON).
 //
 // Playnite (https://playnite.link) is a free open-source Windows game library
 // manager that aggregates Steam / Epic / GOG / Xbox / PlayStation / Battle.net /
 // Origin / Uplay / etc. into a single library. Most importantly it has its own
-// CompletionStatus field that maps almost 1:1 to our statuses — so imports
+// CompletionStatus field that maps almost 1:1 to our statuses - so imports
 // from Playnite skip all the heuristic guessing because the user already
 // categorized everything themselves.
 //
@@ -29,7 +29,7 @@
 // custom plugins / re-serialized). Output normalized to our row shape.
 
 // Playnite CompletionStatus → our status enum.
-// Playnite supports custom statuses too — we match by substring on common names.
+// Playnite supports custom statuses too - we match by substring on common names.
 function mapPlayniteStatus(name) {
   const s = String(name || '').toLowerCase().trim();
   if (!s) return null;
@@ -78,7 +78,7 @@ function normalizePlayniteGame(g) {
   // Source = store / launcher (Steam, Epic, GOG, PSN, Xbox, ...)
   const source = (g.Source?.Name || g.source?.Name || g.source || '').toString();
 
-  // Platform — Playnite stores as array; take first. Some plugins flatten.
+  // Platform - Playnite stores as array; take first. Some plugins flatten.
   let platformName = '';
   if (Array.isArray(g.Platforms) && g.Platforms.length > 0) {
     platformName = g.Platforms[0]?.Name || g.Platforms[0] || '';

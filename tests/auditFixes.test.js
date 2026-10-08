@@ -43,6 +43,17 @@ describe('coverThumb', () => {
   });
 });
 
+describe('cleanProductName (barcode product titles)', () => {
+  it('drops spaced dashes/colons but keeps digits and in-word hyphens', async () => {
+    const { cleanProductName } = await import('../src/lib/barcode.js');
+    const out = n => cleanProductName(n);
+    expect(out('Battlefield 1 Revolution')).toContain('Battlefield 1');
+    expect(out('Elden Ring — Shadow Edition')).not.toMatch(/[–—]/);
+    expect(out('Marvel Spider-Man 2 – Launch')).toContain('Spider-Man 2');
+    expect(out('FIFA 23 : Standard')).toContain('FIFA 23');
+  });
+});
+
 describe('lsRead migrations (v1.18.1)', () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.resetModules(); });
 

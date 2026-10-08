@@ -1,4 +1,4 @@
-// v1.10.0 — Weekly summary push notification helper.
+// v1.10.0 - Weekly summary push notification helper.
 //
 // Fires a local Notification once per 7 days, summarizing the user's last 7 days of
 // gaming activity. App.jsx runs maybePushWeeklySummary() on mount; this file
@@ -15,7 +15,7 @@
 // Note: this is an App-side check, not a true scheduled push. PWA Periodic Background
 // Sync would be the "right" answer but its support is fragmented (Chrome-only, requires
 // installed PWA with site engagement). App-side check is reliable when user opens the
-// app — the worst case is "user doesn't open app for 14 days, gets one push on day 14
+// app - the worst case is "user doesn't open app for 14 days, gets one push on day 14
 // summarizing the last 7", which is still useful retention-wise.
 import { LS_LAST_WEEKLY_PUSH } from '../constants.js';
 import { collectSessions } from './sessions.js';
@@ -55,10 +55,10 @@ export function computeWeeklyStats(games) {
 }
 
 // Returns true if a notification was fired (or attempted), false otherwise.
-// Caller should only invoke this once per app mount — internal LS throttle prevents
+// Caller should only invoke this once per app mount - internal LS throttle prevents
 // firing more than once per 7 days, but doesn't prevent multiple-calls-per-mount issues.
 export async function maybePushWeeklySummary(games, lang, t) {
-  // Permission check first — skip everything else if we can't notify.
+  // Permission check first - skip everything else if we can't notify.
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
 
   // Throttle check: ≥ 7 days since last push.
@@ -81,7 +81,7 @@ export async function maybePushWeeklySummary(games, lang, t) {
     : t(lang, 'weeklyPushBodyNoTop', { hours: stats.totalHours, sessions: stats.sessionCount });
 
   // Fire the notification. Use the SW registration so the notification persists
-  // even when the page is closed (best-effort — falls back to local Notification API).
+  // even when the page is closed (best-effort - falls back to local Notification API).
   try {
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.ready.catch(() => null);

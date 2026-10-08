@@ -1,9 +1,9 @@
-// v1.16.1 — Parser for Xbox library exports via TrueAchievements (paste flow).
+// v1.16.1 - Parser for Xbox library exports via TrueAchievements (paste flow).
 //
-// TrueAchievements (truachievements.com) is the de-facto Xbox library tracker —
+// TrueAchievements (truachievements.com) is the de-facto Xbox library tracker -
 // users link their Gamertag, TA scrapes the public profile, and exposes a Games
 // page with built-in CSV export. Same model as PSN-Profiles for PSN. No Microsoft
-// API access, no OAuth flow, no Partner Center — just public data shared by user.
+// API access, no OAuth flow, no Partner Center - just public data shared by user.
 //
 // User flow:
 //   1. Open trueachievements.com, log in (or create account, link Gamertag, ~5 min)
@@ -18,7 +18,7 @@
 // quoted CSV with embedded commas. Same approach as psnprofiles-import.
 
 // ─── CSV PARSER (RFC 4180-ish) ─────────────────────────────────────────────
-// v1.16.3 — pass delimiter as a param (TA UK exports as ',', some EU regions
+// v1.16.3 - pass delimiter as a param (TA UK exports as ',', some EU regions
 // re-export from Excel which switches to ';' based on the user's locale).
 function splitCsvLine(line, delim = ',') {
   const fields = [];
@@ -40,7 +40,7 @@ function splitCsvLine(line, delim = ',') {
   return fields;
 }
 
-// v1.16.3 — strip UTF-8 BOM (﻿) that Windows / Excel commonly prepends to
+// v1.16.3 - strip UTF-8 BOM (﻿) that Windows / Excel commonly prepends to
 // CSV files. Without this the first header reads as "﻿Game" and never
 // matches the title alias list, causing the entire CSV to fail and fall through
 // to plaintext (which is rejected because line 0 has commas).
@@ -48,12 +48,12 @@ function stripBOM(text) {
   return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
 }
 
-// v1.16.3 — auto-detect delimiter by counting on header line. Pick whichever of
+// v1.16.3 - auto-detect delimiter by counting on header line. Pick whichever of
 // ','  ';'  '\t' appears most often. Tab-separated (TSV) is what some TA legacy
 // exports use; semicolon comes from Excel re-exports in EU locales.
-// v1.16.9 — Same plaintext-table detector as psnprofiles-import.js. Handles
+// v1.16.9 - Same plaintext-table detector as psnprofiles-import.js. Handles
 // iOS Safari "Select All → Copy" which produces one-cell-per-line text.
-// v1.16.11 — Same noise/section-break filters as psnprofiles-import.js. Kept
+// v1.16.11 - Same noise/section-break filters as psnprofiles-import.js. Kept
 // in sync intentionally because both platforms have similar sidebar/recommendation
 // pollution problems when user does Select-All-Copy on mobile.
 const SECTION_BREAK_RX = /^(recommended|trending|sponsored|advertis|you may|you might|popular|featured|related|similar|sugest|polec|reklam|sponsorow|see also|learn more|sign up|log in|register)/i;
@@ -72,7 +72,7 @@ function isLikelyTitle(line) {
   return true;
 }
 
-// v1.16.12 — Require ≥2 signals (fraction + hours/percent/date) to filter out
+// v1.16.12 - Require ≥2 signals (fraction + hours/percent/date) to filter out
 // recommended-games sidebars on TA that show fractions without play data.
 function rowOwnedSignalCount(cells) {
   const hasFraction = cells.some(c => /^\d+\s*\/\s*\d+$/.test(c));
@@ -87,7 +87,7 @@ function rowHasTrophyMetadata(cells) {
 }
 
 function parsePlaintextTable(lines) {
-  // v1.16.11 — Truncate at first section-break (Recommended/Sponsored/etc.)
+  // v1.16.11 - Truncate at first section-break (Recommended/Sponsored/etc.)
   let workingLines = lines;
   for (let i = 10; i < lines.length; i++) {
     if (SECTION_BREAK_RX.test(lines[i])) { workingLines = lines.slice(0, i); break; }
@@ -111,7 +111,7 @@ function parsePlaintextTable(lines) {
     rawRows.push(workingLines.slice(tIdx, tIdx + rowSize));
   }
   if (rawRows.length < 3) return null;
-  // v1.16.11 — STRICT: keep only rows with trophy/achievement metadata
+  // v1.16.11 - STRICT: keep only rows with trophy/achievement metadata
   const filtered = rawRows.filter(rowHasTrophyMetadata);
   const rows = filtered.length >= Math.max(3, rawRows.length * 0.3) ? filtered : rawRows;
   if (rows.length < 3) return null;
@@ -143,9 +143,9 @@ function detectDelimiter(headerLine) {
   return best[1] > 0 ? best[0] : ',';
 }
 
-// v1.16.7 — Find a table section in noisy input (e.g. mobile Select-All-Copy
+// v1.16.7 - Find a table section in noisy input (e.g. mobile Select-All-Copy
 // from a rendered TA page that includes nav/sidebar). Same algorithm as
-// psnprofiles-import.js — kept in sync deliberately.
+// psnprofiles-import.js - kept in sync deliberately.
 function findBestTableSection(lines) {
   const DELIMS = ['\t', ',', ';'];
   let best = null;
@@ -198,7 +198,7 @@ function parseCsv(text) {
   return { header, rows: lines.slice(1).map(l => splitCsvLine(l, strictDelim)), delim: strictDelim };
 }
 
-// Column aliases — TrueAchievements uses different casings + sometimes legacy
+// Column aliases - TrueAchievements uses different casings + sometimes legacy
 // names. v1.16.3 expanded with more variants observed across TA Pro CSV exports
 // (incl. localized headers, "Title" vs "Game", "Total Hours" etc.).
 const COLUMN_MAP = {
@@ -211,9 +211,9 @@ const COLUMN_MAP = {
   lastPlayed:   ['date finished', 'date_finished', 'last played', 'last activity', 'finished', 'completed', 'last_played'],
 };
 
-// v1.16.3 — match header against alias list using EXACT first, then SUBSTRING
+// v1.16.3 - match header against alias list using EXACT first, then SUBSTRING
 // fallback (e.g. "Game (10h+)" still matches title via substring 'game'). Substring
-// match is intentionally lossy — better to over-match a column than to fail entirely.
+// match is intentionally lossy - better to over-match a column than to fail entirely.
 function findColumn(header, canonical) {
   const aliases = COLUMN_MAP[canonical] || [canonical];
   // Exact match pass
@@ -221,7 +221,7 @@ function findColumn(header, canonical) {
     const h = header[i].toLowerCase().trim();
     if (aliases.includes(h)) return i;
   }
-  // Substring fallback pass — alias appears anywhere in header cell
+  // Substring fallback pass - alias appears anywhere in header cell
   for (let i = 0; i < header.length; i++) {
     const h = header[i].toLowerCase().trim();
     if (aliases.some(a => h.includes(a))) return i;
@@ -266,12 +266,12 @@ function parseCompletion(raw) {
   return Math.round(parseFloat(m[1]));
 }
 
-// v1.16.3 — heuristic: pick the column most likely to contain game titles when
+// v1.16.3 - heuristic: pick the column most likely to contain game titles when
 // header aliases don't match. Skips columns that are mostly numeric / dates /
 // short codes. Picks the column with longest average string length among text
 // columns. Returns -1 if no column qualifies (e.g. all-numeric CSV).
 function guessTitleColumn(header, rows) {
-  // v1.16.3 — only guess on multi-column, multi-row inputs. Single-column CSVs
+  // v1.16.3 - only guess on multi-column, multi-row inputs. Single-column CSVs
   // are usually plaintext title lists (handled by the plaintext fallback);
   // single-row inputs are too ambiguous to guess from.
   if (header.length < 2 || rows.length < 2) return -1;
@@ -302,7 +302,7 @@ function guessTitleColumn(header, rows) {
   return candidates[0].col;
 }
 
-// Public entry — returns { format, count, rows, debug? }.
+// Public entry - returns { format, count, rows, debug? }.
 // `debug` is set on failure to help diagnose what was seen (header columns,
 // first data line, detected delimiter). v1.16.3 added BOM stripping, ; / \t
 // delimiter auto-detect, broader column aliases, and column-guessing fallback.
@@ -310,7 +310,7 @@ export function parseXboxPaste(text) {
   const trimmed = stripBOM((text || '').trim());
   if (!trimmed) return { format: 'unknown', count: 0, rows: [] };
 
-  // v1.16.3 — early reject binary inputs (xlsx / xls / zip / docx all have null
+  // v1.16.3 - early reject binary inputs (xlsx / xls / zip / docx all have null
   // bytes or low control chars in their first ~200 bytes). Without this, the
   // plaintext fallback would happily accept a single garbage-line as a "title".
   const looksLikeBinary = /[\x00-\x08\x0E-\x1F]/.test(trimmed.slice(0, 200));
@@ -332,7 +332,7 @@ export function parseXboxPaste(text) {
 
   // Try CSV (or plaintext-table fallback for iOS Safari pastes)
   let csv = parseCsv(trimmed);
-  // v1.16.9 — If CSV parsing produced a single-column or no-column result
+  // v1.16.9 - If CSV parsing produced a single-column or no-column result
   // (typical of iOS Safari "Select All → Copy" which gives one cell per line),
   // try the plaintext-table pattern detector. It groups consecutive lines into
   // rows by finding the modal gap between title-looking lines.
@@ -348,9 +348,9 @@ export function parseXboxPaste(text) {
     const idxHours      = findColumn(csv.header, 'hours');
     const idxCompletion = findColumn(csv.header, 'completion');
     const idxLastPlayed = findColumn(csv.header, 'lastPlayed');
-    const idxAchievements = findColumn(csv.header, 'achievements');  // v1.16.4 — "X/Y" for platinum detection
+    const idxAchievements = findColumn(csv.header, 'achievements');  // v1.16.4 - "X/Y" for platinum detection
 
-    // v1.16.3 — if no header alias matched, try heuristic title-column guess
+    // v1.16.3 - if no header alias matched, try heuristic title-column guess
     // (e.g. column 0 is usually the game name even when header is "Item" / localized)
     let format = csv.delim === '\n' ? 'plaintext-table' : 'csv';
     if (idxTitle < 0) {
@@ -366,7 +366,7 @@ export function parseXboxPaste(text) {
           hours:         parseHours      (idxHours       >= 0 ? r[idxHours]       : ''),
           completionPct: parseCompletion (idxCompletion  >= 0 ? r[idxCompletion]  : ''),
           lastPlayed:    (idxLastPlayed  >= 0 ? r[idxLastPlayed] : '') || null,
-          // v1.16.4 — raw "X/Y" achievements string. Mapped downstream to
+          // v1.16.4 - raw "X/Y" achievements string. Mapped downstream to
           // platinum=true when fully completed (Xbox doesn't have platinum
           // trophies but our schema reuses the same flag for "all unlocked").
           achievements:  idxAchievements >= 0 ? String(r[idxAchievements] || '').trim() : '',
@@ -389,8 +389,8 @@ export function parseXboxPaste(text) {
     }
   }
 
-  // v1.16.10 — Last-resort: extract alphabetic-rich lines as titles only.
-  // v1.16.11 — Truncate at section break first (Recommended/Sponsored/etc.)
+  // v1.16.10 - Last-resort: extract alphabetic-rich lines as titles only.
+  // v1.16.11 - Truncate at section break first (Recommended/Sponsored/etc.)
   const allLinesRaw = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   let allLinesAll = allLinesRaw;
   for (let i = 10; i < allLinesRaw.length; i++) {
@@ -405,7 +405,7 @@ export function parseXboxPaste(text) {
     return { format: 'titles-only', count: titlesOnly.length, rows: titlesOnly };
   }
 
-  // v1.16.3/v1.16.10 — rich diagnostic on full failure
+  // v1.16.3/v1.16.10 - rich diagnostic on full failure
   const debug = {
     bytesRead: trimmed.length,
     totalLines: allLinesAll.length,

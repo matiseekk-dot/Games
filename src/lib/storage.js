@@ -1,7 +1,7 @@
 // Storage layer: localStorage R/W for the games list + small singletons (budget, timer,
 // onboarding, language, currency). Plus export/import helpers that act on the games array.
 // Per-feature persistence (eanCache, goals) lives next to its feature in lib/barcode.js
-// and lib/goals.js — keeping this file focused on the canonical games collection.
+// and lib/goals.js - keeping this file focused on the canonical games collection.
 import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, LS_ONBOARDING_BANNER_DISMISSED, CURRENCIES } from '../constants.js';
 import { uid, parseNum } from './util.js';
 
@@ -12,11 +12,11 @@ export function lsRead() {
     // Migration (v1.2.4+): legacy games may have priceSold:'' from v1.2.3 bug,
     // which rendered as "sold toggle ON" + ROI +0 zł on cards.
     // Normalize to null on read so every load is consistent.
-    // Idempotent — running twice is safe.
+    // Idempotent - running twice is safe.
     //
     // Migration (v1.7.0): completedAt was added to track exact date of completion.
     // For pre-v1.7 games with status==='ukonczone' but no completedAt, backfill from
-    // lastPlayed (preferred — actual play date) or addedAt (last resort). Without
+    // lastPlayed (preferred - actual play date) or addedAt (last resort). Without
     // this, Goals of type 'complete' / 'platinum' and Year-in-Review undercount older
     // completions. Idempotent.
     let dirty = false;
@@ -31,7 +31,7 @@ export function lsRead() {
       // schemas stored addedAt/completedAt/lastPlayed as numeric timestamps; downstream
       // code calls .slice(0,4) / .slice(0,7) on them, which crashes on numbers. We coerce
       // any number / Date to ISO string here so every consumer can safely string-slice.
-      // Idempotent — already-ISO strings pass through untouched.
+      // Idempotent - already-ISO strings pass through untouched.
       for (const key of ['addedAt','completedAt','lastPlayed']) {
         const v = next[key];
         if (v != null && typeof v !== 'string') {
@@ -46,13 +46,13 @@ export function lsRead() {
         }
       }
       // Migration (v1.14.0): backfill `source` field for pre-v1.14 games. Every legacy
-      // game was bought ("owned") since subscription tracking didn't exist before — that's
+      // game was bought ("owned") since subscription tracking didn't exist before - that's
       // the only safe default. Without this, downstream cost filters (which check
       // g.source === 'owned') would erroneously exclude every legacy game from totals.
-      // Idempotent — already-set source values pass through.
+      // Idempotent - already-set source values pass through.
       if (next.source == null) { dirty = true; next = { ...next, source: 'owned' }; }
       // Migration (v1.15.3): backfill `preOrdered: false` for pre-v1.15.3 games. Legacy
-      // schema didn't track pre-orders at all — safe default is false (no game was
+      // schema didn't track pre-orders at all - safe default is false (no game was
       // implicitly pre-ordered). Idempotent.
       if (typeof next.preOrdered !== 'boolean') { dirty = true; next = { ...next, preOrdered: false }; }
       // Migration (v1.18.1): money typed with a decimal comma ("89,99", "1 299,99") was
@@ -70,7 +70,7 @@ export function lsRead() {
     if (dirty) { try { localStorage.setItem(LS_KEY, JSON.stringify(migrated)); } catch {} }
     return migrated;
   } catch {
-    // v1.18.1 — Unreadable collection. The app starts empty and the next save would
+    // v1.18.1 - Unreadable collection. The app starts empty and the next save would
     // overwrite the stored string for good, so keep a one-off copy for manual recovery.
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -105,7 +105,7 @@ export function timerWrite(d) { try { if (d === null) localStorage.removeItem('p
 export function isOnboarded() { return !!localStorage.getItem(LS_ONBOARD); }
 export function setOnboarded() { localStorage.setItem(LS_ONBOARD, '1'); }
 
-// v1.14.1 — Demo banner dismissal flag. Read at App mount + after every games[]
+// v1.14.1 - Demo banner dismissal flag. Read at App mount + after every games[]
 // mutation that could change banner visibility (clear demos, add first own game).
 export function isDemoBannerDismissed() {
   try { return !!localStorage.getItem(LS_ONBOARDING_BANNER_DISMISSED); } catch { return false; }
@@ -114,7 +114,7 @@ export function dismissDemoBanner() {
   try { localStorage.setItem(LS_ONBOARDING_BANNER_DISMISSED, '1'); } catch {}
 }
 
-// v1.7.0 — set of achievement IDs that the user has already been notified about.
+// v1.7.0 - set of achievement IDs that the user has already been notified about.
 // Returns Set<string>. Reading returns null if never set (callers treat null as
 // "first run" and silently sync without showing a banner).
 export function lastSeenAchRead() {
@@ -131,15 +131,15 @@ export function lastSeenAchWrite(set) {
   } catch {}
 }
 
-// v1.8.0 — Per-section "last opened" markers used by the hamburger badge trigger.
+// v1.8.0 - Per-section "last opened" markers used by the hamburger badge trigger.
 // First read (no key in LS) returns a zero-state object so the menu can compute
 // triggers without null-guards everywhere.
 //
 // Schema:
-//   achievementsCount: number    — how many achievements were unlocked when user
+//   achievementsCount: number    - how many achievements were unlocked when user
 //                                  last opened the Achievements view
-//   goalsAt:           ISO string — when user last opened the Goals manager
-//   wrappedYear:       number     — last calendar year for which user opened Wrapped
+//   goalsAt:           ISO string - when user last opened the Goals manager
+//   wrappedYear:       number     - last calendar year for which user opened Wrapped
 //
 // Trigger logic lives in App.jsx; this module just stores/loads the raw object.
 const MENU_SEEN_DEFAULT = { achievementsCount:0, goalsAt:null, wrappedYear:null };
@@ -162,7 +162,7 @@ export function menuSeenUpdate(patch) {
 }
 
 // ─── Language + currency selection ────────────────────────────────────────
-// v1.14.2 — Spanish (es-419 neutral) added. Detection prefers exact match on the
+// v1.14.2 - Spanish (es-419 neutral) added. Detection prefers exact match on the
 // stored choice, then falls back to browser navigator.language. Anything outside
 // pl/es/en-* defaults to EN since EN has full string coverage.
 export function getLang() {
@@ -178,8 +178,8 @@ export function getCurrency() {
   return 'PLN';
 }
 export function getCurSymbol() { return (CURRENCIES[getCurrency()] || CURRENCIES.PLN).symbol; }
-// Default for Onboarding picker — based on navigator.language at first render.
-// v1.14.2 — refined Spanish detection: es-MX/AR/CO/CL/PE → MXN as a "first-pass"
+// Default for Onboarding picker - based on navigator.language at first render.
+// v1.14.2 - refined Spanish detection: es-MX/AR/CO/CL/PE → MXN as a "first-pass"
 // regional default (the user can still change it on the next onboarding step);
 // es-ES → EUR (eurozone). Other es-* fall through to USD as a neutral hemisphere
 // default rather than mismatched Polish PLN.
@@ -197,13 +197,13 @@ export function getDefaultCurrency() {
 }
 
 // ─── Backup export / import ───────────────────────────────────────────────
-// v1.15.0 — Hardened export filename + MIME type:
+// v1.15.0 - Hardened export filename + MIME type:
 //   1. Filename was reported saving as "data.json" instead of PS5Vault_Backup_YYYY-MM-DD.json
 //      on some Android WebView builds. Root cause: Chrome ignores the `download` attribute
 //      for blob: URLs when MIME is text-y (application/json) and chooses a UUID-derived
 //      fallback. Switching MIME to application/octet-stream forces the browser into
 //      "must download" mode, which respects the download attribute reliably.
-//   2. Trying Web Share API first if available — opens the system share sheet (user can
+//   2. Trying Web Share API first if available - opens the system share sheet (user can
 //      pick Drive / Mail / save to Files) with the correct filename. Falls back to the
 //      legacy blob+download flow on browsers without share support.
 export async function exportData(games, lang, onDone) {
@@ -220,7 +220,7 @@ export async function exportData(games, lang, onDone) {
       }
     }
   } catch (e) {
-    // User canceled the share sheet — exit silently, don't fall through to download dialog.
+    // User canceled the share sheet - exit silently, don't fall through to download dialog.
     if (e && e.name === 'AbortError') return;
     // Any other error: fall through to legacy blob+download.
   }
@@ -243,7 +243,7 @@ export function importData(file, onOk, onErr) {
   r.readAsText(file);
 }
 
-// Maximum import file size — protects against memory exhaustion from accidental
+// Maximum import file size - protects against memory exhaustion from accidental
 // or malicious large JSONs. Realistic backup with 1000 games + sessions ~ 2MB.
 const IMPORT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -254,10 +254,10 @@ export function isValidGameShape(g) {
   return true;
 }
 
-// v1.14.0 — Apply forward-compat defaults to imported games. Mirrors the lsRead
+// v1.14.0 - Apply forward-compat defaults to imported games. Mirrors the lsRead
 // migration but runs synchronously inside the import path, so users don't need to
 // reload after importing a pre-v1.14 backup before financial KPIs are correct.
-// v1.15.3 — also backfill preOrdered:false for pre-v1.15.3 backups.
+// v1.15.3 - also backfill preOrdered:false for pre-v1.15.3 backups.
 function applyImportDefaults(g) {
   let out = g;
   if (out.source == null) out = { ...out, source: 'owned' };
@@ -282,7 +282,7 @@ export function importMerge(file, existing, onOk, onErr) {
   r.readAsText(file);
 }
 
-// v1.2.0: importReplace — nadpisuje całą kolekcję backupem (destructive)
+// v1.2.0: importReplace - nadpisuje całą kolekcję backupem (destructive)
 // Preserves all fields as-is, including sessions[], hours, ratings etc.
 export function importReplace(file, onOk, onErr) {
   if (file.size > IMPORT_MAX_BYTES) { onErr('File too large (>10MB)'); return; }
@@ -297,22 +297,22 @@ export function importReplace(file, onOk, onErr) {
   r.readAsText(file);
 }
 
-// v1.11.1 — Right-to-deletion / Play Data Safety compliance.
+// v1.11.1 - Right-to-deletion / Play Data Safety compliance.
 // Removes EVERY ps5vault_* key from localStorage. After this call the app behaves like
-// a fresh install — next mount triggers the welcome screen, all caches gone, all
-// preferences reset. There is no "soft delete" — this is the nuclear option.
+// a fresh install - next mount triggers the welcome screen, all caches gone, all
+// preferences reset. There is no "soft delete" - this is the nuclear option.
 //
 // Returns { wiped: number, errors: string[] } so caller can flash a toast with the count.
-// Errors come from individual removeItem failures (rare — usually only when storage is
+// Errors come from individual removeItem failures (rare - usually only when storage is
 // disabled or quota exceeded mid-iteration).
 //
-// Caller MUST trigger a hard reload after this returns — clearing state in-memory only
+// Caller MUST trigger a hard reload after this returns - clearing state in-memory only
 // would leave React refs and useState pointing at deleted underlying data, causing
 // inconsistent UI. window.location.reload() is the right exit path.
 export function wipeAllData() {
   const errors = [];
   let wiped = 0;
-  // Snapshot keys first — modifying localStorage during iteration is unsafe in some browsers.
+  // Snapshot keys first - modifying localStorage during iteration is unsafe in some browsers.
   const keys = [];
   try {
     for (let i = 0; i < localStorage.length; i++) {

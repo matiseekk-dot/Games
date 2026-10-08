@@ -1,5 +1,5 @@
 // RAWG.io API client. Single function that returns a normalized list of game results.
-// `playtime` (added v1.4.0) is mapped from RAWG's average-hours field — used by Modal.fill
+// `playtime` (added v1.4.0) is mapped from RAWG's average-hours field - used by Modal.fill
 // to prefill targetHours. Genre is resolved through RMAP (slug → PL label) with fallback
 // to RAWG's English name when slug isn't in our map.
 import { RAWG_KEY, RMAP } from '../constants.js';
@@ -25,7 +25,7 @@ export async function rawgSearch(q) {
   finally { clearTimeout(tm); }
 }
 
-// v1.9.0 — Fetch suggested games for a given RAWG game ID.
+// v1.9.0 - Fetch suggested games for a given RAWG game ID.
 // Returns up to 20 normalized game objects (same shape as rawgSearch results),
 // or [] on any failure (404, network, abort). Caller is responsible for caching.
 //
@@ -50,21 +50,21 @@ export async function fetchSuggested(rawgGameId) {
       cover: g.background_image || '',
       abbr: mkAbbr(g.name || ''),
       playtime: Number.isFinite(+g.playtime) ? +g.playtime : 0,
-      // RAWG aggregate rating (0–5 scale). Used to break ties when sorting recommendations.
+      // RAWG aggregate rating (0-5 scale). Used to break ties when sorting recommendations.
       rawgRating: Number.isFinite(+g.rating) ? +g.rating : 0,
     })).filter(g => g.title); // drop any malformed rows
   } catch { return []; }
   finally { clearTimeout(tm); }
 }
 
-// v1.13.1 — Fetch single game by RAWG ID. Used by Modal "Aktualizuj z RAWG" button
+// v1.13.1 - Fetch single game by RAWG ID. Used by Modal "Aktualizuj z RAWG" button
 // to refresh stale fields (releaseDate, year, genre, cover) for an existing game.
 // Returns normalized object (same shape subset as rawgSearch) or null on any failure.
 // Caller flashes appropriate toast on null vs success.
 //
-// Endpoint: /games/{id}?key=... — single game detail, includes released, genres, background_image.
+// Endpoint: /games/{id}?key=... - single game detail, includes released, genres, background_image.
 // We deliberately do NOT use rawgSearch(title) because:
-//   1. Game titles can change (re-launches, renames) — id is stable
+//   1. Game titles can change (re-launches, renames) - id is stable
 //   2. Search-by-title is non-deterministic (returns 10 results, filter risk)
 //   3. Single endpoint = less RAWG quota usage
 export async function fetchGameById(rawgId) {

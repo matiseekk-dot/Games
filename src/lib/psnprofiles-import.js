@@ -1,9 +1,9 @@
-// v1.16.0 — Parser for PSN-Profiles game library exports.
+// v1.16.0 - Parser for PSN-Profiles game library exports.
 //
-// PSN-Profiles (psnprofiles.com) is the de-facto public PSN library mirror — users
+// PSN-Profiles (psnprofiles.com) is the de-facto public PSN library mirror - users
 // link their PSN ID and the site scrapes their public trophy/game data. It exposes a
 // "Games" tab with built-in CSV export, plus a copy-paste-friendly HTML table.
-// Both are public, scraped from public PSN data — no Sony API access, no NPSSO token,
+// Both are public, scraped from public PSN data - no Sony API access, no NPSSO token,
 // no ToS violation. User views their own data via their own browser, copies, pastes
 // into our app, we parse locally.
 //
@@ -11,7 +11,7 @@
 //   [{ title, platform, hours, completionPct, lastPlayedISO, source }]
 // where source is 'psnprofiles' (for migration tracking).
 //
-// Format flexibility is intentional — PSN-Profiles has changed export schemas a few
+// Format flexibility is intentional - PSN-Profiles has changed export schemas a few
 // times, and users sometimes paste partial data (just a column they highlighted).
 // Parser is generous: ignores unknown columns, skips empty rows, recovers from
 // malformed quotes by line-by-line scan instead of requiring strict RFC 4180.
@@ -20,7 +20,7 @@
 // Splits a single CSV line into fields, respecting "double quotes" and embedded
 // commas. Embedded quotes inside a field are encoded as "" per CSV convention.
 // Returns array of strings, trimmed.
-// v1.16.3 — delimiter param + BOM strip + auto-detect (matches xbox-import.js
+// v1.16.3 - delimiter param + BOM strip + auto-detect (matches xbox-import.js
 // for consistency). Original PSN-Profiles CSV uses ',', but users sometimes
 // re-export from Excel which switches to ';' in EU locales.
 function splitCsvLine(line, delim = ',') {
@@ -47,8 +47,8 @@ function stripBOM(text) {
   return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
 }
 
-// v1.16.9 — iOS Safari "Select All → Copy" on a rendered <table> produces
-// plain text with each cell on its own line — no tabs, no commas. So:
+// v1.16.9 - iOS Safari "Select All → Copy" on a rendered <table> produces
+// plain text with each cell on its own line - no tabs, no commas. So:
 //   God of War Ragnarök
 //   PS5
 //   36/36
@@ -65,12 +65,12 @@ function stripBOM(text) {
 // them. Then group each K-line block as one row. Synthetic header is inferred
 // from cell contents (column where most entries match a fraction → 'trophies',
 // where most are 'X%' → 'completion', etc.).
-// v1.16.11 — Lines that signal we're entering a non-games section (recommended
+// v1.16.11 - Lines that signal we're entering a non-games section (recommended
 // games sidebar, ads, "you may like", etc.). When parser hits these in PSN-
-// Profiles "Select All" pastes, downstream rows are usually noise — skip them.
+// Profiles "Select All" pastes, downstream rows are usually noise - skip them.
 const SECTION_BREAK_RX = /^(recommended|trending|sponsored|advertis|you may|you might|popular|featured|related|similar|sugest|polec|reklam|sponsorow|see also|learn more|sign up|log in|register)/i;
 
-// v1.16.11 — UI-text noise that often appears between game rows in mobile
+// v1.16.11 - UI-text noise that often appears between game rows in mobile
 // renders (buttons, link labels). Reject these as "title candidates".
 const UI_NOISE_RX = /^(more|edit|add|view|play|filter|sort|share|home|games|trophies|friends|search|menu|settings|profile|next|prev|back|all|none|select)$/i;
 
@@ -82,19 +82,19 @@ function isLikelyTitle(line) {
   if (/^\d+\s*m$/i.test(line)) return false;                  // "60m"
   if (/^(PS[1-5]|PSP|PS\s?Vita|Xbox(\s+(Series\s*[XS]?(\|S)?|One|360))?|PC|Steam|Switch|Mobile|iOS|Android)$/i.test(line)) return false;
   if (/^(PS[1-5][,\s/|]+PS[1-5])$/i.test(line)) return false; // "PS5,PS4"
-  if (UI_NOISE_RX.test(line)) return false;                   // v1.16.11 — common UI labels
+  if (UI_NOISE_RX.test(line)) return false;                   // v1.16.11 - common UI labels
   if (!/[a-zA-Z]/.test(line)) return false;                   // must have at least one letter
   return true;
 }
 
-// v1.16.12 — A row qualifies as "real owned game" only if it has ≥2 of these
+// v1.16.12 - A row qualifies as "real owned game" only if it has ≥2 of these
 // signals: trophy fraction (X/Y), hours played (12h or 12h 30m), completion
 // percentage (X%), or last-played date. Recommended-games sidebars on PSN-
 // Profiles show trophy fractions (game's MAX trophies) but no hours/percent/
-// date — so requiring 2+ signals cleanly filters them out.
+// date - so requiring 2+ signals cleanly filters them out.
 //
 // Edge case: owned-but-never-played games might have only fraction + 0% which
-// is technically 2 signals — that's fine, they should be imported.
+// is technically 2 signals - that's fine, they should be imported.
 function rowOwnedSignalCount(cells) {
   const hasFraction = cells.some(c => /^\d+\s*\/\s*\d+$/.test(c));
   const hasHours    = cells.some(c => /^\d+\s*h(\s+\d+\s*m)?$/i.test(c));
@@ -103,7 +103,7 @@ function rowOwnedSignalCount(cells) {
   return [hasFraction, hasHours, hasPercent, hasDate].filter(Boolean).length;
 }
 
-// v1.16.11/v1.16.12 — Convenience wrapper. Returns true if row has enough
+// v1.16.11/v1.16.12 - Convenience wrapper. Returns true if row has enough
 // signals to qualify as an owned game.
 function rowHasTrophyMetadata(cells) {
   return rowOwnedSignalCount(cells) >= 2;
@@ -112,7 +112,7 @@ function rowHasTrophyMetadata(cells) {
 // Detect repeating-block plaintext pattern. Returns { header, rows, delim }
 // shape compatible with parseCsv output, or null if pattern not found.
 function parsePlaintextTable(lines) {
-  // v1.16.11 — Truncate at first "section break" (Recommended/Sponsored/etc).
+  // v1.16.11 - Truncate at first "section break" (Recommended/Sponsored/etc).
   // Everything after is sidebar/ad noise that pollutes the table. Only truncate
   // if the break appears past line 10 (so we don't kill input that legitimately
   // starts with "Recommended" header somewhere).
@@ -141,7 +141,7 @@ function parsePlaintextTable(lines) {
     rawRows.push(workingLines.slice(tIdx, tIdx + rowSize));
   }
   if (rawRows.length < 3) return null;
-  // v1.16.11 — STRICT FILTER: keep only rows with trophy/achievement metadata
+  // v1.16.11 - STRICT FILTER: keep only rows with trophy/achievement metadata
   // (X/Y fraction or X% cell). Recommended-games sidebars don't show trophies,
   // so this cleanly separates owned games from noise. Defensive: only apply
   // strict filter if it keeps ≥30% of rows (otherwise user genuinely pasted
@@ -149,7 +149,7 @@ function parsePlaintextTable(lines) {
   const filtered = rawRows.filter(rowHasTrophyMetadata);
   const rows = filtered.length >= Math.max(3, rawRows.length * 0.3) ? filtered : rawRows;
   if (rows.length < 3) return null;
-  // Infer column types from first 10 rows — synthesize header
+  // Infer column types from first 10 rows - synthesize header
   const sample = rows.slice(0, Math.min(10, rows.length));
   const header = [];
   for (let c = 0; c < rowSize; c++) {
@@ -180,15 +180,15 @@ function detectDelimiter(headerLine) {
 
 // Parse full CSV string into rows of fields. First non-empty line is the header.
 // Returns { header: string[], rows: string[][], delim: string }.
-// v1.16.7 — Find the best "table-like" line to use as header. Mobile users
+// v1.16.7 - Find the best "table-like" line to use as header. Mobile users
 // pasting "Select All → Copy" from PSN-Profiles get the entire page content
 // including navigation, footer, etc. The actual games table is buried in the
 // middle. Scan first 100 lines for the one with the most consistent column
-// count (tabs/commas/etc.) — that's almost certainly the table header line.
+// count (tabs/commas/etc.) - that's almost certainly the table header line.
 //
 // Algorithm: for each line in first 100, count delim occurrences. Find the
 // modal column count among lines that share it (≥3 lines with same count, ≥3
-// columns each). Pick the FIRST line matching that mode as the header — the
+// columns each). Pick the FIRST line matching that mode as the header - the
 // rest of those modal-count lines become data rows. Other lines (nav/footer)
 // are dropped.
 function findBestTableSection(lines) {
@@ -198,7 +198,7 @@ function findBestTableSection(lines) {
   for (const delim of DELIMS) {
     const sample = lines.slice(0, 100);
     const counts = sample.map(l => {
-      // Count delim occurrences NOT inside quotes (rough — ok for this heuristic)
+      // Count delim occurrences NOT inside quotes (rough - ok for this heuristic)
       return (l.match(new RegExp(delim === '\t' ? '\\t' : `\\${delim}`, 'g')) || []).length;
     });
     // Find the modal count (most common count value, must be ≥2 = ≥3 columns)
@@ -241,7 +241,7 @@ function parseCsv(text) {
     }
   }
 
-  // v1.16.7 — Fuzzy fallback for noisy mobile pastes (Select-All-Copy from a
+  // v1.16.7 - Fuzzy fallback for noisy mobile pastes (Select-All-Copy from a
   // rendered PSN-Profiles page includes nav/sidebar/footer noise). Find the
   // table section by column-count consistency.
   const best = findBestTableSection(lines);
@@ -261,7 +261,7 @@ function parseCsv(text) {
 // ─── COLUMN NAME NORMALIZATION ─────────────────────────────────────────────
 // Map varying column names from PSN-Profiles / similar sites to canonical fields.
 // Each canonical field has a list of accepted aliases (lowercase, alphanumeric).
-// v1.16.3 — broader aliases incl. PL/ES localized headers + "Game Title" forms.
+// v1.16.3 - broader aliases incl. PL/ES localized headers + "Game Title" forms.
 const COLUMN_MAP = {
   title:        ['title', 'game', 'name', 'game title', 'game name', 'gra', 'tytuł', 'tytul', 'titulo', 'título', 'juego'],
   platform:     ['platform', 'platforms', 'console', 'system', 'platforma', 'plataforma'],
@@ -271,7 +271,7 @@ const COLUMN_MAP = {
   trophies:     ['trophies', 'earned', 'trophy', 'trofea'],
 };
 
-// v1.16.3 — exact-then-substring matching, same logic as xbox-import.js
+// v1.16.3 - exact-then-substring matching, same logic as xbox-import.js
 function findColumn(header, canonical) {
   const aliases = COLUMN_MAP[canonical] || [canonical];
   for (let i = 0; i < header.length; i++) {
@@ -285,9 +285,9 @@ function findColumn(header, canonical) {
   return -1;
 }
 
-// v1.16.3 — heuristic title-column guess for unknown CSV schemas (same as xbox-import.js).
+// v1.16.3 - heuristic title-column guess for unknown CSV schemas (same as xbox-import.js).
 function guessTitleColumn(header, rows) {
-  // v1.16.3 — only guess on multi-column, multi-row inputs (same guard as xbox-import.js).
+  // v1.16.3 - only guess on multi-column, multi-row inputs (same guard as xbox-import.js).
   if (header.length < 2 || rows.length < 2) return -1;
   const sampleSize = Math.min(rows.length, 20);
   const candidates = [];
@@ -317,7 +317,7 @@ function guessTitleColumn(header, rows) {
 // ─── PLATFORM NORMALIZATION ────────────────────────────────────────────────
 // PSN-Profiles uses values like "PS5", "PS4,PS3", "PSVita", "PSP", "PS1".
 // We map to our PLATFORMS enum (PS5/PS4/Xbox.../PC/Switch/Mobile/Other).
-// Multiple platforms get split — we take the first one (most relevant).
+// Multiple platforms get split - we take the first one (most relevant).
 function normalizePlatform(raw) {
   if (!raw) return 'PS5';  // safe default
   const first = String(raw).split(/[,/|;]/)[0].trim().toUpperCase();
@@ -327,7 +327,7 @@ function normalizePlatform(raw) {
   if (first === 'PSVITA' || first === 'VITA' || first === 'PS VITA') return 'Other';
   if (first === 'PSP')         return 'Other';
   if (first === 'PS1' || first === 'PSX') return 'Other';
-  return 'PS5';  // PSN-Profiles is PS-centric — anything else is likely PS5
+  return 'PS5';  // PSN-Profiles is PS-centric - anything else is likely PS5
 }
 
 // Parse hours field. PSN-Profiles formats vary:
@@ -366,10 +366,10 @@ function parseCompletion(raw) {
 
 // ─── HTML PARSER ──────────────────────────────────────────────────────────
 // Fallback for users who paste / upload the rendered HTML table from the Games
-// page. Uses DOMParser (browser-only — Node tests skip this path). Looks for
+// page. Uses DOMParser (browser-only - Node tests skip this path). Looks for
 // <table> and extracts <th> as header, <td> as rows.
 //
-// v1.16.6 — When a cell contains an anchor (e.g. PSN-Profiles wraps game
+// v1.16.6 - When a cell contains an anchor (e.g. PSN-Profiles wraps game
 // titles in <a class="title">), prefer the anchor's text. PSN-Profiles' title
 // cell typically has the format:
 //   <td><a class="title" href="...">Game Title</a> <span>PS5 · 36/36</span></td>
@@ -390,14 +390,14 @@ function cellText(td) {
   return td.textContent.replace(/\s+/g, ' ').trim();
 }
 
-// v1.16.14 — Dedicated parser for PSN-Profiles "MyGameCollection" export format.
+// v1.16.14 - Dedicated parser for PSN-Profiles "MyGameCollection" export format.
 // This is the format users get when they Select-All-Copy on the Games page or
-// download the .csv export — it's NOT comma-separated, it's a multi-line block
+// download the .csv export - it's NOT comma-separated, it's a multi-line block
 // per game with tab characters between games. Format:
 //
 //   Crimson Desert            ← title
 //   2 of 35 Trophies          ← trophies fraction (anchor for game block)
-//   3rd May 2026              ← last activity date (OPTIONAL — missing for unplayed)
+//   3rd May 2026              ← last activity date (OPTIONAL - missing for unplayed)
 //   PS5                       ← platform string (PS5, PS4, PS5PC, PS5VR, etc.)
 //   E                         ← rank letter (A-F)
 //   RANK                      ← literal text
@@ -409,7 +409,7 @@ function cellText(td) {
 //   2.42%                     ← global rarity %
 //   \t                        ← tab separator between games
 //
-// We anchor on the "X of Y Trophies" line — that's exactly one per game and
+// We anchor on the "X of Y Trophies" line - that's exactly one per game and
 // gives us trophy fraction. Title is the previous line, rest is forward-scanned.
 function parsePsnNativeFormat(text) {
   const lines = text.split(/\r?\n/);  // keep empties for structure
@@ -445,7 +445,7 @@ function parsePsnNativeFormat(text) {
         platform = line;
         continue;
       }
-      // Completion % (single integer with %, NOT decimal — that's the rarity stat)
+      // Completion % (single integer with %, NOT decimal - that's the rarity stat)
       if (completionPct === null && /^(\d+)%$/.test(line)) {
         completionPct = parseInt(/^(\d+)/.exec(line)[1], 10);
         // After completion %, we usually hit empty line + rarity %; we have what we need.
@@ -522,7 +522,7 @@ export function parsePsnProfilesPaste(text) {
   const trimmed = stripBOM((text || '').trim());
   if (!trimmed) return { format: 'unknown', count: 0, rows: [] };
 
-  // v1.16.3 — early reject binary inputs (xlsx / xls / zip etc.). See xbox-import.js comment.
+  // v1.16.3 - early reject binary inputs (xlsx / xls / zip etc.). See xbox-import.js comment.
   const looksLikeBinary = /[\x00-\x08\x0E-\x1F]/.test(trimmed.slice(0, 200));
   if (looksLikeBinary) {
     return {
@@ -543,9 +543,9 @@ export function parsePsnProfilesPaste(text) {
   let parsed = null;
   let format = 'unknown';
 
-  // v1.16.14 — 0. Detect PSN-Profiles native multi-line export (the actual format
+  // v1.16.14 - 0. Detect PSN-Profiles native multi-line export (the actual format
   // users get from .csv export or Select-All-Copy). Look for "X of Y Trophies"
-  // pattern — if we see ≥3 of those, it's the native format.
+  // pattern - if we see ≥3 of those, it's the native format.
   const trophyAnchorCount = (trimmed.match(/^\d+\s+of\s+\d+\s+Trophies$/gim) || []).length;
   if (trophyAnchorCount >= 3) {
     const games = parsePsnNativeFormat(trimmed);
@@ -587,7 +587,7 @@ export function parsePsnProfilesPaste(text) {
     format = 'csv';
   }
 
-  // 3b. v1.16.9 — Plaintext-table fallback for iOS Safari "Select All → Copy"
+  // 3b. v1.16.9 - Plaintext-table fallback for iOS Safari "Select All → Copy"
   // which produces one-cell-per-line text. Only kicks in when CSV detection
   // failed to find a title column (otherwise normal CSV path wins).
   if (!parsed.header.length || !parsed.rows.length || (parsed.header.length === 1 && parsed.rows.length > 0)) {
@@ -600,10 +600,10 @@ export function parsePsnProfilesPaste(text) {
   }
 
   if (!parsed.header.length || !parsed.rows.length) {
-    // v1.16.10 — Even when CSV/HTML/plaintext-table all failed, try one more
+    // v1.16.10 - Even when CSV/HTML/plaintext-table all failed, try one more
     // thing: extract any alphabetic-looking lines as titles. Better to import
     // 400 game names without metadata than to import nothing.
-    // v1.16.11 — Truncate at section break first to avoid pulling sidebar
+    // v1.16.11 - Truncate at section break first to avoid pulling sidebar
     // recommended-games as if they were owned games.
     const allLinesRaw = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     let allLines = allLinesRaw;
@@ -636,16 +636,16 @@ export function parsePsnProfilesPaste(text) {
   const idxHours      = findColumn(parsed.header, 'hours');
   const idxCompletion = findColumn(parsed.header, 'completion');
   const idxLastPlayed = findColumn(parsed.header, 'lastPlayed');
-  const idxTrophies   = findColumn(parsed.header, 'trophies');  // v1.16.4 — platinum detection
+  const idxTrophies   = findColumn(parsed.header, 'trophies');  // v1.16.4 - platinum detection
 
-  // v1.16.3 — column-guess fallback for non-standard CSV schemas
+  // v1.16.3 - column-guess fallback for non-standard CSV schemas
   if (idxTitle < 0) {
     idxTitle = guessTitleColumn(parsed.header, parsed.rows);
     if (idxTitle >= 0) format = format + '-guessed';
   }
 
   if (idxTitle < 0) {
-    // v1.16.10 — Last-resort fallback: pull alphabetic-rich lines as titles only.
+    // v1.16.10 - Last-resort fallback: pull alphabetic-rich lines as titles only.
     // Loses metadata but at least imports game names. Useful for users on weird
     // mobile browsers / formats we don't recognize.
     const allLines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
@@ -677,8 +677,8 @@ export function parsePsnProfilesPaste(text) {
       hours:         parseHours      (idxHours       >= 0 ? r[idxHours]       : ''),
       completionPct: parseCompletion (idxCompletion  >= 0 ? r[idxCompletion]  : ''),
       lastPlayed:    (idxLastPlayed  >= 0 ? r[idxLastPlayed] : '') || null,
-      // v1.16.4 — raw "X/Y" trophies string (e.g. "36/36"). Used downstream to
-      // detect platinum trophy on PSN — when X==Y, all trophies (incl. platinum
+      // v1.16.4 - raw "X/Y" trophies string (e.g. "36/36"). Used downstream to
+      // detect platinum trophy on PSN - when X==Y, all trophies (incl. platinum
       // if the game has one) are earned.
       trophies:      idxTrophies >= 0 ? String(r[idxTrophies] || '').trim() : '',
       raw: r,

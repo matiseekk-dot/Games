@@ -1,5 +1,5 @@
-// PS5 Vault: Service Worker v1.18.1 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
-const CACHE = "ps5vault-v64";
+// PS5 Vault: Service Worker v1.18.2 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v65";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -7,9 +7,9 @@ const NOTIF_I18N = {
     todayTitle: "🎮 Premiera dzisiaj!",
     todayBody: t => `${t} jest już dostępne!`,
     weekTitle: "⏳ Tydzień do premiery!",
-    weekBody: t => `${t} — za 7 dni!`,
+    weekBody: t => `${t} - za 7 dni!`,
     monthTitle: "📅 Miesiąc do premiery",
-    monthBody: t => `${t} — za miesiąc!`,
+    monthBody: t => `${t} - za miesiąc!`,
     daysTitle: d => `⏳ ${d} dni do premiery`,
     daysBody: t => `${t}`
   },
@@ -17,20 +17,20 @@ const NOTIF_I18N = {
     todayTitle: "🎮 Released today!",
     todayBody: t => `${t} is now available!`,
     weekTitle: "⏳ One week to release!",
-    weekBody: t => `${t} — in 7 days!`,
+    weekBody: t => `${t} - in 7 days!`,
     monthTitle: "📅 One month to release",
-    monthBody: t => `${t} — in one month!`,
+    monthBody: t => `${t} - in one month!`,
     daysTitle: d => `⏳ ${d} days to release`,
     daysBody: t => `${t}`
   },
-  // v1.14.2 — Spanish (es-419 neutral)
+  // v1.14.2 - Spanish (es-419 neutral)
   es: {
     todayTitle: "🎮 ¡Sale hoy!",
     todayBody: t => `¡${t} ya está disponible!`,
     weekTitle: "⏳ ¡Una semana para el lanzamiento!",
-    weekBody: t => `${t} — ¡en 7 días!`,
+    weekBody: t => `${t} - ¡en 7 días!`,
     monthTitle: "📅 Un mes para el lanzamiento",
-    monthBody: t => `${t} — ¡en un mes!`,
+    monthBody: t => `${t} - ¡en un mes!`,
     daysTitle: d => `⏳ ${d} días para el lanzamiento`,
     daysBody: t => `${t}`
   }
@@ -78,14 +78,14 @@ self.addEventListener("message", async event => {
   if (event.data?.type === "SKIP_WAITING") { self.skipWaiting(); return; }
   if (event.data?.type !== "CHECK_RELEASES") return;
   const games = event.data.games || [];
-  // v1.14.2 — accept es alongside pl/en. Anything else (or undefined) defaults to pl
+  // v1.14.2 - accept es alongside pl/en. Anything else (or undefined) defaults to pl
   // for backward-compat with pre-v1.14.2 scheduled notifications.
   const lang = event.data.lang === "en" ? "en" : event.data.lang === "es" ? "es" : "pl";
   const i18n = NOTIF_I18N[lang];
   const today = new Date(); today.setHours(0,0,0,0);
   for (const game of games) {
     if (!game.releaseDate || !game.notifyEnabled) continue;
-    // v1.18.1 — read "YYYY-MM-DD" as a local calendar day (UTC parsing fired "release today"
+    // v1.18.1 - read "YYYY-MM-DD" as a local calendar day (UTC parsing fired "release today"
     // a day early in the Americas)
     const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(game.releaseDate);
     const rel = ymd ? new Date(+ymd[1], +ymd[2] - 1, +ymd[3]) : new Date(game.releaseDate);
@@ -112,7 +112,7 @@ self.addEventListener("message", async event => {
 
 self.addEventListener("notificationclick", e => {
   e.notification.close();
-  // v1.10.0 — Honor data.tab from notification payload (weekly summary uses tab='st').
+  // v1.10.0 - Honor data.tab from notification payload (weekly summary uses tab='st').
   // The app reads ?tab=... from the URL on mount and switches accordingly.
   const data = e.notification.data || {};
   const tab = data.tab;

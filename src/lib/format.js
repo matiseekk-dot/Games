@@ -5,7 +5,7 @@ import { CURRENCIES } from '../constants.js';
 import { getCurrency, getLang } from './storage.js';
 import { parseDay } from './util.js';
 
-// v1.14.3 — Spanish month names added. Was binary lang==='en'?EN:PL — now 3-way.
+// v1.14.3 - Spanish month names added. Was binary lang==='en'?EN:PL - now 3-way.
 const MONTHS_PL = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -33,7 +33,7 @@ export function pln(v, lang) {
 }
 
 // Polish has 3-form plural: 1 gra, 2-4 gry, 5+ gier (also 12-14 → "gier", 22-24 → "gry")
-// English uses simpler 1 game / 2+ games. v1.14.3 — Spanish: juego / juegos.
+// English uses simpler 1 game / 2+ games. v1.14.3 - Spanish: juego / juegos.
 export function gamesWord(n, lang) {
   const abs = Math.abs(n);
   if (lang === 'es') return abs === 1 ? 'juego' : 'juegos';
@@ -44,7 +44,7 @@ export function gamesWord(n, lang) {
   return 'gier';
 }
 
-// v1.13.3 — Polish 3-form plural for "hours" used in goal templates and similar
+// v1.13.3 - Polish 3-form plural for "hours" used in goal templates and similar
 // sentence-style strings. EN: 1 hour / 2+ hours.
 // PL: 1 godzinę / 2-4 godziny / 5+ godzin (genitive).
 // Note: this is the ACCUSATIVE form (used after verbs like "Zagraj X godzin/y/ę")
@@ -60,7 +60,7 @@ export function hoursWord(n, lang) {
   return 'godzin';
 }
 
-// v1.13.3 — Polish plural for "platinum (trophy)" — same 3-form pattern.
+// v1.13.3 - Polish plural for "platinum (trophy)" - same 3-form pattern.
 // EN: 1 platinum / 2+ platinums. PL: 1 platynę / 2-4 platyny / 5+ platyn.
 export function platynaWord(n, lang) {
   const abs = Math.abs(n);
@@ -72,7 +72,7 @@ export function platynaWord(n, lang) {
   return 'platyn';
 }
 
-// v1.13.4 — Polish plural for "session" (gaming session). Used in Wrapped hero subtitle
+// v1.13.4 - Polish plural for "session" (gaming session). Used in Wrapped hero subtitle
 // ("X sesji"/"X sesje") and home stats ("X sesji dziś"). 1 sesja / 2-4 sesje / 5+ sesji.
 // EN: 1 session / 2+ sessions.
 export function sessionsWord(n, lang) {
@@ -88,14 +88,14 @@ export function sessionsWord(n, lang) {
 // Cost-per-hour with dynamic symbol. Format always "1.9 sym/h" regardless of before/after.
 // Named fmtCph (NOT cph) to avoid collision with local `const cph` inside Stats/Finance.
 export function fmtCph(v) {
-  // v1.18.1 — decimal comma for Polish and Spanish ("3,2 zł/h", not "3.2 zł/h")
+  // v1.18.1 - decimal comma for Polish and Spanish ("3,2 zł/h", not "3.2 zł/h")
   let num = (+v || 0).toFixed(1);
   try { const l = getLang(); if (l === 'pl' || l === 'es') num = num.replace('.', ','); } catch {}
   const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
   return `${num} ${def.symbol}/h`;
 }
 
-// Format hours as "2h 54min" / "30min" / "5h" — replaces ugly "2.9h"
+// Format hours as "2h 54min" / "30min" / "5h" - replaces ugly "2.9h"
 // minStr: "min" in both PL/EN (common, no need to translate)
 export function fmtHours(v, opts) {
   const h = +v || 0;

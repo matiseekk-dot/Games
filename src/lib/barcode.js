@@ -36,7 +36,7 @@ export function cleanProductName(raw) {
   for (const n of noise) s = s.replace(n, ' ');
   // Punctuation cleanup: only collapse dashes/colons that have whitespace around them,
   // so in-word hyphens like "Spider-Man" survive.
-  s = s.replace(/\s+[\-–—:|·,]+\s+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  s = s.replace(/\s+[\-\u2013\u2014:|·,]+\s+/g, ' ').replace(/\s{2,}/g, ' ').trim();
   // Drop empty parens left behind
   s = s.replace(/\(\s*\)/g, '').trim();
   // Orphan stop-words at the start/end after publisher/console strip ("...XVI for")
@@ -65,7 +65,7 @@ export async function eanLookup(ean) {
     eanCacheWrite(cache);
     return title || null;
   } catch {
-    // Network/abort/timeout — don't poison cache, allow retry next time
+    // Network/abort/timeout - don't poison cache, allow retry next time
     return null;
   } finally { clearTimeout(tm); }
 }

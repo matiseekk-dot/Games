@@ -1,4 +1,4 @@
-// v1.17.7 — Funnel analytics via Umami Cloud (cookieless, no consent banner needed).
+// v1.17.7 - Funnel analytics via Umami Cloud (cookieless, no consent banner needed).
 //
 // Why Umami and not Firebase/GA4: GA4 stores a client identifier, so in the EU it needs a
 // consent banner before the first event, and that banner would sit exactly at first launch,

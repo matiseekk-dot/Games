@@ -1,21 +1,21 @@
-// v1.9.0 — Recommendations engine.
+// v1.9.0 - Recommendations engine.
 //
 // Strategy (option C from CHANGELOG-v1.8.0): hybrid two-track recommendations
-//   1. "Bo lubisz X"    — seeds = top-3 highest-rated games (rating ≥ 8)
-//   2. "Bo grałeś w Y"  — seeds = last-3 completed games by completedAt desc
+//   1. "Bo lubisz X"    - seeds = top-3 highest-rated games (rating ≥ 8)
+//   2. "Bo grałeś w Y"  - seeds = last-3 completed games by completedAt desc
 //
 // For each seed game with a stored rawgId, we fetch /games/{id}/suggested via
 // lib/rawg.fetchSuggested, then aggregate + dedupe + score the union.
 //
 // Cache (LS_RECS_CACHE) is keyed by RAWG game ID. TTL = 30 days. Suggestions are
-// content-based and stable per game, so we cache aggressively — at 6 calls per
+// content-based and stable per game, so we cache aggressively - at 6 calls per
 // "show recommendations" tap and 30-day TTL, even a daily user stays well under
-// the 20k/month free quota (~10–30 calls/month realistic).
+// the 20k/month free quota (~10-30 calls/month realistic).
 //
 // Dedupe vs already-added games: since most existing user games predate v1.9 and
 // don't have rawgId stored, we fall back to normalized-title comparison. Edge
 // cases like "Marvel's Spider-Man 2" (user) vs "Spider-Man 2" (RAWG) will be
-// flagged as new — acceptable noise. Users who add via RAWG search after v1.9
+// flagged as new - acceptable noise. Users who add via RAWG search after v1.9
 // get clean rawgId-based dedupe.
 import { LS_RECS_CACHE } from '../constants.js';
 import { fetchSuggested } from './rawg.js';
@@ -64,7 +64,7 @@ export function normalizeTitle(s) {
 // fallback chain). Returns at most MAX_SEEDS_PER_TRACK per track.
 //
 // IMPORTANT: only games with rawgId can be seeds. Manual entries / pre-v1.9 games
-// without rawgId are silently skipped — UI shows an empty-state CTA pointing user
+// without rawgId are silently skipped - UI shows an empty-state CTA pointing user
 // at the RAWG search.
 export function pickSeeds(games) {
   const eligible = (games || []).filter(g => g && g.rawgId);
@@ -101,12 +101,12 @@ async function getSuggestionsFor(seed) {
 // Score = (number of seeds that recommended this game) × 10 + RAWG rating.
 // The frequency boost surfaces titles that are "similar to" multiple favorites,
 // while RAWG rating breaks ties by quality. Ties broken by playtime (longer first
-// — bigger ROI for backlog optimization).
+// - bigger ROI for backlog optimization).
 //
 // Each result keeps a `reasons[]` list (array of {seedTitle, seedRating}) so the
 // UI can show "Bo lubisz X (ocena 9), Y (ocena 8)" tooltip.
 //
-// Exported (rather than module-private) for unit testing — see tests/aggregate.test.js.
+// Exported (rather than module-private) for unit testing - see tests/aggregate.test.js.
 // Consumers should still go through buildRecommendations() in production code.
 export function aggregate(perSeedResults, alreadyOwnedNorms) {
   // perSeedResults: [{ seed, results }]
@@ -140,12 +140,12 @@ export function aggregate(perSeedResults, alreadyOwnedNorms) {
 //     completed:   { recs: [...], seeds: [...], anyCached: bool },
 //     hasAnyData:  bool  ← false → UI should show empty state }
 //
-// Each track is independent — empty topRated is OK if user has completions, and vice
+// Each track is independent - empty topRated is OK if user has completions, and vice
 // versa. UI shows per-track empty states with appropriate CTAs.
 export async function buildRecommendations(games) {
   const { topRated, recentlyCompleted } = pickSeeds(games);
 
-  // Build the ownership set ONCE — used for dedupe across both tracks.
+  // Build the ownership set ONCE - used for dedupe across both tracks.
   const ownedNorms = new Set(
     (games || []).map(g => normalizeTitle(g?.title)).filter(Boolean)
   );
@@ -154,7 +154,7 @@ export async function buildRecommendations(games) {
   topRated.forEach(g => ownedNorms.add(normalizeTitle(g.title)));
   recentlyCompleted.forEach(g => ownedNorms.add(normalizeTitle(g.title)));
 
-  // Fetch in parallel — RAWG handles 6 concurrent requests fine.
+  // Fetch in parallel - RAWG handles 6 concurrent requests fine.
   const fetchTrack = async (seeds) => {
     const responses = await Promise.all(seeds.map(async (seed) => {
       const { results, cached } = await getSuggestionsFor(seed);
@@ -181,7 +181,7 @@ export async function buildRecommendations(games) {
 }
 
 // ─── Cache utility for Settings ─────────────────────────────────────────
-// Returns total cached entries + their cumulative size in bytes (rough — JSON length).
+// Returns total cached entries + their cumulative size in bytes (rough - JSON length).
 // Used by Settings → Data → "Wyczyść cache rekomendacji" row to show meaningful info.
 export function recsCacheStats() {
   const c = recsCacheRead();

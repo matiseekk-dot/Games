@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
-// v1.6.0 — extracted modules. App.jsx is now a thin orchestrator + components shell.
+// v1.6.0 - extracted modules. App.jsx is now a thin orchestrator + components shell.
 import {
   APP_VER,
   LS_LANG, LS_CURRENCY,
@@ -39,7 +39,7 @@ import { proGateActive, readCachedPro, refreshEntitlement, buyPro, getProPrice, 
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
-// v1.17.6 — Collection list is rendered in pages of this many cards. Big imported
+// v1.17.6 - Collection list is rendered in pages of this many cards. Big imported
 // libraries (700+) otherwise mount hundreds of DOM nodes at once and jank.
 const COL_PAGE = 120;
 
@@ -62,13 +62,13 @@ function ReleaseBadge({releaseDate,lang}){
   return<span className='rbdg-upcoming'>📅 {fmtShort(releaseDate,lang)}</span>;
 }
 
-// v1.15.0 — Replaces v1.10 carousel + v1.14 demo banner. Linear 4-step setup wizard:
+// v1.15.0 - Replaces v1.10 carousel + v1.14 demo banner. Linear 4-step setup wizard:
 //   1 = Welcome (single CTA, sets the brand tone)
-//   2 = Currency picker (full grid — user makes deliberate choice, no auto-detect surprise)
-//   3 = Demo games choice (EXPLICIT — fixes "I think I'm too dumb, why are these games here"
+//   2 = Currency picker (full grid - user makes deliberate choice, no auto-detect surprise)
+//   3 = Demo games choice (EXPLICIT - fixes "I think I'm too dumb, why are these games here"
 //       reported on r/SideProject by TheBigRandowski). User picks "show examples" or "start
-//       empty" — no more silent demo seed.
-//   4 = Expectation setting (CRITICAL — addresses TheEnigmaEric's "do I have to manually add
+//       empty" - no more silent demo seed.
+//   4 = Expectation setting (CRITICAL - addresses TheEnigmaEric's "do I have to manually add
 //       my games or can I connect my existing PS5 library" feedback. Says explicitly: this
 //       is a manual tracker, PSN sync coming in Premium).
 // onLoadDemo is fired only if the user picks "show examples" in step 3 (was: fired in step 1
@@ -88,7 +88,7 @@ function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
     if(loadDemo && typeof onLoadDemo==='function') onLoadDemo();
     onSkip();
   }
-  // Tiny step-counter chip rendered on every step (except 1 — welcome doesn't need it)
+  // Tiny step-counter chip rendered on every step (except 1 - welcome doesn't need it)
   const stepLabel = step>1 ? <div className='ob-step-chip'>{t(lang,'wizard4StepLabel',{n:step})}</div> : null;
 
   if(step===1){
@@ -132,7 +132,7 @@ function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
         <div className='ob-logo' style={{fontSize:36}}>🎮</div>
         <div className='ob-title'>{t(lang,'wizard3Title')}</div>
         <div className='ob-sub'>{t(lang,'wizard3Body')}</div>
-        {/* Two equal-weight choices — no "primary/secondary" hierarchy because both are
+        {/* Two equal-weight choices - no "primary/secondary" hierarchy because both are
             valid paths. User feedback explicitly said the default seeded demos confused
             them, so making this an explicit 50/50 choice is the fix. */}
         <button type='button' className='ob-start' onClick={()=>{ window.__ps5v_pendingDemo=true; setStep(4); }}>{t(lang,'wizard3Yes')}</button>
@@ -141,15 +141,15 @@ function Onboarding({onSkip,onCurrencyPick,onLoadDemo,lang}){
     );
   }
 
-  // step === 4 — expectation setting. The "this is manual tracker" message is the most
-  // important text in the whole wizard. Don't soften it — clarity is the conversion fix.
+  // step === 4 - expectation setting. The "this is manual tracker" message is the most
+  // important text in the whole wizard. Don't soften it - clarity is the conversion fix.
   return(
     <div className='onboard'>
       {stepLabel}
       <div className='ob-logo' style={{fontSize:36}}>📋</div>
       <div className='ob-title'>{t(lang,'wizard4Title')}</div>
       <div className='ob-sub'>{t(lang,'wizard4Body')}</div>
-      {/* v1.18.0 — was a "PSN sync coming in Premium" promise that never shipped. Now an
+      {/* v1.18.0 - was a "PSN sync coming in Premium" promise that never shipped. Now an
           honest note about the one-time Pro, shown only once Pro is live. */}
       {PRO_ENABLED&&<div style={{margin:'14px 0',padding:'12px 14px',background:'rgba(255,209,102,.08)',border:'1px solid rgba(255,209,102,.3)',borderRadius:12,fontSize:12,color:'#E8EDF8',lineHeight:1.5}}>
         ⭐ {t(lang,'wizard4Pro')}
@@ -181,12 +181,12 @@ function Confirm({title,body,onYes,onNo,lang}){
   );
 }
 
-// v1.7.0 — toast-style banner that surfaces freshly-unlocked achievements.
+// v1.7.0 - toast-style banner that surfaces freshly-unlocked achievements.
 // Renders at most ONE achievement at a time (the first newly-unlocked, by definition order
 // in ACHIEVEMENTS array). If multiple unlocked simultaneously, queue head shows + counter.
 // Tap → opens Achievements overlay. Auto-dismisses after 6s. Rare-tier gets gold accent.
 //
-// Important: we deliberately don't show the banner on first load after install/update —
+// Important: we deliberately don't show the banner on first load after install/update -
 // the App-level useEffect handles the silent migration (sets lastSeenAch = current set).
 // This banner only fires for genuine NEW unlocks during the session.
 function AchievementBanner({ ach, queueLen, onTap, onDismiss, lang }){
@@ -204,9 +204,9 @@ function AchievementBanner({ ach, queueLen, onTap, onDismiss, lang }){
   );
 }
 
-// v1.15.1 — Added bulk mode. Pass mode='bulk' + onBulkAdd to enable continuous scan
+// v1.15.1 - Added bulk mode. Pass mode='bulk' + onBulkAdd to enable continuous scan
 // with dedup, in-camera queue, and batch commit on Done. Single mode (default, called
-// from RawgSearch) keeps current behavior — pick one EAN, lookup, return result, done.
+// from RawgSearch) keeps current behavior - pick one EAN, lookup, return result, done.
 function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
   const isBulk = mode === 'bulk';
   const videoRef = useRef(null);
@@ -215,14 +215,14 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
   const intervalRef = useRef(null);
   const handleEANRef = useRef(null);
   // Phases:
-  //   'init'        — checking BarcodeDetector / requesting camera
-  //   'scanning'    — camera live, polling for codes
-  //   'lookup'      — got an EAN, asking UPCitemdb (single mode only — bulk stays in 'scanning')
-  //   'rawg'        — got a name, asking RAWG (single mode only)
-  //   'results'     — done, show RAWG hits (possibly 0) + scan-again (single mode only)
-  //   'unsupported' — no BarcodeDetector available (iOS Safari)
-  //   'denied'      — user denied camera
-  //   'error'       — getUserMedia threw something else
+  //   'init'        - checking BarcodeDetector / requesting camera
+  //   'scanning'    - camera live, polling for codes
+  //   'lookup'      - got an EAN, asking UPCitemdb (single mode only - bulk stays in 'scanning')
+  //   'rawg'        - got a name, asking RAWG (single mode only)
+  //   'results'     - done, show RAWG hits (possibly 0) + scan-again (single mode only)
+  //   'unsupported' - no BarcodeDetector available (iOS Safari)
+  //   'denied'      - user denied camera
+  //   'error'       - getUserMedia threw something else
   const [phase, setPhase] = useState('init');
   const [ean, setEan] = useState('');
   const [productName, setProductName] = useState('');
@@ -232,9 +232,9 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
   const [manualEAN, setManualEAN] = useState('');
   // v1.15.1 bulk-mode state. Always declared (Rules of Hooks) but only used when isBulk.
   // bulkQueue: ordered list of {id, ean, status, title, cover, gameObj?, addedAt}.
-  //   Newest items prepended — UI shows top-3 horizontal strip.
+  //   Newest items prepended - UI shows top-3 horizontal strip.
   // bulkScannedRef: Set<ean> to skip duplicates within a single session (user accidentally
-  //   waving same box past camera again — happens in practice on a tilted shelf).
+  //   waving same box past camera again - happens in practice on a tilted shelf).
   // bulkToast: transient flash overlay over camera view {key, type, text}; key forces
   //   re-render for animation; auto-clears after 1.4s.
   const [bulkQueue, setBulkQueue] = useState([]);
@@ -269,7 +269,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
       setResults(r);
       setPhase('results');
     } else {
-      // No name available — try the raw EAN against RAWG as a Hail Mary, but it'll
+      // No name available - try the raw EAN against RAWG as a Hail Mary, but it'll
       // almost always come back empty. The 'results' phase handles 0 hits gracefully.
       setProductName('');
       setPhase('rawg');
@@ -279,20 +279,20 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
     }
   },[stopCam]);
 
-  // v1.15.1 — Bulk-mode handler. Camera stays live; we lookup + auto-pick the first
+  // v1.15.1 - Bulk-mode handler. Camera stays live; we lookup + auto-pick the first
   // RAWG result silently, push to queue, flash a transient toast over the video. No
-  // results screen, no rescan button — just keep scanning.
+  // results screen, no rescan button - just keep scanning.
   const handleEANBulk = useCallback(async (code)=>{
     const clean = String(code).replace(/\D/g,'');
     if(!clean) return;
     if(bulkScannedRef.current.has(clean)){
-      // Duplicate within this session — quick visual ack, don't re-fetch.
+      // Duplicate within this session - quick visual ack, don't re-fetch.
       setBulkToast({ key:Date.now(), type:'dup', text:t(lang,'bulkScanFlashDup') });
       return;
     }
     bulkScannedRef.current.add(clean);
     const itemId = 'bs_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-    // Optimistic queue entry — gives instant feedback while UPCitemdb + RAWG run.
+    // Optimistic queue entry - gives instant feedback while UPCitemdb + RAWG run.
     setBulkQueue(q => [{ id:itemId, ean:clean, status:'pending', title:t(lang,'bulkScanLookingUp'), cover:'', addedAt:new Date().toISOString() }, ...q]);
     try {
       const name = await eanLookup(clean);
@@ -308,7 +308,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
           : i));
         setBulkToast({ key:Date.now(), type:'ok', text:t(lang,'bulkScanFlashAdded',{title:chosen.title}) });
       } else {
-        // Lookup succeeded but RAWG returned nothing — keep the entry as 'err' so user
+        // Lookup succeeded but RAWG returned nothing - keep the entry as 'err' so user
         // sees what was scanned but didn't make it; gets dropped at commit time.
         setBulkQueue(q => q.map(i => i.id === itemId ? { ...i, status:'err', title:name||clean } : i));
         setBulkToast({ key:Date.now(), type:'err', text:t(lang,'bulkScanFlashSkipped',{ean:clean}) });
@@ -373,7 +373,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
           const codes = await det.detect(vid);
           if(codes && codes.length){
             const raw = codes[0].rawValue || '';
-            // EAN-13 is 13 digits, EAN-8 is 8, UPC-A is 12, UPC-E is 6-8. Accept 8–14 digits.
+            // EAN-13 is 13 digits, EAN-8 is 8, UPC-A is 12, UPC-E is 6-8. Accept 8-14 digits.
             if(/^\d{8,14}$/.test(raw)){
               handleEANRef.current?.(raw);
             }
@@ -411,7 +411,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
 
   const close = ()=>{ stopCam(); onClose(); };
 
-  // v1.15.1 — Done button in bulk mode commits the queue's successful items + closes.
+  // v1.15.1 - Done button in bulk mode commits the queue's successful items + closes.
   const bulkOk = bulkQueue.filter(i => i.status === 'ok');
   const finishBulk = ()=>{
     stopCam();
@@ -422,7 +422,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
   };
 
   // ── Render bits ──
-  // v1.15.1 — bulk stays in 'scanning' phase forever; we never transition to lookup/results.
+  // v1.15.1 - bulk stays in 'scanning' phase forever; we never transition to lookup/results.
   const showVideo = phase === 'init' || phase === 'scanning';
   const showStatus = !isBulk && (phase === 'lookup' || phase === 'rawg');
   const showResults = !isBulk && phase === 'results';
@@ -442,7 +442,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
           <div className='bs-hint'>
             {phase==='init' ? t(lang,'scanInitializing') : (isBulk ? t(lang,'scanModeBulkHint') : t(lang,'scanHint'))}
           </div>
-          {/* v1.15.1 — Bulk transient toast overlaid on video. Reuses tiny key-bumped state
+          {/* v1.15.1 - Bulk transient toast overlaid on video. Reuses tiny key-bumped state
               for animation re-trigger. Three colors: green/red/blue for ok/err/dup. */}
           {isBulk && bulkToast && (
             <div key={bulkToast.key} className={'bs-bulk-flash bs-bulk-flash-'+bulkToast.type}>
@@ -452,7 +452,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
         </div>
       )}
 
-      {/* v1.15.1 — Bulk queue strip (horizontal scroll). Newest 8 visible, oldest scrolls
+      {/* v1.15.1 - Bulk queue strip (horizontal scroll). Newest 8 visible, oldest scrolls
           out of view. Each card shows cover thumbnail + title + status icon. Pending
           items show a spinner; errors are red and dropped at commit time. */}
       {isBulk && phase === 'scanning' && (
@@ -482,7 +482,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
               <div className='bs-err-d'>
                 {phase==='unsupported' && t(lang,'scanUnsupportedHint')}
                 {phase==='denied'      && t(lang,'scanDeniedHint')}
-                {phase==='error'       && (errMsg || '—')}
+                {phase==='error'       && (errMsg || '-')}
               </div>
             </div>
           </>
@@ -549,7 +549,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
           </>
         )}
 
-        {/* v1.15.1 — Bulk-mode commit button. Replaces single-mode's manual EAN entry +
+        {/* v1.15.1 - Bulk-mode commit button. Replaces single-mode's manual EAN entry +
             results UI. Disabled until at least one game is queued. Label includes the
             count so user can see "Done (5)" before tapping. */}
         {isBulk ? (
@@ -560,7 +560,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
           </div>
         ) : (
           <>
-            {/* Manual EAN entry — always available as a fallback */}
+            {/* Manual EAN entry - always available as a fallback */}
             <div className='bs-mlbl'>{t(lang,'scanManualLabel')}</div>
             <div className='bs-mrow'>
               <input
@@ -591,7 +591,7 @@ function RawgSearch({onSelect,lang}){
   const [scanOpen,setScanOpen]=useState(false);
   const timer=useRef(null);
   const reqId=useRef(0);
-  // v1.15.0 — Anti-flicker: don't clear `res` on every keystroke (it caused the dropdown
+  // v1.15.0 - Anti-flicker: don't clear `res` on every keystroke (it caused the dropdown
   // to flash empty between requests). Old results stay visible while the user types,
   // dimmed via the .stale class (see styles.js). When the new request resolves, results
   // swap in atomically. setRes([]) only fires when query becomes empty.
@@ -607,7 +607,7 @@ function RawgSearch({onSelect,lang}){
         const r=await rawgSearch(val);
         if(myReq!==reqId.current)return;
         setRes(r);
-        // Keep dropdown open even when 0 results — show "not found" hint instead of silently closing
+        // Keep dropdown open even when 0 results - show "not found" hint instead of silently closing
         setOpen(true);
         setBusy(false);
       } catch {
@@ -654,19 +654,19 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
   const [f,setF]=useState(()=>game?{...EF,...game}:{...EF});
   const [confirmDel,setConfirmDel]=useState(false);
   const [shake,setShake]=useState(false);
-  // v1.4.0 — Quick add: collapsed by default for new games, expanded for edits.
+  // v1.4.0 - Quick add: collapsed by default for new games, expanded for edits.
   // Edits typically need full visibility (user came to change something specific);
   // adds want a friction-free "RAWG → pick → save" path.
   const [showDetails,setShowDetails]=useState(isEdit);
   // Track whether targetHours came from RAWG playtime so we can show the explanatory hint
   // and clear it once the user manually overrides the value.
   const [targetFromRawg,setTargetFromRawg]=useState(false);
-  // v1.13.1 — Refresh-from-RAWG state. Only meaningful for edited games with a rawgId.
+  // v1.13.1 - Refresh-from-RAWG state. Only meaningful for edited games with a rawgId.
   // Flips true while the fetch is in flight, blocks button taps, shows spinner.
   const [refreshing,setRefreshing]=useState(false);
   const titleRef=useRef(null);
   const SM=getSM(lang);
-  // v1.14.3 — Spanish added. Localized labels only — value stored on the game is
+  // v1.14.3 - Spanish added. Localized labels only - value stored on the game is
   // still the PL canonical (RMAP+legacy data), so cross-language collections stay
   // consistent. The Modal's <select> uses GENRES_PL as values + this localized
   // array as visible labels (see render below).
@@ -679,7 +679,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
     return n;
   });
   // RAWG/scanner pick: prefill title/year/genre/cover/release date AND target hours
-  // (only if currently empty — never overwrite a user-typed target).
+  // (only if currently empty - never overwrite a user-typed target).
   // v1.9.0: also stash the RAWG game id as `rawgId` for later use as a Recommendations seed.
   const fill=item=>setF(p=>{
     const next={
@@ -700,14 +700,14 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
     }
     return next;
   });
-  // v1.13.1 — Refresh-from-RAWG: re-fetch the canonical game data by rawgId and
+  // v1.13.1 - Refresh-from-RAWG: re-fetch the canonical game data by rawgId and
   // overwrite the 4 RAWG-controlled fields (releaseDate, year, genre, cover).
   // We do NOT touch user-controlled fields:
-  //   title — user may have customized ("My Speedrun Save")
-  //   abbr — derived from title, user may have overridden
+  //   title - user may have customized ("My Speedrun Save")
+  //   abbr - derived from title, user may have overridden
   //   status, hours, rating, notes, priceBought/Sold, storeBought, targetHours,
   //   extraSpend, platform, platinum, lastPlayed, completedAt, sessions,
-  //   notifyEnabled — all user-tracked or user-preference fields
+  //   notifyEnabled - all user-tracked or user-preference fields
   //
   // Diff is reported in the success toast so the user knows what changed
   // ("Zaktualizowano: data, okładka") or that there was nothing new ("Brak zmian").
@@ -748,7 +748,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
         if(typeof flash==='function') flash(t(lang,'rawgRefreshNoChanges'));
         return;
       }
-      // Apply updates (functional form — safe vs concurrent state changes mid-fetch).
+      // Apply updates (functional form - safe vs concurrent state changes mid-fetch).
       setF(p => ({...p, ...updates}));
       if(typeof flash==='function') flash(t(lang,'rawgRefreshOk',{fields:changes.join(', ')}));
     } catch {
@@ -762,7 +762,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
       setShake(true);
       setTimeout(()=>setShake(false),500);
       titleRef.current?.focus();
-      // Force the details accordion open if user hits Save without a title — but
+      // Force the details accordion open if user hits Save without a title - but
       // title lives in the quick-add view, so just shake. Nothing to expand here.
       return;
     }
@@ -774,7 +774,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
     // (e.g. after a status change). Guard against null/undefined/empty/non-finite before clamping.
     const rNum=parseNum(f.rating);
     const rating=rNum!==null&&rNum>0?Math.min(10,Math.max(1,rNum)):null;
-    // v1.18.1 — accept "89,99" / "12,5" from Polish and Spanish keyboards (was NaN → dropped)
+    // v1.18.1 - accept "89,99" / "12,5" from Polish and Spanish keyboards (was NaN → dropped)
     const money=v=>{const n=parseNum(v);return n===null?'':String(n);};
     // priceSold UX: single input where empty string = not sold (no toggle anymore).
     // Anything else gets coerced to a number string at the storage layer.
@@ -788,7 +788,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
         <div className='mdl'>
           <div className='mhdl'/>
           <div className='mttl'>{isEdit?t(lang,'editGameTitle'):t(lang,'addGameTitle')}</div>
-          {/* v1.15.1 — Bulk scan call-out, only on Add (not Edit). Discoverable but
+          {/* v1.15.1 - Bulk scan call-out, only on Add (not Edit). Discoverable but
               not pushy; tap → close this modal + open BarcodeScanner in bulk mode. */}
           {!isEdit && typeof onBulkScan === 'function' && (
             <button type='button' onClick={onBulkScan} style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'12px 14px',marginBottom:12,background:'linear-gradient(135deg,rgba(0,212,255,.1),rgba(167,139,250,.06))',border:'1px solid rgba(0,212,255,.35)',borderRadius:12,cursor:'pointer',color:G.txt,textAlign:'left'}}>
@@ -828,7 +828,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
                 </select>
               </div>
             </div>
-            {/* v1.14.0 — Source dropdown (owned vs PS Plus / Game Pass / etc.).
+            {/* v1.14.0 - Source dropdown (owned vs PS Plus / Game Pass / etc.).
                 Drives cost-exclusion: only `owned` games count toward total spent / cph / ROI.
                 Defaults to 'owned' for new games and pre-v1.14 imports (lsRead migration). */}
             <div className='fg'><label className='fl'>{t(lang,'source_label')}</label>
@@ -837,10 +837,10 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
               </select>
             </div>
             <div className='fg'>
-              <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'— '+t(lang,'releaseToday'):'— '+t(lang,'inDays',{n:days})}</span>}</label>
+              <label className='fl'>{t(lang,'releaseDateField')}{days!==null&&days>=0&&<span style={{marginLeft:8,fontWeight:700,color:days===0?G.grn:days<=3?G.org:G.pur}}>{days===0?'· '+t(lang,'releaseToday'):'· '+t(lang,'inDays',{n:days})}</span>}</label>
               <input className='fi' type='date' value={f.releaseDate} onChange={e=>upd('releaseDate',e.target.value)} style={{colorScheme:'dark'}}/>
               <div className='fhnt'>{t(lang,'releaseDateHint')}</div>
-              {/* v1.15.3 — Pre-order toggle. Only relevant for games not yet released
+              {/* v1.15.3 - Pre-order toggle. Only relevant for games not yet released
                   (days > 0). Checkbox style + amber/gold accent matches the "💳" semantic. */}
               {days!==null && days>0 && (
                 <label style={{display:'flex',alignItems:'center',gap:10,marginTop:10,padding:'10px 12px',background:'rgba(255,209,102,.07)',border:'1px solid rgba(255,209,102,.25)',borderRadius:10,cursor:'pointer'}}>
@@ -851,7 +851,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
                   </span>
                 </label>
               )}
-              {/* v1.13.1 — Refresh from RAWG. Only shown for edited games with a rawgId
+              {/* v1.13.1 - Refresh from RAWG. Only shown for edited games with a rawgId
                   (new games and pre-v1.9 games without rawgId have nothing to refresh). */}
               {isEdit && f.rawgId && (
                 <button type='button' className='rawg-refresh' onClick={refreshFromRawg} disabled={refreshing}>
@@ -863,7 +863,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
               <div className='fg'><label className='fl'>{t(lang,'genreField')}</label>
                 <select className='fs' value={f.genre} onChange={e=>upd('genre',e.target.value)}>
                   <option value=''>{t(lang,'genrePh')}</option>
-                  {/* v1.14.3 — value=PL canonical (back-compat with stored data + RMAP),
+                  {/* v1.14.3 - value=PL canonical (back-compat with stored data + RMAP),
                       label=localized for the active language. */}
                   {GENRES_PL.map((gPl,i)=><option key={gPl} value={gPl}>{genres[i]}</option>)}
                 </select>
@@ -871,7 +871,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
               <div className='fg'><label className='fl'>{t(lang,'hoursField')}</label><input className='fi' inputMode='decimal' value={f.hours} onChange={e=>upd('hours',e.target.value)} placeholder='0'/></div>
             </div>
             <div className='f2'>
-              <div className='fg'><label className='fl'>{t(lang,'ratingField')}</label><input className='fi' inputMode='decimal' value={f.rating??''} onChange={e=>upd('rating',e.target.value)} placeholder='—'/></div>
+              <div className='fg'><label className='fl'>{t(lang,'ratingField')}</label><input className='fi' inputMode='decimal' value={f.rating??''} onChange={e=>upd('rating',e.target.value)} placeholder='-'/></div>
               <div className='fg'>
                 <label className='fl'>{t(lang,'targetHoursField')}</label>
                 <input className='fi' inputMode='decimal' value={f.targetHours||''} onChange={e=>upd('targetHours',e.target.value)} placeholder={t(lang,'targetPh')}/>
@@ -904,7 +904,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
                 inputMode='decimal'
                 value={f.priceSold==null?'':f.priceSold}
                 onChange={e=>upd('priceSold', e.target.value===''?null:e.target.value)}
-                placeholder='—'
+                placeholder='-'
               />
               <div className='fhnt'>{t(lang,'soldFieldHint')}</div>
             </div>
@@ -929,7 +929,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
   );
 }
 
-// v1.17.4 — SessionTimer component removed per user request. Historical sessions
+// v1.17.4 - SessionTimer component removed per user request. Historical sessions
 // (from prior versions when the timer was active) are preserved on each game via
 // g.sessions[]; Stats → Time tab still uses them via collectSessions().
 
@@ -938,7 +938,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
   const backlog=games.filter(g=>g.status==='planuje'&&!g.releaseDate);
-  // v1.17.3 — Added status==='planuje' filter (same fix as Premieres tab in v1.17.2).
+  // v1.17.3 - Added status==='planuje' filter (same fix as Premieres tab in v1.17.2).
   // Without it, clicking "Zacznij grać" on the "nearest premiere" card changes
   // status to 'gram' but the card still shows the same game because the filter
   // doesn't re-evaluate based on status. With the filter, nextUp advances to the
@@ -956,9 +956,9 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
   const totalSpent=totalBase+totalDLC;
   const totalEarned=sold.reduce((s,g)=>s+ +g.priceSold,0);
   const sellable=games.filter(g=>isOwned(g) && g.status==='porzucone'&&!!+g.priceBought&&(g.priceSold==null||!+g.priceSold)).sort((a,b)=>+b.priceBought - +a.priceBought);
-  // Monthly purchases — games added in the current local month with a price.
+  // Monthly purchases - games added in the current local month with a price.
   // Shown as expandable card on Home when purchases exist this month.
-  // v1.17.5 — Exclude still-active pre-orders (preOrdered + future release date).
+  // v1.17.5 - Exclude still-active pre-orders (preOrdered + future release date).
   // A pre-order is money committed to a game that hasn't released yet, so it
   // shouldn't count as a "purchase this month" until it's out. Once it releases
   // (or the user unchecks preOrdered), it counts normally.
@@ -968,16 +968,16 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
     .filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought&&!isActivePreOrder(g))
     .sort((a,b)=>(b.addedAt||'').localeCompare(a.addedAt||''));
   const monthSpent=monthPurchasesList.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
-  // v1.14.1 — Friendlier empty state. Triggered when user clears all demos and hasn't
+  // v1.14.1 - Friendlier empty state. Triggered when user clears all demos and hasn't
   // added their own games yet, OR on a hand-cleaned install. Different copy from the
-  // first-run onboarding (obTitle/obSub) — those run BEFORE the demo seed; this is the
+  // first-run onboarding (obTitle/obSub) - those run BEFORE the demo seed; this is the
   // post-seed/post-clear state.
   if(!games.length)return(<div className='scr'><div className='empty' style={{paddingTop:60}}><div className='eic'>🎮</div><div className='ett'>{t(lang,'home_empty_title')}</div><div className='ess'>{t(lang,'home_empty_hint')}</div><button className='empty-cta' onClick={onAddFirst}>{t(lang,'addGame')}</button></div></div>);
   const hour=new Date().getHours();
   const greet=hour<6?t(lang,'goodNight'):hour<12?t(lang,'goodMorning'):hour<18?t(lang,'goodAfternoon'):t(lang,'goodEvening');
   return(
     <div className='scr'>
-      {/* v1.15.0 — Removed demo banner from v1.14. The banner was a band-aid for the
+      {/* v1.15.0 - Removed demo banner from v1.14. The banner was a band-aid for the
           activation problem; the real fix is the 4-step setup wizard which sets explicit
           expectations BEFORE the user sees any games. Demo games (if user picked them in
           wizard step 3) are now self-explanatory because user opted in. */}
@@ -985,7 +985,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,letterSpacing:'.06em',marginBottom:2}}>{greet}</div>
         <div style={{fontSize:11,color:G.dim}}>{games.length} {t(lang,'gamesInCollection')} · {current.length} {t(lang,'active')} · {upcoming.length} {t(lang,'upcomingReleases')}</div>
       </div>
-      {/* v1.17.6 — Welcome-back nudge (returning user + real backlog). */}
+      {/* v1.17.6 - Welcome-back nudge (returning user + real backlog). */}
       {welcomeBack>0 && (
         <div className='hcard' style={{border:`1px solid rgba(167,139,250,.35)`,background:'rgba(167,139,250,.06)'}}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
@@ -1001,7 +1001,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
           </div>
         </div>
       )}
-      {/* v1.17.5 — Goals card removed (feature retired per user request). */}
+      {/* v1.17.5 - Goals card removed (feature retired per user request). */}
       {current.length>0?(
         <div className='hcard'>
           <div className='hcard-hdr'><span className='hcard-title'>▶️ {t(lang,'continuePlay')}</span><span className='hcard-badge' style={{background:'rgba(0,212,255,.12)',color:G.blu}}>{current.length}</span></div>
@@ -1017,7 +1017,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
                   {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span>{gProg<100&&<span>~{fmtHours(gRem)} {t(lang,'remaining')}</span>}</div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
                 </div>
               </div>
-              {/* v1.17.4 — SessionTimer removed per user request. Clicking the
+              {/* v1.17.4 - SessionTimer removed per user request. Clicking the
                   game opens Modal where hours can be edited manually. Existing
                   sessions[] on games is preserved for legacy Stats → Time tab. */}
             </div>;
@@ -1096,23 +1096,23 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
           )}
         </div>
       )}
-      {/* v1.17.5 — Recommendations CTA removed (feature retired per user request). */}
+      {/* v1.17.5 - Recommendations CTA removed (feature retired per user request). */}
     </div>
   );
 }
 
-// v1.15.3 — Pre-order awareness. Upcoming list now splits into "Pre-ordered" (user
+// v1.15.3 - Pre-order awareness. Upcoming list now splits into "Pre-ordered" (user
 // already paid, awaiting release) + "Watching" (user is just tracking). Pre-ordered
-// section renders first because it's the higher-stakes bucket — money is already
+// section renders first because it's the higher-stakes bucket - money is already
 // committed, user wants to see those most. Watching is the discovery / wishlist view.
-// Card body unchanged for both — only the section header + 💳 badge in the banner
+// Card body unchanged for both - only the section header + 💳 badge in the banner
 // distinguishes pre-orders. Buy button is suppressed for pre-orders (already paid).
 function UpcomingCard({g,d,lang,onOpen,onStatusChange,onToggleNotify,onRequestNotif,notifPerm}){
   return (
     <div key={g.id} className='upc-card'>
       <div className='upc-banner' style={g.cover?{backgroundImage:`url(${coverThumb(g.cover,640)})`}:{}}>
         <div className='upc-ov'/>
-        {/* v1.15.3 — pre-order badge in banner top-left. Gold accent matches the form
+        {/* v1.15.3 - pre-order badge in banner top-left. Gold accent matches the form
             checkbox tone. Stacks with the days countdown on the right. */}
         {g.preOrdered && (
           <div className='upc-preorder-bdg' style={{position:'absolute',top:10,left:10,padding:'4px 10px',background:'rgba(255,209,102,.95)',color:'#000',borderRadius:999,fontSize:10,fontWeight:700,letterSpacing:'.06em'}}>💳 {t(lang,'preOrderBadge')}</div>
@@ -1129,7 +1129,7 @@ function UpcomingCard({g,d,lang,onOpen,onStatusChange,onToggleNotify,onRequestNo
           : (<>
               <button type='button' className='upc-btn upc-btn-plan' onClick={()=>onOpen(g)}>{t(lang,'edit')}</button>
               <button type='button' className={'upc-btn upc-btn-watch'+(g.notifyEnabled?' on':'')} onClick={async()=>{if(!g.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();onToggleNotify(g.id);}}>{g.notifyEnabled?'✓ '+t(lang,'watch'):t(lang,'watch')}</button>
-              {/* Hide "Buy" CTA on pre-orders — user already paid. */}
+              {/* Hide "Buy" CTA on pre-orders - user already paid. */}
               {!g.preOrdered && <button type='button' className='upc-btn' style={{borderColor:'rgba(0,212,255,.3)',color:G.blu,background:'rgba(0,212,255,.07)'}} onClick={()=>window.open(`https://store.playstation.com/search/${encodeURIComponent(g.title)}`,'_blank','noopener,noreferrer')}>{t(lang,'buy')}</button>}
             </>)}</div>
         <div className='ntgl-row'><span className='ntgl-lbl'>{t(lang,'notifyToggle')}</span><div className={'ntgl-sw'+(g.notifyEnabled?' on':'')} onClick={async()=>{if(!g.notifyEnabled&&notifPerm!=='granted')await onRequestNotif();onToggleNotify(g.id);}}><div className='ntgl-knob'/></div></div>
@@ -1139,7 +1139,7 @@ function UpcomingCard({g,d,lang,onOpen,onStatusChange,onToggleNotify,onRequestNo
 }
 
 function Upcoming({games,onOpen,onToggleNotify,onStatusChange,notifPerm,onRequestNotif,lang}){
-  // v1.17.2 — Two bug fixes:
+  // v1.17.2 - Two bug fixes:
   // 1. allUpcoming now also requires status==='planuje'. Without this, clicking
   //    "Zacznij grać" on a premiere-day card changes status to 'gram' but the
   //    game still matched releaseDate>=0 → stayed visible in Premieres.
@@ -1183,7 +1183,7 @@ function InsightsTab({insights,games,lang}){
   const unsold=porzucone.reduce((s,g)=>s+ +g.priceBought*0.5,0);
   const totalSav=Math.round(losses+unsold);
   const ctaKeys={[t(lang,'biggestLoss')]:{label:t(lang,'avoidLoss'),flow:'avoid'},[t(lang,'bestInvestment')]:{label:t(lang,'buyBetter'),flow:'invest'},[t(lang,'mostExpensiveHours')]:{label:t(lang,'optimizeBacklog'),flow:'optim'},[t(lang,'bestValueShort')]:{label:t(lang,'findSimilar'),flow:'similar'},[t(lang,'financeSummary')]:{label:t(lang,'saveMoney'),flow:'save'}};
-  // v1.14.3 — flow tutorial tips routed through t() (PL/EN/ES). Was 20× isEn ternary.
+  // v1.14.3 - flow tutorial tips routed through t() (PL/EN/ES). Was 20× isEn ternary.
   const flowData={
     avoid:{title:t(lang,"flowAvoidTitle"),steps:[
       {ico:"⏰",tip:t(lang,'flowAvoidTip1')},
@@ -1235,7 +1235,7 @@ function InsightsTab({insights,games,lang}){
         </div>);
       })}
       {flowModal&&(<div style={{position:'fixed',top:0,left:0,right:0,bottom:'env(safe-area-inset-bottom,0px)',background:'rgba(4,6,14,.92)',zIndex:19999,display:'flex',alignItems:'flex-end'}} onClick={()=>setFlowModal(null)}>
-        {/* v1.13.13 — same nav-bar clearance as the rest: padding-bottom min 120px */}
+        {/* v1.13.13 - same nav-bar clearance as the rest: padding-bottom min 120px */}
         <div style={{width:'100%',background:G.card2,borderTop:`1px solid ${G.bdr}`,borderRadius:'20px 20px 0 0',padding:'18px 16px max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)',maxHeight:'80dvh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
           <div style={{width:32,height:4,background:G.bdr,borderRadius:2,margin:'0 auto 16px'}}/>
           <div style={{fontFamily:"'Orbitron',monospace",fontSize:13,fontWeight:700,color:G.blu,marginBottom:16}}>{flowModal.title}</div>
@@ -1247,9 +1247,9 @@ function InsightsTab({insights,games,lang}){
   );
 }
 
-// F07 — Time tracking helpers
+// F07 - Time tracking helpers
 // Collect all sessions from all games into flat array, normalized
-// v1.2.0 — Import modal with dual-mode selection
+// v1.2.0 - Import modal with dual-mode selection
 function ImportModal({onClose,onPickFile,mode,onPickMode,games,lang,pendingFile,onConfirmReplace}){
   // Three phases: mode selection -> file picker -> confirm (replace only)
   const [confirming,setConfirming]=useState(false);
@@ -1308,10 +1308,10 @@ function Stats({games,lang}){
   if(!games.length)return<div className='scr'><div className='empty'><div className='eic'>📈</div><div className='ett'>{t(lang,'noGames')}</div></div></div>;
   const hrs=games.reduce((s,g)=>s+(g.hours||0),0);
   const rated=games.filter(g=>g.rating!=null);
-  const avg=rated.length?(rated.reduce((s,g)=>s+g.rating,0)/rated.length).toFixed(1):'—';
+  const avg=rated.length?(rated.reduce((s,g)=>s+g.rating,0)/rated.length).toFixed(1):'-';
   const SM2=getSM(lang);
 
-  // v1.16.6 — Library-scale stats. With 400+ game libraries (post-import) the
+  // v1.16.6 - Library-scale stats. With 400+ game libraries (post-import) the
   // existing 4 KPIs (games/completed/hours/rating) don't tell the full story.
   // These compute lazily and only render when meaningful (>0 or > threshold).
   const completedCnt = games.filter(g => g.status === 'ukonczone').length;
@@ -1322,7 +1322,7 @@ function Stats({games,lang}){
   const backlogGames = games.filter(g => g.status === 'planuje' || g.status === 'porzucone');
   const backlogHours = backlogGames.reduce((s, g) => s + (+g.targetHours || 30), 0);
   const backlogDays = Math.round(backlogHours / 8);  // 8h/day non-stop estimate
-  // Per-platform completion — only show platforms with ≥3 games to avoid noise.
+  // Per-platform completion - only show platforms with ≥3 games to avoid noise.
   const byPlatform = {};
   games.forEach(g => {
     const p = g.platform || 'Other';
@@ -1334,7 +1334,7 @@ function Stats({games,lang}){
     .filter(([, s]) => s.total >= 3)
     .map(([p, s]) => ({ n: p, total: s.total, done: s.done, rate: Math.round((s.done / s.total) * 100) }))
     .sort((a, b) => b.total - a.total);
-  // Library age — RAWG year for each game. Skip 0/missing years.
+  // Library age - RAWG year for each game. Skip 0/missing years.
   const years = games.map(g => +g.year).filter(y => y > 1980 && y <= new Date().getFullYear() + 2);
   const oldestYear = years.length ? Math.min(...years) : null;
   const newestYear = years.length ? Math.max(...years) : null;
@@ -1346,7 +1346,7 @@ function Stats({games,lang}){
   }
   const decadeData = Object.entries(decades).sort((a, b) => +a[0] - +b[0]).map(([d, v]) => ({ n: d + 's', v }));
 
-  // v1.17.1 — Big-library storytelling stats. Designed for users with 200+
+  // v1.17.1 - Big-library storytelling stats. Designed for users with 200+
   // game collections (post-Playnite import). All gated on data thresholds so
   // small libraries don't see noise.
 
@@ -1362,7 +1362,7 @@ function Stats({games,lang}){
     .sort((a, b) => (+b.hours || 0) - (+a.hours || 0))
     .slice(0, 10);
 
-  // Hours by Platform (vs game count) — reveals where time actually goes
+  // Hours by Platform (vs game count) - reveals where time actually goes
   const hoursByPlatform = {};
   games.forEach(g => {
     const h = +g.hours || 0;
@@ -1374,7 +1374,7 @@ function Stats({games,lang}){
     .sort((a, b) => b[1] - a[1])
     .map(([n, v]) => ({ n, v: Math.round(v) }));
 
-  // Hours by Genre — true preferences (gData above is by COUNT)
+  // Hours by Genre - true preferences (gData above is by COUNT)
   const hoursByGenre = {};
   games.forEach(g => {
     const h = +g.hours || 0;
@@ -1404,7 +1404,7 @@ function Stats({games,lang}){
     .sort((a, b) => (+a.targetHours || 0) - (+b.targetHours || 0))
     .slice(0, 8);
 
-  // v1.17.4 — Completed games per year timeline. Uses g.completedAt (set on
+  // v1.17.4 - Completed games per year timeline. Uses g.completedAt (set on
   // status transition to 'ukonczone', either at import time from lastPlayed
   // or when user manually marks completion). Skips games without completedAt.
   const completionsByYear = {};
@@ -1449,7 +1449,7 @@ function Stats({games,lang}){
     {l:t(lang,'spentTotal2'),  v:pln(totalSpent,lang),  c:G.org, bg:'rgba(255,159,28,.07)'},
     {l:t(lang,'earnedBack'),   v:pln(totalEarned,lang), c:G.grn, bg:'rgba(57,255,110,.07)'},
     {l:t(lang,'realCostShort'),v:pln(netCost,lang),     c:netCost>0?G.org:G.grn, bg:'rgba(255,159,28,.05)'},
-    {l:t(lang,'costPerHour'),  v:cph?fmtCph(cph):'—', c:G.blu, bg:'rgba(0,212,255,.07)'},
+    {l:t(lang,'costPerHour'),  v:cph?fmtCph(cph):'-', c:G.blu, bg:'rgba(0,212,255,.07)'},
   ];
   const insights=[];
   if(bought.length){
@@ -1463,14 +1463,14 @@ function Stats({games,lang}){
     if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:fmtCph(+bCph.priceBought/bCph.hours).replace('/h','')}),val:fmtCph(+bCph.priceBought/bCph.hours)});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
-  // v1.17.5 — Time subtab removed (session-based heatmap is meaningless now that
+  // v1.17.5 - Time subtab removed (session-based heatmap is meaningless now that
   // the timer is gone and libraries are imported). Stats is a single view.
   return(
     <div className='scr'>
       {tab==='general'&&<>
-        {/* v1.17.1 — Hero card for big libraries (≥100 games). Frames total hours
+        {/* v1.17.1 - Hero card for big libraries (≥100 games). Frames total hours
             in human time (days non-stop, years at a sane pace). The "wow" moment
-            when opening Stats — gives users a sense of magnitude. */}
+            when opening Stats - gives users a sense of magnitude. */}
         {games.length >= 100 && hrs >= 100 && (
           <div className='ccd' style={{padding:'18px 16px',background:`linear-gradient(135deg,${G.card},rgba(167,139,250,.08))`,marginBottom:14}}>
             <div style={{fontSize:11,fontWeight:700,color:G.dim,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10}}>{t(lang,'libraryHero')}</div>
@@ -1498,7 +1498,7 @@ function Stats({games,lang}){
 
         <div className='kgd'>{kpis.map(k=><div key={k.l} className='kcd' style={{'--c':k.c}}><div className='kvl'>{k.v}</div><div className='klb'>{k.l}</div></div>)}</div>
 
-        {/* v1.17.1 — Top 10 most-played games. The killer "where my time went"
+        {/* v1.17.1 - Top 10 most-played games. The killer "where my time went"
             insight for big libraries. Visual list with covers + hours bar. */}
         {topPlayed.length >= 5 && (
           <div className='ccd' style={{padding:'14px 16px'}}>
@@ -1530,9 +1530,9 @@ function Stats({games,lang}){
           </div>
         )}
 
-        {/* v1.16.6 — Library completion gauge (single most insightful stat for big libraries).
+        {/* v1.16.6 - Library completion gauge (single most insightful stat for big libraries).
             Big number + horizontal progress bar. Color shifts green→amber→red as rate drops.
-            Only meaningful with ≥10 games (otherwise shows "—"). */}
+            Only meaningful with ≥10 games (otherwise shows "-"). */}
         {games.length >= 10 && (
           <div className='ccd' style={{padding:'14px 16px'}}>
             <div className='ctl'>{t(lang,'libraryCompletion')}</div>
@@ -1547,7 +1547,7 @@ function Stats({games,lang}){
           </div>
         )}
 
-        {/* Backlog estimate — only renders when ≥10 unplayed games (otherwise not worth a card). */}
+        {/* Backlog estimate - only renders when ≥10 unplayed games (otherwise not worth a card). */}
         {backlogGames.length >= 10 && (
           <div className='ccd' style={{padding:'14px 16px'}}>
             <div className='ctl'>{t(lang,'backlogEstimate')}</div>
@@ -1571,7 +1571,7 @@ function Stats({games,lang}){
 
         <div className='ccd'><div className='ctl'>{t(lang,'statusChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={sData} barSize={28} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:24,right:24}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]}>{sData.map((d,i)=><Cell key={i} fill={d.c} fillOpacity={0.85}/>)}</Bar></BarChart></ResponsiveContainer></div>
 
-        {/* Per-platform completion comparison — only useful when user has games on ≥2 platforms.
+        {/* Per-platform completion comparison - only useful when user has games on ≥2 platforms.
             Shows total + completed counts per platform with colored completion-rate bar. */}
         {platformStats.length >= 2 && (
           <div className='ccd'>
@@ -1592,7 +1592,7 @@ function Stats({games,lang}){
           </div>
         )}
 
-        {/* Library age — oldest/newest/average year. Only renders when ≥20 dated games
+        {/* Library age - oldest/newest/average year. Only renders when ≥20 dated games
             (otherwise the average is too noisy to be meaningful). */}
         {years.length >= 20 && (
           <div className='ccd' style={{padding:'14px 16px'}}>
@@ -1614,7 +1614,7 @@ function Stats({games,lang}){
           </div>
         )}
 
-        {/* Decade breakdown bar chart — only renders when ≥20 dated games (need enough
+        {/* Decade breakdown bar chart - only renders when ≥20 dated games (need enough
             data spread across decades to be visually meaningful). */}
         {decadeData.length >= 2 && (
           <div className='ccd'>
@@ -1631,7 +1631,7 @@ function Stats({games,lang}){
         )}
         {gData.length>0&&<div className='ccd'><div className='ctl'>{t(lang,'genreChart')}</div><ResponsiveContainer width='100%' height={130}><BarChart data={gData} barSize={22} margin={{top:4,left:0,right:0,bottom:4}}><XAxis dataKey='n' tick={{fill:G.dim,fontSize:9}} axisLine={false} tickLine={false} interval={0} padding={{left:22,right:22}}/><YAxis hide/><Tooltip content={<CTip/>}/><Bar dataKey='v' radius={[4,4,0,0]} fill={G.pur} fillOpacity={0.8}/></BarChart></ResponsiveContainer></div>}
 
-        {/* v1.17.4 — Completed-games timeline (by year). Uses g.completedAt.
+        {/* v1.17.4 - Completed-games timeline (by year). Uses g.completedAt.
             Highlights the best year with a callout below the chart. Renders
             when the user has completed games across ≥2 different years. */}
         {yearData.length >= 2 && (
@@ -1660,7 +1660,7 @@ function Stats({games,lang}){
           </div>
         )}
 
-        {/* v1.17.1 — Hours by Platform. Reveals where time actually goes (not
+        {/* v1.17.1 - Hours by Platform. Reveals where time actually goes (not
             just how many games per platform). PSN may have 200 games but PC
             could have all the playtime. ≥2 platforms with hours required. */}
         {platformHoursData.length >= 2 && (
@@ -1677,7 +1677,7 @@ function Stats({games,lang}){
           </div>
         )}
 
-        {/* v1.17.1 — Hours by Genre. Different from gData (count) — this shows
+        {/* v1.17.1 - Hours by Genre. Different from gData (count) - this shows
             true preferences. ≥3 genres with hours, ≥50 total game-hours required. */}
         {genreHoursData.length >= 3 && hrs >= 50 && (
           <div className='ccd'>
@@ -1695,8 +1695,8 @@ function Stats({games,lang}){
           </div>
         )}
 
-        {/* v1.17.1 — Backlog Runway. "How long would it take to clear my backlog
-            at my current pace?" — actionable insight for big libraries.
+        {/* v1.17.1 - Backlog Runway. "How long would it take to clear my backlog
+            at my current pace?" - actionable insight for big libraries.
             Requires ≥30 backlog games + active gaming history (≥2 yearly hours). */}
         {backlogGames.length >= 30 && yearlyHoursPace >= 2 && backlogYears > 0 && (
           <div className='ccd' style={{padding:'14px 16px'}}>
@@ -1714,7 +1714,7 @@ function Stats({games,lang}){
           </div>
         )}
 
-        {/* v1.17.1 — Quick Wins. Short backlog games (≤10h) — actionable
+        {/* v1.17.1 - Quick Wins. Short backlog games (≤10h) - actionable
             "you could finish these this weekend" list. ≥3 quick wins required. */}
         {quickWins.length >= 3 && (
           <div className='ccd' style={{padding:'14px 16px'}}>
@@ -1741,7 +1741,7 @@ function Stats({games,lang}){
   );
 }
 
-// v1.2.0 — Finance as standalone main-tab component
+// v1.2.0 - Finance as standalone main-tab component
 // Combines former Stats→Finance and Stats→Analysis subtabs
 function Finance({games,lang,proLocked=false,onUnlock}){
   const [tab,setTab]=useState('overview');
@@ -1762,7 +1762,7 @@ function Finance({games,lang,proLocked=false,onUnlock}){
   const gcMap={}; bought.forEach(g=>{if(g.genre)gcMap[g.genre]=(gcMap[g.genre]||0)+ +g.priceBought;});
   const gcData=Object.entries(gcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v:+v.toFixed(0)}));
   const soldG=sold.map(g=>({...g,roi:+g.priceSold - +g.priceBought})).sort((a,b)=>b.roi-a.roi);
-  // Monthly spending — last 12 months, oldest first for chart left-to-right
+  // Monthly spending - last 12 months, oldest first for chart left-to-right
   // Aggregates priceBought + extraSpend per month based on g.addedAt (UTC ok for trend visualization)
   const monthlyMap={};
   bought.forEach(g=>{
@@ -1770,13 +1770,13 @@ function Finance({games,lang,proLocked=false,onUnlock}){
     const k=g.addedAt.slice(0,7);  // YYYY-MM
     monthlyMap[k]=(monthlyMap[k]||0)+ +g.priceBought + +(g.extraSpend||0);
   });
-  // Build last 12 months series — fill gaps with 0 so chart shows continuous timeline
+  // Build last 12 months series - fill gaps with 0 so chart shows continuous timeline
   const monthlyData=[];
   const _now=new Date();
   for(let i=11;i>=0;i--){
     const d=new Date(_now.getFullYear(),_now.getMonth()-i,1);
     const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    // v1.14.3 — month short labels via t() so all 3 languages (PL/EN/ES) share the same keys
+    // v1.14.3 - month short labels via t() so all 3 languages (PL/EN/ES) share the same keys
     const months=[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>t(lang,'monthShort_'+n));
     const label=`${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
     monthlyData.push({n:label,v:Math.round(monthlyMap[k]||0),k});
@@ -1785,17 +1785,17 @@ function Finance({games,lang,proLocked=false,onUnlock}){
   const maxMonth=monthlyData.reduce((m,d)=>d.v>m.v?d:m,{v:0});
   const monthlyHasData=monthlyData.some(d=>d.v>0);
 
-  // v1.3 #3 — Backlog cost: games with priceBought but zero hours played
-  // v1.14.0 — only owned games count toward backlog cost (subscription games have no purchase price)
-  // v1.15.4 — Pre-orders + games not yet released are NOT backlog. Backlog by definition
-  // means "you bought it but it sits on the shelf unplayed" — that's a value-leak signal.
+  // v1.3 #3 - Backlog cost: games with priceBought but zero hours played
+  // v1.14.0 - only owned games count toward backlog cost (subscription games have no purchase price)
+  // v1.15.4 - Pre-orders + games not yet released are NOT backlog. Backlog by definition
+  // means "you bought it but it sits on the shelf unplayed" - that's a value-leak signal.
   // A game whose release date is still in the future was never playable; counting it as
   // "frozen on shelf" misrepresents the user's actual backlog and double-stings them with
   // a "you wasted X zł" warning that doesn't apply.
   const backlogGames=games.filter(g=>isOwned(g) && !!+g.priceBought && (!g.hours || +g.hours===0) && g.status!=='ukonczone' && g.status!=='porzucone' && !g.preOrdered && !(g.releaseDate && daysUntil(g.releaseDate) > 0));
   const backlogCost=backlogGames.reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
 
-  // v1.3 #1 — Year projection: avg from last 3-6 months × remaining months in year
+  // v1.3 #1 - Year projection: avg from last 3-6 months × remaining months in year
   // Requires at least 1 month of data (excluding current incomplete month)
   // Compare with same period prior year
   const _curMonth=_now.getMonth();  // 0-indexed
@@ -1830,7 +1830,7 @@ function Finance({games,lang,proLocked=false,onUnlock}){
   const projectionHasData=avgRecent>0 && recent3.length>=2;
   const ratioVsLast=prevYearFull>0?(projectedTotal/prevYearFull):null;
 
-  // v1.3 #2 — Per-genre $/h aggregate
+  // v1.3 #2 - Per-genre $/h aggregate
   const genreAgg={};
   bought.filter(g=>g.genre && +g.hours>0).forEach(g=>{
     const ge=g.genre;
@@ -1846,8 +1846,8 @@ function Finance({games,lang,proLocked=false,onUnlock}){
     .slice(0,5);
   const perGenreHasData=perGenreData.length>0;
 
-  // v1.3 #4 — Year over year ROI: bought vs recovered ratio per calendar year
-  // v1.14.0 — exclude subscription games (only owned games have meaningful "bought vs recovered")
+  // v1.3 #4 - Year over year ROI: bought vs recovered ratio per calendar year
+  // v1.14.0 - exclude subscription games (only owned games have meaningful "bought vs recovered")
   const yearAgg={};
   games.forEach(g=>{
     if(!isOwned(g)) return;
@@ -1856,7 +1856,7 @@ function Finance({games,lang,proLocked=false,onUnlock}){
       yearAgg[y]=yearAgg[y]||{bought:0,recovered:0};
       yearAgg[y].bought+=+g.priceBought + +(g.extraSpend||0);
     }
-    // Use addedAt year for sold tracking too — sale year would need separate field
+    // Use addedAt year for sold tracking too - sale year would need separate field
     if(g.addedAt && g.priceSold!=null && +g.priceSold>0){
       const y=g.addedAt.slice(0,4);
       yearAgg[y]=yearAgg[y]||{bought:0,recovered:0};
@@ -1914,9 +1914,9 @@ function Finance({games,lang,proLocked=false,onUnlock}){
         </div>
         {!bought.length?<div className='empty'><div className='eic'>💰</div><div className='ett'>{t(lang,'noFinanceData')}</div><div className='ess'>{t(lang,'addPricesHint')}</div></div>:<>
           <div className='fkgd'>{fkpis.map(k=><div key={k.l} className='fkcd' style={{'--c':k.c,background:k.bg}}><div className='fkv'>{k.v}</div><div className='fkl'>{k.l}</div></div>)}</div>
-          {/* v1.14.0 — explain to the user that subscription games (PS Plus etc.) don't
+          {/* v1.14.0 - explain to the user that subscription games (PS Plus etc.) don't
               count toward Spent / cost-per-hour. Only shows if at least one game has a
-              non-owned source — keeps the UI clean for users with no subscription data. */}
+              non-owned source - keeps the UI clean for users with no subscription data. */}
           {games.some(g=>!isOwned(g))&&<div className='cph-note'>ℹ️ {t(lang,'source_disclaimer')}</div>}
           {backlogGames.length>0&&<div className='ccd' style={{borderColor:'rgba(255,159,28,.3)',background:'linear-gradient(135deg,rgba(255,159,28,.06),rgba(255,77,109,.04))'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
@@ -1943,7 +1943,7 @@ function Finance({games,lang,proLocked=false,onUnlock}){
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,color:G.red}}>{pln(maxMonth.v,lang)}</span>
             </div>}
           </div>}
-          {/* v1.18.0 — everything below the monthly chart is Pro */}
+          {/* v1.18.0 - everything below the monthly chart is Pro */}
           {proLocked&&<ProTeaser title={t(lang,'proFinanceTeaserTitle')} body={t(lang,'proFinanceTeaserBody')} lang={lang} onUnlock={onUnlock}/>}
           {!proLocked&&<>
           {projectionHasData&&<div className='ccd' style={{borderColor:'rgba(0,212,255,.3)'}}>
@@ -2090,12 +2090,12 @@ function ProSheet({ lang, isPro, from, onClose, onOwned, flash }){
 
 // ─── v1.5.0 Hamburger menu overlay ───────────────────────────────────────────
 // Fullscreen drawer triggered from the header ⋮ button. Lists secondary screens
-// (Wrapped, Achievements, Goals, Settings) — these used to either be a tab or a
+// (Wrapped, Achievements, Goals, Settings) - these used to either be a tab or a
 // modal. Centralizing them here freed a tab slot and gave each feature breathing
 // room behind a single entry point.
 function MenuOverlay({ onClose, onPick, lang, achStats, currentYear, triggers }){
   // v1.8.0: triggers={achievements, goals, wrapped, any} drive per-row red dots.
-  // Falls back to no-dots if not provided (defensive — older callsites still work).
+  // Falls back to no-dots if not provided (defensive - older callsites still work).
   const trig = triggers || { achievements:false, goals:false, wrapped:false };
   const items=[
     { key:'wrapped',      ico:'🎁', tk:'menuWrapped',     dk:'menuWrappedDesc',
@@ -2103,7 +2103,7 @@ function MenuOverlay({ onClose, onPick, lang, achStats, currentYear, triggers })
     { key:'achievements', ico:'🏆', tk:'menuAchievements',dk:'menuAchievementsDesc',
       vars:{ unlocked:achStats.unlocked, total:achStats.total },
       badge: achStats.unlocked>0 ? `${achStats.unlocked}/${achStats.total}` : null, dot: trig.achievements },
-    // v1.17.5 — Goals menu entry removed (feature retired).
+    // v1.17.5 - Goals menu entry removed (feature retired).
     { key:'settings',     ico:'⚙️', tk:'menuSettings',    dk:'menuSettingsDesc' },
   ];
   return (
@@ -2133,7 +2133,7 @@ function MenuOverlay({ onClose, onPick, lang, achStats, currentYear, triggers })
 // ─── v1.5.0 Achievements overlay ─────────────────────────────────────────────
 // Read-only grid. Locked achievements appear dimmed with a progress bar; unlocked
 // ones get a colored card. Multi-tier groups (collector_1..5) render as separate
-// tiles by design — players see "what's next" instead of just one badge that
+// tiles by design - players see "what's next" instead of just one badge that
 // silently leveled up.
 function Achievements({ games, longestStreak, lang, onClose }){
   const list=computeAchievements(games, longestStreak);
@@ -2180,7 +2180,7 @@ function Achievements({ games, longestStreak, lang, onClose }){
   );
 }
 
-// v1.5.0 Year-in-Review overlay. v1.17.5 — display derives from game-level data
+// v1.5.0 Year-in-Review overlay. v1.17.5 - display derives from game-level data
 // (see computeYearReview); session-only cards removed.
 function YearInReview({ games, lang, onClose, flash }){
   const years=getYearsWithData(games);
@@ -2259,7 +2259,7 @@ function YearInReview({ games, lang, onClose, flash }){
         {review && <>
           <div className='wr-sub'>{t(lang,'wrappedSub',{year})}</div>
 
-          {/* Big-number hero card. v1.17.5 — sub shows games played + avg/game
+          {/* Big-number hero card. v1.17.5 - sub shows games played + avg/game
               (was session count, always 0 for imported libraries). */}
           <div className='wr-hero'>
             <div className='wr-hero-num'>{review.totalHours}</div>
@@ -2267,7 +2267,7 @@ function YearInReview({ games, lang, onClose, flash }){
             <div className='wr-hero-sub'>{review.gamesPlayed} {gamesWord(review.gamesPlayed, lang)} · ~{review.avgHoursPerGame}h {t(lang,'wrappedAvgPerGame')}</div>
           </div>
 
-          {/* Stats grid. v1.17.5 — "games played" replaces session-only "active days". */}
+          {/* Stats grid. v1.17.5 - "games played" replaces session-only "active days". */}
           <div className='wr-grid'>
             <div className='wr-stat'>
               <div className='wr-stat-num' style={{color:G.pur}}>{review.gamesPlayed}</div>
@@ -2324,7 +2324,7 @@ function YearInReview({ games, lang, onClose, flash }){
             <div className='wr-genre-meta'>{t(lang,'wrappedTopGenreDesc',{n:review.topGenre.hours, hrs:hoursWord(review.topGenre.hours,lang), games:review.topGenre.gamesCount, gw:gamesWord(review.topGenre.gamesCount,lang)})}</div>
           </div>}
 
-          {/* Money. v1.17.5 — dropped session-only streak/session cards. */}
+          {/* Money. v1.17.5 - dropped session-only streak/session cards. */}
           {(review.totalSpent>0 || review.totalRecovered>0) && (
             <div className='wr-grid'>
               <div className='wr-stat'>
@@ -2353,7 +2353,7 @@ function YearInReview({ games, lang, onClose, flash }){
 }
 
 
-// v1.11.1 — Wipe-all-data confirmation modal.
+// v1.11.1 - Wipe-all-data confirmation modal.
 // GDPR right-to-deletion + Play Data Safety compliance: user must have an in-app way
 // to delete ALL their data. This is the gate before pulling that trigger.
 //
@@ -2372,7 +2372,7 @@ function WipeConfirm({ games, lang, onClose }){
   function doWipe(){
     if (!ready) return;
     wipeAllData();
-    // No way to flash a toast that survives the reload — so we just reload immediately.
+    // No way to flash a toast that survives the reload - so we just reload immediately.
     // The user lands on the welcome screen, which is itself the "✓ done" feedback.
     window.location.reload();
   }
@@ -2410,9 +2410,9 @@ function WipeConfirm({ games, lang, onClose }){
   );
 }
 
-// v1.16.18 — Status derivation now also uses targetHours (RAWG playtime
+// v1.16.18 - Status derivation now also uses targetHours (RAWG playtime
 // estimate) as a "completed main story" signal. If user played significantly
-// more than RAWG's estimate, they probably finished — even without 100%
+// more than RAWG's estimate, they probably finished - even without 100%
 // achievements. This catches Xbox/Steam users who beat games but never went
 // for completion %, and games where the main story ≠ achievement hunt.
 //
@@ -2427,7 +2427,7 @@ function WipeConfirm({ games, lang, onClose }){
 //   any progress (c>0 OR h>0)          → 'gram' (active rotation)
 //   else                               → 'planuje'
 //
-// Play-ratio thresholds are conservative — 1.5× estimate is "definitely beaten"
+// Play-ratio thresholds are conservative - 1.5× estimate is "definitely beaten"
 // (e.g. RAWG says 30h, played 45h = finished + replay/explore). 1.0× requires
 // completion% confirmation to avoid false positives (live-service grinders).
 function deriveStatusFromSignals({ completionPct, hours, lastPlayed, targetHours }) {
@@ -2438,13 +2438,13 @@ function deriveStatusFromSignals({ completionPct, hours, lastPlayed, targetHours
   const daysAgo = lpTs ? (Date.now() - lpTs) / 86400000 : null;
   const playRatio = tgt > 0 ? h / tgt : 0;
 
-  // 1. Completed (5 ways now — added play-ratio rules)
+  // 1. Completed (5 ways now - added play-ratio rules)
   if (c === 100) return 'ukonczone';
   if (c >= 95) return 'ukonczone';
   if (c >= 80 && daysAgo !== null && daysAgo > 90) return 'ukonczone';
-  // v1.16.18 — Play time exceeded RAWG estimate by 50%+ → clearly beaten
+  // v1.16.18 - Play time exceeded RAWG estimate by 50%+ → clearly beaten
   if (playRatio >= 1.5 && tgt >= 5) return 'ukonczone';
-  // v1.16.18 — Played enough to beat AND got some achievements → finished main story
+  // v1.16.18 - Played enough to beat AND got some achievements → finished main story
   if (playRatio >= 1.0 && c >= 30 && tgt >= 5) return 'ukonczone';
 
   // 2. Untouched
@@ -2459,13 +2459,13 @@ function deriveStatusFromSignals({ completionPct, hours, lastPlayed, targetHours
   return 'planuje';
 }
 
-// Wrapper for recategorize tool (matches stored game shape — no completionPct
+// Wrapper for recategorize tool (matches stored game shape - no completionPct
 // available since we don't persist it). Falls back to status-based hints.
 function recomputeImportStatus(g) {
   if (g.status === 'ukonczone') return g.status;  // don't touch completed
   // Synthesize a completion hint: platinum=true → 100%, else unknown (0)
   const completionPct = g.platinum ? 100 : 0;
-  // v1.16.18 — pass targetHours so play-ratio rules can detect "essentially
+  // v1.16.18 - pass targetHours so play-ratio rules can detect "essentially
   // beaten" games (hours ≥ 1.5× RAWG estimate).
   return deriveStatusFromSignals({
     completionPct,
@@ -2476,12 +2476,12 @@ function recomputeImportStatus(g) {
 }
 
 function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openImport,openPsnImport,openSteamImport,openXboxImport,openPlayniteImport,openImportUndo,openPrivacy,onWipeOpen}){
-  // importRef removed in v1.2.0 — import now opens via ImportModal
-  // v1.13.14 — Removed className='scr' wrapper. Settings is rendered INSIDE the
+  // importRef removed in v1.2.0 - import now opens via ImportModal
+  // v1.13.14 - Removed className='scr' wrapper. Settings is rendered INSIDE the
   // .bs-ovr's inner scroll div (with its own flex:1/overflow-y:auto/min-height:0).
   // Having .scr here meant nesting two scroll containers: the inner .scr had
   // overflow-y:auto, but in a non-flex parent flex:1 is ignored and the box just
-  // sized to content — so .scr's overflow:auto was a no-op visually, BUT Android
+  // sized to content - so .scr's overflow:auto was a no-op visually, BUT Android
   // Chrome WebView still routed touch events to it (and ate them), preventing the
   // outer scroller from scrolling. iOS Safari propagates touch up the chain so it
   // didn't manifest there. Plain <div> means touches go straight to the outer
@@ -2494,8 +2494,8 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='lang-row'>
           <button type='button' className={'lang-btn'+(lang==='pl'?' on':'')} onClick={()=>{setLang('pl');localStorage.setItem(LS_LANG,'pl');}}>🇵🇱 Polski</button>
           <button type='button' className={'lang-btn'+(lang==='en'?' on':'')} onClick={()=>{setLang('en');localStorage.setItem(LS_LANG,'en');}}>🇬🇧 English</button>
-          {/* v1.14.2 — Spanish (es-419 neutral). Globe emoji used instead of a single
-              flag — picking 🇪🇸 vs 🇲🇽 vs 🇦🇷 would alienate users from other regions. */}
+          {/* v1.14.2 - Spanish (es-419 neutral). Globe emoji used instead of a single
+              flag - picking 🇪🇸 vs 🇲🇽 vs 🇦🇷 would alienate users from other regions. */}
           <button type='button' className={'lang-btn'+(lang==='es'?' on':'')} onClick={()=>{setLang('es');localStorage.setItem(LS_LANG,'es');}}>🌎 Español</button>
         </div>
       </div>
@@ -2505,7 +2505,7 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
           value={currency}
           onChange={e=>setCurrency(e.target.value)}>
           {Object.values(CURRENCIES).map(def=>(
-            <option key={def.code} value={def.code}>{def.symbol} — {def.code} · {def.name[lang]||def.name.en}</option>
+            <option key={def.code} value={def.code}>{def.symbol} · {def.code} · {def.name[lang]||def.name.en}</option>
           ))}
         </select>
         <div style={{fontSize:11,color:G.dim,marginTop:8,padding:'0 4px',lineHeight:1.5}}>{t(lang,'currencyDesc')}</div>
@@ -2518,7 +2518,7 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         <div className='set-row' onClick={openImport}>
           <span className='set-row-ico'>⬇️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'importData')}</div><div className='set-row-desc'>{t(lang,'importDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        {/* v1.17.0 — Playnite import (RECOMMENDED — cleanest data, user already
+        {/* v1.17.0 - Playnite import (RECOMMENDED - cleanest data, user already
             categorized everything). Listed first because it's the best path
             when available. */}
         {typeof openPlayniteImport === 'function' && (
@@ -2526,9 +2526,9 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             <span className='set-row-ico'>🎯</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'playniteImportRowTitle')}</div><div className='set-row-desc'>{t(lang,'playniteImportRowDesc')}</div></div><span className='set-row-arrow'>›</span>
           </div>
         )}
-        {/* v1.16.0 — PSN-Profiles paste import. Opens dedicated overlay; closes Settings
+        {/* v1.16.0 - PSN-Profiles paste import. Opens dedicated overlay; closes Settings
             implicitly because overlay sits on top with higher z-index.
-            v1.16.1 — Steam (steamcommunity.com) + Xbox (trueachievements.com) paste flows
+            v1.16.1 - Steam (steamcommunity.com) + Xbox (trueachievements.com) paste flows
             mirror the same UX: zero backend, public-profile mirror, paste-and-parse. */}
         {typeof openPsnImport === 'function' && (
           <div className='set-row' onClick={openPsnImport}>
@@ -2545,10 +2545,10 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             <span className='set-row-ico'>🟢</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'xboxImportRowTitle')}</div><div className='set-row-desc'>{t(lang,'xboxImportRowDesc')}</div></div><span className='set-row-arrow'>›</span>
           </div>
         )}
-        {/* v1.16.13 — Recategorize imported games using current status logic.
+        {/* v1.16.13 - Recategorize imported games using current status logic.
             Only renders if there are imports tagged with importSource AND at
             least one of them has a status that the current logic wouldn't
-            assign (e.g. 'porzucone' — never auto-assigned anymore). One-shot
+            assign (e.g. 'porzucone' - never auto-assigned anymore). One-shot
             cleanup for users who imported with older versions. */}
         {(() => {
           const importedGames = games.filter(g => g.importSource);
@@ -2572,13 +2572,13 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             </div>
           );
         })()}
-        {/* v1.16.5 — Undo a specific import batch (tagged by importSource OR
+        {/* v1.16.5 - Undo a specific import batch (tagged by importSource OR
             detected via addedAt clustering). Only renders if there's at least
-            one detectable batch — keeps Settings clean for users who never
+            one detectable batch - keeps Settings clean for users who never
             imported anything. */}
         {typeof openImportUndo === 'function' && (() => {
           const hasTagged = games.some(g => g.importSource === 'psn' || g.importSource === 'steam' || g.importSource === 'xbox' || g.importSource === 'playnite');
-          // Quick heuristic check — any addedAt cluster of 5+ games?
+          // Quick heuristic check - any addedAt cluster of 5+ games?
           const untagged = games.filter(g => !g.importSource && g.addedAt).map(g => new Date(g.addedAt).getTime()).sort((a,b)=>a-b);
           let hasCluster = false;
           let cnt = 1;
@@ -2604,8 +2604,8 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
             <span className='set-row-ico'>🧹</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'demoClear')}</div><div className='set-row-desc'>{t(lang,'demoClearDesc',{n:games.filter(g=>g._demo).length})}</div></div><span className='set-row-arrow'>›</span>
           </div>
         )}
-        {/* v1.17.5 — Recommendations cache cleanup removed (feature retired). */}
-        {/* v1.15.0 — Reset onboarding wizard. Useful for users who skipped it accidentally
+        {/* v1.17.5 - Recommendations cache cleanup removed (feature retired). */}
+        {/* v1.15.0 - Reset onboarding wizard. Useful for users who skipped it accidentally
             or want to revisit the expectation-setting screen. Doesn't touch games or settings.
             Implementation: just clears the LS_ONBOARD flag + reloads. */}
         <div className='set-row' onClick={()=>{
@@ -2618,12 +2618,12 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
         }}>
           <span className='set-row-ico'>🎓</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'settingsResetWizard')}</div><div className='set-row-desc'>{t(lang,'settingsResetWizardDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        {/* v1.11.1 — GDPR right-to-deletion. Always visible; opens 2-step confirm modal.
+        {/* v1.11.1 - GDPR right-to-deletion. Always visible; opens 2-step confirm modal.
             Last row of Data section because it's the most destructive action. */}
         <div className='set-row set-row-danger' onClick={onWipeOpen}>
           <span className='set-row-ico'>🗑️</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'wipeRowTitle')}</div><div className='set-row-desc'>{t(lang,'wipeRowDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
-        {/* importRef input removed in v1.2.0 — replaced by ImportModal */}
+        {/* importRef input removed in v1.2.0 - replaced by ImportModal */}
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'support')}</div>
@@ -2640,9 +2640,9 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
           <span className='set-row-ico'>🎮</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'poweredBy')}</div><div className='set-row-desc'>{t(lang,'poweredByDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>
         <div className='set-row' onClick={()=>{
-          const subject=encodeURIComponent(`PS5 Vault v${APP_VER} — feedback`);
+          const subject=encodeURIComponent(`PS5 Vault v${APP_VER}: feedback`);
           // Pull last error from ErrorBoundary log (main.jsx). Helps diagnose crashes that
-          // user couldn't describe — they just hit "Report" and we get the stack.
+          // user couldn't describe - they just hit "Report" and we get the stack.
           let lastErr='';
           try{
             const log=JSON.parse(localStorage.getItem('ps5vault_error_log')||'[]');
@@ -2668,13 +2668,13 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
   );
 }
 
-// v1.16.0 — PSN-Profiles paste import overlay.
-// v1.16.1 — Generalized to handle PSN / Steam / Xbox via a `platform` prop.
+// v1.16.0 - PSN-Profiles paste import overlay.
+// v1.16.1 - Generalized to handle PSN / Steam / Xbox via a `platform` prop.
 //   platform === 'psn'   → uses parsePsnProfilesPaste, walkthrough about psnprofiles.com
 //   platform === 'steam' → uses parseSteamPaste, walkthrough about steamcommunity.com
 //   platform === 'xbox'  → uses parseXboxPaste, walkthrough about trueachievements.com
 // Same 3-step flow + RAWG match preview + commit. Default platform 'psn' is a
-// safety fallback — App always passes platform explicitly via 3 separate render
+// safety fallback - App always passes platform explicitly via 3 separate render
 // sites (psnImportOpen / steamImportOpen / xboxImportOpen).
 //
 // User does NOT need API keys, OAuth tokens, or developer accounts for any of these
@@ -2689,32 +2689,32 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
 // Duplicates rendered as 'dup' status and excluded from default-selected set.
 function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommit, lang, freeLeft=Infinity, onUnlock }){
   const [step, setStep] = useState(1);
-  // v1.18.0 — free tier imports up to FREE_IMPORT_LIMIT games in total; gate = limit prompt
+  // v1.18.0 - free tier imports up to FREE_IMPORT_LIMIT games in total; gate = limit prompt
   const [gate, setGate] = useState(false);
   const [pasteText, setPasteText] = useState('');
   const [parsed, setParsed] = useState(null);  // { format, count, rows }
   const [matches, setMatches] = useState({});  // index → { status, rawg?, error? }
   const [selected, setSelected] = useState(new Set());  // indices of selected rows
   const [committing, setCommitting] = useState(false);
-  // v1.16.2 — File upload as primary input path. At 1000+ games, copy-paste of
+  // v1.16.2 - File upload as primary input path. At 1000+ games, copy-paste of
   // raw CSV stalls the browser textarea (especially on mobile WebView). FileReader
-  // sidesteps that — pick file, read text, hand same string to parser. Steam still
+  // sidesteps that - pick file, read text, hand same string to parser. Steam still
   // supports paste because steamcommunity.com page source isn't a downloadable file.
   const [fileName, setFileName] = useState('');
   const [fileError, setFileError] = useState('');
-  // v1.16.7 — On mobile, paste is the primary input path even for PSN/Xbox
+  // v1.16.7 - On mobile, paste is the primary input path even for PSN/Xbox
   // because Save Page As / file pickers are awkward in mobile browsers. Detect
   // via UA and auto-expand the textarea. Steam always opens with paste expanded
   // because steamcommunity.com page source isn't downloadable on any device.
   const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || '');
   const [showPaste, setShowPaste] = useState(platform === 'steam' || isMobile);
-  // v1.16.16 — Manual status override per row (option E). Map row index →
+  // v1.16.16 - Manual status override per row (option E). Map row index →
   // status string. Click predicted-status badge in step 2 to cycle through
   // the 4 statuses. commit() prefers the override; falls back to derive() if unset.
   const [statusOverrides, setStatusOverrides] = useState({});
   const STATUS_CYCLE = ['ukonczone', 'gram', 'porzucone', 'planuje'];
   const fileInputRef = useRef(null);
-  const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB — generous cap (1000-game CSV ≈300KB; Steam page source ≈5-10MB)
+  const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB - generous cap (1000-game CSV ≈300KB; Steam page source ≈5-10MB)
 
   async function onPickFile(e) {
     const file = e.target.files && e.target.files[0];
@@ -2741,7 +2741,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  // v1.16.1 — Platform dispatch. Map prop to (i18n key prefix, parser fn, public help URL).
+  // v1.16.1 - Platform dispatch. Map prop to (i18n key prefix, parser fn, public help URL).
   const platformConfig = {
     psn:      { keyPrefix: 'psnImport',      parser: parsePsnProfilesPaste, helpUrl: 'https://psnprofiles.com',     icon: '🎮' },
     steam:    { keyPrefix: 'steamImport',    parser: parseSteamPaste,       helpUrl: 'https://steamcommunity.com',  icon: '⚙️' },
@@ -2759,7 +2759,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
     if (!platformConfig) return;
     const result = platformConfig.parser(pasteText);
     if (result.count === 0) {
-      // empty / invalid input — stay on step 1, show error
+      // empty / invalid input - stay on step 1, show error
       setParsed(result);
       return;
     }
@@ -2835,9 +2835,9 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
       if (!row || (m && m.status === 'dup')) continue;
       const rawg = m && m.rawg;
 
-      // v1.16.15 / v1.16.16 / v1.16.18 / v1.17.0 — Status priority:
-      //   1. Manual override (statusOverrides[i]) — user clicked status badge
-      //   2. Explicit status from parser (Playnite has user's CompletionStatus —
+      // v1.16.15 / v1.16.16 / v1.16.18 / v1.17.0 - Status priority:
+      //   1. Manual override (statusOverrides[i]) - user clicked status badge
+      //   2. Explicit status from parser (Playnite has user's CompletionStatus -
       //      gold standard, beats heuristics)
       //   3. Derived from signals (completion% / hours / lastPlayed / targetHours)
       const derived = deriveStatusFromSignals({
@@ -2852,7 +2852,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
         completedAt = row.lastPlayed ? new Date(row.lastPlayed).toISOString() : new Date().toISOString();
       }
 
-      // v1.16.4 — Detect platinum/full completion from trophy/achievement strings.
+      // v1.16.4 - Detect platinum/full completion from trophy/achievement strings.
       // PSN: row.trophies = "36/36" → all earned (incl. platinum if game has one).
       // Xbox: row.achievements = "100/100" → all earned (no platinum concept on
       // Xbox but our schema reuses the flag for "100% achievement-complete").
@@ -2873,7 +2873,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
         year: rawg?.year || new Date().getFullYear(),
         releaseDate: rawg?.releaseDate || '',
         rawgId: rawg?.id || null,
-        // v1.16.6 — RAWG playtime estimate carried into targetHours so the new
+        // v1.16.6 - RAWG playtime estimate carried into targetHours so the new
         // backlog-hours stat can sum unplayed library size in hours.
         targetHours: rawg?.playtime || '',
         // Platform-derived: hours, status, last played, platinum flag
@@ -2885,7 +2885,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
         platinum,
         source: 'owned',
         preOrdered: false,
-        // v1.16.5 — tag this game with the import platform so Settings → "Undo
+        // v1.16.5 - tag this game with the import platform so Settings → "Undo
         // import" can find the batch without timestamp heuristics.
         importSource: platform,  // 'psn' | 'steam' | 'xbox'
       });
@@ -2931,8 +2931,8 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
             </div>
             <a href={platformConfig?.helpUrl || '#'} target='_blank' rel='noopener noreferrer' style={{display:'block',padding:'10px',background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.3)',borderRadius:10,color:G.blu,fontSize:13,fontWeight:700,textDecoration:'none',textAlign:'center',marginBottom:18}}>{t(lang, k('OpenSite'))}</a>
 
-            {/* v1.16.2 — File upload (primary path for PSN/Xbox CSV downloads).
-                Hidden file input + visible button — standard pattern for styled file
+            {/* v1.16.2 - File upload (primary path for PSN/Xbox CSV downloads).
+                Hidden file input + visible button - standard pattern for styled file
                 pickers. accept=".csv,.json,.txt,.html" covers all 3 platforms (PSN/Xbox
                 CSV, Steam HTML page source, plaintext title lists). FileReader.text()
                 resolves with file content as UTF-8 string. */}
@@ -2955,7 +2955,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
               <div style={{padding:'8px 12px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:10,color:G.red,fontSize:12,marginBottom:10}}>⚠️ {fileError}</div>
             )}
 
-            {/* "Or paste" toggle — collapsed by default for PSN/Xbox (most users will
+            {/* "Or paste" toggle - collapsed by default for PSN/Xbox (most users will
                 use the file picker), expanded by default for Steam (page source isn't
                 a downloadable file, paste is the only path). */}
             <button
@@ -2981,8 +2981,8 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
             {parsed && parsed.count === 0 && (
               <div style={{padding:'10px 12px',background:'rgba(255,77,109,.08)',border:'1px solid rgba(255,77,109,.3)',borderRadius:10,color:G.red,fontSize:12,marginBottom:10}}>
                 ⚠️ {t(lang, k('Empty'))}
-                {/* v1.16.3 / v1.16.10 — Rich debug panel. Shows first 20 lines
-                    of what was pasted so user can screenshot/share back —
+                {/* v1.16.3 / v1.16.10 - Rich debug panel. Shows first 20 lines
+                    of what was pasted so user can screenshot/share back -
                     that's the only way for me to diagnose mobile-paste quirks
                     (iOS Safari produces different format than Android Chrome). */}
                 {parsed.debug && (
@@ -3043,7 +3043,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
 
         {step === 2 && parsed && (
           <>
-            {/* v1.16.4 — Sticky action bar at TOP of step 2. With 400+ games the
+            {/* v1.16.4 - Sticky action bar at TOP of step 2. With 400+ games the
                 bottom commit button is unreachable without scrolling forever; this
                 surfaces the same actions at the top of the scroll viewport. Also
                 adds Select All / None toggles for bulk control. position:sticky
@@ -3070,10 +3070,10 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
             <div style={{padding:'4px 0 6px',fontSize:14,fontWeight:700,color:G.blu,fontFamily:"'Orbitron',monospace"}}>{t(lang, k('PreviewTitle'),{n:parsed.count, gw:gamesWord(parsed.count,lang)})}</div>
             <div style={{fontSize:11,color:G.dim,marginBottom:8,lineHeight:1.5}}>{t(lang, k('PreviewSub'))}</div>
 
-            {/* v1.16.17 — Status breakdown chip row. User immediately sees the
+            {/* v1.16.17 - Status breakdown chip row. User immediately sees the
                 proportions before scrolling 300 rows. Counts include all rows
                 (selected + dups), based on derived status (overrides not applied
-                here for performance — would require recompute on every override). */}
+                here for performance - would require recompute on every override). */}
             {parsed.rows.length >= 5 && (() => {
               const counts = { ukonczone: 0, gram: 0, porzucone: 0, planuje: 0 };
               parsed.rows.forEach((row, i) => {
@@ -3131,7 +3131,7 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
                         {m.status === 'nomatch' && <span style={{color:G.org}}>{t(lang,'psnImportNoMatch')}</span>}
                         {m.status === 'dup' && <span style={{color:G.dim}}>{t(lang,'psnImportDup')}</span>}
                       </div>
-                      {/* v1.16.4 / v1.16.15 / v1.16.16 / v1.16.18 / v1.17.0 — Predicted status.
+                      {/* v1.16.4 / v1.16.15 / v1.16.16 / v1.16.18 / v1.17.0 - Predicted status.
                           Priority: override > explicit (Playnite) > derived. */}
                       {m.status !== 'dup' && (() => {
                         const derived = deriveStatusFromSignals({
@@ -3184,12 +3184,12 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
   );
 }
 
-// v1.16.5 — Import Undo overlay. User imports 400 games via Xbox flow, decides
+// v1.16.5 - Import Undo overlay. User imports 400 games via Xbox flow, decides
 // they don't want them, but doesn't want to wipe entire collection. This finds
 // "import batches" two ways:
-//   1. Tagged batches — games where importSource ∈ {'psn','steam','xbox'} (set
+//   1. Tagged batches - games where importSource ∈ {'psn','steam','xbox'} (set
 //      starting v1.16.5 on every import commit).
-//   2. Heuristic clusters — games added within 60s of each other (≥5 in cluster),
+//   2. Heuristic clusters - games added within 60s of each other (≥5 in cluster),
 //      catches pre-1.16.5 imports that have no importSource tag.
 // Each batch shows: source/icon, count, timestamp; user clicks "Remove N games"
 // to delete the batch atomically with confirmation.
@@ -3219,7 +3219,7 @@ function ImportUndoOverlay({ games, onClose, onRemoveBatch, lang }){
   }
   const heuristicBatches = clusters.filter(c => c.games.length >= 5);
 
-  // Build display list — tagged batches first (one per platform), then heuristic
+  // Build display list - tagged batches first (one per platform), then heuristic
   const PLATFORM_META = {
     psn:      { icon: '🎮', label: 'PSN-Profiles' },
     steam:    { icon: '⚙️', label: 'Steam' },
@@ -3313,19 +3313,19 @@ function ImportUndoOverlay({ games, onClose, onRemoveBatch, lang }){
   );
 }
 
-// v1.3: BudgetEditor — proper save/edit pattern instead of "phantom Set button"
+// v1.3: BudgetEditor - proper save/edit pattern instead of "phantom Set button"
 // State machine: editing=true (input + Set/Cancel) ←→ editing=false (display + Edit + Clear)
 function BudgetEditor({budget,setBudget,games,flash,lang}){
   // editing=true on first paint when no amount yet (so user sees an input, not empty)
   const [editing,setEditing]=useState(()=>!budget.amount);
   const [draft,setDraft]=useState(()=>budget.amount||'');
-  // Local-time month key (YYYY-MM) — see dayKey() comment about UTC bug
+  // Local-time month key (YYYY-MM) - see dayKey() comment about UTC bug
   const monthKey=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})();
   // Spent this month: games added in current local month with priceBought, plus extraSpend
   // Note: g.addedAt is stored as toISOString() (UTC), so for users near midnight a game added
   // 1 maja 00:30 local time may slot into "April" budget. Documented limitation, not fixed
   // because g.addedAt schema would need a refactor.
-  // v1.17.5 — exclude active pre-orders (unreleased) from budget spent, same as
+  // v1.17.5 - exclude active pre-orders (unreleased) from budget spent, same as
   // the Home "purchases this month" card.
   const spent=games.filter(g=>g.addedAt&&g.addedAt.slice(0,7)===monthKey&&!!+g.priceBought&&!(g.preOrdered&&g.releaseDate&&daysUntil(g.releaseDate)>0))
     .reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
@@ -3416,7 +3416,7 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
 export default function App(){
   const [games,setGamesRaw]    = useState(()=>lsRead());
   const [onboarded,setOnboard] = useState(()=>isOnboarded());
-  // v1.14.1 demo banner state removed in v1.15.0 — banner replaced by setup wizard.
+  // v1.14.1 demo banner state removed in v1.15.0 - banner replaced by setup wizard.
   // The LS_ONBOARDING_BANNER_DISMISSED key is left in place (never read anymore) so
   // existing users don't see any leftover side effects on upgrade.
   const [lang,setLang]         = useState(()=>getLang());
@@ -3425,57 +3425,57 @@ export default function App(){
   const [flt,setFlt]           = useState('all');
   const [q,setQ]               = useState('');
   const [sortBy,setSortBy]     = useState('added');
-  // v1.17.6 — Collection render cap. Rendering 700+ game cards at once janks
+  // v1.17.6 - Collection render cap. Rendering 700+ game cards at once janks
   // hard on mobile; we render the first COL_PAGE and reveal more on demand.
   const [colLimit,setColLimit] = useState(COL_PAGE);
-  // v1.17.6 — Backlog randomizer result (null = closed).
+  // v1.17.6 - Backlog randomizer result (null = closed).
   const [randomPick,setRandomPick] = useState(null);
-  // v1.17.6 — "Welcome back" nudge: if the user hasn't opened the app in a while
+  // v1.17.6 - "Welcome back" nudge: if the user hasn't opened the app in a while
   // and has a real backlog, show a one-tap prompt to re-engage (offer a random
-  // pick). This is the reliable retention hook — true closed-app push would need
+  // pick). This is the reliable retention hook - true closed-app push would need
   // a backend, which contradicts the offline/no-account design.
   const [welcomeBack,setWelcomeBack] = useState(null);
   const [platFilter,setPlatFilter]= useState('all');
-  // v1.14.0 — source filter (parallel to platFilter). 'all' or one of SOURCES.
-  // Auto-hidden in the UI when every game shares the same source — see filter row below.
+  // v1.14.0 - source filter (parallel to platFilter). 'all' or one of SOURCES.
+  // Auto-hidden in the UI when every game shares the same source - see filter row below.
   const [srcFilter,setSrcFilter]  = useState('all');
   const [rateModal,setRateModal]= useState(null);
   const [privacyOpen,setPrivacyOpen]=useState(false);
-  // v1.5.0 — Hamburger-driven secondary screens. Single 'overlay' enum keeps mutual
+  // v1.5.0 - Hamburger-driven secondary screens. Single 'overlay' enum keeps mutual
   // exclusion trivial (you can't have Wrapped and Achievements open at once).
   const [overlay,setOverlay]=useState(null); // 'menu' | 'wrapped' | 'achievements' | 'settings' | null
-  // v1.7.0 — Queue of newly-unlocked achievement IDs not yet acknowledged by user.
+  // v1.7.0 - Queue of newly-unlocked achievement IDs not yet acknowledged by user.
   // Render shows the first one as a banner; tap or dismiss pops the queue.
   // Banner auto-dismisses after 6s (handled by useEffect below).
   const [achQueue,setAchQueue]=useState([]);
-  // v1.8.0 — Hamburger badge trigger state. The full "seen" object lives in LS;
+  // v1.8.0 - Hamburger badge trigger state. The full "seen" object lives in LS;
   // we mirror it here so React re-renders when we mark sections as seen.
   const [menuSeen,setMenuSeen]=useState(()=>menuSeenRead());
-  // v1.2.0 — Import modal state
+  // v1.2.0 - Import modal state
   const [importModal,setImportModal]=useState(null);  // null | {mode:null|'merge'|'replace', file:null|File}
   const openImport=()=>setImportModal({mode:null,file:null});
   const closeImport=()=>setImportModal(null);
   const [budget,setBudgetRaw]      = useState(()=>budgetRead());
   const setBudget=useCallback(val=>{setBudgetRaw(prev=>{const next=typeof val==='function'?val(prev):val;budgetWrite(next);return next;});},[]);
   const [modal,setModal]       = useState(null);
-  // v1.15.1 — Bulk scanner state. Lives at App level (not inside Modal) because the
-  // bulk path bypasses the form entirely — games go straight to library. Toggled from
+  // v1.15.1 - Bulk scanner state. Lives at App level (not inside Modal) because the
+  // bulk path bypasses the form entirely - games go straight to library. Toggled from
   // the "Or scan multiple games" banner in Modal Add view.
   const [bulkScannerOpen,setBulkScannerOpen] = useState(false);
-  // v1.16.0 — PSN-Profiles paste import overlay state. Triggered from Settings.
-  // v1.16.1 — Steam + Xbox added; mutually exclusive (only one open at a time so
+  // v1.16.0 - PSN-Profiles paste import overlay state. Triggered from Settings.
+  // v1.16.1 - Steam + Xbox added; mutually exclusive (only one open at a time so
   // the bs-ovr stack stays clean). Same PlatformImportOverlay component, different
   // platform prop dispatches the parser + i18n key prefix.
   const [psnImportOpen,setPsnImportOpen] = useState(false);
   const [steamImportOpen,setSteamImportOpen] = useState(false);
   const [xboxImportOpen,setXboxImportOpen] = useState(false);
-  // v1.17.0 — Playnite import (best path: cross-platform aggregator with
+  // v1.17.0 - Playnite import (best path: cross-platform aggregator with
   // user-curated CompletionStatus that maps 1:1 to our statuses).
   const [playniteImportOpen,setPlayniteImportOpen] = useState(false);
-  // v1.16.5 — Undo-import overlay (Settings → "Cofnij import")
+  // v1.16.5 - Undo-import overlay (Settings → "Cofnij import")
   const [importUndoOpen,setImportUndoOpen] = useState(false);
   const [toast,setToast]       = useState(null);
-  // v1.18.0 — Pro. Cached answer first (instant, works offline), then reconciled with Play.
+  // v1.18.0 - Pro. Cached answer first (instant, works offline), then reconciled with Play.
   const [isPro,setIsPro]       = useState(()=>readCachedPro());
   const [proSheet,setProSheet] = useState(null); // null | what opened it (analytics)
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
@@ -3489,7 +3489,7 @@ export default function App(){
     });
   },[]);
   useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&Notification.permission==='granted')checkReleases(g,lang);});},[]);// eslint-disable-line
-  // v1.17.7 — Funnel analytics (no-op until UMAMI_WEBSITE_ID is set). first_open only for
+  // v1.17.7 - Funnel analytics (no-op until UMAMI_WEBSITE_ID is set). first_open only for
   // fresh installs: anyone already past onboarding is an existing user, not a new one.
   useEffect(()=>{
     initAnalytics();
@@ -3501,7 +3501,7 @@ export default function App(){
   useEffect(()=>{
     const real=games.filter(g=>!g._demo).length;
     if(realCountRef.current===0 && real>0) trackOnce('first_game_added');
-    // v1.18.1 — the collection exists only in this browser's storage, which Chrome may
+    // v1.18.1 - the collection exists only in this browser's storage, which Chrome may
     // evict when the phone runs low on space unless the site holds "persistent" storage.
     // Ask once there is something worth keeping (Chrome grants it silently for installed apps).
     if(real>0 && realCountRef.current!==real){
@@ -3516,7 +3516,7 @@ export default function App(){
   },[]);// eslint-disable-line -- mount-only
   const openPro=useCallback(from=>{ setProSheet(from); track('paywall_view',{from}); },[]);
 
-  // v1.17.6 — Welcome-back nudge. Compare now against the last recorded open; if
+  // v1.17.6 - Welcome-back nudge. Compare now against the last recorded open; if
   // ≥7 days elapsed and the backlog has ≥5 unplayed games, surface a re-engage
   // prompt on Home. Always stamp the new open time.
   useEffect(()=>{
@@ -3533,7 +3533,7 @@ export default function App(){
     }catch{}
   },[]);// eslint-disable-line
 
-  // v1.10.0 — Weekly summary push. Once-per-mount call; the helper internally throttles
+  // v1.10.0 - Weekly summary push. Once-per-mount call; the helper internally throttles
   // to ≥7 days between fires + checks permission + activity. We wait until games are
   // hydrated (skip first render where games might still be empty during initial load)
   // by gating on games.length > 0. Lang is also a dep so notification text matches the
@@ -3543,7 +3543,7 @@ export default function App(){
     maybePushWeeklySummary(games, lang, t).catch(()=>{});
   },[games.length, lang]);// eslint-disable-line -- intentional: only re-run on count change, not on every games mutation
 
-  // v1.10.0 — URL-driven initial tab + SW message handler for weekly push clicks.
+  // v1.10.0 - URL-driven initial tab + SW message handler for weekly push clicks.
   // SW's notificationclick may openWindow('/Games/?tab=st') OR postMessage to existing tab.
   // We support both paths.
   useEffect(()=>{
@@ -3571,7 +3571,7 @@ export default function App(){
 
   const flash=useCallback(msg=>{setToast(msg);setTimeout(()=>setToast(null),2200);},[]);
   // Register a global callback so top-level lsWrite/timerWrite can signal storage failures
-  // (quota exceeded, storage disabled) and surface them as a toast — instead of silent loss.
+  // (quota exceeded, storage disabled) and surface them as a toast - instead of silent loss.
   useEffect(()=>{
     window.__ps5v_storageError=(kind)=>{
       flash(t(lang, kind==='quota'?'storageQuotaErr':'storageGenericErr'));
@@ -3579,7 +3579,7 @@ export default function App(){
     return ()=>{ delete window.__ps5v_storageError; };
   },[lang,flash]);
 
-  // v1.10.0 — Demo escape hatch for onboarding step 3. The Onboarding component loads
+  // v1.10.0 - Demo escape hatch for onboarding step 3. The Onboarding component loads
   // demo games in the background during step 1→2; if the user explicitly opts out
   // ("Zacznę od pustej kolekcji" link on currency confirm step), this hook clears them.
   // Implemented as a global hook because Onboarding doesn't have a direct setGames ref.
@@ -3590,7 +3590,7 @@ export default function App(){
     return ()=>{ delete window.__ps5v_clearDemo; };
   },[setGames]);
 
-  // v1.7.0 — Achievement-unlock diff. Watches `games` and surfaces freshly-unlocked
+  // v1.7.0 - Achievement-unlock diff. Watches `games` and surfaces freshly-unlocked
   // achievements as a banner. Two phases:
   //   1. First-ever run (lastSeenAchRead returns null) → silent migration: persist
   //      the current unlocked set as "already seen". This prevents 5+ banners stacking
@@ -3601,7 +3601,7 @@ export default function App(){
   // become re-locked (theoretically: e.g. user deletes the only platinum game) don't
   // re-trigger when they later re-unlock.
   useEffect(()=>{
-    // Recompute longestStreak from current games — it's an input to streak achievements.
+    // Recompute longestStreak from current games - it's an input to streak achievements.
     const sbd=new Map();
     games.forEach(g=>{
       (g.sessions||[]).forEach(s=>{
@@ -3614,7 +3614,7 @@ export default function App(){
     const current=unlockedAchievementIds(games,longest);
     const seen=lastSeenAchRead();
     if(seen===null){
-      // First-ever run — silent sync, no banner. Includes upgrade from pre-v1.7.
+      // First-ever run - silent sync, no banner. Includes upgrade from pre-v1.7.
       lastSeenAchWrite(current);
       return;
     }
@@ -3622,7 +3622,7 @@ export default function App(){
     const added=[...current].filter(id=>!seen.has(id));
     if(added.length){
       // Preserve the order in which achievements appear in the ACHIEVEMENTS array
-      // (Collector I before Collector II etc) — the unlockedAchievementIds Set
+      // (Collector I before Collector II etc) - the unlockedAchievementIds Set
       // doesn't promise insertion order across iterations, so re-sort by definition index.
       const idx=new Map(ACHIEVEMENTS.map((a,i)=>[a.id,i]));
       added.sort((a,b)=>(idx.get(a)??999)-(idx.get(b)??999));
@@ -3631,7 +3631,7 @@ export default function App(){
       // mid-session, the same achievements won't re-fire after a reload.
       lastSeenAchWrite(current);
     } else if(current.size!==seen.size){
-      // Set shrunk (rare — game deletion or status change). Keep storage in sync
+      // Set shrunk (rare - game deletion or status change). Keep storage in sync
       // so that future re-unlocks fire the banner.
       lastSeenAchWrite(current);
     }
@@ -3649,7 +3649,7 @@ export default function App(){
 
   const requestNotif=async()=>{const p=await requestNotifPerm();setNotifP(p);return p;};
 
-  // v1.15.1 — Bulk scan handler. Receives an array of RAWG game objects from
+  // v1.15.1 - Bulk scan handler. Receives an array of RAWG game objects from
   // BarcodeScanner's bulk mode, converts each to a full game record (mirroring fill()
   // in Modal but standalone since there's no current form), and appends them all to
   // the collection in a single setGames call. Uses the same EF defaults as Modal.
@@ -3696,7 +3696,7 @@ export default function App(){
     const isCompleted  = form.status === 'ukonczone';
     let completedAt = form.completedAt || null;
     if(isCompleted && !wasCompleted && !completedAt){ completedAt = new Date().toISOString(); }
-    // v1.18.1 — Year in Review files hours under lastPlayed's year (falling back to addedAt).
+    // v1.18.1 - Year in Review files hours under lastPlayed's year (falling back to addedAt).
     // Manual edits never set it, so a game bought in 2024 and played now counted for 2024.
     // Stamp it when the user logs more hours or starts/finishes the game.
     const now = new Date().toISOString();
@@ -3727,14 +3727,14 @@ export default function App(){
     }
     setGames(prev=>prev.map(g=>{
       if(g.id!==id) return g;
-      // v1.7.0: stamp completedAt on transition INTO 'ukonczone' (only if not already set —
+      // v1.7.0: stamp completedAt on transition INTO 'ukonczone' (only if not already set -
       // we don't reset it on toggle off→on, since a re-completion isn't really a new completion).
       // This is what lets Goals/Wrapped count completions accurately by date.
       const next={...g,status,...extra};
       if(status==='ukonczone' && g.status!=='ukonczone' && !next.completedAt){
         next.completedAt=new Date().toISOString();
       }
-      // v1.18.1 — see handleSave: keep Year in Review attribution right for quick changes
+      // v1.18.1 - see handleSave: keep Year in Review attribution right for quick changes
       if((status==='gram'||status==='ukonczone') && g.status!==status && extra.lastPlayed===undefined){
         next.lastPlayed=new Date().toISOString();
       }
@@ -3749,19 +3749,19 @@ export default function App(){
     const next=!g.notifyEnabled;
     // If enabling and permission not granted, request it first
     if(next && typeof Notification!=='undefined' && Notification.permission==='default'){
-      requestNotif();  // best-effort — user may decline; we still toggle the flag
+      requestNotif();  // best-effort - user may decline; we still toggle the flag
     }
     setGames(prev=>prev.map(g=>g.id===id?{...g,notifyEnabled:next}:g));
     flash(next?t(lang,'notifEnabled'):t(lang,'notifDisabled'));
   }
 
-  // Currency: silent persist (used by Onboarding initial pick — no toast on first-time setup)
+  // Currency: silent persist (used by Onboarding initial pick - no toast on first-time setup)
   const setCurrencyPersist=useCallback((code)=>{
     if(!CURRENCIES[code]) return;
     try { localStorage.setItem(LS_CURRENCY,code); } catch{}
     setCurrencyState(code);
   },[]);
-  // Currency: change from Settings — persists + emits toast
+  // Currency: change from Settings - persists + emits toast
   const changeCurrency=useCallback((code)=>{
     if(!CURRENCIES[code]) return;
     try { localStorage.setItem(LS_CURRENCY,code); } catch{}
@@ -3770,12 +3770,12 @@ export default function App(){
     flash(t(lang,'currencyChanged',{name:(def.name[lang]||def.name.en)}));
   },[lang,flash]);
 
-  // v1.13.2 — A4 fix: Back button intercept (Android hardware back / TWA back).
+  // v1.13.2 - A4 fix: Back button intercept (Android hardware back / TWA back).
   //
   // Native pattern: pressing back in Android should pop the topmost screen,
   // and on the root screen show a "press back again to exit" toast for ~2s before
   // actually closing the app. Our PWA was just letting browser default behavior
-  // close the app immediately on any back press from any screen — surprising
+  // close the app immediately on any back press from any screen - surprising
   // users and losing in-flight modal data.
   //
   // Implementation: on mount we push a fake history entry. The browser back button
@@ -3788,13 +3788,13 @@ export default function App(){
   // After every dismiss we re-push the fake entry so the next back press has
   // something to pop. The arm timer auto-disarms after 2s (returns to step-1 state).
   //
-  // v1.13.8 — Hoisted ABOVE the `if(!onboarded) return` early return below.
+  // v1.13.8 - Hoisted ABOVE the `if(!onboarded) return` early return below.
   // Previously these hooks lived after the gate, so they were skipped during onboarding
   // and only mounted on the first post-onboarding render. That added 3 hooks to the
   // call list mid-lifecycle and tripped React's "Rendered more hooks than during the
   // previous render" Rules-of-Hooks check, crashing the app right after the user
   // confirmed the currency step. Hooks must be unconditionally called in the same
-  // order every render — so they belong above any conditional return.
+  // order every render - so they belong above any conditional return.
   const backExitArmed = useRef(false);
   const backDisarmTimer = useRef(null);
   useEffect(() => {
@@ -3821,10 +3821,10 @@ export default function App(){
       // Priority 3: hamburger overlay screens (settings, wrapped, achievements, etc.)
       if (overlay != null)    { setOverlay(null); return; }
 
-      // Priority 4: root screen — arm exit on first press, allow exit on second
+      // Priority 4: root screen - arm exit on first press, allow exit on second
       if (backExitArmed.current) {
         // Second press within window: actually exit. Pop our re-pushed fake entry
-        // AND then go back once more — browser/TWA closes app when no history left.
+        // AND then go back once more - browser/TWA closes app when no history left.
         if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
         backExitArmed.current = false;
         // history.go(-2) pops both the just-pushed fake entry and the original
@@ -3843,9 +3843,9 @@ export default function App(){
     };
   }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, proSheet, lang, flash]);
 
-  // v1.17.6 — reset the render cap whenever the filter/search/sort signature
+  // v1.17.6 - reset the render cap whenever the filter/search/sort signature
   // changes, so a new query always starts from the top page.
-  // v1.17.7 — must stay ABOVE the `if(!onboarded) return` below. It used to sit after it,
+  // v1.17.7 - must stay ABOVE the `if(!onboarded) return` below. It used to sit after it,
   // so finishing the onboarding wizard rendered one more hook than the previous render
   // and every new user hit React error #310 ("Coś się zepsuło"). No hooks below this line.
   useEffect(()=>{ setColLimit(COL_PAGE); }, [q, flt, platFilter, srcFilter, sortBy]);
@@ -3854,8 +3854,8 @@ export default function App(){
     onSkip={()=>{setOnboarded(true);setOnboard(true);trackOnce('onboarding_done',{demo:window.__ps5v_pendingDemo===true?'yes':'no'});}}
     onCurrencyPick={setCurrencyPersist}
     onLoadDemo={()=>{
-      // v1.15.0 — Demo loads ONLY if user picked "Show examples" in wizard step 3.
-      // Was: silently loaded during step 1→2 transition (v1.10) — that hidden default
+      // v1.15.0 - Demo loads ONLY if user picked "Show examples" in wizard step 3.
+      // Was: silently loaded during step 1→2 transition (v1.10) - that hidden default
       // is what created the activation problem we're fixing this release.
       const demos=makeDemoGames();
       setGames(demos);
@@ -3865,14 +3865,14 @@ export default function App(){
   /></>);
 
   const SM2=getSM(lang);
-  // v1.17.3 — Same status filter fix (used for tab badge count). Without it,
+  // v1.17.3 - Same status filter fix (used for tab badge count). Without it,
   // already-started games inflate the Premieres tab count badge incorrectly.
   const upcomingCount=games.filter(g=>g.releaseDate&&daysUntil(g.releaseDate)>=0&&g.status==='planuje').length;
 
-  // v1.8.0 — Compute hamburger badge triggers (red dot on ⋮ + per-row dots in MenuOverlay).
+  // v1.8.0 - Compute hamburger badge triggers (red dot on ⋮ + per-row dots in MenuOverlay).
   // Three signals, each independent. UI shows a dot when ANY is true.
   // Implementation note: this runs on every render but the work is O(games.length) bounded
-  // by Stats which already does the same — no perf concern.
+  // by Stats which already does the same - no perf concern.
   const menuTriggers = (() => {
     // Achievements: count current unlocked vs lastSeen count. Need longestStreak for streak achs.
     const sbd2=new Map();
@@ -3880,7 +3880,7 @@ export default function App(){
     const ach=computeAchievements(games, computeLongestStreak(sbd2));
     const unlockedCount=ach.filter(a=>a.unlocked).length;
     const achTrigger = unlockedCount > menuSeen.achievementsCount;
-    // v1.17.5 — Goals feature retired; no goals trigger anymore.
+    // v1.17.5 - Goals feature retired; no goals trigger anymore.
     const now = new Date();
     // Year-in-Review: nudge in December (month 11 zero-indexed) if user hasn't opened
     // Wrapped for the current year yet. Dot disappears the moment they tap it.
@@ -3905,10 +3905,10 @@ export default function App(){
   };
   const chips=[{k:'all',l:t(lang,'allGames')},...Object.entries(SM2).map(([k,m])=>({k,l:m.label})),{k:'sold',l:'💰 '+t(lang,'filterSold')},{k:'platinum',l:t(lang,'filterPlatinum')}];
 
-  // v1.13.8 — back-button intercept hook moved above the `if(!onboarded) return` early
+  // v1.13.8 - back-button intercept hook moved above the `if(!onboarded) return` early
   // return earlier in this component (Rules of Hooks fix). See comment block there.
 
-  // v1.17.6 — `added` now actually sorts by addedAt desc (was a no-op that just
+  // v1.17.6 - `added` now actually sorts by addedAt desc (was a no-op that just
   // preserved array order). Added `completed` sort (by completedAt desc).
   const sortFn = {
     added:     (a,b) => (b.addedAt||'').localeCompare(a.addedAt||''),
@@ -3925,11 +3925,11 @@ export default function App(){
     .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
     .sort(sortFn[sortBy]||sortFn.added);
   const visibleCapped = visible.slice(0, colLimit);
-  // v1.18.0 — Pro gating. proLocked is false whenever the PRO_ENABLED switch is off.
+  // v1.18.0 - Pro gating. proLocked is false whenever the PRO_ENABLED switch is off.
   const proLocked = proGateActive() && !isPro;
   const importFreeLeft = proLocked ? Math.max(0, FREE_IMPORT_LIMIT - games.filter(g=>g.importSource).length) : Infinity;
 
-  // v1.17.6 — Backlog randomizer. Pool = unplayed, owned-or-any, not an unreleased
+  // v1.17.6 - Backlog randomizer. Pool = unplayed, owned-or-any, not an unreleased
   // pre-order. Shared by the toolbar button, the re-roll, and the welcome-back nudge.
   const rollRandom = () => {
     const pool = games.filter(g => g.status==='planuje' && !(g.releaseDate && daysUntil(g.releaseDate) > 0));
@@ -3976,7 +3976,7 @@ export default function App(){
         {tab==='col'&&<>
           <div className='sw'><span className='sx'>🔍</span><input className='si' value={q} onChange={e=>setQ(e.target.value)} placeholder={t(lang,'searchPlaceholder')}/></div>
           <div className='toolbar'>
-            {/* v1.17.6 — Backlog randomizer. Picks a random unplayed owned game. */}
+            {/* v1.17.6 - Backlog randomizer. Picks a random unplayed owned game. */}
             <button type='button' className='tbtn' style={{borderColor:'rgba(167,139,250,.4)',color:G.pur}} onClick={rollRandom}>🎲 {t(lang,'randomPick')}</button>
             <button type='button' className='tbtn' onClick={()=>exportData(games,lang,()=>flash(t(lang,'backupSaved')))}>{t(lang,'export')}</button>
             <button type='button' className='tbtn' onClick={openImport}>{t(lang,'import')}</button>
@@ -3989,7 +3989,7 @@ export default function App(){
               <button type='button' key={p} className={'sort-btn'+(platFilter===p?' on':'')} onClick={()=>setPlatFilter(p)}>{p}</button>
             ))}
           </div>}
-          {/* v1.14.0 — Source filter row. Mirrors the platform filter pattern: only renders
+          {/* v1.14.0 - Source filter row. Mirrors the platform filter pattern: only renders
               when there are at least 2 distinct sources in the collection (parallel to the
               "filter out PS5" check above). Avoids clutter for users who only own games. */}
           {[...new Set(games.map(g=>g.source||'owned'))].length>1&&<div className='sort-row'>
@@ -4005,7 +4005,7 @@ export default function App(){
               <button type='button' key={k} className={'sort-btn'+(sortBy===k?' on':'')} onClick={()=>setSortBy(k)}>{l}</button>
             ))}
           </div>
-          {/* v1.17.6 — Result count so users grasp filter scope at a glance (esp. big libraries). */}
+          {/* v1.17.6 - Result count so users grasp filter scope at a glance (esp. big libraries). */}
           {visible.length>0&&<div style={{fontSize:11,color:G.dim,padding:'0 2px 8px',fontWeight:600}}>{t(lang,'resultCount',{n:visible.length, gw:gamesWord(visible.length,lang)})}</div>}
           <div className='lst'>
             {visible.length===0
@@ -4014,9 +4014,9 @@ export default function App(){
                 <div key={g.id} className='gc' style={{'--c':m.c,'--bg':m.bg}} onClick={()=>setModal(g)}>
                   {g.cover?<div className='gcov' style={{backgroundImage:`url(${coverThumb(g.cover)})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
-                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 — subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
+                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 - subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
                     <div className='grt'>
-                      {g.rating!=null?<><span className='grn'>{g.rating}</span><span className='grd'>/10</span></>:<span style={{color:G.dim,fontSize:17}}>—</span>}
+                      {g.rating!=null?<><span className='grn'>{g.rating}</span><span className='grd'>/10</span></>:<span style={{color:G.dim,fontSize:17}}>-</span>}
                       {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
                       {g.status==='psplus'&&<span style={{fontSize:11,fontWeight:700,color:G.gld}}>PS+</span>}
                       {g.platinum&&<span style={{fontSize:13}} title={t(lang,'platinum')}>🏆</span>}
@@ -4028,7 +4028,7 @@ export default function App(){
                 </div>
               );})
             }
-            {/* v1.17.6 — Load-more: reveal the next page of the capped list. */}
+            {/* v1.17.6 - Load-more: reveal the next page of the capped list. */}
             {visible.length>colLimit&&(
               <button type='button' className='empty-cta' style={{margin:'12px auto',display:'block'}} onClick={()=>setColLimit(l=>l+COL_PAGE)}>
                 {t(lang,'loadMore',{n:Math.min(COL_PAGE, visible.length-colLimit)})}
@@ -4040,10 +4040,10 @@ export default function App(){
         {tab==='upc'&&<Upcoming games={games} onOpen={setModal} onToggleNotify={toggleNotify} onStatusChange={handleStatusChange} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang}/>}
         {tab==='fin'&&<Finance games={games} lang={lang} proLocked={proLocked} onUnlock={()=>openPro('finance')}/>}
         {tab==='st'&&<Stats games={games} lang={lang}/>}
-        {/* v1.5.0 — Settings/Achievements/Goals/Wrapped now live behind hamburger menu (see overlays below) */}
+        {/* v1.5.0 - Settings/Achievements/Goals/Wrapped now live behind hamburger menu (see overlays below) */}
 
-        {/* v1.14.1 — Floating action button (FAB) for adding games. Standard Material
-            Design pattern — much more discoverable on mobile than a top-right "+" alone.
+        {/* v1.14.1 - Floating action button (FAB) for adding games. Standard Material
+            Design pattern - much more discoverable on mobile than a top-right "+" alone.
             Visible on Home + Collection (the two views where adding makes sense). Pinned
             to bottom-right with the same env(safe-area-inset-bottom) clearance the rest
             of the layout uses, plus a baseline 24px so it sits above the nav bar even on
@@ -4062,7 +4062,7 @@ export default function App(){
         )}
 
         {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} onBulkScan={()=>{setModal(null); if(proLocked){openPro('scan');return;} setBulkScannerOpen(true);}} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
-        {/* v1.15.1 — Bulk barcode scanner. Renders at App level (not inside Modal) so it
+        {/* v1.15.1 - Bulk barcode scanner. Renders at App level (not inside Modal) so it
             takes over the full screen. onBulkAdd receives RAWG game objects from the queue
             and pushes them all to library in one batch. */}
         {bulkScannerOpen && <BarcodeScanner
@@ -4072,9 +4072,9 @@ export default function App(){
           onBulkAdd={handleBulkAdd}
           onClose={()=>setBulkScannerOpen(false)}
         />}
-        {/* v1.16.0 — PSN-Profiles paste import overlay. Top-level (not nested in
+        {/* v1.16.0 - PSN-Profiles paste import overlay. Top-level (not nested in
             Settings) so it covers the full screen with its own bs-ovr container.
-            v1.16.1 — Generalized via PlatformImportOverlay with `platform` prop.
+            v1.16.1 - Generalized via PlatformImportOverlay with `platform` prop.
             Three separate state flags + render sites instead of one shared "open
             with platform=X" enum so the React tree is unambiguous and overlay-
             close logic stays per-platform. The success flash key is platform-
@@ -4146,7 +4146,7 @@ export default function App(){
             setXboxImportOpen(false);
           }}
         />}
-        {/* v1.17.0 — Playnite import overlay. Best path because Playnite users
+        {/* v1.17.0 - Playnite import overlay. Best path because Playnite users
             already categorized everything via CompletionStatus → no heuristics. */}
         {playniteImportOpen && <PlatformImportOverlay
           platform='playnite'
@@ -4170,7 +4170,7 @@ export default function App(){
             setPlayniteImportOpen(false);
           }}
         />}
-        {/* v1.16.5 — Undo-import overlay. Removes a batch of games matched by
+        {/* v1.16.5 - Undo-import overlay. Removes a batch of games matched by
             importSource tag (post-1.16.5 imports) or addedAt clustering (legacy). */}
         {importUndoOpen && <ImportUndoOverlay
           games={games}
@@ -4200,10 +4200,10 @@ export default function App(){
             mode={importModal.mode}
             onPickMode={(m)=>{
               if(m==='merge'){
-                // Merge mode — open file picker directly, no confirmation needed
+                // Merge mode - open file picker directly, no confirmation needed
                 setImportModal({mode:'merge',file:null});
               } else {
-                // Replace mode — open file picker, then show confirmation
+                // Replace mode - open file picker, then show confirmation
                 setImportModal({mode:'replace',file:null});
               }
             }}
@@ -4222,7 +4222,7 @@ export default function App(){
                   }
                 },err=>{closeImport();flash('❌ '+err);});
               } else {
-                // Replace — stash file, show confirmation
+                // Replace - stash file, show confirmation
                 setImportModal(prev=>({...prev,file}));
               }
             }}
@@ -4241,7 +4241,7 @@ export default function App(){
           />
         )}
 
-        {/* v1.17.6 — Backlog randomizer result. "Co zagrać?" picks a random unplayed
+        {/* v1.17.6 - Backlog randomizer result. "Co zagrać?" picks a random unplayed
             game; user can jump in (→ gram), re-roll, or open details. */}
         {randomPick&&(
           <div className='rate-modal' onClick={()=>setRandomPick(null)}>
@@ -4300,7 +4300,7 @@ export default function App(){
               <div style={{display:'inline-block',alignSelf:'center',background:'rgba(57,255,110,.1)',border:'1px solid rgba(57,255,110,.3)',color:'#39FF6E',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,marginBottom:14,width:'fit-content',marginLeft:'auto',marginRight:'auto'}}>
                 <div style={{display:'flex',justifyContent:'center'}}>{t(lang,'privacyBadge')}</div>
               </div>
-              {/* v1.5.0 — Single-paragraph privacy summary; full policy linked out to privacy.html */}
+              {/* v1.5.0 - Single-paragraph privacy summary; full policy linked out to privacy.html */}
               <div style={{fontSize:13,color:G.txt,lineHeight:1.6,marginBottom:16,textAlign:'left'}}>{t(lang,'privacyMiniBody')}</div>
               <a href='https://matiseekk-dot.github.io/Games/privacy.html' target='_blank' rel='noopener noreferrer' style={{display:'block',fontSize:13,fontWeight:700,color:G.blu,textDecoration:'none',padding:'10px',background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.3)',borderRadius:10,textAlign:'center',marginBottom:10}}>{t(lang,'privacyMiniLink')}</a>
               <div style={{fontSize:10,color:G.dim,textAlign:'center',marginBottom:14}}>{t(lang,'privacyUpdated')}</div>
@@ -4309,7 +4309,7 @@ export default function App(){
           </div>
         )}
 
-        {/* v1.5.0 — Hamburger menu + secondary screens */}
+        {/* v1.5.0 - Hamburger menu + secondary screens */}
         {overlay==='menu' && (
           <MenuOverlay
             onClose={()=>setOverlay(null)}
@@ -4330,7 +4330,7 @@ export default function App(){
           const longest=computeLongestStreak(sbd);
           return <Achievements games={games} longestStreak={longest} lang={lang} onClose={()=>setOverlay('menu')}/>;
         })()}
-        {/* v1.17.5 — Goals + Recommendations overlays removed (features retired). */}
+        {/* v1.17.5 - Goals + Recommendations overlays removed (features retired). */}
         {overlay==='wipe' && (
           <WipeConfirm
             games={games}
@@ -4344,8 +4344,8 @@ export default function App(){
               <div className='bs-ttl'>⚙️ {t(lang,'settings').replace(/^[^\s]+\s/,'')}</div>
               <button type='button' className='bs-x' onClick={()=>setOverlay('menu')} aria-label={t(lang,'cancel')}>✕</button>
             </div>
-            {/* v1.13.13 — added minHeight:0 (without it, flex:1 child with overflow-y:auto
-                doesn't actually scroll on mobile — same fix as .scr/.lst/.bs-pn) and
+            {/* v1.13.13 - added minHeight:0 (without it, flex:1 child with overflow-y:auto
+                doesn't actually scroll on mobile - same fix as .scr/.lst/.bs-pn) and
                 padding-bottom max() floor so the last setting row clears the Android nav
                 bar even when env(safe-area-inset-bottom) is 0. */}
             <div style={{flex:1,minHeight:0,overflowY:'auto',WebkitOverflowScrolling:'touch',paddingBottom:'max(calc(env(safe-area-inset-bottom,0px) + 24px), 120px)'}}>
@@ -4367,7 +4367,7 @@ export default function App(){
             </div>
           </div>
         )}
-        {/* v1.18.0 — last in the tree so it sits above the overlays that open it */}
+        {/* v1.18.0 - last in the tree so it sits above the overlays that open it */}
         {proSheet!=null && <ProSheet lang={lang} isPro={isPro} from={proSheet} onClose={()=>setProSheet(null)} onOwned={()=>setIsPro(true)} flash={flash}/>}
       </div>
     </>

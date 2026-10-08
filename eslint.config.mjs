@@ -1,4 +1,4 @@
-// v1.17.7 — Lint exists for one reason: the Rules of Hooks. v1.17.6 shipped a useEffect
+// v1.17.7 - Lint exists for one reason: the Rules of Hooks. v1.17.6 shipped a useEffect
 // placed after `if(!onboarded) return`, so finishing onboarding crashed every new user
 // (React error #310) for three weeks. `npm test` runs this, and CI runs `npm test`
 // before building, so a hook-order violation now blocks the deploy.
