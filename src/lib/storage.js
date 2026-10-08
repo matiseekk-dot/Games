@@ -1,7 +1,7 @@
 // Storage layer: localStorage R/W for the games list + small singletons (budget, timer,
 // onboarding, language, currency). Plus export/import helpers that act on the games array.
-// Per-feature persistence (eanCache, goals) lives next to its feature in lib/barcode.js
-// and lib/goals.js - keeping this file focused on the canonical games collection.
+// Per-feature persistence (e.g. the EAN cache in lib/barcode.js) lives next to its
+// feature, keeping this file focused on the canonical games collection.
 import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, LS_ONBOARDING_BANNER_DISMISSED, CURRENCIES } from '../constants.js';
 import { uid, parseNum } from './util.js';
 

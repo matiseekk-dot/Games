@@ -10,7 +10,7 @@ import {
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
 import { uid, mkAbbr, daysUntil, dayKey, parseNum, coverThumb } from './lib/util.js';
-import { fmtDate, fmtShort, pln, plnExact, gamesWord, pluralForm, hoursWord, platynaWord, fmtCph, fmtHours } from './lib/format.js';
+import { fmtDate, fmtShort, pln, plnExact, gamesWord, pluralForm, hoursWord, fmtCph, fmtHours } from './lib/format.js';
 import {
   lsRead, lsWrite,
   budgetRead, budgetWrite, timerRead, timerWrite,
@@ -24,8 +24,8 @@ import {
 import { registerSW, requestNotifPerm, checkReleases, shareText, shareFile } from './lib/platform.js';
 import { buildWrappedImage } from './lib/wrapped-image.js';
 import { rawgSearch, fetchGameById } from './lib/rawg.js';
-import { eanCacheRead, eanCacheWrite, cleanProductName, eanLookup } from './lib/barcode.js';
-import { collectSessions, computeStreak, computeLongestStreak } from './lib/sessions.js';
+import { eanCacheRead, cleanProductName, eanLookup } from './lib/barcode.js';
+import { collectSessions, computeLongestStreak } from './lib/sessions.js';
 import { ACHIEVEMENTS, computeAchievements, unlockedAchievementIds, getAchievementById } from './lib/achievements.js';
 import { getYearsWithData, computeYearReview } from './lib/wrapped.js';
 import { makeDemoGames, hasDemoGames, removeDemoGames } from './lib/demo.js';

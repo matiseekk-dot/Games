@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies - every other module imports from here.
 
-export const APP_VER  = '1.19.4';
+export const APP_VER  = '1.19.5';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 // v1.17.7 - Umami Cloud website ID (public by design, like the Cloudflare beacon token).
 // Empty = funnel analytics fully off (see src/lib/analytics.js).
@@ -30,7 +30,6 @@ export const LS_ONBOARD   = 'ps5vault_onboarded';
 export const LS_LANG      = 'ps5vault_lang';
 export const LS_CURRENCY  = 'ps5vault_currency';
 export const LS_EAN_CACHE = 'ps5vault_ean_cache';
-export const LS_GOALS     = 'ps5vault_goals';
 // v1.7.0 - set of achievement IDs the user has been notified about. Used to detect
 // freshly-unlocked achievements without spamming the banner on every render.
 // Stored as a JSON array (Sets don't serialize); cast back to Set on read.
@@ -41,11 +40,6 @@ export const LS_LAST_SEEN_ACH = 'ps5vault_last_seen_ach';
 // achievementsCount is "how many were unlocked when user last opened Achievements
 // view"; if current count > stored, there's something new to show.
 export const LS_MENU_SEEN = 'ps5vault_menu_seen';
-// v1.9.0 - Recommendations cache. Per-RAWG-game-id storage of the last fetched
-// /games/{id}/suggested results. Suggestions are content-based and stable per game,
-// so we cache aggressively (TTL 30 days) to stay well under the 20k/month free quota.
-// Schema: { '<rawgId>': { fetchedAt: ISO, results: [{id,name,background_image,genres,released,playtime}] } }
-export const LS_RECS_CACHE = 'ps5vault_recs_cache';
 // v1.10.0 - Timestamp of the last weekly summary notification we fired. Drives the
 // once-per-week throttle in App.jsx. Stored as ISO string. Default null → first
 // eligible visit triggers immediately (assuming permission + sessions).
