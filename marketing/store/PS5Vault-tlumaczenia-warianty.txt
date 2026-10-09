@@ -1,0 +1,522 @@
+PS5 Vault (com.skudev.ps5vault): Google Play store listing, regional variants
+Each section is one language. Fields: App name, Short description, Full description.
+
+==================================================
+LANGUAGE: English (United Kingdom) (en-GB)
+==================================================
+
+App name:
+PS5 Vault: Game Tracker
+
+Short description:
+Track your games, spending and backlog. Year in review. No account, no ads.
+
+Full description:
+How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
+
+PS5 Vault is a private tracker for your game collection. Add your games and the app counts hours, money and progress, then turns your year into a recap you can share.
+
+━━━ YOUR COLLECTION IN A MINUTE ━━━
+🔎 Type a title: cover, genre and release date fill in by themselves (RAWG database, 500,000+ games).
+📷 Scan the barcode on the box and the game is in your collection.
+📥 Hundreds of games already? Import your library from Steam, PSN, Xbox or Playnite (free up to 50 games).
+🕹 PS5, PS4, Xbox, PC and Switch in one place, including PS Plus and Game Pass games.
+🏷 Your own tags and lists: "co-op", "with Sam", "for the holidays". Filter the collection with one tap.
+⏱ After a session, tap "+1 h": hours and your daily play streak add up by themselves.
+
+━━━ MONEY UNDER CONTROL ━━━
+💰 What you spent on games, DLC and microtransactions, and what you got back from selling.
+📉 Spending month by month and your most expensive month.
+🧊 Unplayed games: how much money is sitting on the shelf.
+🎯 Wishlist with a target price: say what you would pay and the app tells you when the sale is good enough. One tap also shows the PS Store price history.
+
+━━━ PILE OF SHAME AND YEAR IN GAMES ━━━
+📦 Your pile of shame in one image: how many games and how much money are waiting. Share it with friends.
+🎁 Year in games: hours, most played titles, games finished, platinums and favorite genre.
+🎲 Can't decide what to play? "What to play?" picks a game from your backlog.
+🏆 19 achievements, from your first game to trophy hunter.
+
+━━━ RELEASES ━━━
+📅 Games with a future release date get their own tab with a countdown.
+🔔 Reminders a month, a week and 3 days before launch, and on launch day.
+
+━━━ STATS ━━━
+📊 Your top 10 games by time played, library completion, platinums, ratings and genres.
+
+━━━ PS5 VAULT PRO (OPTIONAL) ━━━
+A one-time purchase on Google Play. No subscription and no ads, forever.
+• Import your whole library with no limit
+• Advanced finance: cost per hour, ROI, yearly forecast, charts by store and genre
+• Spending analysis: where you overpay and what is worth selling
+• Monthly budget with an alert when you go over
+• Serial scanner: many boxes in a row
+Everything else is free.
+
+━━━ PRIVACY ━━━
+No account and no ads. Your collection stays on your phone. Make a backup with one tap (JSON file).
+The app only asks outside services about games (RAWG, a barcode database), never about you.
+
+━━━ ALSO ━━━
+• 7 languages: English, Spanish, German, French, Italian, Portuguese, Polish
+• 12 currencies, including dollar, euro, pound and real
+• Works offline
+• Select many games at once and undo deletes
+
+PS5 Vault is made by one person in their spare time. Have an idea or found a bug? Leave a review, I read every one.
+
+PS5 Vault is not affiliated with Sony Interactive Entertainment. "PS5" and "PlayStation" are trademarks of Sony Interactive Entertainment Inc.
+
+==================================================
+LANGUAGE: English (Canada) (en-CA)
+==================================================
+
+App name:
+PS5 Vault: Game Tracker
+
+Short description:
+Track your games, spending and backlog. Year in review. No account, no ads.
+
+Full description:
+How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
+
+PS5 Vault is a private tracker for your game collection. Add your games and the app counts hours, money and progress, then turns your year into a recap you can share.
+
+━━━ YOUR COLLECTION IN A MINUTE ━━━
+🔎 Type a title: cover, genre and release date fill in by themselves (RAWG database, 500,000+ games).
+📷 Scan the barcode on the box and the game is in your collection.
+📥 Hundreds of games already? Import your library from Steam, PSN, Xbox or Playnite (free up to 50 games).
+🕹 PS5, PS4, Xbox, PC and Switch in one place, including PS Plus and Game Pass games.
+🏷 Your own tags and lists: "co-op", "with Sam", "for the holidays". Filter the collection with one tap.
+⏱ After a session, tap "+1 h": hours and your daily play streak add up by themselves.
+
+━━━ MONEY UNDER CONTROL ━━━
+💰 What you spent on games, DLC and microtransactions, and what you got back from selling.
+📉 Spending month by month and your most expensive month.
+🧊 Unplayed games: how much money is sitting on the shelf.
+🎯 Wishlist with a target price: say what you would pay and the app tells you when the sale is good enough. One tap also shows the PS Store price history.
+
+━━━ PILE OF SHAME AND YEAR IN GAMES ━━━
+📦 Your pile of shame in one image: how many games and how much money are waiting. Share it with friends.
+🎁 Year in games: hours, most played titles, games finished, platinums and favorite genre.
+🎲 Can't decide what to play? "What to play?" picks a game from your backlog.
+🏆 19 achievements, from your first game to trophy hunter.
+
+━━━ RELEASES ━━━
+📅 Games with a future release date get their own tab with a countdown.
+🔔 Reminders a month, a week and 3 days before launch, and on launch day.
+
+━━━ STATS ━━━
+📊 Your top 10 games by time played, library completion, platinums, ratings and genres.
+
+━━━ PS5 VAULT PRO (OPTIONAL) ━━━
+A one-time purchase on Google Play. No subscription and no ads, forever.
+• Import your whole library with no limit
+• Advanced finance: cost per hour, ROI, yearly forecast, charts by store and genre
+• Spending analysis: where you overpay and what is worth selling
+• Monthly budget with an alert when you go over
+• Serial scanner: many boxes in a row
+Everything else is free.
+
+━━━ PRIVACY ━━━
+No account and no ads. Your collection stays on your phone. Make a backup with one tap (JSON file).
+The app only asks outside services about games (RAWG, a barcode database), never about you.
+
+━━━ ALSO ━━━
+• 7 languages: English, Spanish, German, French, Italian, Portuguese, Polish
+• 12 currencies, including dollar, euro, pound and real
+• Works offline
+• Select many games at once and undo deletes
+
+PS5 Vault is made by one person in their spare time. Have an idea or found a bug? Leave a review, I read every one.
+
+PS5 Vault is not affiliated with Sony Interactive Entertainment. "PS5" and "PlayStation" are trademarks of Sony Interactive Entertainment Inc.
+
+==================================================
+LANGUAGE: English (Australia) (en-AU)
+==================================================
+
+App name:
+PS5 Vault: Game Tracker
+
+Short description:
+Track your games, spending and backlog. Year in review. No account, no ads.
+
+Full description:
+How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
+
+PS5 Vault is a private tracker for your game collection. Add your games and the app counts hours, money and progress, then turns your year into a recap you can share.
+
+━━━ YOUR COLLECTION IN A MINUTE ━━━
+🔎 Type a title: cover, genre and release date fill in by themselves (RAWG database, 500,000+ games).
+📷 Scan the barcode on the box and the game is in your collection.
+📥 Hundreds of games already? Import your library from Steam, PSN, Xbox or Playnite (free up to 50 games).
+🕹 PS5, PS4, Xbox, PC and Switch in one place, including PS Plus and Game Pass games.
+🏷 Your own tags and lists: "co-op", "with Sam", "for the holidays". Filter the collection with one tap.
+⏱ After a session, tap "+1 h": hours and your daily play streak add up by themselves.
+
+━━━ MONEY UNDER CONTROL ━━━
+💰 What you spent on games, DLC and microtransactions, and what you got back from selling.
+📉 Spending month by month and your most expensive month.
+🧊 Unplayed games: how much money is sitting on the shelf.
+🎯 Wishlist with a target price: say what you would pay and the app tells you when the sale is good enough. One tap also shows the PS Store price history.
+
+━━━ PILE OF SHAME AND YEAR IN GAMES ━━━
+📦 Your pile of shame in one image: how many games and how much money are waiting. Share it with friends.
+🎁 Year in games: hours, most played titles, games finished, platinums and favorite genre.
+🎲 Can't decide what to play? "What to play?" picks a game from your backlog.
+🏆 19 achievements, from your first game to trophy hunter.
+
+━━━ RELEASES ━━━
+📅 Games with a future release date get their own tab with a countdown.
+🔔 Reminders a month, a week and 3 days before launch, and on launch day.
+
+━━━ STATS ━━━
+📊 Your top 10 games by time played, library completion, platinums, ratings and genres.
+
+━━━ PS5 VAULT PRO (OPTIONAL) ━━━
+A one-time purchase on Google Play. No subscription and no ads, forever.
+• Import your whole library with no limit
+• Advanced finance: cost per hour, ROI, yearly forecast, charts by store and genre
+• Spending analysis: where you overpay and what is worth selling
+• Monthly budget with an alert when you go over
+• Serial scanner: many boxes in a row
+Everything else is free.
+
+━━━ PRIVACY ━━━
+No account and no ads. Your collection stays on your phone. Make a backup with one tap (JSON file).
+The app only asks outside services about games (RAWG, a barcode database), never about you.
+
+━━━ ALSO ━━━
+• 7 languages: English, Spanish, German, French, Italian, Portuguese, Polish
+• 12 currencies, including dollar, euro, pound and real
+• Works offline
+• Select many games at once and undo deletes
+
+PS5 Vault is made by one person in their spare time. Have an idea or found a bug? Leave a review, I read every one.
+
+PS5 Vault is not affiliated with Sony Interactive Entertainment. "PS5" and "PlayStation" are trademarks of Sony Interactive Entertainment Inc.
+
+==================================================
+LANGUAGE: English (India) (en-IN)
+==================================================
+
+App name:
+PS5 Vault: Game Tracker
+
+Short description:
+Track your games, spending and backlog. Year in review. No account, no ads.
+
+Full description:
+How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
+
+PS5 Vault is a private tracker for your game collection. Add your games and the app counts hours, money and progress, then turns your year into a recap you can share.
+
+━━━ YOUR COLLECTION IN A MINUTE ━━━
+🔎 Type a title: cover, genre and release date fill in by themselves (RAWG database, 500,000+ games).
+📷 Scan the barcode on the box and the game is in your collection.
+📥 Hundreds of games already? Import your library from Steam, PSN, Xbox or Playnite (free up to 50 games).
+🕹 PS5, PS4, Xbox, PC and Switch in one place, including PS Plus and Game Pass games.
+🏷 Your own tags and lists: "co-op", "with Sam", "for the holidays". Filter the collection with one tap.
+⏱ After a session, tap "+1 h": hours and your daily play streak add up by themselves.
+
+━━━ MONEY UNDER CONTROL ━━━
+💰 What you spent on games, DLC and microtransactions, and what you got back from selling.
+📉 Spending month by month and your most expensive month.
+🧊 Unplayed games: how much money is sitting on the shelf.
+🎯 Wishlist with a target price: say what you would pay and the app tells you when the sale is good enough. One tap also shows the PS Store price history.
+
+━━━ PILE OF SHAME AND YEAR IN GAMES ━━━
+📦 Your pile of shame in one image: how many games and how much money are waiting. Share it with friends.
+🎁 Year in games: hours, most played titles, games finished, platinums and favorite genre.
+🎲 Can't decide what to play? "What to play?" picks a game from your backlog.
+🏆 19 achievements, from your first game to trophy hunter.
+
+━━━ RELEASES ━━━
+📅 Games with a future release date get their own tab with a countdown.
+🔔 Reminders a month, a week and 3 days before launch, and on launch day.
+
+━━━ STATS ━━━
+📊 Your top 10 games by time played, library completion, platinums, ratings and genres.
+
+━━━ PS5 VAULT PRO (OPTIONAL) ━━━
+A one-time purchase on Google Play. No subscription and no ads, forever.
+• Import your whole library with no limit
+• Advanced finance: cost per hour, ROI, yearly forecast, charts by store and genre
+• Spending analysis: where you overpay and what is worth selling
+• Monthly budget with an alert when you go over
+• Serial scanner: many boxes in a row
+Everything else is free.
+
+━━━ PRIVACY ━━━
+No account and no ads. Your collection stays on your phone. Make a backup with one tap (JSON file).
+The app only asks outside services about games (RAWG, a barcode database), never about you.
+
+━━━ ALSO ━━━
+• 7 languages: English, Spanish, German, French, Italian, Portuguese, Polish
+• 12 currencies, including dollar, euro, pound and real
+• Works offline
+• Select many games at once and undo deletes
+
+PS5 Vault is made by one person in their spare time. Have an idea or found a bug? Leave a review, I read every one.
+
+PS5 Vault is not affiliated with Sony Interactive Entertainment. "PS5" and "PlayStation" are trademarks of Sony Interactive Entertainment Inc.
+
+==================================================
+LANGUAGE: Spanish (Latin America) (es-419)
+==================================================
+
+App name:
+PS5 Vault: Tracker de Juegos
+
+Short description:
+Tu colección, tus gastos y tu resumen del año. Sin cuenta ni anuncios.
+
+Full description:
+¿Cuánto has gastado de verdad en juegos? ¿Cuántas horas les has dedicado? ¿Y cuántos siguen sin abrir?
+
+PS5 Vault es un tracker privado para tu colección de juegos. Añade tus juegos y la app cuenta horas, dinero y progreso, y al final del año te da un resumen para compartir.
+
+━━━ TU COLECCIÓN EN UN MINUTO ━━━
+🔎 Escribe el título: portada, género y fecha de lanzamiento se rellenan solos (base de datos RAWG, más de 500.000 juegos).
+📷 Escanea el código de barras de la caja y el juego ya está en tu colección.
+📥 ¿Ya tienes cientos de juegos? Importa tu biblioteca de Steam, PSN, Xbox o Playnite (gratis hasta 50 juegos).
+🕹 PS5, PS4, Xbox, PC y Switch en un solo lugar, también juegos de PS Plus y Game Pass.
+🏷 Tus propias etiquetas y listas: "coop", "con Ana", "para vacaciones". Filtra la colección con un toque.
+⏱ Después de jugar, toca "+1 h": las horas y tu racha de días se suman solas.
+
+━━━ TU DINERO BAJO CONTROL ━━━
+💰 Cuánto gastaste en juegos, DLC y microtransacciones, y cuánto recuperaste al venderlos.
+📉 Gastos mes a mes y tu mes más caro.
+🧊 Juegos sin jugar: cuánto dinero está parado en la estantería.
+🎯 Lista de deseos con precio objetivo: indica cuánto pagarías y la app te avisa cuando la oferta merece la pena. Con un toque ves también el historial de precios de PS Store.
+
+━━━ PILA DE LA VERGÜENZA Y AÑO EN JUEGOS ━━━
+📦 Tu pila de la vergüenza en una imagen: cuántos juegos y cuánto dinero esperan. Compártela con tus amigos.
+🎁 Año en juegos: horas, títulos más jugados, juegos terminados, platinos y género favorito.
+🎲 ¿No sabes a qué jugar? "¿A qué juego?" elige un juego de tu pila.
+🏆 19 logros, desde tu primer juego hasta cazador de trofeos.
+
+━━━ LANZAMIENTOS ━━━
+📅 Los juegos con fecha de lanzamiento futura tienen su propia pestaña con cuenta atrás.
+🔔 Avisos un mes, una semana y 3 días antes del lanzamiento, y el mismo día.
+
+━━━ ESTADÍSTICAS ━━━
+📊 Tu top 10 de juegos por tiempo jugado, porcentaje de biblioteca terminada, platinos, notas y géneros.
+
+━━━ PS5 VAULT PRO (OPCIONAL) ━━━
+Una compra única en Google Play. Sin suscripción y sin anuncios, para siempre.
+• Importa toda tu biblioteca sin límite
+• Finanzas avanzadas: coste por hora, ROI, previsión del año, gráficos por tienda y género
+• Análisis de gastos: dónde pagas de más y qué conviene vender
+• Presupuesto mensual con aviso cuando lo superas
+• Escáner en serie: varias cajas seguidas
+Todo lo demás es gratis.
+
+━━━ PRIVACIDAD ━━━
+Sin cuenta y sin anuncios. Tu colección se queda en tu móvil. Haz una copia de seguridad con un toque (archivo JSON).
+La app solo pregunta a servicios externos por los juegos (RAWG, una base de códigos de barras), nunca por ti.
+
+━━━ ADEMÁS ━━━
+• 7 idiomas: español, inglés, portugués, francés, italiano, alemán y polaco
+• 12 monedas, entre ellas euro, dólar y peso mexicano
+• Funciona sin conexión
+• Selecciona varios juegos a la vez y deshaz un borrado
+
+PS5 Vault lo hace una sola persona en su tiempo libre. ¿Tienes una idea o encontraste un error? Déjalo en una reseña, las leo todas.
+
+PS5 Vault no está afiliado a Sony Interactive Entertainment. "PS5" y "PlayStation" son marcas comerciales de Sony Interactive Entertainment Inc.
+
+==================================================
+LANGUAGE: Spanish (United States) (es-US)
+==================================================
+
+App name:
+PS5 Vault: Tracker de Juegos
+
+Short description:
+Tu colección, tus gastos y tu resumen del año. Sin cuenta ni anuncios.
+
+Full description:
+¿Cuánto has gastado de verdad en juegos? ¿Cuántas horas les has dedicado? ¿Y cuántos siguen sin abrir?
+
+PS5 Vault es un tracker privado para tu colección de juegos. Añade tus juegos y la app cuenta horas, dinero y progreso, y al final del año te da un resumen para compartir.
+
+━━━ TU COLECCIÓN EN UN MINUTO ━━━
+🔎 Escribe el título: portada, género y fecha de lanzamiento se rellenan solos (base de datos RAWG, más de 500.000 juegos).
+📷 Escanea el código de barras de la caja y el juego ya está en tu colección.
+📥 ¿Ya tienes cientos de juegos? Importa tu biblioteca de Steam, PSN, Xbox o Playnite (gratis hasta 50 juegos).
+🕹 PS5, PS4, Xbox, PC y Switch en un solo lugar, también juegos de PS Plus y Game Pass.
+🏷 Tus propias etiquetas y listas: "coop", "con Ana", "para vacaciones". Filtra la colección con un toque.
+⏱ Después de jugar, toca "+1 h": las horas y tu racha de días se suman solas.
+
+━━━ TU DINERO BAJO CONTROL ━━━
+💰 Cuánto gastaste en juegos, DLC y microtransacciones, y cuánto recuperaste al venderlos.
+📉 Gastos mes a mes y tu mes más caro.
+🧊 Juegos sin jugar: cuánto dinero está parado en la estantería.
+🎯 Lista de deseos con precio objetivo: indica cuánto pagarías y la app te avisa cuando la oferta merece la pena. Con un toque ves también el historial de precios de PS Store.
+
+━━━ PILA DE LA VERGÜENZA Y AÑO EN JUEGOS ━━━
+📦 Tu pila de la vergüenza en una imagen: cuántos juegos y cuánto dinero esperan. Compártela con tus amigos.
+🎁 Año en juegos: horas, títulos más jugados, juegos terminados, platinos y género favorito.
+🎲 ¿No sabes a qué jugar? "¿A qué juego?" elige un juego de tu pila.
+🏆 19 logros, desde tu primer juego hasta cazador de trofeos.
+
+━━━ LANZAMIENTOS ━━━
+📅 Los juegos con fecha de lanzamiento futura tienen su propia pestaña con cuenta atrás.
+🔔 Avisos un mes, una semana y 3 días antes del lanzamiento, y el mismo día.
+
+━━━ ESTADÍSTICAS ━━━
+📊 Tu top 10 de juegos por tiempo jugado, porcentaje de biblioteca terminada, platinos, notas y géneros.
+
+━━━ PS5 VAULT PRO (OPCIONAL) ━━━
+Una compra única en Google Play. Sin suscripción y sin anuncios, para siempre.
+• Importa toda tu biblioteca sin límite
+• Finanzas avanzadas: coste por hora, ROI, previsión del año, gráficos por tienda y género
+• Análisis de gastos: dónde pagas de más y qué conviene vender
+• Presupuesto mensual con aviso cuando lo superas
+• Escáner en serie: varias cajas seguidas
+Todo lo demás es gratis.
+
+━━━ PRIVACIDAD ━━━
+Sin cuenta y sin anuncios. Tu colección se queda en tu móvil. Haz una copia de seguridad con un toque (archivo JSON).
+La app solo pregunta a servicios externos por los juegos (RAWG, una base de códigos de barras), nunca por ti.
+
+━━━ ADEMÁS ━━━
+• 7 idiomas: español, inglés, portugués, francés, italiano, alemán y polaco
+• 12 monedas, entre ellas euro, dólar y peso mexicano
+• Funciona sin conexión
+• Selecciona varios juegos a la vez y deshaz un borrado
+
+PS5 Vault lo hace una sola persona en su tiempo libre. ¿Tienes una idea o encontraste un error? Déjalo en una reseña, las leo todas.
+
+PS5 Vault no está afiliado a Sony Interactive Entertainment. "PS5" y "PlayStation" son marcas comerciales de Sony Interactive Entertainment Inc.
+
+==================================================
+LANGUAGE: French (Canada) (fr-CA)
+==================================================
+
+App name:
+PS5 Vault : Suivi de Jeux
+
+Short description:
+Ta collection, tes dépenses et ton bilan de l’année. Sans compte ni pub.
+
+Full description:
+Combien as-tu vraiment dépensé en jeux ? Combien d’heures y as-tu passé ? Et combien sont encore sous blister ?
+
+PS5 Vault est un suivi privé pour ta collection de jeux. Ajoute tes jeux, l’app compte les heures, l’argent et ta progression, puis transforme ton année en bilan à partager.
+
+━━━ TA COLLECTION EN UNE MINUTE ━━━
+🔎 Tape le titre : jaquette, genre et date de sortie se remplissent tout seuls (base RAWG, plus de 500 000 jeux).
+📷 Scanne le code-barres de la boîte et le jeu est dans ta collection.
+📥 Déjà des centaines de jeux ? Importe ta bibliothèque depuis Steam, PSN, Xbox ou Playnite (gratuit jusqu’à 50 jeux).
+🕹 PS5, PS4, Xbox, PC et Switch au même endroit, y compris les jeux PS Plus et Game Pass.
+🏷 Tes propres tags et listes : « coop », « avec Léa », « pour les vacances ». Filtre la collection d’un geste.
+⏱ Après une session, touche « +1 h » : les heures et ta série de jours se comptent toutes seules.
+
+━━━ TON ARGENT SOUS CONTRÔLE ━━━
+💰 Ce que tu as dépensé en jeux, DLC et microtransactions, et ce que tu as récupéré en les revendant.
+📉 Tes dépenses mois par mois et ton mois le plus cher.
+🧊 Jeux pas encore lancés : combien d’argent dort sur l’étagère.
+🎯 Liste de souhaits avec prix cible : indique combien tu paierais et l’app te dit quand la promo vaut le coup. Un geste suffit pour voir l’historique des prix du PS Store.
+
+━━━ PILE DE LA HONTE ET ANNÉE EN JEUX ━━━
+📦 Ta pile de la honte en une image : combien de jeux et combien d’argent attendent. Partage-la avec tes amis.
+🎁 Année en jeux : heures, titres les plus joués, jeux terminés, platines et genre préféré.
+🎲 Tu ne sais pas à quoi jouer ? « À quoi jouer ? » tire un jeu de ta pile au sort.
+🏆 19 succès, de ton premier jeu au chasseur de trophées.
+
+━━━ SORTIES ━━━
+📅 Les jeux avec une date de sortie à venir ont leur propre onglet avec compte à rebours.
+🔔 Des rappels un mois, une semaine et 3 jours avant la sortie, et le jour J.
+
+━━━ STATISTIQUES ━━━
+📊 Ton top 10 par temps de jeu, la part de ta bibliothèque terminée, tes platines, tes notes et tes genres.
+
+━━━ PS5 VAULT PRO (OPTIONNEL) ━━━
+Un achat unique sur Google Play. Sans abonnement et sans pub, pour toujours.
+• Import de toute ta bibliothèque sans limite
+• Finances avancées : coût par heure, ROI, prévision de l’année, graphiques par boutique et par genre
+• Analyse des dépenses : où tu paies trop et ce qui vaut la peine d’être revendu
+• Budget mensuel avec alerte en cas de dépassement
+• Scanner en série : plusieurs boîtes à la suite
+Tout le reste est gratuit.
+
+━━━ VIE PRIVÉE ━━━
+Sans compte et sans pub. Ta collection reste sur ton téléphone. Une sauvegarde se fait en un geste (fichier JSON).
+L’app ne demande aux services externes que des infos sur les jeux (RAWG, une base de codes-barres), jamais sur toi.
+
+━━━ AUSSI ━━━
+• 7 langues : français, anglais, espagnol, italien, allemand, portugais, polonais
+• 12 devises, dont l’euro, le dollar canadien et la livre
+• Fonctionne hors ligne
+• Sélection de plusieurs jeux à la fois et annulation d’une suppression
+
+PS5 Vault est développé par une seule personne sur son temps libre. Une idée, un bug ? Dis-le dans un avis, je les lis tous.
+
+PS5 Vault n’est pas affilié à Sony Interactive Entertainment. « PS5 » et « PlayStation » sont des marques de Sony Interactive Entertainment Inc.
+
+==================================================
+LANGUAGE: Portuguese (Portugal) (pt-PT)
+==================================================
+
+App name:
+PS5 Vault: Controle de Jogos
+
+Short description:
+Sua coleção, seus gastos e a retrospectiva do ano. Sem conta e sem anúncios.
+
+Full description:
+Quanto você realmente gastou com jogos? Quantas horas passou neles? E quantos ainda estão lacrados?
+
+PS5 Vault é um controle particular da sua coleção de jogos. Você adiciona seus jogos e o app conta horas, dinheiro e progresso, e no fim do ano transforma tudo numa retrospectiva para compartilhar.
+
+━━━ SUA COLEÇÃO EM UM MINUTO ━━━
+🔎 Digite o título: capa, gênero e data de lançamento se preenchem sozinhos (base RAWG, mais de 500 mil jogos).
+📷 Escaneie o código de barras da caixa e o jogo já está na sua coleção.
+📥 Já tem centenas de jogos? Importe sua biblioteca da Steam, PSN, Xbox ou Playnite (grátis até 50 jogos).
+🕹 PS5, PS4, Xbox, PC e Switch num só lugar, incluindo jogos da PS Plus e do Game Pass.
+🏷 Suas próprias tags e listas: "co-op", "com a Ana", "para as férias". Filtre a coleção com um toque.
+⏱ Depois de jogar, toque em "+1 h": as horas e sua sequência de dias somam sozinhas.
+
+━━━ DINHEIRO SOB CONTROLE ━━━
+💰 Quanto você gastou com jogos, DLCs e microtransações, e quanto recuperou vendendo.
+📉 Gastos mês a mês e o seu mês mais caro.
+🧊 Jogos nunca jogados: quanto dinheiro está parado na estante.
+🎯 Lista de desejos com preço-alvo: diga quanto pagaria e o app avisa quando a promoção vale a pena. Com um toque você vê também o histórico de preços da PS Store.
+
+━━━ PILHA DA VERGONHA E ANO EM JOGOS ━━━
+📦 Sua pilha da vergonha numa imagem: quantos jogos e quanto dinheiro estão esperando. Compartilhe com os amigos.
+🎁 Ano em jogos: horas, títulos mais jogados, jogos zerados, platinas e gênero favorito.
+🎲 Não sabe o que jogar? "O que jogar?" sorteia um jogo da sua pilha.
+🏆 19 conquistas, do primeiro jogo ao caçador de troféus.
+
+━━━ LANÇAMENTOS ━━━
+📅 Jogos com data de lançamento futura ganham uma aba própria com contagem regressiva.
+🔔 Lembretes um mês, uma semana e 3 dias antes do lançamento, e no dia.
+
+━━━ ESTATÍSTICAS ━━━
+📊 Seu top 10 por tempo jogado, a porcentagem da biblioteca zerada, platinas, notas e gêneros.
+
+━━━ PS5 VAULT PRO (OPCIONAL) ━━━
+Uma compra única no Google Play. Sem assinatura e sem anúncios, para sempre.
+• Importe toda a biblioteca sem limite
+• Finanças avançadas: custo por hora, ROI, previsão do ano, gráficos por loja e gênero
+• Análise de gastos: onde você paga caro e o que vale a pena vender
+• Orçamento mensal com alerta quando você passar do limite
+• Scanner em série: várias caixas seguidas
+Todo o resto é grátis.
+
+━━━ PRIVACIDADE ━━━
+Sem conta e sem anúncios. Sua coleção fica no seu celular. O backup é feito com um toque (arquivo JSON).
+O app só pergunta a serviços externos sobre jogos (RAWG, uma base de códigos de barras), nunca sobre você.
+
+━━━ TAMBÉM ━━━
+• 7 idiomas: português, inglês, espanhol, francês, italiano, alemão e polonês
+• 12 moedas, incluindo real, dólar e euro
+• Funciona offline
+• Selecione vários jogos de uma vez e desfaça exclusões
+
+O PS5 Vault é feito por uma pessoa só, no tempo livre. Tem uma ideia ou achou um bug? Conte numa avaliação, eu leio todas.
+
+O PS5 Vault não é afiliado à Sony Interactive Entertainment. "PS5" e "PlayStation" são marcas registradas da Sony Interactive Entertainment Inc.
