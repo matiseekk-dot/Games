@@ -8,7 +8,7 @@ export const LISTING = {
   pl: {
     name: 'Polski (pl-PL)',
     title: 'PS5 Vault: Tracker Gier',
-    short: 'Kolekcja gier, godziny, wydatki i podsumowanie roku w jednym miejscu.',
+    short: 'Twoja kolekcja gier, godziny, kupka wstydu i podsumowanie roku w grach.',
     whatsNew: `Nowość: PS5 Vault Pro, jednorazowy zakup bez subskrypcji.
 • Import całej biblioteki ze Steam, PSN, Xboxa i Playnite bez limitu
 • Koszt na godzinę, ROI, prognoza roku i analiza wydatków
@@ -72,7 +72,7 @@ PS5 Vault nie jest powiązany z Sony Interactive Entertainment. „PS5” i „P
   en: {
     name: 'English (en-US, also en-GB)',
     title: 'PS5 Vault: Game Tracker',
-    short: 'Track your game collection, hours, spending and backlog. Your year in games.',
+    short: 'Your game collection, play time, backlog and year in games, all in one place.',
     whatsNew: `New: PS5 Vault Pro, a one-time purchase with no subscription.
 • Import your whole Steam, PSN, Xbox or Playnite library with no limit
 • Cost per hour, ROI, yearly forecast and spending analysis
@@ -136,7 +136,7 @@ PS5 Vault is not affiliated with Sony Interactive Entertainment. "PS5" and "Play
   es: {
     name: 'Español (es-419 y es-ES)',
     title: 'PS5 Vault: Tracker de Juegos',
-    short: 'Tu colección de juegos, horas, gastos y resumen del año en un solo lugar.',
+    short: 'Tu colección de juegos, horas, pendientes y resumen del año en un solo lugar.',
     whatsNew: `Novedad: PS5 Vault Pro, una compra única sin suscripción.
 • Importa toda tu biblioteca de Steam, PSN, Xbox o Playnite sin límite
 • Coste por hora, ROI, previsión del año y análisis de gastos
@@ -200,7 +200,7 @@ PS5 Vault no está afiliado a Sony Interactive Entertainment. "PS5" y "PlayStati
   de: {
     name: 'Deutsch (de-DE)',
     title: 'PS5 Vault: Spiele-Tracker',
-    short: 'Spielesammlung, Spielzeit, Ausgaben und Jahresrückblick an einem Ort.',
+    short: 'Spielesammlung, Spielzeit, Backlog und Jahresrückblick an einem Ort.',
     whatsNew: `Neu: PS5 Vault Pro, ein einmaliger Kauf ohne Abo.
 • Importiere deine ganze Steam-, PSN-, Xbox- oder Playnite-Bibliothek ohne Limit
 • Kosten pro Stunde, ROI, Jahresprognose und Ausgabenanalyse
@@ -264,7 +264,7 @@ PS5 Vault steht in keiner Verbindung zu Sony Interactive Entertainment. „PS5�
   fr: {
     name: 'Français (fr-FR)',
     title: 'PS5 Vault : Suivi de Jeux',
-    short: 'Ta collection de jeux, tes heures, tes dépenses et ton bilan de l’année.',
+    short: 'Ta collection de jeux, tes heures, ta pile de la honte et ton bilan annuel.',
     whatsNew: `Nouveau : PS5 Vault Pro, un achat unique sans abonnement.
 • Importe toute ta bibliothèque Steam, PSN, Xbox ou Playnite sans limite
 • Coût par heure, ROI, prévision de l’année et analyse des dépenses
@@ -328,7 +328,7 @@ PS5 Vault n’est pas affilié à Sony Interactive Entertainment. « PS5 » et �
   it: {
     name: 'Italiano (it-IT)',
     title: 'PS5 Vault: Tracker Giochi',
-    short: 'Collezione di giochi, ore, spese e riepilogo dell’anno in un unico posto.',
+    short: 'Collezione di giochi, ore, arretrati e riepilogo dell’anno in un unico posto.',
     whatsNew: `Novità: PS5 Vault Pro, un acquisto unico senza abbonamento.
 • Importa tutta la tua libreria Steam, PSN, Xbox o Playnite senza limiti
 • Costo per ora, ROI, previsione dell’anno e analisi delle spese
@@ -392,7 +392,7 @@ PS5 Vault non è affiliato a Sony Interactive Entertainment. "PS5" e "PlayStatio
   pt: {
     name: 'Português do Brasil (pt-BR)',
     title: 'PS5 Vault: Controle de Jogos',
-    short: 'Sua coleção de jogos, horas, gastos e a retrospectiva do ano num só lugar.',
+    short: 'Sua coleção de jogos, horas, pilha da vergonha e retrospectiva do ano.',
     whatsNew: `Novidade: PS5 Vault Pro, uma compra única sem assinatura.
 • Importe toda a sua biblioteca da Steam, PSN, Xbox ou Playnite sem limite
 • Custo por hora, ROI, previsão do ano e análise de gastos

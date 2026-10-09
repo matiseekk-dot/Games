@@ -9,7 +9,7 @@ App name:
 PS5 Vault: Game Tracker
 
 Short description:
-Track your game collection, hours, spending and backlog. Your year in games.
+Your game collection, play time, backlog and year in games, all in one place.
 
 Full description:
 How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
@@ -74,7 +74,7 @@ App name:
 PS5 Vault: Game Tracker
 
 Short description:
-Track your game collection, hours, spending and backlog. Your year in games.
+Your game collection, play time, backlog and year in games, all in one place.
 
 Full description:
 How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
@@ -139,7 +139,7 @@ App name:
 PS5 Vault: Game Tracker
 
 Short description:
-Track your game collection, hours, spending and backlog. Your year in games.
+Your game collection, play time, backlog and year in games, all in one place.
 
 Full description:
 How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
@@ -204,7 +204,7 @@ App name:
 PS5 Vault: Game Tracker
 
 Short description:
-Track your game collection, hours, spending and backlog. Your year in games.
+Your game collection, play time, backlog and year in games, all in one place.
 
 Full description:
 How much have you really spent on games? How many hours went into them? And how many are still in the shrink wrap?
@@ -269,7 +269,7 @@ App name:
 PS5 Vault: Tracker de Juegos
 
 Short description:
-Tu colección de juegos, horas, gastos y resumen del año en un solo lugar.
+Tu colección de juegos, horas, pendientes y resumen del año en un solo lugar.
 
 Full description:
 ¿Cuánto has gastado de verdad en juegos? ¿Cuántas horas les has dedicado? ¿Y cuántos siguen sin abrir?
@@ -334,7 +334,7 @@ App name:
 PS5 Vault: Tracker de Juegos
 
 Short description:
-Tu colección de juegos, horas, gastos y resumen del año en un solo lugar.
+Tu colección de juegos, horas, pendientes y resumen del año en un solo lugar.
 
 Full description:
 ¿Cuánto has gastado de verdad en juegos? ¿Cuántas horas les has dedicado? ¿Y cuántos siguen sin abrir?
@@ -399,7 +399,7 @@ App name:
 PS5 Vault : Suivi de Jeux
 
 Short description:
-Ta collection de jeux, tes heures, tes dépenses et ton bilan de l’année.
+Ta collection de jeux, tes heures, ta pile de la honte et ton bilan annuel.
 
 Full description:
 Combien as-tu vraiment dépensé en jeux ? Combien d’heures y as-tu passé ? Et combien sont encore sous blister ?
@@ -464,7 +464,7 @@ App name:
 PS5 Vault: Controle de Jogos
 
 Short description:
-Sua coleção de jogos, horas, gastos e a retrospectiva do ano num só lugar.
+Sua coleção de jogos, horas, pilha da vergonha e retrospectiva do ano.
 
 Full description:
 Quanto você realmente gastou com jogos? Quantas horas passou neles? E quantos ainda estão lacrados?

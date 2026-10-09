@@ -35,10 +35,10 @@ Kategoria: **Rozrywka**. Tagi w Play Console: Gry wideo, Narzędzia, Finanse oso
 PS5 Vault: Tracker Gier
 ```
 
-**Krótki opis** (69/80)
+**Krótki opis** (71/80)
 
 ```
-Kolekcja gier, godziny, wydatki i podsumowanie roku w jednym miejscu.
+Twoja kolekcja gier, godziny, kupka wstydu i podsumowanie roku w grach.
 ```
 
 **Pełny opis** (2915/4000)
@@ -119,10 +119,10 @@ Do tego lista życzeń z ceną docelową, obrazek „kupka wstydu” i 7 język�
 PS5 Vault: Game Tracker
 ```
 
-**Krótki opis** (76/80)
+**Krótki opis** (77/80)
 
 ```
-Track your game collection, hours, spending and backlog. Your year in games.
+Your game collection, play time, backlog and year in games, all in one place.
 ```
 
 **Pełny opis** (2976/4000)
@@ -203,10 +203,10 @@ Plus a wishlist with target prices, the pile of shame image and 7 languages.
 PS5 Vault: Tracker de Juegos
 ```
 
-**Krótki opis** (73/80)
+**Krótki opis** (77/80)
 
 ```
-Tu colección de juegos, horas, gastos y resumen del año en un solo lugar.
+Tu colección de juegos, horas, pendientes y resumen del año en un solo lugar.
 ```
 
 **Pełny opis** (3156/4000)
@@ -287,10 +287,10 @@ Además: lista de deseos con precio objetivo, la imagen de tu pila de la vergüe
 PS5 Vault: Spiele-Tracker
 ```
 
-**Krótki opis** (69/80)
+**Krótki opis** (68/80)
 
 ```
-Spielesammlung, Spielzeit, Ausgaben und Jahresrückblick an einem Ort.
+Spielesammlung, Spielzeit, Backlog und Jahresrückblick an einem Ort.
 ```
 
 **Pełny opis** (3252/4000)
@@ -371,10 +371,10 @@ Außerdem: Wunschliste mit Zielpreis, das Pile-of-Shame-Bild und 7 Sprachen.
 PS5 Vault : Suivi de Jeux
 ```
 
-**Krótki opis** (72/80)
+**Krótki opis** (75/80)
 
 ```
-Ta collection de jeux, tes heures, tes dépenses et ton bilan de l’année.
+Ta collection de jeux, tes heures, ta pile de la honte et ton bilan annuel.
 ```
 
 **Pełny opis** (3286/4000)
@@ -455,10 +455,10 @@ Et aussi : liste de souhaits avec prix cible, l’image de ta pile de la honte e
 PS5 Vault: Tracker Giochi
 ```
 
-**Krótki opis** (73/80)
+**Krótki opis** (77/80)
 
 ```
-Collezione di giochi, ore, spese e riepilogo dell’anno in un unico posto.
+Collezione di giochi, ore, arretrati e riepilogo dell’anno in un unico posto.
 ```
 
 **Pełny opis** (3185/4000)
@@ -539,10 +539,10 @@ In più: lista desideri con prezzo obiettivo, l’immagine della tua pila della 
 PS5 Vault: Controle de Jogos
 ```
 
-**Krótki opis** (74/80)
+**Krótki opis** (70/80)
 
 ```
-Sua coleção de jogos, horas, gastos e a retrospectiva do ano num só lugar.
+Sua coleção de jogos, horas, pilha da vergonha e retrospectiva do ano.
 ```
 
 **Pełny opis** (3086/4000)
