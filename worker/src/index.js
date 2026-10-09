@@ -8,6 +8,12 @@
 //
 // Secret (set with `wrangler secret put GOOGLE_SA_JSON`): the JSON key of a Google Cloud
 // service account that has access to this app in Play Console. It never leaves the Worker.
+//
+// v1.22.0 - GET /steam?id=<nick | profile link | SteamID64> returns the public Steam library
+// through the official Steam Web API (secret STEAM_API_KEY, from
+// https://steamcommunity.com/dev/apikey). The browser cannot call that API itself (no CORS,
+// and the key must stay secret). Answers { steamid, games:[{ appid, name, playtime_forever,
+// last_played }] }, 404 { error:'not_found' } or 403 { error:'private' }.
 
 const PACKAGE_NAME = 'com.skudev.ps5vault';
 const PRODUCTS = new Set(['pro_lifetime']);
@@ -25,7 +31,7 @@ export function _resetForTests() {
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': APP_ORIGIN,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
   };
@@ -107,10 +113,60 @@ export async function verifyPurchase(env, productId, purchaseToken) {
   return { owned: true };
 }
 
+const STEAM_API = 'https://api.steampowered.com';
+const VANITY_RE = /^[A-Za-z0-9_-]{2,32}$/;
+const STEAMID_RE = /^7656119\d{10}$/;
+
+// "gaben", "https://steamcommunity.com/id/gaben/", ".../profiles/7656119..." or a bare SteamID64
+export function parseSteamInput(raw) {
+  const s = String(raw || '').trim();
+  const m = /steamcommunity\.com\/(id|profiles)\/([^/?#\s]+)/i.exec(s);
+  if (m) {
+    if (m[1].toLowerCase() === 'profiles') return STEAMID_RE.test(m[2]) ? { steamid: m[2] } : null;
+    return VANITY_RE.test(m[2]) ? { vanity: m[2] } : null;
+  }
+  if (STEAMID_RE.test(s)) return { steamid: s };
+  return VANITY_RE.test(s) ? { vanity: s } : null;
+}
+
+export async function steamLibrary(env, input) {
+  const who = parseSteamInput(input);
+  if (!who) return { status: 400, body: { error: 'bad_id' } };
+  const key = encodeURIComponent(env.STEAM_API_KEY || '');
+  let steamid = who.steamid;
+  if (!steamid) {
+    const r = await fetch(`${STEAM_API}/ISteamUser/ResolveVanityURL/v1/?key=${key}&vanityurl=${encodeURIComponent(who.vanity)}`);
+    if (!r.ok) throw new Error('steam ' + r.status);
+    const j = await r.json();
+    if (!j.response || j.response.success !== 1 || !j.response.steamid) return { status: 404, body: { error: 'not_found' } };
+    steamid = j.response.steamid;
+  }
+  const r = await fetch(`${STEAM_API}/IPlayerService/GetOwnedGames/v1/?key=${key}&steamid=${steamid}&include_appinfo=1&include_played_free_games=1&format=json`);
+  if (!r.ok) throw new Error('steam ' + r.status);
+  const j = await r.json();
+  // A private profile (or private game details) answers with an empty response
+  const list = j.response && Array.isArray(j.response.games) ? j.response.games : null;
+  if (!list) return { status: 403, body: { error: 'private' } };
+  const games = list.filter(g => g && g.name).map(g => ({
+    appid: g.appid, name: g.name, playtime_forever: g.playtime_forever || 0, last_played: g.rtime_last_played || 0,
+  }));
+  return { status: 200, body: { steamid, games } };
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders() });
-    const { pathname } = new URL(request.url);
+    const url = new URL(request.url);
+    const { pathname } = url;
+    if (pathname === '/steam' && request.method === 'GET') {
+      if (!env.STEAM_API_KEY) return json({ error: 'not configured' }, 503);
+      try {
+        const r = await steamLibrary(env, url.searchParams.get('id'));
+        return json(r.body, r.status);
+      } catch {
+        return json({ error: 'upstream' }, 502);
+      }
+    }
     if (pathname !== '/verify' || request.method !== 'POST') return json({ error: 'not found' }, 404);
 
     let body;

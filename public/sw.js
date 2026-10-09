@@ -1,5 +1,5 @@
-// PS5 Vault: Service Worker v1.21.2 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
-const CACHE = "ps5vault-v80";
+// PS5 Vault: Service Worker v1.22.0 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v81";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -100,6 +100,9 @@ self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   if (!e.request.url.startsWith("https://")) return;
   if (e.request.url.includes("api.rawg.io")) return;
+  // v1.22.0 - never keep answers from our Worker (Steam library) or Google (Drive sync,
+  // sign-in) in the offline cache: they are personal data and must always be fresh
+  if (/workers\.dev|googleapis\.com|accounts\.google\.com/.test(e.request.url)) return;
 
   e.respondWith(
     fetch(e.request)

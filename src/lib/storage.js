@@ -5,6 +5,7 @@
 import { LS_KEY, LS_ONBOARD, LS_LANG, LS_CURRENCY, LS_LAST_SEEN_ACH, LS_MENU_SEEN, LS_ONBOARDING_BANNER_DISMISSED, CURRENCIES, READY_LANGS } from '../constants.js';
 import { uid, parseNum } from './util.js';
 import { wishRead, wishWrite, cleanWishes, mergeWishlists } from './wishlist.js';
+import { cleanTags } from './tags.js';
 
 // ─── Games list ────────────────────────────────────────────────────────────
 export function lsRead() {
@@ -83,6 +84,8 @@ export function lsRead() {
       }
       // v1.21.2 - Playnite imports wrote platform 'Switch', which is not in PLATFORMS
       if (next.platform === 'Switch') { dirty = true; next = { ...next, platform: 'Nintendo Switch' }; }
+      // v1.22.0 - own tags must be a clean array of strings (hand-edited or foreign backups)
+      if (next.tags !== undefined && (!Array.isArray(next.tags) || next.tags.some(x => typeof x !== 'string'))) { dirty = true; next = { ...next, tags: cleanTags(Array.isArray(next.tags) ? next.tags.filter(x => typeof x === 'string') : []) }; }
       return next;
     }).filter(Boolean);
     if (dirty) { try { localStorage.setItem(LS_KEY, JSON.stringify(migrated)); } catch {} }
@@ -286,6 +289,7 @@ function applyImportDefaults(g) {
     if (typeof out[key] === 'string') { const n = parseNum(out[key]); out = { ...out, [key]: n === null ? (key === 'rating' ? null : 0) : n }; }
   }
   if (out.platform === 'Switch') out = { ...out, platform: 'Nintendo Switch' };
+  if (out.tags !== undefined) out = { ...out, tags: cleanTags(Array.isArray(out.tags) ? out.tags.filter(x => typeof x === 'string') : []) };
   if (out.source == null) out = { ...out, source: 'owned' };
   if (typeof out.preOrdered !== 'boolean') out = { ...out, preOrdered: false };
   if (out.status === 'psplus') out = psPlusStatusToSource(out);

@@ -117,3 +117,19 @@ export function parseSteamPaste(text) {
 
   return { format: 'unknown', count: 0, rows: [] };
 }
+
+// v1.22.0 - Library by Steam nickname, profile link or SteamID64 (Pro). Our Worker calls the
+// official Steam Web API (the browser cannot: no CORS, and the API key must stay secret).
+// Resolves with the same rows as parseSteamPaste; rejects with Error(code), code one of
+// 'not_found' | 'private' | 'bad_id' | 'network'.
+export async function fetchSteamLibrary(input, api) {
+  let res, body = {};
+  try {
+    res = await fetch(api + '/steam?id=' + encodeURIComponent(String(input || '').trim()));
+    body = await res.json().catch(() => ({}));
+  } catch {
+    throw new Error('network');
+  }
+  if (!res.ok) throw new Error(['not_found', 'private', 'bad_id'].includes(body.error) ? body.error : 'network');
+  return parseSteamPaste(JSON.stringify(Array.isArray(body.games) ? body.games : []));
+}

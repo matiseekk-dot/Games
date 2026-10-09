@@ -89,7 +89,7 @@ stronę `matiseekk-dot.github.io` i przekaż mi jej Website ID. Wtedy wpiszę je
 Po włączeniu trzeba też zaktualizować formularz Bezpieczeństwo danych w Play Console
 (Aktywność w aplikacji, Interakcje z aplikacją: zbierane, nieudostępniane, anonimowe).
 
-## Kopia na Dysku Google (1.19.0)
+## Synchronizacja i kopia na Dysku Google (1.19.0, synchronizacja od 1.22.0)
 
 Kod jest gotowy i ukryty, dopóki `DRIVE_CLIENT_ID` w `src/constants.js` jest pusty. Kopia trafia
 do ukrytego folderu apki na Dysku użytkownika (uprawnienie `drive.appdata`, Google uznaje je za
@@ -112,5 +112,40 @@ niewrażliwe, więc nie ma płatnego audytu bezpieczeństwa). Po włączeniu Pro
    To ważne: okno logowania Google musi poprawnie wrócić do apki w TWA. Jeśli nie wróci,
    przełączę logowanie na tryb przekierowania.
 
+Test synchronizacji na dwóch telefonach:
+1. Na obu włącz kartę **Synchronizacja i kopia na Dysku Google** tym samym kontem Google.
+2. Dodaj grę na telefonie A i stuknij **Synchronizuj teraz**.
+3. Na telefonie B też stuknij **Synchronizuj teraz**. Gra powinna się pojawić.
+4. Sprawdź usuwanie: usunięta gra powinna zniknąć na drugim telefonie, a nie wrócić.
+
+Jak to działa (od 1.22.0):
+- Przed każdym wysłaniem apka czyta kopię z Dysku i łączy ją z telefonem (`src/lib/sync.js`).
+- Przy tej samej grze wygrywa nowsza zmiana.
+- Usunięcia są pamiętane przez pół roku, więc usunięta gra nie wraca z drugiego telefonu.
+- Ta sama gra dodana na dwóch telefonach zostaje jedna.
+- Zmiany wysyłają się same po 15 s. Działa to przez około godzinę od zalogowania, bo token Google jest krótki. Kiedy synchronizacja jest starsza niż doba, ekran główny pokazuje kafelek „stuknij, aby zsynchronizować”.
+
 Google może poprosić o weryfikację marki (potwierdzenie domen w Search Console). Jest bezpłatna
 i zwykle trwa kilka dni. Zdarzenia analityki: `drive_enabled`, `drive_restore`.
+
+## Import Steam po nicku (1.22.0, Pro)
+
+Apka wysyła nick do naszego Workera (`GET /steam?id=...`), a Worker pyta oficjalne Steam Web API.
+Potrzebny jest darmowy klucz Steam:
+
+1. Zaloguj się na https://steamcommunity.com/dev/apikey. Konto Steam musi mieć wydane co najmniej 5 USD.
+2. Wpisz domenę `skudev.pl` i skopiuj klucz.
+3. W folderze `worker/` uruchom:
+   ```
+   npx wrangler secret put STEAM_API_KEY
+   npx wrangler deploy
+   ```
+   Pierwsze polecenie zapyta o klucz. Wklej go tam, nie do repo.
+
+Dopóki klucza nie ma:
+- Worker odpowiada 503.
+- Apka pokazuje „Nie udało się połączyć ze Steam”.
+- Ręczny import przez wklejenie dalej działa.
+
+Limit Steam to 100 000 zapytań na dzień, a jeden import zużywa 2 zapytania.
+Zdarzenie analityki: `steam_nick_import`.

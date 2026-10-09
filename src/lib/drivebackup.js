@@ -11,6 +11,7 @@
 // Off unless DRIVE_CLIENT_ID (constants.js) is set. Never throws into the UI on its own:
 // callers get rejected promises and decide what to show.
 import { DRIVE_CLIENT_ID } from '../constants.js';
+import { mergeSync } from './sync.js';
 
 export const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
 export const BACKUP_FILE = 'ps5vault-backup.json';
@@ -135,6 +136,17 @@ export async function fetchBackup() {
   if (!file) return null;
   const res = await api(`${FILES}/${file.id}?alt=media`);
   return { data: await res.json(), modifiedTime: file.modifiedTime };
+}
+
+// v1.22.0 - Sync: read the Drive copy, merge it with this phone (sync.js), hand the result to
+// apply() so the app stores it, then upload the merged copy. getLocal() returns
+// { games, wishlist, tombstones, wishTombstones }.
+export async function syncNow(getLocal, apply) {
+  const remote = await fetchBackup();
+  const data = remote && (Array.isArray(remote.data) ? { games: remote.data } : remote.data);
+  const m = mergeSync(getLocal(), data);
+  apply(m);
+  return backupNow(buildPayload(m.games, { wishlist: m.wishlist, tombstones: m.tombstones, wishTombstones: m.wishTombstones }));
 }
 
 // After a restore: backup is on and the Drive copy is as fresh as the restored data.

@@ -160,6 +160,12 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 .grn{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:${G.gld};line-height:1}
 .grd{font-size:10px;color:${G.dim}}
 .gprice{font-size:11px;font-weight:700;color:${G.org};white-space:nowrap}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px}
+.tagchip{padding:6px 10px;border:1px dashed ${G.bdr};border-radius:20px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tagchip.on{border:1px solid rgba(0,212,255,.45);background:rgba(0,212,255,.1);color:${G.blu}}
+.qlog{display:block;width:100%;margin-top:10px;padding:9px;border:1px solid rgba(57,255,110,.4);border-radius:9px;background:rgba(57,255,110,.08);color:${G.grn};font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.02em}
+.qlog:active{transform:scale(.97);background:rgba(57,255,110,.18)}
+.qlog-sm{display:inline-block;width:auto;margin-top:0;padding:4px 9px;font-size:11px;border-radius:7px;white-space:nowrap}
 .gprice-roi{font-size:11px;font-weight:700;white-space:nowrap}
 .rbdg-today{padding:3px 8px;border-radius:6px;background:rgba(57,255,110,.15);color:${G.grn};font-size:10px;font-weight:700;white-space:nowrap;border:1px solid rgba(57,255,110,.3);animation:pulse 1s infinite}
 .rbdg-soon{padding:3px 8px;border-radius:6px;background:rgba(255,159,28,.15);color:${G.org};font-size:10px;font-weight:700;white-space:nowrap;border:1px solid rgba(255,159,28,.3)}

@@ -5,7 +5,7 @@ import {
   APP_VER,
   LS_LANG, LS_CURRENCY,
   G, GENRES_PL, GENRES_EN, GENRES_BY_LANG, LANGS, READY_LANGS, localeFor, localizeGenre, STORES, PLATFORMS, SOURCES, isOwned, CURRENCIES, EF,
-  PRO_ENABLED, FREE_IMPORT_LIMIT, PLAY_STORE_URL, CPH_POOR,
+  PRO_ENABLED, FREE_IMPORT_LIMIT, PLAY_STORE_URL, CPH_POOR, BILLING_API,
 } from './constants.js';
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
@@ -25,20 +25,22 @@ import { registerSW, requestNotifPerm, checkReleases, shareText, shareFile } fro
 import { buildWrappedImage } from './lib/wrapped-image.js';
 import { buildShameImage } from './lib/shame-image.js';
 import { computeShamePile } from './lib/shame.js';
-import { wishRead, wishWrite, newWish, sameGame, targetHit, sortWishes, wishToGame, psStoreSearchUrl } from './lib/wishlist.js';
+import { wishRead, wishWrite, newWish, sameGame, targetHit, sortWishes, wishToGame, psStoreSearchUrl, priceHistoryUrl } from './lib/wishlist.js';
 import { rawgSearch, fetchGameById } from './lib/rawg.js';
 import { eanCacheRead, cleanProductName, eanLookup } from './lib/barcode.js';
-import { collectSessions, computeLongestStreak } from './lib/sessions.js';
+import { collectSessions, computeStreak, computeLongestStreak } from './lib/sessions.js';
+import { normTag, cleanTags, hasTag, allTags, addTagMany, MAX_TAGS } from './lib/tags.js';
 import { ACHIEVEMENTS, computeAchievements, unlockedAchievementIds, getAchievementById } from './lib/achievements.js';
 import { getYearsWithData, computeYearReview } from './lib/wrapped.js';
 import { makeDemoGames, hasDemoGames, removeDemoGames } from './lib/demo.js';
 import { parsePsnProfilesPaste } from './lib/psnprofiles-import.js';
-import { parseSteamPaste } from './lib/steam-import.js';
+import { parseSteamPaste, fetchSteamLibrary } from './lib/steam-import.js';
 import { parseXboxPaste } from './lib/xbox-import.js';
 import { parsePlaynitePaste } from './lib/playnite-import.js';
 import { initAnalytics, track, trackOnce, countBucket, getPlatform } from './lib/analytics.js';
 import { proTestMode, setProTestMode, proGateActive, readCachedPro, refreshEntitlement, buyPro, getProPrice, getBillingService } from './lib/pro.js';
-import { driveAvailable, readDriveState, backupStale, loadGis, gisReady, hasValidToken, requestToken, buildPayload, backupNow, fetchBackup, disableDrive, markDriveEnabled } from './lib/drivebackup.js';
+import { driveAvailable, readDriveState, backupStale, loadGis, gisReady, hasValidToken, requestToken, fetchBackup, disableDrive, markDriveEnabled, syncNow } from './lib/drivebackup.js';
+import { stampChanges, removedIds, addTombs, readTombs, writeTombs, mergeSync } from './lib/sync.js';
 import { maybePushWeeklySummary } from './lib/weeklysummary.js';
 import { applyStatus, setStatusMany, revertMany, removeGames, restoreGames } from './lib/bulk.js';
 import { writeRate, readRate, shouldAskRating, markAsked, PLAY_REVIEW_URL } from './lib/rate.js';
@@ -719,7 +721,49 @@ function RawgSearch({onSelect,lang}){
   );
 }
 
-function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,lang,flash}){
+// v1.22.0 - add one tag to the selected games (a quick way to build a "list")
+function BulkTagSheet({ lang, n, known, onPick, onClose }){
+  const [draft,setDraft]=useState('');
+  return <div className='confirm-ovr' onClick={onClose}>
+    <div className='confirm-box' onClick={e=>e.stopPropagation()}>
+      <div className='confirm-title'>{t(lang,'bulkTagTitle',{n,gw:gamesWord(n,lang)})}</div>
+      <div style={{display:'flex',gap:8,marginTop:14}}>
+        <input className='fi' style={{flex:1,minWidth:0}} autoFocus value={draft} maxLength={40} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter'&&normTag(draft)) onPick(draft); }} placeholder={t(lang,'tagsPh')}/>
+        <button type='button' className='bpr' style={{flex:'0 0 auto',padding:'0 16px'}} disabled={!normTag(draft)} onClick={()=>onPick(draft)}>{t(lang,'tagAdd')}</button>
+      </div>
+      {known.length>0&&<div className='tagrow' style={{marginTop:12}}>
+        {known.slice(0,16).map(({tag})=><button type='button' key={tag} className='tagchip' onClick={()=>onPick(tag)}>#{tag}</button>)}
+      </div>}
+      <button type='button' className='confirm-no' style={{marginTop:14,width:'100%'}} onClick={onClose}>{t(lang,'cancel')}</button>
+    </div>
+  </div>;
+}
+
+// v1.22.0 - own tags on a game: chips with ✕, type and Enter (or comma) to add, tap a
+// suggestion from tags already used in the collection.
+function TagEditor({ value, onChange, known, lang }){
+  const [draft,setDraft]=useState('');
+  const tags=cleanTags(value);
+  const add=raw=>{ const tag=normTag(raw); setDraft(''); if(tag) onChange(cleanTags([...tags,tag])); };
+  const full=tags.length>=MAX_TAGS;
+  const hints=(known||[]).map(x=>x.tag).filter(x=>!tags.some(y=>y.toLowerCase()===x.toLowerCase()))
+    .filter(x=>!draft||x.toLowerCase().includes(draft.trim().toLowerCase())).slice(0,10);
+  return <div>
+    {tags.length>0&&<div className='tagrow' style={{marginBottom:8}}>
+      {tags.map(x=><button type='button' key={x} className='tagchip on' onClick={()=>onChange(tags.filter(y=>y!==x))} aria-label={t(lang,'tagRemove',{tag:x})}>#{x} <span aria-hidden='true'>✕</span></button>)}
+    </div>}
+    {!full&&<input className='fi' value={draft} maxLength={40} enterKeyHint='done'
+      onChange={e=>{ const v=e.target.value; if(v.includes(',')) add(v.replace(/,/g,'')); else setDraft(v); }}
+      onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); add(draft); } }}
+      onBlur={()=>{ if(draft.trim()) add(draft); }}
+      placeholder={t(lang,'tagsPh')}/>}
+    {!full&&hints.length>0&&<div className='tagrow' style={{marginTop:8}}>
+      {hints.map(x=><button type='button' key={x} className='tagchip' onMouseDown={e=>e.preventDefault()} onClick={()=>add(x)}>+ #{x}</button>)}
+    </div>}
+  </div>;
+}
+
+function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,lang,flash,knownTags}){
   // v1.9.0: isEdit checks game.id specifically (not just truthy) so that pre-fill
   // objects from Recommendations (which carry title/cover/rawgId but no id) are
   // treated as NEW games with prefilled fields, not edits of nonexistent games.
@@ -852,7 +896,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
     // priceSold UX: single input where empty string = not sold (no toggle anymore).
     // Anything else gets coerced to a number string at the storage layer.
     const priceSold = (f.priceSold===null||f.priceSold==='') ? null : (money(f.priceSold)||null);
-    onSave({...f,abbr,year:+f.year||new Date().getFullYear(),hours:parseNum(f.hours)||0,rating,targetHours:parseNum(f.targetHours)||0,priceSold,priceBought:money(f.priceBought),extraSpend:money(f.extraSpend)});
+    onSave({...f,tags:cleanTags(f.tags),abbr,year:+f.year||new Date().getFullYear(),hours:parseNum(f.hours)||0,rating,targetHours:parseNum(f.targetHours)||0,priceSold,priceBought:money(f.priceBought),extraSpend:money(f.extraSpend)});
   }
   const days=daysUntil(f.releaseDate);
   return(
@@ -952,6 +996,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
               </div>
             </div>
             <div className='fg'><label className='fl'>{t(lang,'notesField')}</label><textarea className='fta' value={f.notes} onChange={e=>upd('notes',e.target.value)} placeholder={t(lang,'notesPh')}/></div>
+            <div className='fg'><label className='fl'>🏷️ {t(lang,'tagsField')}</label><TagEditor value={f.tags} onChange={v=>upd('tags',v)} known={knownTags} lang={lang}/><div className='fhnt'>{t(lang,'tagsHint')}</div></div>
             {f.status==='ukonczone'&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:f.platinum?'rgba(255,209,102,.08)':G.bg,border:f.platinum?'1px solid rgba(255,209,102,.4)':'1px solid '+G.bdr,borderRadius:9,cursor:'pointer',transition:'all .2s'}} onClick={()=>upd('platinum',!f.platinum)}>
               <div><div style={{fontSize:14,color:f.platinum?G.gld:G.txt}}>🏆 {t(lang,'platinum')}</div><div style={{fontSize:10,color:G.dim,marginTop:2}}>{t(lang,'platinumDesc')}</div></div>
               <div style={{width:44,height:26,borderRadius:13,background:f.platinum?G.gld:G.bdr,position:'relative',flexShrink:0,transition:'background .2s'}}>
@@ -1006,7 +1051,7 @@ function Modal({game,onSave,onDel,onClose,onBulkScan,notifPerm,onRequestNotif,la
 // (from prior versions when the timer was active) are preserved on each game via
 // g.sessions[]; Stats → Time tab still uses them via collectSessions().
 
-function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcomeBack,onWelcomeRoll,onWelcomeDismiss,driveBanner,onDriveBackup,onShareShame}){
+function Home({games,onOpen,onStatusChange,onQuickLog,onAddFirst,onToggleNotify,lang,welcomeBack,onWelcomeRoll,onWelcomeDismiss,driveBanner,onDriveBackup,onShareShame}){
   const [monthOpen,setMonthOpen]=useState(false);
   const SM=getSM(lang);
   const current=games.filter(g=>g.status==='gram');
@@ -1095,6 +1140,8 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
                   {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span>{gProg<100&&<span>~{fmtHours(gRem)} {t(lang,'remaining')}</span>}</div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
                 </div>
               </div>
+              {/* v1.22.0 - one tap after a session: +1 h, today's play day, streak */}
+              {onQuickLog&&<button type='button' className='qlog' onClick={()=>onQuickLog(g.id)} aria-label={t(lang,'quickLogAria',{title:g.title})}>{t(lang,'quickLog')}</button>}
               {/* v1.17.4 - SessionTimer removed per user request. Clicking the
                   game opens Modal where hours can be edited manually. Existing
                   sessions[] on games is preserved for legacy Stats → Time tab. */}
@@ -2101,9 +2148,25 @@ function withDriveToken(consent){
   return gisReady() ? requestToken({consent}) : loadGis().then(()=>requestToken({consent}));
 }
 
+// v1.22.0 - Drive sync glue: what this phone has, and how to store a merged result. Games
+// edited while the Drive copy was downloading are merged again instead of being lost.
+function syncLocal(games){
+  return { games, wishlist:wishRead(), tombstones:readTombs(), wishTombstones:readTombs('wish') };
+}
+function syncApply(setGames, snapshot){
+  return m=>{
+    writeTombs(m.tombstones); writeTombs(m.wishTombstones,'wish');
+    if(m.wishChanged) wishWrite(m.wishlist,{raw:true});
+    if(m.gamesChanged) setGames(cur=>cur===snapshot?m.games:mergeSync({...syncLocal(cur),tombstones:m.tombstones},{games:m.games}).games,{synced:true});
+  };
+}
+function driveSync(games, setGames){
+  return syncNow(()=>syncLocal(games), syncApply(setGames, games));
+}
+
 function DriveCard({ lang, games, setGames, flash, driveState, setDriveState }){
   const [busy,setBusy]=useState(false);
-  const [pending,setPending]=useState(null); // { data, modifiedTime, mode:'choose'|'confirm' }
+  const [pending,setPending]=useState(null); // { data, modifiedTime, mode:'confirm' }
   useEffect(()=>{ loadGis().catch(()=>{}); },[]);
   function run(consent, fn){
     if(busy) return;
@@ -2113,18 +2176,18 @@ function DriveCard({ lang, games, setGames, flash, driveState, setDriveState }){
       .finally(()=>setBusy(false));
   }
   async function save(){
-    try{ setDriveState(await backupNow(buildPayload(games,{wishlist:wishRead()}))); flash(t(lang,'driveSaved')); }
+    try{ setDriveState(await driveSync(games,setGames)); flash(t(lang,'driveSaved')); }
     catch{ flash(t(lang,'driveFailed')); }
   }
   const remoteCount=p=>(p.data&&(p.data.count??(Array.isArray(p.data.games)?p.data.games.length:0)))||0;
   function onEnable(){
     run(true, async()=>{
+      // v1.22.0 - a Drive copy from another phone is merged, nothing is overwritten
       try{
-        const remote=await fetchBackup();
         track('drive_enabled');
-        // Never overwrite an existing Drive backup silently (it may come from another phone).
-        if(remote&&remoteCount(remote)>0) setPending({...remote,mode:'choose'});
-        else await save();
+        const st=await driveSync(games,setGames);
+        setDriveState(st);
+        flash(t(lang,'driveSynced',{n:st.lastCount??0,gw:gamesWord(st.lastCount||0,lang)}));
       }catch{ flash(t(lang,'driveFailed')); }
     });
   }
@@ -2146,7 +2209,6 @@ function DriveCard({ lang, games, setGames, flash, driveState, setDriveState }){
       flash(t(lang,'driveRestored',{n,gw:gamesWord(n,lang)}));
     },()=>flash(t(lang,'driveFailed')));
   }
-  function keepLocal(){ setPending(null); run(false, save); }
   const st=driveState;
   const btn={padding:'10px 12px',borderRadius:10,fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,cursor:'pointer'};
   const primary={...btn,border:'none',background:`linear-gradient(135deg,${G.blu},#0060FF)`,color:'#fff'};
@@ -2159,14 +2221,10 @@ function DriveCard({ lang, games, setGames, flash, driveState, setDriveState }){
         <div style={{fontSize:12,color:G.dim,lineHeight:1.5,marginBottom:10}}>{t(lang,'driveDesc')}</div>
         {st.enabled&&<div style={{fontSize:12,color:G.grn,marginBottom:10}}>{st.lastBackupAt?t(lang,'driveLast',{when:fmtWhen(st.lastBackupAt,lang),n:st.lastCount??0,gw:gamesWord(st.lastCount||0,lang)}):t(lang,'driveNever')}</div>}
         {pending&&<div style={{fontSize:13,color:G.txt,lineHeight:1.5,marginBottom:10,padding:'10px 12px',background:'rgba(0,212,255,.07)',border:`1px solid ${G.bdr}`,borderRadius:10}}>
-          {pending.mode==='choose'
-            ? t(lang,'driveFoundChoose',{when:fmtWhen(pending.modifiedTime,lang),n,gw:gamesWord(n,lang)})
-            : t(lang,'driveConfirmRestore',{when:fmtWhen(pending.modifiedTime,lang),n,gw:gamesWord(n,lang)})}
+          {t(lang,'driveConfirmRestore',{when:fmtWhen(pending.modifiedTime,lang),n,gw:gamesWord(n,lang)})}
           <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:10}}>
-            <button type='button' style={primary} onClick={applyRemote}>{pending.mode==='choose'?t(lang,'driveUseRemote'):t(lang,'driveRestoreConfirmBtn')}</button>
-            {pending.mode==='choose'
-              ? <button type='button' style={secondary} onClick={keepLocal}>{t(lang,'driveKeepLocal')}</button>
-              : <button type='button' style={secondary} onClick={()=>setPending(null)}>{t(lang,'cancel')}</button>}
+            <button type='button' style={primary} onClick={applyRemote}>{t(lang,'driveRestoreConfirmBtn')}</button>
+            <button type='button' style={secondary} onClick={()=>setPending(null)}>{t(lang,'cancel')}</button>
           </div>
         </div>}
         {!pending&&(!st.enabled
@@ -2350,6 +2408,7 @@ function WishRow({ w, lang, onPrice, onRemove, onBought }){
       </div>
       <div style={{display:'flex',gap:8,marginTop:10,flexWrap:'wrap'}}>
         <a className='tbtn' href={psStoreSearchUrl(w.title)} target='_blank' rel='noopener noreferrer' style={{textDecoration:'none',color:G.blu,borderColor:'rgba(0,212,255,.4)'}}>{t(lang,'wishCheck')}</a>
+        <a className='tbtn' href={priceHistoryUrl(w.title,getCurrency(),lang)} target='_blank' rel='noopener noreferrer' onClick={()=>track('wish_price_history')} style={{textDecoration:'none',color:G.pur,borderColor:'rgba(167,139,250,.4)'}}>{t(lang,'wishHistory')}</a>
         <button type='button' className='tbtn' style={{color:G.grn,borderColor:'rgba(57,255,110,.4)'}} onClick={()=>onBought(w)}>{t(lang,'wishBought')}</button>
         <button type='button' className='tbtn' style={{marginLeft:'auto'}} onClick={()=>onRemove(w)} aria-label={t(lang,'deleteBtn')}>🗑</button>
       </div>
@@ -2966,8 +3025,11 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
 //
 // Dedup: existingTitles set built from current library (lowercase title match).
 // Duplicates rendered as 'dup' status and excluded from default-selected set.
-function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommit, lang, freeLeft=Infinity, onUnlock }){
+function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommit, lang, freeLeft=Infinity, onUnlock, proLocked=false }){
   const [step, setStep] = useState(1);
+  // v1.22.0 - Steam by nickname (Pro): { busy, err } for the nickname box
+  const [nick, setNick] = useState('');
+  const [nickState, setNickState] = useState({ busy:false, err:'' });
   // v1.18.0 - free tier imports up to FREE_IMPORT_LIMIT games in total; gate = limit prompt
   const [gate, setGate] = useState(false);
   const [pasteText, setPasteText] = useState('');
@@ -3036,7 +3098,20 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
   // Trigger parse + RAWG lookup pipeline when entering step 2
   function onParseAndProceed(){
     if (!platformConfig) return;
-    const result = platformConfig.parser(pasteText);
+    proceedWith(platformConfig.parser(pasteText));
+  }
+  function onSteamNick(){
+    if (proLocked) { onUnlock && onUnlock(); return; }
+    if (!nick.trim() || nickState.busy) return;
+    setNickState({ busy:true, err:'' });
+    fetchSteamLibrary(nick, BILLING_API).then(result => {
+      track('steam_nick_import',{size:countBucket(result.count)});
+      if (!result.count) { setNickState({ busy:false, err:'empty' }); return; }
+      setNickState({ busy:false, err:'' });
+      proceedWith(result);
+    }, e => setNickState({ busy:false, err:e.message }));
+  }
+  function proceedWith(result){
     if (result.count === 0) {
       // empty / invalid input - stay on step 1, show error
       setParsed(result);
@@ -3203,6 +3278,16 @@ function PlatformImportOverlay({ platform='psn', existingGames, onClose, onCommi
           <>
             <div style={{padding:'4px 0 14px',fontSize:14,fontWeight:700,color:G.blu,fontFamily:"'Orbitron',monospace"}}>{t(lang, k('Step1Title'))}</div>
             <div style={{fontSize:13,color:G.txt,lineHeight:1.6,marginBottom:14}}>{t(lang, k('Step1Body'))}</div>
+            {platform==='steam'&&<div style={{padding:12,marginBottom:16,background:'rgba(0,212,255,.06)',border:'1px solid rgba(0,212,255,.35)',borderRadius:12}}>
+              <div style={{fontSize:14,fontWeight:800,color:G.txt,marginBottom:4}}>⚡ {t(lang,'steamNickTitle')}{proLocked&&<span style={{marginLeft:8,fontSize:10,fontWeight:800,color:'#000',background:G.gld,borderRadius:6,padding:'2px 6px'}}>PRO</span>}</div>
+              <div style={{fontSize:12,color:G.dim,lineHeight:1.5,marginBottom:10}}>{t(lang,'steamNickBody')}</div>
+              <div style={{display:'flex',gap:8}}>
+                <input className='fi' style={{flex:1,minWidth:0}} value={nick} onChange={e=>{setNick(e.target.value);setNickState({busy:false,err:''});}} onKeyDown={e=>{if(e.key==='Enter')onSteamNick();}} placeholder={t(lang,'steamNickPh')} autoCapitalize='off' autoCorrect='off' spellCheck={false}/>
+                <button type='button' onClick={onSteamNick} disabled={nickState.busy} style={{padding:'0 14px',border:'none',borderRadius:10,background:`linear-gradient(135deg,${G.blu},#0060FF)`,color:'#fff',fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:800,cursor:'pointer',opacity:nickState.busy?.6:1,whiteSpace:'nowrap'}}>{nickState.busy?t(lang,'steamNickBusy'):t(lang,'steamNickBtn')}</button>
+              </div>
+              {nickState.err&&<div style={{marginTop:8,fontSize:12,color:G.red,lineHeight:1.5}}>⚠️ {t(lang,'steamNickErr_'+nickState.err)}</div>}
+            </div>}
+            {platform==='steam'&&<div style={{fontSize:11,fontWeight:700,color:G.dim,letterSpacing:'.05em',marginBottom:8}}>{t(lang,'steamNickOr')}</div>}
             <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:14}}>
               {[1,2,3,4,5].map(n=>(
                 <div key={n} style={{fontSize:12,color:G.txt,lineHeight:1.5,padding:'10px 12px',background:G.card,border:`1px solid ${G.bdr}`,borderRadius:8}} dangerouslySetInnerHTML={{__html: t(lang, k('Step1Step'+n))}}/>
@@ -3723,6 +3808,8 @@ export default function App(){
   // a backend, which contradicts the offline/no-account design.
   const [welcomeBack,setWelcomeBack] = useState(null);
   const [platFilter,setPlatFilter]= useState('all');
+  // v1.22.0 - own tag filter: 'all' or a tag (compared ignoring case)
+  const [tagFilter,setTagFilter]= useState('all');
   // v1.14.0 - source filter (parallel to platFilter). 'all' or one of SOURCES.
   // Auto-hidden in the UI when every game shares the same source - see filter row below.
   const [srcFilter,setSrcFilter]  = useState('all');
@@ -3767,9 +3854,12 @@ export default function App(){
   const [proSheet,setProSheet] = useState(null); // null | what opened it (analytics)
   const [notifPerm,setNotifP]  = useState(()=>'Notification'in window?Notification.permission:'denied');
 
-  const setGames=useCallback(val=>{
+  // v1.22.0 - every change stamps updatedAt and every deletion leaves a tombstone, so the
+  // Drive sync can merge two phones. {synced:true} = a list already merged by the sync.
+  const setGames=useCallback((val,opts)=>{
     setGamesRaw(prev=>{
-      const next=typeof val==='function'?val(prev):val;
+      let next=typeof val==='function'?val(prev):val;
+      if(!opts||!opts.synced){ next=stampChanges(prev,next); addTombs(removedIds(prev,next)); }
       lsWrite(next);
       // v1.14.1 auto-dismiss-banner-on-first-add removed in v1.15.0 (banner is gone).
       return next;
@@ -3837,7 +3927,7 @@ export default function App(){
     if(!driveAvailable()||!driveState.enabled||!hasValidToken()) return;
     if(proGateActive()&&!isPro) return;
     clearTimeout(driveTimer.current);
-    driveTimer.current=setTimeout(()=>{ backupNow(buildPayload(games,{wishlist:wishRead()})).then(setDriveState).catch(()=>{}); },15000);
+    driveTimer.current=setTimeout(()=>{ driveSync(gamesRef.current,setGames).then(setDriveState).catch(()=>{}); },15000);
     return ()=>clearTimeout(driveTimer.current);
   },[games]);// eslint-disable-line -- only re-run on collection changes
 
@@ -4059,6 +4149,21 @@ export default function App(){
     flash(over?t(lang,'budgetOverToast',over):(isEdit?t(lang,'saved'):t(lang,'added')));
     if(isCompleted&&!wasCompleted) maybeAskRating('complete',isEdit?games.map(g=>g.id===id?game:g):[...games,game]);
   }
+  // v1.22.0 - quick play log: +1 h, lastPlayed and a session for today (streaks, weekly
+  // summary, heatmap). Undo puts the game back as it was.
+  function quickLog(id,h=1){
+    const before=games.find(g=>g.id===id); if(!before) return;
+    const now=new Date().toISOString();
+    const after={...before,hours:Math.round(((+before.hours||0)+h)*100)/100,lastPlayed:now,
+      sessions:[...(Array.isArray(before.sessions)?before.sessions:[]),{startedAt:now,endedAt:now,hours:h}]};
+    const next=games.map(g=>g.id===id?after:g);
+    setGames(prev=>prev.map(g=>g.id===id?after:g));
+    const byDay=new Map(); collectSessions(next).forEach(x=>byDay.set(x.dateKey,1));
+    const streak=computeStreak(byDay);
+    const msg=t(lang,'quickLogToast',{title:before.title,h:fmtHours(after.hours)})+(streak>=2?' · '+t(lang,'quickLogStreak',{n:streak}):'');
+    flash(msg,()=>{ setGames(prev=>prev.map(g=>g.id===id?{...before}:g)); flash(t(lang,'undone')); });
+    try{ navigator.vibrate&&navigator.vibrate(10); }catch{}
+  }
   // v1.21.2 - month spend as counted by the budget card (BudgetEditor): games added this
   // local month with a price, plus DLC, minus unreleased pre-orders
   function monthSpend(list){
@@ -4215,10 +4320,10 @@ export default function App(){
   // v1.17.7 - must stay ABOVE the `if(!onboarded) return` below. It used to sit after it,
   // so finishing the onboarding wizard rendered one more hook than the previous render
   // and every new user hit React error #310 ("Coś się zepsuło"). No hooks below this line.
-  useEffect(()=>{ setColLimit(COL_PAGE); }, [q, flt, platFilter, srcFilter, sortBy]);
+  useEffect(()=>{ setColLimit(COL_PAGE); }, [q, flt, platFilter, srcFilter, tagFilter, sortBy]);
   // v1.19.2 - a new filter or search starts a fresh selection, so bulk actions never hit
   // games the user can no longer see; leaving the collection ends selecting.
-  useEffect(()=>{ setSel(s=>s?new Set():s); }, [q, flt, platFilter, srcFilter]);
+  useEffect(()=>{ setSel(s=>s?new Set():s); }, [q, flt, platFilter, srcFilter, tagFilter]);
   useEffect(()=>{ if(tab!=='col'){ setSel(null); setBulkSheet(null); } }, [tab]);
 
   if(!onboarded)return(<><style>{CSS}</style><Onboarding
@@ -4289,13 +4394,18 @@ export default function App(){
     price:     (a,b) => (+b.priceBought||0)-(+a.priceBought||0),
     completed: (a,b) => (b.completedAt||'').localeCompare(a.completedAt||''),
   };
+  const knownTags = allTags(games);
+  // a filter on a tag that no game has any more (deleted, renamed) shows everything
+  const tagOn = tagFilter!=='all'&&knownTags.some(x=>x.tag.toLowerCase()===tagFilter.toLowerCase()) ? tagFilter : 'all';
   const visible=games
     .filter(g=>flt==='all'||(flt==='sold'?g.priceSold!=null&&!!+g.priceSold:flt==='platinum'?g.platinum===true:g.status===flt))
     .filter(g=>platFilter==='all'||g.platform===platFilter)
     .filter(g=>srcFilter==='all'||(g.source||'owned')===srcFilter)
+    .filter(g=>tagOn==='all'||hasTag(g,tagOn))
     .filter(g=>!q||g.title.toLowerCase().includes(q.toLowerCase()))
     .sort(sortFn[sortBy]||sortFn.added);
   const visibleCapped = visible.slice(0, colLimit);
+
   // v1.18.0 - Pro gating. proLocked is false whenever the PRO_ENABLED switch is off.
   const proLocked = proGateActive() && !isPro;
   const importFreeLeft = proLocked ? Math.max(0, FREE_IMPORT_LIMIT - games.filter(g=>g.importSource).length) : Infinity;
@@ -4352,6 +4462,14 @@ export default function App(){
     flash(t(lang,'bulkStatusDone',{n,gw:gamesWord(n,lang),status:SM2[status]?.label}),
       before.size?()=>{ setGames(cur=>revertMany(cur,before)); flash(t(lang,'undone')); }:undefined);
   }
+  function bulkAddTag(tag){
+    const ids=sel; if(!ids||!ids.size) return;
+    const {next,before}=addTagMany(games,ids,tag);
+    setGames(next);
+    setBulkSheet(null); setSel(null);
+    flash(t(lang,'bulkTagDone',{tag:normTag(tag),n:before.size,gw:gamesWord(before.size,lang)}),
+      before.size?()=>{ setGames(cur=>revertMany(cur,before)); flash(t(lang,'undone')); }:undefined);
+  }
   function bulkDelete(){
     const ids=sel; if(!ids||!ids.size) return;
     const n=ids.size;
@@ -4360,7 +4478,7 @@ export default function App(){
   }
   function driveBackupTap(){
     withDriveToken(false).then(
-      ()=>backupNow(buildPayload(games,{wishlist:wishRead()})).then(st=>{ setDriveState(st); flash(t(lang,'driveSaved')); }, ()=>flash(t(lang,'driveFailed'))),
+      ()=>driveSync(games,setGames).then(st=>{ setDriveState(st); flash(t(lang,'driveSaved')); }, ()=>flash(t(lang,'driveFailed'))),
       ()=>flash(t(lang,'driveSignInFailed')),
     );
   }
@@ -4401,6 +4519,7 @@ export default function App(){
           games={games}
           onOpen={setModal}
           onStatusChange={handleStatusChange}
+          onQuickLog={quickLog}
           onAddFirst={()=>setModal('add')}
           onToggleNotify={toggleNotify}
           lang={lang}
@@ -4440,6 +4559,13 @@ export default function App(){
               <button type='button' key={s} className={'sort-btn'+(srcFilter===s?' on':'')} onClick={()=>setSrcFilter(s)}>{t(lang,'source_'+s)}</button>
             ))}
           </div>}
+          {knownTags.length>0&&<div className='sort-row'>
+            <span className='sort-lbl'>🏷️</span>
+            <button type='button' className={'sort-btn'+(tagOn==='all'?' on':'')} onClick={()=>setTagFilter('all')}>{t(lang,'allShort')}</button>
+            {knownTags.map(({tag,n})=>(
+              <button type='button' key={tag} className={'sort-btn'+(tagOn.toLowerCase()===tag.toLowerCase()?' on':'')} onClick={()=>setTagFilter(tag)}>#{tag} <span style={{opacity:.6}}>{n}</span></button>
+            ))}
+          </div>}
           <div className='sort-row'>
             <span className='sort-lbl'>{t(lang,'sortBy')}</span>
             {[['added',t(lang,'sortAdded')],['title',t(lang,'sortTitle')],['rating',t(lang,'sortRating')],['hours',t(lang,'sortHours')],['completed',t(lang,'sortCompleted')],['price',t(lang,'sortPrice')]].map(([k,l])=>(
@@ -4461,13 +4587,14 @@ export default function App(){
                   {sel&&<span className={'gc-check'+(sel.has(g.id)?' on':'')} aria-hidden='true'>{sel.has(g.id)?'✓':''}</span>}
                   {g.cover?<div className='gcov' style={{backgroundImage:`url(${coverThumb(g.cover)})`}}/>:<div className='gcov0'><div className='gab'>{g.abbr||'??'}</div></div>}
                   <div className='gcnt'>
-                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 - subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
+                    <div className='gbdy'><div className='gtt'>{g.title}</div><div className='gmt'><span className='gsb'>{m.label}</span>{g.platform&&g.platform!=='PS5'&&<span className='gmp' style={{color:G.org}}>🎮 {g.platform}</span>}{/* v1.14.0 - subscription-source badge (only for non-owned games; reuses .gmp pill style). */}{!isOwned(g)&&<span className='gmp' style={{color:G.pur,borderColor:'rgba(167,139,250,.3)'}}>📺 {t(lang,'source_'+(g.source||'other'))}</span>}{g.genre&&<span className='gmp'>{localizeGenre(g.genre,lang)}</span>}{g.year&&<span className='gmp'>📅{g.year}</span>}{!!g.hours&&<span className='gmp'>⏱{fmtHours(g.hours,{compact:true})}</span>}{Array.isArray(g.tags)&&g.tags.slice(0,3).map(x=><span key={x} className='gmp' style={{color:G.blu,borderColor:'rgba(0,212,255,.3)'}}>#{x}</span>)}<ReleaseBadge releaseDate={g.releaseDate} lang={lang}/></div></div>
                     <div className='grt'>
                       {g.rating!=null?<><span className='grn'>{g.rating}</span><span className='grd'>/10</span></>:<span style={{color:G.dim,fontSize:17}}>-</span>}
                       {g.notifyEnabled&&<span style={{fontSize:12}}>🔔</span>}
                       {g.platinum&&<span style={{fontSize:13}} title={t(lang,'platinum')}>🏆</span>}
                       {!!+g.extraSpend&&<span style={{fontSize:10,color:G.red,fontWeight:700}}>+{plnExact(+g.extraSpend,lang)} DLC</span>}
                       {roi!==null?<span className={'gprice-roi '+(roi>=0?'roi-pos':'roi-neg')}>{roi>=0?'+':''}{plnExact(roi,lang)}</span>:!!+g.priceBought&&<span className='gprice'>{plnExact(+g.priceBought,lang)}</span>}
+                      {g.status==='gram'&&!sel&&<button type='button' className='qlog qlog-sm' onClick={e=>{e.stopPropagation();quickLog(g.id);}} aria-label={t(lang,'quickLogAria',{title:g.title})}>{t(lang,'quickLog')}</button>}
                       {g.status==='ukonczone'&&g.rating==null&&<span style={{fontSize:11,color:G.gld,cursor:'pointer',fontWeight:700}} onClick={e=>{e.stopPropagation();if(sel){toggleSel(g.id);return;}setRateModal({id:g.id,title:g.title});}} title={t(lang,'rateGame')}>★?</span>}
                     </div>
                   </div>
@@ -4521,6 +4648,7 @@ export default function App(){
             </div>
             <div className='selbar-row'>
               <button type='button' className='selbar-btn' disabled={!sel.size} onClick={()=>setBulkSheet('status')}>{t(lang,'bulkChangeStatus')}</button>
+              <button type='button' className='selbar-btn' disabled={!sel.size} onClick={()=>setBulkSheet('tag')}>🏷️ {t(lang,'bulkTag')}</button>
               <button type='button' className='selbar-btn danger' disabled={!sel.size} onClick={()=>setBulkSheet('delete')}>{t(lang,'deleteBtn')}</button>
             </div>
           </div>;
@@ -4534,10 +4662,11 @@ export default function App(){
             </div>
           </div>
         </div>}
+        {bulkSheet==='tag'&&sel&&<BulkTagSheet lang={lang} n={sel.size} known={knownTags} onPick={bulkAddTag} onClose={()=>setBulkSheet(null)}/>}
         {rateAsk&&<RateSheet lang={lang} games={games} onClose={closeRate}/>}
         {bulkSheet==='delete'&&sel&&<Confirm lang={lang} title={t(lang,'bulkDeleteTitle',{n:sel.size,gw:gamesWord(sel.size,lang)})} body={t(lang,'bulkDeleteBody')} onNo={()=>setBulkSheet(null)} onYes={bulkDelete}/>}
 
-        {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} onBulkScan={()=>{setModal(null); if(proLocked){openPro('scan');return;} setBulkScannerOpen(true);}} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash}/>}
+        {modal&&<Modal game={modal==='add'?null:modal} onSave={handleSave} onDel={handleDel} onClose={()=>setModal(null)} onBulkScan={()=>{setModal(null); if(proLocked){openPro('scan');return;} setBulkScannerOpen(true);}} notifPerm={notifPerm} onRequestNotif={requestNotif} lang={lang} flash={flash} knownTags={knownTags}/>}
         {/* v1.15.1 - Bulk barcode scanner. Renders at App level (not inside Modal) so it
             takes over the full screen. onBulkAdd receives RAWG game objects from the queue
             and pushes them all to library in one batch. */}
@@ -4582,6 +4711,7 @@ export default function App(){
           platform='steam'
           existingGames={games}
           lang={lang}
+          proLocked={proLocked}
           freeLeft={importFreeLeft}
           onUnlock={()=>openPro('import')}
           onClose={()=>setSteamImportOpen(false)}

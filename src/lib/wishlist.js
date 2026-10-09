@@ -6,6 +6,7 @@
 // the Drive copy (drivebackup.js).
 import { LS_WISHLIST, EF } from '../constants.js';
 import { uid, mkAbbr } from './util.js';
+import { addTombs, removedIds } from './sync.js';
 
 const num = v => (v === null || v === undefined || v === '' || !Number.isFinite(+v) ? null : +v);
 
@@ -22,6 +23,7 @@ function clean(w) {
     lastPrice: num(w.lastPrice),
     priceAt: typeof w.priceAt === 'string' ? w.priceAt : null,
     addedAt: typeof w.addedAt === 'string' ? w.addedAt : new Date().toISOString(),
+    ...(typeof w.updatedAt === 'string' ? { updatedAt: w.updatedAt } : {}),
   };
 }
 
@@ -33,8 +35,23 @@ export function wishRead() {
   try { return cleanWishes(JSON.parse(localStorage.getItem(LS_WISHLIST) || '[]')); } catch { return []; }
 }
 
-export function wishWrite(list) {
-  try { localStorage.setItem(LS_WISHLIST, JSON.stringify(list)); } catch {}
+// v1.22.0 - stamps updatedAt on changed entries and remembers deletions for the Drive sync.
+// raw = list already merged by the sync, written as is.
+const sig = w => JSON.stringify({ ...w, updatedAt: undefined });
+export function wishWrite(list, { raw = false } = {}) {
+  let out = list;
+  if (!raw) {
+    const prev = wishRead();
+    const old = new Map(prev.map(w => [w.id, w]));
+    const now = new Date().toISOString();
+    out = list.map(w => {
+      const o = old.get(w.id);
+      return o && sig(o) === sig(w) ? w : { ...w, updatedAt: now };
+    });
+    addTombs(removedIds(prev, out), 'wish', now);
+  }
+  try { localStorage.setItem(LS_WISHLIST, JSON.stringify(out)); } catch {}
+  return out;
 }
 
 // From a RAWG search result
@@ -86,4 +103,17 @@ export function wishToGame(w, now = new Date().toISOString()) {
 
 export function psStoreSearchUrl(title) {
   return 'https://store.playstation.com/search/' + encodeURIComponent(String(title || '').trim());
+}
+
+// v1.22.0 - price history and deal alerts: no free PS Store price source exists, so the
+// wishlist links to PSprices, which keeps the history and sends sale e-mails. The store
+// region follows the app currency (and the language for the euro).
+const REGION_BY_CUR = { PLN: 'pl', USD: 'us', GBP: 'gb', BRL: 'br', CAD: 'ca', AUD: 'au', MXN: 'mx', CZK: 'cz', SEK: 'se', NOK: 'no' };
+const EURO_LANG = { de: 'de', fr: 'fr', es: 'es', it: 'it', pt: 'pt' };
+export function priceRegion(currency, lang) {
+  if (currency === 'EUR') return EURO_LANG[lang] || 'de';
+  return REGION_BY_CUR[currency] || (lang === 'pl' ? 'pl' : 'us');
+}
+export function priceHistoryUrl(title, currency, lang) {
+  return `https://psprices.com/region-${priceRegion(currency, lang)}/search/?q=${encodeURIComponent(String(title || '').trim())}&platform=PS5`;
 }
