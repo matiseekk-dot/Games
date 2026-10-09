@@ -1,0 +1,2270 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PS5 Vault: shorty po kolei</title>
+<style>
+:root { --bg:#080B14; --card:#0D1120; --bdr:#1E2A42; --txt:#E8EDF8; --dim:#7B8AAD; --blu:#00D4FF; --grn:#39FF6E; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--txt); font: 15px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: rgba(8,11,20,.95); border-bottom: 1px solid var(--bdr); padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+h1 { margin: 0; font-size: 20px; color: var(--blu); }
+.prog { color: var(--dim); }
+.bar { flex: 1 1 200px; height: 8px; background: var(--bdr); border-radius: 9px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--blu), var(--grn)); width: 0; }
+header button, .box button { background: var(--blu); color: #04121a; border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer; }
+header label { color: var(--dim); display: inline; margin: 0; font-size: 14px; text-transform: none; letter-spacing: 0; }
+main { max-width: 980px; margin: 0 auto; padding: 16px; }
+.intro { background: var(--card); border: 1px solid var(--bdr); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; color: var(--dim); }
+.intro b { color: var(--txt); }
+.card { position: relative; display: flex; gap: 16px; background: var(--card); border: 1px solid var(--bdr); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+.card.next { border-color: var(--blu); box-shadow: 0 0 24px rgba(0,212,255,.25); }
+.card.isdone { opacity: .45; }
+.hide .card.isdone { display: none; }
+.num { position: absolute; left: -8px; top: -8px; background: var(--blu); color: #04121a; font-weight: 800; border-radius: 999px; min-width: 30px; height: 30px; display: grid; place-items: center; padding: 0 8px; }
+video { width: 200px; aspect-ratio: 9/16; background: #000; border-radius: 10px; flex: none; }
+.body { flex: 1; min-width: 0; }
+.when { font-size: 16px; }
+.file { color: var(--dim); font-size: 13px; margin: 4px 0 8px; word-break: break-all; }
+label { display: block; color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-top: 8px; }
+.box { display: flex; gap: 8px; align-items: flex-start; }
+pre { flex: 1; margin: 2px 0 0; white-space: pre-wrap; word-break: break-word; font: inherit; background: #111827; border: 1px solid var(--bdr); border-radius: 8px; padding: 8px 10px; max-height: 170px; overflow: auto; }
+.box button.ok { background: var(--grn); }
+.steps { margin-top: 10px; color: var(--dim); font-size: 13px; }
+.steps b { color: var(--txt); } a { color: var(--blu); }
+.done { margin-top: 10px; font-size: 15px; text-transform: none; letter-spacing: 0; color: var(--txt); cursor: pointer; }
+.done input { width: 18px; height: 18px; vertical-align: -3px; }
+@media (max-width: 640px) { .card { flex-direction: column; } video { width: 100%; max-width: 260px; } }
+</style></head>
+<body>
+<header>
+  <h1>PS5 Vault: shorty po kolei</h1>
+  <span class="prog" id="prog"></span>
+  <div class="bar"><i id="bar"></i></div>
+  <button id="next">Następny do wrzucenia ↓</button>
+  <label><input type="checkbox" id="hide"> ukryj wrzucone</label>
+</header>
+<main>
+  <div class="intro">
+    Kanał: <b>PS5 Vault</b> (nie Spokojny Rodzic). YouTube Studio → <b>Utwórz → Prześlij filmy</b>.
+    Przy każdym filmie: wklej tytuł i opis, ustaw <b>Język filmu</b>, dodaj okładkę i <b>Zaplanuj</b> na podaną datę i godzinę.
+    Ptaszek „Wrzucone” zapamiętuje ta przeglądarka. Plik musi leżeć w folderze <b>marketing</b>, obok folderu <b>shorts</b>.
+  </div>
+  
+<article class="card" id="c0" data-key="pl-01">
+  <div class="num">1</div>
+  <video src="shorts/pl/01-kupka-wstydu.mp4" poster="shorts/pl/01-kupka-wstydu-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 10.10</b> · 18:00 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/01-kupka-wstydu.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Ile kasy leży u Ciebie na półce? 🎮 Kupka wstydu w liczbach</pre><button data-copy="t0">Kopiuj tytuł</button></div>
+    <textarea hidden id="t0">Ile kasy leży u Ciebie na półce? 🎮 Kupka wstydu w liczbach</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Gry kupione na promocji i nigdy nie odpalone. PS5 Vault liczy, ile ich masz i ile pieniędzy w nich leży, a potem robi z tego obrazek do udostępnienia.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#kupkawstydu #backlog #ps5 #playstation #gry #gracze #shorts</pre><button data-copy="d0">Kopiuj opis</button></div>
+    <textarea hidden id="d0">Gry kupione na promocji i nigdy nie odpalone. PS5 Vault liczy, ile ich masz i ile pieniędzy w nich leży, a potem robi z tego obrazek do udostępnienia.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#kupkawstydu #backlog #ps5 #playstation #gry #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/01-kupka-wstydu-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 10.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c1" data-key="en-08">
+  <div class="num">2</div>
+  <video src="shorts/en/08-how-many-hours.mp4" poster="shorts/en/08-how-many-hours-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 10.10</b> · 20:30 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/08-how-many-hours.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>How many hours have you REALLY played? ⏱ The top 10 games that ate your time</pre><button data-copy="t1">Kopiuj tytuł</button></div>
+    <textarea hidden id="t1">How many hours have you REALLY played? ⏱ The top 10 games that ate your time</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>PS5 Vault adds up hours across your whole collection and shows which games ate the most time, how much of your library you finished and your platinums.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#gaming #ps5 #playstation #stats #platinum #gamer #shorts</pre><button data-copy="d1">Kopiuj opis</button></div>
+    <textarea hidden id="d1">PS5 Vault adds up hours across your whole collection and shows which games ate the most time, how much of your library you finished and your platinums.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#gaming #ps5 #playstation #stats #platinum #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/08-how-many-hours-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 10.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c2" data-key="de-02">
+  <div class="num">3</div>
+  <video src="shorts/de/02-wie-viel-ausgegeben.mp4" poster="shorts/de/02-wie-viel-ausgegeben-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 11.10</b> · 18:00 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/02-wie-viel-ausgegeben.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Wie viel hast du WIRKLICH für Spiele ausgegeben? 💸 Spiele, DLCs, Mikrotransaktionen</pre><button data-copy="t2">Kopiuj tytuł</button></div>
+    <textarea hidden id="t2">Wie viel hast du WIRKLICH für Spiele ausgegeben? 💸 Spiele, DLCs, Mikrotransaktionen</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Trag ein, was du für Spiele und DLCs bezahlt und durch Verkäufe zurückbekommen hast. PS5 Vault zeigt deine Ausgaben Monat für Monat und wo du zu viel zahlst.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#gaming #ps5 #playstation #dlc #zocken #gamer #shorts</pre><button data-copy="d2">Kopiuj opis</button></div>
+    <textarea hidden id="d2">Trag ein, was du für Spiele und DLCs bezahlt und durch Verkäufe zurückbekommen hast. PS5 Vault zeigt deine Ausgaben Monat für Monat und wo du zu viel zahlst.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#gaming #ps5 #playstation #dlc #zocken #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/02-wie-viel-ausgegeben-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 11.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c3" data-key="pt-05">
+  <div class="num">4</div>
+  <video src="shorts/pt/05-o-que-jogar.mp4" poster="shorts/pt/05-o-que-jogar-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 11.10</b> · 20:30 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/05-o-que-jogar.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Não sabe o que jogar? 🎲 Deixe sua pilha escolher</pre><button data-copy="t3">Kopiuj tytuł</button></div>
+    <textarea hidden id="t3">Não sabe o que jogar? 🎲 Deixe sua pilha escolher</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Uma hora olhando a biblioteca e zero jogando? No PS5 Vault um botão &quot;O que jogar?&quot; sorteia um jogo da sua pilha da vergonha.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #games #ps5 #playstation #gamer #gaming #shorts</pre><button data-copy="d3">Kopiuj opis</button></div>
+    <textarea hidden id="d3">Uma hora olhando a biblioteca e zero jogando? No PS5 Vault um botão &quot;O que jogar?&quot; sorteia um jogo da sua pilha da vergonha.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #games #ps5 #playstation #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/05-o-que-jogar-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 11.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c4" data-key="es-12">
+  <div class="num">5</div>
+  <video src="shorts/es/12-coste-por-hora.mp4" poster="shorts/es/12-coste-por-hora-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 12.10</b> · 18:00 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/12-coste-por-hora.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>¿Cuánto te cuesta una hora de juego? 🧮 Coste por hora de cada juego</pre><button data-copy="t4">Kopiuj tytuł</button></div>
+    <textarea hidden id="t4">¿Cuánto te cuesta una hora de juego? 🧮 Coste por hora de cada juego</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Un juego de 70 € al que jugaste 100 horas te costó 0,70 € la hora. PS5 Vault calcula el coste por hora de toda tu colección y te muestra los juegos que menos valieron la pena.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#videojuegos #ps5 #playstation #dinero #gamer #gaming #shorts</pre><button data-copy="d4">Kopiuj opis</button></div>
+    <textarea hidden id="d4">Un juego de 70 € al que jugaste 100 horas te costó 0,70 € la hora. PS5 Vault calcula el coste por hora de toda tu colección y te muestra los juegos que menos valieron la pena.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#videojuegos #ps5 #playstation #dinero #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/12-coste-por-hora-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 12.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c5" data-key="fr-04">
+  <div class="num">6</div>
+  <video src="shorts/fr/04-importe-ta-bibliotheque.mp4" poster="shorts/fr/04-importe-ta-bibliotheque-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 12.10</b> · 20:30 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/04-importe-ta-bibliotheque.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Toute ta bibliothèque de jeux en une minute 📥 Import Steam, PSN, Xbox et Playnite</pre><button data-copy="t5">Kopiuj tytuł</button></div>
+    <textarea hidden id="t5">Toute ta bibliothèque de jeux en une minute 📥 Import Steam, PSN, Xbox et Playnite</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Inutile de taper des centaines de jeux à la main. PS5 Vault importe ta bibliothèque depuis Steam, PSN, Xbox et Playnite (gratuit jusqu’à 50 jeux, sans limite avec Pro).
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #jeuxvideo #shorts</pre><button data-copy="d5">Kopiuj opis</button></div>
+    <textarea hidden id="d5">Inutile de taper des centaines de jeux à la main. PS5 Vault importe ta bibliothèque depuis Steam, PSN, Xbox et Playnite (gratuit jusqu’à 50 jeux, sans limite avec Pro).
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #jeuxvideo #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/04-importe-ta-bibliotheque-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 12.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c6" data-key="it-07">
+  <div class="num">7</div>
+  <video src="shorts/it/07-conto-alla-rovescia.mp4" poster="shorts/it/07-conto-alla-rovescia-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 13.10</b> · 18:00 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/07-conto-alla-rovescia.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quanti giorni all’uscita? ⏳ Conto alla rovescia per i tuoi giochi</pre><button data-copy="t6">Kopiuj tytuł</button></div>
+    <textarea hidden id="t6">Quanti giorni all’uscita? ⏳ Conto alla rovescia per i tuoi giochi</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Aggiungi un gioco con la data di uscita e PS5 Vault mostra il conto alla rovescia nella schermata principale e ti avvisa 3 giorni prima e il giorno stesso.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#uscita #preordine #ps5 #playstation #videogiochi #gamer #shorts</pre><button data-copy="d6">Kopiuj opis</button></div>
+    <textarea hidden id="d6">Aggiungi un gioco con la data di uscita e PS5 Vault mostra il conto alla rovescia nella schermata principale e ti avvisa 3 giorni prima e il giorno stesso.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#uscita #preordine #ps5 #playstation #videogiochi #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/07-conto-alla-rovescia-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 13.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c7" data-key="pl-10">
+  <div class="num">8</div>
+  <video src="shorts/pl/10-zeskanuj-pudelko.mp4" poster="shorts/pl/10-zeskanuj-pudelko-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 13.10</b> · 20:30 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/10-zeskanuj-pudelko.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Zeskanuj pudełko i gra jest w kolekcji 📷 Skaner kodów kreskowych</pre><button data-copy="t7">Kopiuj tytuł</button></div>
+    <textarea hidden id="t7">Zeskanuj pudełko i gra jest w kolekcji 📷 Skaner kodów kreskowych</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Masz gry na płytach? Zeskanuj kod kreskowy z tyłu pudełka, a PS5 Vault sam uzupełni tytuł, gatunek i rok. W Pro skanujesz całą półkę pod rząd.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#kolekcjagier #pudełka #ps5 #playstation #gry #gracze #shorts</pre><button data-copy="d7">Kopiuj opis</button></div>
+    <textarea hidden id="d7">Masz gry na płytach? Zeskanuj kod kreskowy z tyłu pudełka, a PS5 Vault sam uzupełni tytuł, gatunek i rok. W Pro skanujesz całą półkę pod rząd.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#kolekcjagier #pudełka #ps5 #playstation #gry #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/10-zeskanuj-pudelko-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 13.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c8" data-key="en-09">
+  <div class="num">9</div>
+  <video src="shorts/en/09-no-subscription.mp4" poster="shorts/en/09-no-subscription-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 14.10</b> · 18:00 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/09-no-subscription.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>A gamer app with no subscription and no ads 🔒 PS5 Vault</pre><button data-copy="t8">Kopiuj tytuł</button></div>
+    <textarea hidden id="t8">A gamer app with no subscription and no ads 🔒 PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Game collection, stats, releases and your year in games for free. Pro is a single Google Play purchase, no subscription. No account, your collection stays on your phone.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#noads #ps5 #playstation #gaming #app #gamer #shorts</pre><button data-copy="d8">Kopiuj opis</button></div>
+    <textarea hidden id="d8">Game collection, stats, releases and your year in games for free. Pro is a single Google Play purchase, no subscription. No account, your collection stays on your phone.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#noads #ps5 #playstation #gaming #app #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/09-no-subscription-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 14.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c9" data-key="de-11">
+  <div class="num">10</div>
+  <video src="shorts/de/11-erfolge.mp4" poster="shorts/de/11-erfolge-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 14.10</b> · 20:30 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/11-erfolge.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Trophäen für deine Spielesammlung 🏆 19 Erfolge in PS5 Vault</pre><button data-copy="t9">Kopiuj tytuł</button></div>
+    <textarea hidden id="t9">Trophäen für deine Spielesammlung 🏆 19 Erfolge in PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Sammler, Finisher, Trophäenjäger, Marathon. PS5 Vault hat 19 Erfolge, die du freischaltest, wenn du Spiele hinzufügst und beendest.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trophäen #platin #ps5 #playstation #gaming #zocken #shorts</pre><button data-copy="d9">Kopiuj opis</button></div>
+    <textarea hidden id="d9">Sammler, Finisher, Trophäenjäger, Marathon. PS5 Vault hat 19 Erfolge, die du freischaltest, wenn du Spiele hinzufügst und beendest.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trophäen #platin #ps5 #playstation #gaming #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/11-erfolge-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 14.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c10" data-key="en-01">
+  <div class="num">11</div>
+  <video src="shorts/en/01-pile-of-shame.mp4" poster="shorts/en/01-pile-of-shame-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 15.10</b> · 18:00 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/01-pile-of-shame.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>How much money is sitting on your shelf? 🎮 Pile of shame</pre><button data-copy="t10">Kopiuj tytuł</button></div>
+    <textarea hidden id="t10">How much money is sitting on your shelf? 🎮 Pile of shame</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Games bought on sale and never played. PS5 Vault counts how many you have and how much money is stuck in them, then turns it into an image you can share.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#pileofshame #backlog #ps5 #playstation #gaming #gamer #shorts</pre><button data-copy="d10">Kopiuj opis</button></div>
+    <textarea hidden id="d10">Games bought on sale and never played. PS5 Vault counts how many you have and how much money is stuck in them, then turns it into an image you can share.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#pileofshame #backlog #ps5 #playstation #gaming #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/01-pile-of-shame-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 15.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c11" data-key="de-08">
+  <div class="num">12</div>
+  <video src="shorts/de/08-wie-viele-stunden.mp4" poster="shorts/de/08-wie-viele-stunden-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 15.10</b> · 20:30 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/08-wie-viele-stunden.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Wie viele Stunden hast du WIRKLICH gezockt? ⏱ Die Top 10 Zeitfresser</pre><button data-copy="t11">Kopiuj tytuł</button></div>
+    <textarea hidden id="t11">Wie viele Stunden hast du WIRKLICH gezockt? ⏱ Die Top 10 Zeitfresser</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>PS5 Vault zählt die Stunden deiner ganzen Sammlung zusammen und zeigt, welche Spiele am meisten Zeit gefressen haben, wie viel du beendet hast und deine Platin-Trophäen.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#gaming #ps5 #playstation #statistik #platin #zocken #shorts</pre><button data-copy="d11">Kopiuj opis</button></div>
+    <textarea hidden id="d11">PS5 Vault zählt die Stunden deiner ganzen Sammlung zusammen und zeigt, welche Spiele am meisten Zeit gefressen haben, wie viel du beendet hast und deine Platin-Trophäen.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#gaming #ps5 #playstation #statistik #platin #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/08-wie-viele-stunden-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 15.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c12" data-key="pt-02">
+  <div class="num">13</div>
+  <video src="shorts/pt/02-quanto-voce-gastou.mp4" poster="shorts/pt/02-quanto-voce-gastou-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 16.10</b> · 18:00 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/02-quanto-voce-gastou.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quanto você REALMENTE gastou com jogos? 💸 Jogos, DLCs e microtransações</pre><button data-copy="t12">Kopiuj tytuł</button></div>
+    <textarea hidden id="t12">Quanto você REALMENTE gastou com jogos? 💸 Jogos, DLCs e microtransações</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Anote quanto pagou em jogos e DLCs e quanto recuperou vendendo. O PS5 Vault mostra seus gastos mês a mês e onde você paga caro.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#games #ps5 #playstation #dlc #gamer #gaming #shorts</pre><button data-copy="d12">Kopiuj opis</button></div>
+    <textarea hidden id="d12">Anote quanto pagou em jogos e DLCs e quanto recuperou vendendo. O PS5 Vault mostra seus gastos mês a mês e onde você paga caro.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#games #ps5 #playstation #dlc #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/02-quanto-voce-gastou-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 16.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c13" data-key="es-05">
+  <div class="num">14</div>
+  <video src="shorts/es/05-a-que-juego.mp4" poster="shorts/es/05-a-que-juego-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 16.10</b> · 20:30 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/05-a-que-juego.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>¿No sabes a qué jugar? 🎲 Deja que tu pila elija</pre><button data-copy="t13">Kopiuj tytuł</button></div>
+    <textarea hidden id="t13">¿No sabes a qué jugar? 🎲 Deja que tu pila elija</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>¿Una hora mirando la biblioteca y cero jugando? En PS5 Vault un botón &quot;¿A qué juego?&quot; elige un juego de tu pila de pendientes.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #videojuegos #ps5 #playstation #gamer #gaming #shorts</pre><button data-copy="d13">Kopiuj opis</button></div>
+    <textarea hidden id="d13">¿Una hora mirando la biblioteca y cero jugando? En PS5 Vault un botón &quot;¿A qué juego?&quot; elige un juego de tu pila de pendientes.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #videojuegos #ps5 #playstation #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/05-a-que-juego-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 16.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c14" data-key="fr-12">
+  <div class="num">15</div>
+  <video src="shorts/fr/12-cout-par-heure.mp4" poster="shorts/fr/12-cout-par-heure-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 17.10</b> · 18:00 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/12-cout-par-heure.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Combien te coûte une heure de jeu ? 🧮 Le coût par heure de chaque jeu</pre><button data-copy="t14">Kopiuj tytuł</button></div>
+    <textarea hidden id="t14">Combien te coûte une heure de jeu ? 🧮 Le coût par heure de chaque jeu</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Un jeu à 70 € joué 100 heures t’a coûté 0,70 € de l’heure. PS5 Vault calcule le coût par heure de toute ta collection et montre les jeux qui en valaient le moins la peine.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#jeuxvideo #ps5 #playstation #argent #gamer #gaming #shorts</pre><button data-copy="d14">Kopiuj opis</button></div>
+    <textarea hidden id="d14">Un jeu à 70 € joué 100 heures t’a coûté 0,70 € de l’heure. PS5 Vault calcule le coût par heure de toute ta collection et montre les jeux qui en valaient le moins la peine.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#jeuxvideo #ps5 #playstation #argent #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/12-cout-par-heure-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 17.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c15" data-key="it-04">
+  <div class="num">16</div>
+  <video src="shorts/it/04-importa-la-libreria.mp4" poster="shorts/it/04-importa-la-libreria-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 17.10</b> · 20:30 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/04-importa-la-libreria.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Tutta la tua libreria di giochi in un minuto 📥 Import da Steam, PSN, Xbox e Playnite</pre><button data-copy="t15">Kopiuj tytuł</button></div>
+    <textarea hidden id="t15">Tutta la tua libreria di giochi in un minuto 📥 Import da Steam, PSN, Xbox e Playnite</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Non serve scrivere centinaia di giochi a mano. PS5 Vault importa la tua libreria da Steam, PSN, Xbox e Playnite (gratis fino a 50 giochi, senza limiti con Pro).
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #videogiochi #shorts</pre><button data-copy="d15">Kopiuj opis</button></div>
+    <textarea hidden id="d15">Non serve scrivere centinaia di giochi a mano. PS5 Vault importa la tua libreria da Steam, PSN, Xbox e Playnite (gratis fino a 50 giochi, senza limiti con Pro).
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #videogiochi #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/04-importa-la-libreria-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 17.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c16" data-key="pl-07">
+  <div class="num">17</div>
+  <video src="shorts/pl/07-odliczanie-do-premiery.mp4" poster="shorts/pl/07-odliczanie-do-premiery-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 18.10</b> · 18:00 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/07-odliczanie-do-premiery.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Ile dni do premiery? ⏳ Odliczanie do gier, na które czekasz</pre><button data-copy="t16">Kopiuj tytuł</button></div>
+    <textarea hidden id="t16">Ile dni do premiery? ⏳ Odliczanie do gier, na które czekasz</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Dodaj grę z datą premiery, a PS5 Vault pokaże odliczanie na głównym ekranie i przypomni 3 dni przed premierą i w dniu premiery.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#premiera #preorder #ps5 #playstation #gry #gracze #shorts</pre><button data-copy="d16">Kopiuj opis</button></div>
+    <textarea hidden id="d16">Dodaj grę z datą premiery, a PS5 Vault pokaże odliczanie na głównym ekranie i przypomni 3 dni przed premierą i w dniu premiery.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#premiera #preorder #ps5 #playstation #gry #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/07-odliczanie-do-premiery-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 18.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c17" data-key="en-10">
+  <div class="num">18</div>
+  <video src="shorts/en/10-scan-the-box.mp4" poster="shorts/en/10-scan-the-box-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 18.10</b> · 20:30 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/10-scan-the-box.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Scan the box and the game is in your collection 📷 Barcode scanner</pre><button data-copy="t17">Kopiuj tytuł</button></div>
+    <textarea hidden id="t17">Scan the box and the game is in your collection 📷 Barcode scanner</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Collect physical games? Scan the barcode on the back of the box and PS5 Vault fills in the title, genre and year. With Pro you scan your whole shelf in a row.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#physicalgames #gamecollection #ps5 #playstation #gaming #gamer #shorts</pre><button data-copy="d17">Kopiuj opis</button></div>
+    <textarea hidden id="d17">Collect physical games? Scan the barcode on the back of the box and PS5 Vault fills in the title, genre and year. With Pro you scan your whole shelf in a row.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#physicalgames #gamecollection #ps5 #playstation #gaming #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/10-scan-the-box-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 18.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c18" data-key="de-09">
+  <div class="num">19</div>
+  <video src="shorts/de/09-kein-abo.mp4" poster="shorts/de/09-kein-abo-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 19.10</b> · 18:00 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/09-kein-abo.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Eine Gamer-App ohne Abo und ohne Werbung 🔒 PS5 Vault</pre><button data-copy="t18">Kopiuj tytuł</button></div>
+    <textarea hidden id="t18">Eine Gamer-App ohne Abo und ohne Werbung 🔒 PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Spielesammlung, Statistiken, Releases und dein Jahr in Spielen kostenlos. Pro ist ein einmaliger Kauf bei Google Play, kein Abo. Kein Konto, deine Sammlung bleibt auf deinem Handy.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#ohnewerbung #ps5 #playstation #gaming #app #zocken #shorts</pre><button data-copy="d18">Kopiuj opis</button></div>
+    <textarea hidden id="d18">Spielesammlung, Statistiken, Releases und dein Jahr in Spielen kostenlos. Pro ist ein einmaliger Kauf bei Google Play, kein Abo. Kein Konto, deine Sammlung bleibt auf deinem Handy.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#ohnewerbung #ps5 #playstation #gaming #app #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/09-kein-abo-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 19.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c19" data-key="pt-11">
+  <div class="num">20</div>
+  <video src="shorts/pt/11-conquistas.mp4" poster="shorts/pt/11-conquistas-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 19.10</b> · 20:30 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/11-conquistas.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Troféus pela sua coleção de jogos 🏆 19 conquistas no PS5 Vault</pre><button data-copy="t19">Kopiuj tytuł</button></div>
+    <textarea hidden id="t19">Troféus pela sua coleção de jogos 🏆 19 conquistas no PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Colecionador, finalizador, caçador de troféus, maratonista. O PS5 Vault tem 19 conquistas que você desbloqueia ao adicionar e zerar jogos.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trofeus #platina #ps5 #playstation #games #gamer #shorts</pre><button data-copy="d19">Kopiuj opis</button></div>
+    <textarea hidden id="d19">Colecionador, finalizador, caçador de troféus, maratonista. O PS5 Vault tem 19 conquistas que você desbloqueia ao adicionar e zerar jogos.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trofeus #platina #ps5 #playstation #games #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/11-conquistas-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 19.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c20" data-key="de-01">
+  <div class="num">21</div>
+  <video src="shorts/de/01-pile-of-shame.mp4" poster="shorts/de/01-pile-of-shame-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 20.10</b> · 18:00 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/01-pile-of-shame.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Wie viel Geld liegt bei dir im Regal? 🎮 Pile of Shame</pre><button data-copy="t20">Kopiuj tytuł</button></div>
+    <textarea hidden id="t20">Wie viel Geld liegt bei dir im Regal? 🎮 Pile of Shame</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Im Sale gekauft und nie gestartet. PS5 Vault zählt, wie viele Spiele das sind und wie viel Geld darin steckt, und macht daraus ein Bild zum Teilen.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#pileofshame #backlog #ps5 #playstation #gaming #zocken #shorts</pre><button data-copy="d20">Kopiuj opis</button></div>
+    <textarea hidden id="d20">Im Sale gekauft und nie gestartet. PS5 Vault zählt, wie viele Spiele das sind und wie viel Geld darin steckt, und macht daraus ein Bild zum Teilen.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#pileofshame #backlog #ps5 #playstation #gaming #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/01-pile-of-shame-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 20.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c21" data-key="pt-08">
+  <div class="num">22</div>
+  <video src="shorts/pt/08-quantas-horas.mp4" poster="shorts/pt/08-quantas-horas-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 20.10</b> · 20:30 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/08-quantas-horas.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quantas horas você REALMENTE jogou? ⏱ O top 10 de jogos que comeram seu tempo</pre><button data-copy="t21">Kopiuj tytuł</button></div>
+    <textarea hidden id="t21">Quantas horas você REALMENTE jogou? ⏱ O top 10 de jogos que comeram seu tempo</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>O PS5 Vault soma as horas da sua coleção inteira e mostra quais jogos levaram mais tempo, quanto da biblioteca você zerou e suas platinas.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#games #ps5 #playstation #estatisticas #platina #gamer #shorts</pre><button data-copy="d21">Kopiuj opis</button></div>
+    <textarea hidden id="d21">O PS5 Vault soma as horas da sua coleção inteira e mostra quais jogos levaram mais tempo, quanto da biblioteca você zerou e suas platinas.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#games #ps5 #playstation #estatisticas #platina #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/08-quantas-horas-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 20.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c22" data-key="es-02">
+  <div class="num">23</div>
+  <video src="shorts/es/02-cuanto-gastaste.mp4" poster="shorts/es/02-cuanto-gastaste-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 21.10</b> · 18:00 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/02-cuanto-gastaste.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>¿Cuánto has gastado DE VERDAD en juegos? 💸 Juegos, DLC y microtransacciones</pre><button data-copy="t22">Kopiuj tytuł</button></div>
+    <textarea hidden id="t22">¿Cuánto has gastado DE VERDAD en juegos? 💸 Juegos, DLC y microtransacciones</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Apunta lo que pagaste por juegos y DLC y lo que recuperaste al venderlos. PS5 Vault te muestra el gasto mes a mes y dónde pagas de más.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#videojuegos #ps5 #playstation #dlc #gamer #gaming #shorts</pre><button data-copy="d22">Kopiuj opis</button></div>
+    <textarea hidden id="d22">Apunta lo que pagaste por juegos y DLC y lo que recuperaste al venderlos. PS5 Vault te muestra el gasto mes a mes y dónde pagas de más.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#videojuegos #ps5 #playstation #dlc #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/02-cuanto-gastaste-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 21.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c23" data-key="fr-05">
+  <div class="num">24</div>
+  <video src="shorts/fr/05-a-quoi-jouer.mp4" poster="shorts/fr/05-a-quoi-jouer-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 21.10</b> · 20:30 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/05-a-quoi-jouer.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Tu ne sais pas à quoi jouer ? 🎲 Laisse ta pile choisir</pre><button data-copy="t23">Kopiuj tytuł</button></div>
+    <textarea hidden id="t23">Tu ne sais pas à quoi jouer ? 🎲 Laisse ta pile choisir</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Une heure à parcourir ta bibliothèque et zéro partie ? Dans PS5 Vault, un bouton « À quoi jouer ? » tire un jeu de ta pile de la honte.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #jeuxvideo #ps5 #playstation #gamer #gaming #shorts</pre><button data-copy="d23">Kopiuj opis</button></div>
+    <textarea hidden id="d23">Une heure à parcourir ta bibliothèque et zéro partie ? Dans PS5 Vault, un bouton « À quoi jouer ? » tire un jeu de ta pile de la honte.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #jeuxvideo #ps5 #playstation #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/05-a-quoi-jouer-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 21.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c24" data-key="it-12">
+  <div class="num">25</div>
+  <video src="shorts/it/12-costo-per-ora.mp4" poster="shorts/it/12-costo-per-ora-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 22.10</b> · 18:00 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/12-costo-per-ora.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quanto ti costa un’ora di gioco? 🧮 Il costo per ora di ogni gioco</pre><button data-copy="t24">Kopiuj tytuł</button></div>
+    <textarea hidden id="t24">Quanto ti costa un’ora di gioco? 🧮 Il costo per ora di ogni gioco</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Un gioco da 70 € giocato per 100 ore ti è costato 0,70 € all’ora. PS5 Vault calcola il costo per ora di tutta la collezione e mostra i giochi che valevano di meno.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#videogiochi #ps5 #playstation #soldi #gamer #gaming #shorts</pre><button data-copy="d24">Kopiuj opis</button></div>
+    <textarea hidden id="d24">Un gioco da 70 € giocato per 100 ore ti è costato 0,70 € all’ora. PS5 Vault calcola il costo per ora di tutta la collezione e mostra i giochi che valevano di meno.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#videogiochi #ps5 #playstation #soldi #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/12-costo-per-ora-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 22.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c25" data-key="pl-04">
+  <div class="num">26</div>
+  <video src="shorts/pl/04-import-biblioteki.mp4" poster="shorts/pl/04-import-biblioteki-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 22.10</b> · 20:30 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/04-import-biblioteki.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Cała biblioteka gier w minutę 📥 Import ze Steam, PSN, Xboxa i Playnite</pre><button data-copy="t25">Kopiuj tytuł</button></div>
+    <textarea hidden id="t25">Cała biblioteka gier w minutę 📥 Import ze Steam, PSN, Xboxa i Playnite</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Nie musisz wpisywać setek gier ręcznie. PS5 Vault importuje bibliotekę ze Steam, PSN, Xboxa i Playnite (za darmo do 50 gier, bez limitu w Pro).
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #gry #shorts</pre><button data-copy="d25">Kopiuj opis</button></div>
+    <textarea hidden id="d25">Nie musisz wpisywać setek gier ręcznie. PS5 Vault importuje bibliotekę ze Steam, PSN, Xboxa i Playnite (za darmo do 50 gier, bez limitu w Pro).
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #gry #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/04-import-biblioteki-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 22.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c26" data-key="en-07">
+  <div class="num">27</div>
+  <video src="shorts/en/07-release-countdown.mp4" poster="shorts/en/07-release-countdown-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 23.10</b> · 18:00 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/07-release-countdown.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>How many days until launch? ⏳ A countdown to the games you’re waiting for</pre><button data-copy="t26">Kopiuj tytuł</button></div>
+    <textarea hidden id="t26">How many days until launch? ⏳ A countdown to the games you’re waiting for</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Add a game with its release date and PS5 Vault shows a countdown on the home screen and reminds you 3 days before and on launch day.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#preorder #release #ps5 #playstation #gaming #gamer #shorts</pre><button data-copy="d26">Kopiuj opis</button></div>
+    <textarea hidden id="d26">Add a game with its release date and PS5 Vault shows a countdown on the home screen and reminds you 3 days before and on launch day.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#preorder #release #ps5 #playstation #gaming #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/07-release-countdown-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 23.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c27" data-key="de-10">
+  <div class="num">28</div>
+  <video src="shorts/de/10-huelle-scannen.mp4" poster="shorts/de/10-huelle-scannen-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 23.10</b> · 20:30 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/10-huelle-scannen.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Hülle scannen und das Spiel ist in der Sammlung 📷 Barcode-Scanner</pre><button data-copy="t27">Kopiuj tytuł</button></div>
+    <textarea hidden id="t27">Hülle scannen und das Spiel ist in der Sammlung 📷 Barcode-Scanner</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Du sammelst Spiele auf Disc? Scann den Barcode auf der Rückseite und PS5 Vault füllt Titel, Genre und Jahr aus. Mit Pro scannst du das ganze Regal am Stück.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#retail #spielesammlung #ps5 #playstation #gaming #zocken #shorts</pre><button data-copy="d27">Kopiuj opis</button></div>
+    <textarea hidden id="d27">Du sammelst Spiele auf Disc? Scann den Barcode auf der Rückseite und PS5 Vault füllt Titel, Genre und Jahr aus. Mit Pro scannst du das ganze Regal am Stück.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#retail #spielesammlung #ps5 #playstation #gaming #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/10-huelle-scannen-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 23.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c28" data-key="pt-09">
+  <div class="num">29</div>
+  <video src="shorts/pt/09-sem-assinatura.mp4" poster="shorts/pt/09-sem-assinatura-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 24.10</b> · 18:00 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/09-sem-assinatura.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Um app para gamers sem assinatura e sem anúncios 🔒 PS5 Vault</pre><button data-copy="t28">Kopiuj tytuł</button></div>
+    <textarea hidden id="t28">Um app para gamers sem assinatura e sem anúncios 🔒 PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Coleção de jogos, estatísticas, lançamentos e seu ano em jogos de graça. O Pro é uma compra única no Google Play, sem assinatura. Sem conta, sua coleção fica no celular.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#semanuncios #ps5 #playstation #games #app #gamer #shorts</pre><button data-copy="d28">Kopiuj opis</button></div>
+    <textarea hidden id="d28">Coleção de jogos, estatísticas, lançamentos e seu ano em jogos de graça. O Pro é uma compra única no Google Play, sem assinatura. Sem conta, sua coleção fica no celular.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#semanuncios #ps5 #playstation #games #app #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/09-sem-assinatura-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 24.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c29" data-key="es-11">
+  <div class="num">30</div>
+  <video src="shorts/es/11-logros.mp4" poster="shorts/es/11-logros-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 24.10</b> · 20:30 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/11-logros.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Trofeos por tu colección de juegos 🏆 19 logros en PS5 Vault</pre><button data-copy="t29">Kopiuj tytuł</button></div>
+    <textarea hidden id="t29">Trofeos por tu colección de juegos 🏆 19 logros en PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Coleccionista, finalista, cazador de trofeos, maratoniano. PS5 Vault tiene 19 logros que desbloqueas al añadir y terminar juegos.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trofeos #platino #ps5 #playstation #videojuegos #gamer #shorts</pre><button data-copy="d29">Kopiuj opis</button></div>
+    <textarea hidden id="d29">Coleccionista, finalista, cazador de trofeos, maratoniano. PS5 Vault tiene 19 logros que desbloqueas al añadir y terminar juegos.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trofeos #platino #ps5 #playstation #videojuegos #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/11-logros-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 24.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c30" data-key="pt-01">
+  <div class="num">31</div>
+  <video src="shorts/pt/01-pilha-da-vergonha.mp4" poster="shorts/pt/01-pilha-da-vergonha-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 25.10</b> · 18:00 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/01-pilha-da-vergonha.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quanto dinheiro está parado na sua estante? 🎮 Pilha da vergonha</pre><button data-copy="t30">Kopiuj tytuł</button></div>
+    <textarea hidden id="t30">Quanto dinheiro está parado na sua estante? 🎮 Pilha da vergonha</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Jogos comprados na promoção e nunca jogados. O PS5 Vault conta quantos você tem e quanto dinheiro está neles, e transforma isso numa imagem para compartilhar.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#backlog #pilhadavergonha #ps5 #playstation #games #gamer #shorts</pre><button data-copy="d30">Kopiuj opis</button></div>
+    <textarea hidden id="d30">Jogos comprados na promoção e nunca jogados. O PS5 Vault conta quantos você tem e quanto dinheiro está neles, e transforma isso numa imagem para compartilhar.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#backlog #pilhadavergonha #ps5 #playstation #games #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/01-pilha-da-vergonha-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 25.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c31" data-key="es-08">
+  <div class="num">32</div>
+  <video src="shorts/es/08-cuantas-horas.mp4" poster="shorts/es/08-cuantas-horas-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 25.10</b> · 20:30 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/08-cuantas-horas.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>¿Cuántas horas has jugado DE VERDAD? ⏱ El top 10 de juegos que se comieron tu tiempo</pre><button data-copy="t31">Kopiuj tytuł</button></div>
+    <textarea hidden id="t31">¿Cuántas horas has jugado DE VERDAD? ⏱ El top 10 de juegos que se comieron tu tiempo</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>PS5 Vault suma las horas de toda tu colección y te muestra qué juegos se llevaron más tiempo, cuánto de tu biblioteca terminaste y tus platinos.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#videojuegos #ps5 #playstation #estadisticas #platino #gamer #shorts</pre><button data-copy="d31">Kopiuj opis</button></div>
+    <textarea hidden id="d31">PS5 Vault suma las horas de toda tu colección y te muestra qué juegos se llevaron más tiempo, cuánto de tu biblioteca terminaste y tus platinos.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#videojuegos #ps5 #playstation #estadisticas #platino #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/08-cuantas-horas-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 25.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c32" data-key="fr-02">
+  <div class="num">33</div>
+  <video src="shorts/fr/02-combien-tu-as-depense.mp4" poster="shorts/fr/02-combien-tu-as-depense-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 26.10</b> · 18:00 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/02-combien-tu-as-depense.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Combien as-tu VRAIMENT dépensé en jeux ? 💸 Jeux, DLC, microtransactions</pre><button data-copy="t32">Kopiuj tytuł</button></div>
+    <textarea hidden id="t32">Combien as-tu VRAIMENT dépensé en jeux ? 💸 Jeux, DLC, microtransactions</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Note ce que tu as payé pour tes jeux et DLC et ce que tu as récupéré en revendant. PS5 Vault montre tes dépenses mois par mois et où tu paies trop.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#jeuxvideo #ps5 #playstation #dlc #gamer #gaming #shorts</pre><button data-copy="d32">Kopiuj opis</button></div>
+    <textarea hidden id="d32">Note ce que tu as payé pour tes jeux et DLC et ce que tu as récupéré en revendant. PS5 Vault montre tes dépenses mois par mois et où tu paies trop.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#jeuxvideo #ps5 #playstation #dlc #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/02-combien-tu-as-depense-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 26.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c33" data-key="it-05">
+  <div class="num">34</div>
+  <video src="shorts/it/05-a-cosa-gioco.mp4" poster="shorts/it/05-a-cosa-gioco-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 26.10</b> · 20:30 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/05-a-cosa-gioco.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Non sai a cosa giocare? 🎲 Lascia scegliere la tua pila</pre><button data-copy="t33">Kopiuj tytuł</button></div>
+    <textarea hidden id="t33">Non sai a cosa giocare? 🎲 Lascia scegliere la tua pila</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Un’ora a scorrere la libreria e zero partite? In PS5 Vault un pulsante &quot;A cosa gioco?&quot; estrae un gioco dalla tua pila della vergogna.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #videogiochi #ps5 #playstation #gamer #gaming #shorts</pre><button data-copy="d33">Kopiuj opis</button></div>
+    <textarea hidden id="d33">Un’ora a scorrere la libreria e zero partite? In PS5 Vault un pulsante &quot;A cosa gioco?&quot; estrae un gioco dalla tua pila della vergogna.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #videogiochi #ps5 #playstation #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/05-a-cosa-gioco-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 26.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c34" data-key="pl-12">
+  <div class="num">35</div>
+  <video src="shorts/pl/12-koszt-godziny-grania.mp4" poster="shorts/pl/12-koszt-godziny-grania-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 27.10</b> · 18:00 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/12-koszt-godziny-grania.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Ile kosztuje Cię godzina grania? 🧮 Koszt na godzinę każdej gry</pre><button data-copy="t34">Kopiuj tytuł</button></div>
+    <textarea hidden id="t34">Ile kosztuje Cię godzina grania? 🧮 Koszt na godzinę każdej gry</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Gra za 300 zł, w którą grałeś 100 godzin, kosztowała 3 zł za godzinę. PS5 Vault liczy koszt godziny całej kolekcji i pokazuje gry z najgorszą wartością.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#gry #ps5 #playstation #finanse #oszczędzanie #gracze #shorts</pre><button data-copy="d34">Kopiuj opis</button></div>
+    <textarea hidden id="d34">Gra za 300 zł, w którą grałeś 100 godzin, kosztowała 3 zł za godzinę. PS5 Vault liczy koszt godziny całej kolekcji i pokazuje gry z najgorszą wartością.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#gry #ps5 #playstation #finanse #oszczędzanie #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/12-koszt-godziny-grania-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 27.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c35" data-key="en-04">
+  <div class="num">36</div>
+  <video src="shorts/en/04-import-your-library.mp4" poster="shorts/en/04-import-your-library-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 27.10</b> · 20:30 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/04-import-your-library.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Your whole game library in a minute 📥 Import from Steam, PSN, Xbox and Playnite</pre><button data-copy="t35">Kopiuj tytuł</button></div>
+    <textarea hidden id="t35">Your whole game library in a minute 📥 Import from Steam, PSN, Xbox and Playnite</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>No need to type hundreds of games by hand. PS5 Vault imports your library from Steam, PSN, Xbox and Playnite (free up to 50 games, unlimited with Pro).
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #gaming #shorts</pre><button data-copy="d35">Kopiuj opis</button></div>
+    <textarea hidden id="d35">No need to type hundreds of games by hand. PS5 Vault imports your library from Steam, PSN, Xbox and Playnite (free up to 50 games, unlimited with Pro).
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/04-import-your-library-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 27.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c36" data-key="de-07">
+  <div class="num">37</div>
+  <video src="shorts/de/07-release-countdown.mp4" poster="shorts/de/07-release-countdown-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 28.10</b> · 18:00 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/07-release-countdown.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Wie viele Tage bis zum Release? ⏳ Countdown für deine Spiele</pre><button data-copy="t36">Kopiuj tytuł</button></div>
+    <textarea hidden id="t36">Wie viele Tage bis zum Release? ⏳ Countdown für deine Spiele</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Trag ein Spiel mit Erscheinungsdatum ein und PS5 Vault zeigt den Countdown auf dem Startbildschirm und erinnert dich 3 Tage vorher und am Release-Tag.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#release #vorbestellung #ps5 #playstation #gaming #zocken #shorts</pre><button data-copy="d36">Kopiuj opis</button></div>
+    <textarea hidden id="d36">Trag ein Spiel mit Erscheinungsdatum ein und PS5 Vault zeigt den Countdown auf dem Startbildschirm und erinnert dich 3 Tage vorher und am Release-Tag.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#release #vorbestellung #ps5 #playstation #gaming #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/07-release-countdown-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 28.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c37" data-key="pt-10">
+  <div class="num">38</div>
+  <video src="shorts/pt/10-escaneie-a-caixa.mp4" poster="shorts/pt/10-escaneie-a-caixa-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 28.10</b> · 20:30 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/10-escaneie-a-caixa.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Escaneie a caixa e o jogo já está na coleção 📷 Scanner de código de barras</pre><button data-copy="t37">Kopiuj tytuł</button></div>
+    <textarea hidden id="t37">Escaneie a caixa e o jogo já está na coleção 📷 Scanner de código de barras</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Coleciona mídia física? Escaneie o código de barras atrás da caixa e o PS5 Vault preenche título, gênero e ano. No Pro você escaneia a estante inteira em sequência.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#midiafisica #colecao #ps5 #playstation #games #gamer #shorts</pre><button data-copy="d37">Kopiuj opis</button></div>
+    <textarea hidden id="d37">Coleciona mídia física? Escaneie o código de barras atrás da caixa e o PS5 Vault preenche título, gênero e ano. No Pro você escaneia a estante inteira em sequência.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#midiafisica #colecao #ps5 #playstation #games #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/10-escaneie-a-caixa-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 28.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c38" data-key="es-09">
+  <div class="num">39</div>
+  <video src="shorts/es/09-sin-suscripcion.mp4" poster="shorts/es/09-sin-suscripcion-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 29.10</b> · 18:00 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/09-sin-suscripcion.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Una app para gamers sin suscripción ni anuncios 🔒 PS5 Vault</pre><button data-copy="t38">Kopiuj tytuł</button></div>
+    <textarea hidden id="t38">Una app para gamers sin suscripción ni anuncios 🔒 PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Colección de juegos, estadísticas, lanzamientos y tu año en juegos gratis. Pro es una única compra en Google Play, sin suscripción. Sin cuenta, tu colección se queda en tu móvil.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#sinanuncios #ps5 #playstation #videojuegos #app #gamer #shorts</pre><button data-copy="d38">Kopiuj opis</button></div>
+    <textarea hidden id="d38">Colección de juegos, estadísticas, lanzamientos y tu año en juegos gratis. Pro es una única compra en Google Play, sin suscripción. Sin cuenta, tu colección se queda en tu móvil.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#sinanuncios #ps5 #playstation #videojuegos #app #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/09-sin-suscripcion-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 29.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c39" data-key="fr-11">
+  <div class="num">40</div>
+  <video src="shorts/fr/11-succes.mp4" poster="shorts/fr/11-succes-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 29.10</b> · 20:30 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/11-succes.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Des trophées pour ta collection de jeux 🏆 19 succès dans PS5 Vault</pre><button data-copy="t39">Kopiuj tytuł</button></div>
+    <textarea hidden id="t39">Des trophées pour ta collection de jeux 🏆 19 succès dans PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Collectionneur, finisseur, chasseur de trophées, marathonien. PS5 Vault propose 19 succès que tu débloques en ajoutant et en terminant des jeux.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trophees #platine #ps5 #playstation #jeuxvideo #gamer #shorts</pre><button data-copy="d39">Kopiuj opis</button></div>
+    <textarea hidden id="d39">Collectionneur, finisseur, chasseur de trophées, marathonien. PS5 Vault propose 19 succès que tu débloques en ajoutant et en terminant des jeux.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trophees #platine #ps5 #playstation #jeuxvideo #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/11-succes-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 29.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c40" data-key="es-01">
+  <div class="num">41</div>
+  <video src="shorts/es/01-pila-de-la-verguenza.mp4" poster="shorts/es/01-pila-de-la-verguenza-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 30.10</b> · 18:00 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/01-pila-de-la-verguenza.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>¿Cuánto dinero tienes parado en la estantería? 🎮 Pila de la vergüenza</pre><button data-copy="t40">Kopiuj tytuł</button></div>
+    <textarea hidden id="t40">¿Cuánto dinero tienes parado en la estantería? 🎮 Pila de la vergüenza</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Juegos comprados en oferta y nunca jugados. PS5 Vault cuenta cuántos tienes y cuánto dinero hay en ellos, y lo convierte en una imagen para compartir.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#backlog #piladelaverguenza #ps5 #playstation #videojuegos #gamer #shorts</pre><button data-copy="d40">Kopiuj opis</button></div>
+    <textarea hidden id="d40">Juegos comprados en oferta y nunca jugados. PS5 Vault cuenta cuántos tienes y cuánto dinero hay en ellos, y lo convierte en una imagen para compartir.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#backlog #piladelaverguenza #ps5 #playstation #videojuegos #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/01-pila-de-la-verguenza-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 30.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c41" data-key="fr-08">
+  <div class="num">42</div>
+  <video src="shorts/fr/08-combien-d-heures.mp4" poster="shorts/fr/08-combien-d-heures-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 30.10</b> · 20:30 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/08-combien-d-heures.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Combien d’heures as-tu VRAIMENT joué ? ⏱ Le top 10 des jeux qui ont mangé ton temps</pre><button data-copy="t41">Kopiuj tytuł</button></div>
+    <textarea hidden id="t41">Combien d’heures as-tu VRAIMENT joué ? ⏱ Le top 10 des jeux qui ont mangé ton temps</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>PS5 Vault additionne les heures de toute ta collection et montre quels jeux ont pris le plus de temps, combien de ta bibliothèque est terminée et tes platines.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#jeuxvideo #ps5 #playstation #stats #platine #gamer #shorts</pre><button data-copy="d41">Kopiuj opis</button></div>
+    <textarea hidden id="d41">PS5 Vault additionne les heures de toute ta collection et montre quels jeux ont pris le plus de temps, combien de ta bibliothèque est terminée et tes platines.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#jeuxvideo #ps5 #playstation #stats #platine #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/08-combien-d-heures-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 30.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c42" data-key="it-02">
+  <div class="num">43</div>
+  <video src="shorts/it/02-quanto-hai-speso.mp4" poster="shorts/it/02-quanto-hai-speso-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 31.10</b> · 18:00 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/02-quanto-hai-speso.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quanto hai speso DAVVERO in giochi? 💸 Giochi, DLC, microtransazioni</pre><button data-copy="t42">Kopiuj tytuł</button></div>
+    <textarea hidden id="t42">Quanto hai speso DAVVERO in giochi? 💸 Giochi, DLC, microtransazioni</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Segna quanto hai pagato giochi e DLC e quanto hai recuperato vendendoli. PS5 Vault mostra le spese mese per mese e dove paghi troppo.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#videogiochi #ps5 #playstation #dlc #gamer #gaming #shorts</pre><button data-copy="d42">Kopiuj opis</button></div>
+    <textarea hidden id="d42">Segna quanto hai pagato giochi e DLC e quanto hai recuperato vendendoli. PS5 Vault mostra le spese mese per mese e dove paghi troppo.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#videogiochi #ps5 #playstation #dlc #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/02-quanto-hai-speso-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 31.10 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c43" data-key="pl-05">
+  <div class="num">44</div>
+  <video src="shorts/pl/05-w-co-zagrac.mp4" poster="shorts/pl/05-w-co-zagrac-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 31.10</b> · 20:30 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/05-w-co-zagrac.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Nie wiesz, w co zagrać? 🎲 Wylosuj grę z kupki wstydu</pre><button data-copy="t43">Kopiuj tytuł</button></div>
+    <textarea hidden id="t43">Nie wiesz, w co zagrać? 🎲 Wylosuj grę z kupki wstydu</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Godzina przeglądania biblioteki i zero grania? W PS5 Vault jeden przycisk „Co zagrać?” losuje grę z Twojej kupki wstydu.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#wcozagrac #backlog #ps5 #playstation #gry #gracze #shorts</pre><button data-copy="d43">Kopiuj opis</button></div>
+    <textarea hidden id="d43">Godzina przeglądania biblioteki i zero grania? W PS5 Vault jeden przycisk „Co zagrać?” losuje grę z Twojej kupki wstydu.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#wcozagrac #backlog #ps5 #playstation #gry #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/05-w-co-zagrac-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 31.10 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c44" data-key="en-12">
+  <div class="num">45</div>
+  <video src="shorts/en/12-cost-per-hour.mp4" poster="shorts/en/12-cost-per-hour-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 01.11</b> · 18:00 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/12-cost-per-hour.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>What does one hour of gaming cost you? 🧮 Cost per hour for every game</pre><button data-copy="t44">Kopiuj tytuł</button></div>
+    <textarea hidden id="t44">What does one hour of gaming cost you? 🧮 Cost per hour for every game</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>A $60 game you played for 100 hours cost $0.60 an hour. PS5 Vault works out the cost per hour of your whole collection and shows the games with the worst value.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#gaming #ps5 #playstation #money #value #gamer #shorts</pre><button data-copy="d44">Kopiuj opis</button></div>
+    <textarea hidden id="d44">A $60 game you played for 100 hours cost $0.60 an hour. PS5 Vault works out the cost per hour of your whole collection and shows the games with the worst value.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#gaming #ps5 #playstation #money #value #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/12-cost-per-hour-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 01.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c45" data-key="de-04">
+  <div class="num">46</div>
+  <video src="shorts/de/04-bibliothek-importieren.mp4" poster="shorts/de/04-bibliothek-importieren-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 01.11</b> · 20:30 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/04-bibliothek-importieren.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Deine ganze Spielebibliothek in einer Minute 📥 Import aus Steam, PSN, Xbox und Playnite</pre><button data-copy="t45">Kopiuj tytuł</button></div>
+    <textarea hidden id="t45">Deine ganze Spielebibliothek in einer Minute 📥 Import aus Steam, PSN, Xbox und Playnite</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Du musst nicht Hunderte Spiele von Hand eintippen. PS5 Vault importiert deine Bibliothek aus Steam, PSN, Xbox und Playnite (kostenlos bis 50 Spiele, ohne Limit mit Pro).
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #gaming #shorts</pre><button data-copy="d45">Kopiuj opis</button></div>
+    <textarea hidden id="d45">Du musst nicht Hunderte Spiele von Hand eintippen. PS5 Vault importiert deine Bibliothek aus Steam, PSN, Xbox und Playnite (kostenlos bis 50 Spiele, ohne Limit mit Pro).
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/04-bibliothek-importieren-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 01.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c46" data-key="pt-07">
+  <div class="num">47</div>
+  <video src="shorts/pt/07-contagem-regressiva.mp4" poster="shorts/pt/07-contagem-regressiva-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 02.11</b> · 18:00 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/07-contagem-regressiva.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quantos dias para o lançamento? ⏳ Contagem regressiva dos seus jogos</pre><button data-copy="t46">Kopiuj tytuł</button></div>
+    <textarea hidden id="t46">Quantos dias para o lançamento? ⏳ Contagem regressiva dos seus jogos</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Adicione um jogo com a data de lançamento e o PS5 Vault mostra a contagem na tela inicial e avisa 3 dias antes e no dia do lançamento.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#lancamento #prevenda #ps5 #playstation #games #gamer #shorts</pre><button data-copy="d46">Kopiuj opis</button></div>
+    <textarea hidden id="d46">Adicione um jogo com a data de lançamento e o PS5 Vault mostra a contagem na tela inicial e avisa 3 dias antes e no dia do lançamento.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#lancamento #prevenda #ps5 #playstation #games #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/07-contagem-regressiva-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 02.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c47" data-key="es-10">
+  <div class="num">48</div>
+  <video src="shorts/es/10-escanea-la-caja.mp4" poster="shorts/es/10-escanea-la-caja-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 02.11</b> · 20:30 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/10-escanea-la-caja.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Escanea la caja y el juego ya está en tu colección 📷 Escáner de códigos</pre><button data-copy="t47">Kopiuj tytuł</button></div>
+    <textarea hidden id="t47">Escanea la caja y el juego ya está en tu colección 📷 Escáner de códigos</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>¿Coleccionas juegos en físico? Escanea el código de barras de la caja y PS5 Vault rellena título, género y año. Con Pro escaneas toda la estantería seguida.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#formatofisico #coleccion #ps5 #playstation #videojuegos #gamer #shorts</pre><button data-copy="d47">Kopiuj opis</button></div>
+    <textarea hidden id="d47">¿Coleccionas juegos en físico? Escanea el código de barras de la caja y PS5 Vault rellena título, género y año. Con Pro escaneas toda la estantería seguida.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#formatofisico #coleccion #ps5 #playstation #videojuegos #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/10-escanea-la-caja-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 02.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c48" data-key="fr-09">
+  <div class="num">49</div>
+  <video src="shorts/fr/09-sans-abonnement.mp4" poster="shorts/fr/09-sans-abonnement-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 03.11</b> · 18:00 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/09-sans-abonnement.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Une app pour joueurs sans abonnement ni pub 🔒 PS5 Vault</pre><button data-copy="t48">Kopiuj tytuł</button></div>
+    <textarea hidden id="t48">Une app pour joueurs sans abonnement ni pub 🔒 PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Collection de jeux, stats, sorties et ton année en jeux gratuitement. Pro est un achat unique sur Google Play, sans abonnement. Sans compte, ta collection reste sur ton téléphone.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#sanspub #ps5 #playstation #jeuxvideo #app #gamer #shorts</pre><button data-copy="d48">Kopiuj opis</button></div>
+    <textarea hidden id="d48">Collection de jeux, stats, sorties et ton année en jeux gratuitement. Pro est un achat unique sur Google Play, sans abonnement. Sans compte, ta collection reste sur ton téléphone.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#sanspub #ps5 #playstation #jeuxvideo #app #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/09-sans-abonnement-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 03.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c49" data-key="it-11">
+  <div class="num">50</div>
+  <video src="shorts/it/11-obiettivi.mp4" poster="shorts/it/11-obiettivi-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 03.11</b> · 20:30 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/11-obiettivi.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Trofei per la tua collezione di giochi 🏆 19 obiettivi in PS5 Vault</pre><button data-copy="t49">Kopiuj tytuł</button></div>
+    <textarea hidden id="t49">Trofei per la tua collezione di giochi 🏆 19 obiettivi in PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Collezionista, finisher, cacciatore di trofei, maratoneta. PS5 Vault ha 19 obiettivi che sblocchi aggiungendo e finendo giochi.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trofei #platino #ps5 #playstation #videogiochi #gamer #shorts</pre><button data-copy="d49">Kopiuj opis</button></div>
+    <textarea hidden id="d49">Collezionista, finisher, cacciatore di trofei, maratoneta. PS5 Vault ha 19 obiettivi che sblocchi aggiungendo e finendo giochi.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trofei #platino #ps5 #playstation #videogiochi #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/11-obiettivi-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 03.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c50" data-key="fr-01">
+  <div class="num">51</div>
+  <video src="shorts/fr/01-pile-de-la-honte.mp4" poster="shorts/fr/01-pile-de-la-honte-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 04.11</b> · 18:00 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/01-pile-de-la-honte.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Combien d’argent dort sur ton étagère ? 🎮 Pile de la honte</pre><button data-copy="t50">Kopiuj tytuł</button></div>
+    <textarea hidden id="t50">Combien d’argent dort sur ton étagère ? 🎮 Pile de la honte</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Des jeux achetés en solde et jamais lancés. PS5 Vault compte combien tu en as et combien d’argent dort dedans, puis en fait une image à partager.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#backlog #piledelahonte #ps5 #playstation #jeuxvideo #gamer #shorts</pre><button data-copy="d50">Kopiuj opis</button></div>
+    <textarea hidden id="d50">Des jeux achetés en solde et jamais lancés. PS5 Vault compte combien tu en as et combien d’argent dort dedans, puis en fait une image à partager.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#backlog #piledelahonte #ps5 #playstation #jeuxvideo #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/01-pile-de-la-honte-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 04.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c51" data-key="it-08">
+  <div class="num">52</div>
+  <video src="shorts/it/08-quante-ore.mp4" poster="shorts/it/08-quante-ore-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 04.11</b> · 20:30 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/08-quante-ore.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quante ore hai giocato DAVVERO? ⏱ La top 10 dei giochi che ti hanno mangiato il tempo</pre><button data-copy="t51">Kopiuj tytuł</button></div>
+    <textarea hidden id="t51">Quante ore hai giocato DAVVERO? ⏱ La top 10 dei giochi che ti hanno mangiato il tempo</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>PS5 Vault somma le ore di tutta la collezione e mostra quali giochi hanno preso più tempo, quanta libreria hai finito e i tuoi platini.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#videogiochi #ps5 #playstation #statistiche #platino #gamer #shorts</pre><button data-copy="d51">Kopiuj opis</button></div>
+    <textarea hidden id="d51">PS5 Vault somma le ore di tutta la collezione e mostra quali giochi hanno preso più tempo, quanta libreria hai finito e i tuoi platini.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#videogiochi #ps5 #playstation #statistiche #platino #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/08-quante-ore-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 04.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c52" data-key="pl-02">
+  <div class="num">53</div>
+  <video src="shorts/pl/02-ile-wydales-na-gry.mp4" poster="shorts/pl/02-ile-wydales-na-gry-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 05.11</b> · 18:00 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/02-ile-wydales-na-gry.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Ile naprawdę wydałeś na gry? 💸 Gry, DLC i mikrotransakcje</pre><button data-copy="t52">Kopiuj tytuł</button></div>
+    <textarea hidden id="t52">Ile naprawdę wydałeś na gry? 💸 Gry, DLC i mikrotransakcje</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Wpisujesz ceny gier, DLC i to, co odzyskałeś ze sprzedaży, a PS5 Vault pokazuje wydatki miesiąc po miesiącu i podpowiada, gdzie przepłacasz.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#gry #ps5 #playstation #wydatki #dlc #gracze #shorts</pre><button data-copy="d52">Kopiuj opis</button></div>
+    <textarea hidden id="d52">Wpisujesz ceny gier, DLC i to, co odzyskałeś ze sprzedaży, a PS5 Vault pokazuje wydatki miesiąc po miesiącu i podpowiada, gdzie przepłacasz.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#gry #ps5 #playstation #wydatki #dlc #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/02-ile-wydales-na-gry-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 05.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c53" data-key="en-05">
+  <div class="num">54</div>
+  <video src="shorts/en/05-what-to-play.mp4" poster="shorts/en/05-what-to-play-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 05.11</b> · 20:30 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/05-what-to-play.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Can’t decide what to play? 🎲 Let your backlog pick</pre><button data-copy="t53">Kopiuj tytuł</button></div>
+    <textarea hidden id="t53">Can’t decide what to play? 🎲 Let your backlog pick</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>An hour of browsing your library and zero playing? In PS5 Vault one &quot;What to play?&quot; button picks a game from your backlog.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#whattoplay #backlog #ps5 #playstation #gaming #gamer #shorts</pre><button data-copy="d53">Kopiuj opis</button></div>
+    <textarea hidden id="d53">An hour of browsing your library and zero playing? In PS5 Vault one &quot;What to play?&quot; button picks a game from your backlog.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#whattoplay #backlog #ps5 #playstation #gaming #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/05-what-to-play-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 05.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c54" data-key="de-12">
+  <div class="num">55</div>
+  <video src="shorts/de/12-kosten-pro-stunde.mp4" poster="shorts/de/12-kosten-pro-stunde-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 06.11</b> · 18:00 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/12-kosten-pro-stunde.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Was kostet dich eine Stunde Zocken? 🧮 Kosten pro Stunde für jedes Spiel</pre><button data-copy="t54">Kopiuj tytuł</button></div>
+    <textarea hidden id="t54">Was kostet dich eine Stunde Zocken? 🧮 Kosten pro Stunde für jedes Spiel</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Ein Spiel für 70 €, das du 100 Stunden gespielt hast, hat 0,70 € pro Stunde gekostet. PS5 Vault berechnet die Kosten pro Stunde deiner ganzen Sammlung und zeigt die Spiele mit dem schlechtesten Wert.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#gaming #ps5 #playstation #geld #zocken #gamer #shorts</pre><button data-copy="d54">Kopiuj opis</button></div>
+    <textarea hidden id="d54">Ein Spiel für 70 €, das du 100 Stunden gespielt hast, hat 0,70 € pro Stunde gekostet. PS5 Vault berechnet die Kosten pro Stunde deiner ganzen Sammlung und zeigt die Spiele mit dem schlechtesten Wert.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#gaming #ps5 #playstation #geld #zocken #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/12-kosten-pro-stunde-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 06.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c55" data-key="pt-04">
+  <div class="num">56</div>
+  <video src="shorts/pt/04-importe-sua-biblioteca.mp4" poster="shorts/pt/04-importe-sua-biblioteca-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 06.11</b> · 20:30 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/04-importe-sua-biblioteca.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Sua biblioteca de jogos inteira em um minuto 📥 Importe da Steam, PSN, Xbox e Playnite</pre><button data-copy="t55">Kopiuj tytuł</button></div>
+    <textarea hidden id="t55">Sua biblioteca de jogos inteira em um minuto 📥 Importe da Steam, PSN, Xbox e Playnite</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Não precisa digitar centenas de jogos um por um. O PS5 Vault importa sua biblioteca da Steam, PSN, Xbox e Playnite (grátis até 50 jogos, sem limite no Pro).
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #games #shorts</pre><button data-copy="d55">Kopiuj opis</button></div>
+    <textarea hidden id="d55">Não precisa digitar centenas de jogos um por um. O PS5 Vault importa sua biblioteca da Steam, PSN, Xbox e Playnite (grátis até 50 jogos, sem limite no Pro).
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #games #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/04-importe-sua-biblioteca-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 06.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c56" data-key="es-07">
+  <div class="num">57</div>
+  <video src="shorts/es/07-cuenta-atras-lanzamiento.mp4" poster="shorts/es/07-cuenta-atras-lanzamiento-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 07.11</b> · 18:00 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/07-cuenta-atras-lanzamiento.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>¿Cuántos días faltan para el lanzamiento? ⏳ Cuenta atrás para tus juegos</pre><button data-copy="t56">Kopiuj tytuł</button></div>
+    <textarea hidden id="t56">¿Cuántos días faltan para el lanzamiento? ⏳ Cuenta atrás para tus juegos</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Añade un juego con su fecha de lanzamiento y PS5 Vault muestra la cuenta atrás en la pantalla principal y te avisa 3 días antes y el día del lanzamiento.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#lanzamiento #reserva #ps5 #playstation #videojuegos #gamer #shorts</pre><button data-copy="d56">Kopiuj opis</button></div>
+    <textarea hidden id="d56">Añade un juego con su fecha de lanzamiento y PS5 Vault muestra la cuenta atrás en la pantalla principal y te avisa 3 días antes y el día del lanzamiento.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#lanzamiento #reserva #ps5 #playstation #videojuegos #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/07-cuenta-atras-lanzamiento-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 07.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c57" data-key="fr-10">
+  <div class="num">58</div>
+  <video src="shorts/fr/10-scanne-la-boite.mp4" poster="shorts/fr/10-scanne-la-boite-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 07.11</b> · 20:30 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/10-scanne-la-boite.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Scanne la boîte et le jeu est dans ta collection 📷 Scanner de codes-barres</pre><button data-copy="t57">Kopiuj tytuł</button></div>
+    <textarea hidden id="t57">Scanne la boîte et le jeu est dans ta collection 📷 Scanner de codes-barres</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Tu collectionnes les jeux en physique ? Scanne le code-barres au dos de la boîte et PS5 Vault remplit le titre, le genre et l’année. Avec Pro, tu scannes toute l’étagère à la suite.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#physique #collection #ps5 #playstation #jeuxvideo #gamer #shorts</pre><button data-copy="d57">Kopiuj opis</button></div>
+    <textarea hidden id="d57">Tu collectionnes les jeux en physique ? Scanne le code-barres au dos de la boîte et PS5 Vault remplit le titre, le genre et l’année. Avec Pro, tu scannes toute l’étagère à la suite.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#physique #collection #ps5 #playstation #jeuxvideo #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/10-scanne-la-boite-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 07.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c58" data-key="it-09">
+  <div class="num">59</div>
+  <video src="shorts/it/09-senza-abbonamento.mp4" poster="shorts/it/09-senza-abbonamento-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 08.11</b> · 18:00 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/09-senza-abbonamento.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Un’app per gamer senza abbonamento e senza pubblicità 🔒 PS5 Vault</pre><button data-copy="t58">Kopiuj tytuł</button></div>
+    <textarea hidden id="t58">Un’app per gamer senza abbonamento e senza pubblicità 🔒 PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Collezione di giochi, statistiche, uscite e il tuo anno in giochi gratis. Pro è un acquisto unico su Google Play, senza abbonamento. Niente account, la collezione resta sul telefono.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#senzapubblicita #ps5 #playstation #videogiochi #app #gamer #shorts</pre><button data-copy="d58">Kopiuj opis</button></div>
+    <textarea hidden id="d58">Collezione di giochi, statistiche, uscite e il tuo anno in giochi gratis. Pro è un acquisto unico su Google Play, senza abbonamento. Niente account, la collezione resta sul telefono.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#senzapubblicita #ps5 #playstation #videogiochi #app #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/09-senza-abbonamento-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 08.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c59" data-key="pl-11">
+  <div class="num">60</div>
+  <video src="shorts/pl/11-osiagniecia.mp4" poster="shorts/pl/11-osiagniecia-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 08.11</b> · 20:30 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/11-osiagniecia.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Trofea za ogarnięcie kolekcji gier 🏆 19 osiągnięć w PS5 Vault</pre><button data-copy="t59">Kopiuj tytuł</button></div>
+    <textarea hidden id="t59">Trofea za ogarnięcie kolekcji gier 🏆 19 osiągnięć w PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Kolekcjoner, finiszer, łowca trofeów, maratończyk. PS5 Vault ma 19 osiągnięć, które odblokowujesz, gdy dodajesz i kończysz gry.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trofea #platyna #ps5 #playstation #gry #gracze #shorts</pre><button data-copy="d59">Kopiuj opis</button></div>
+    <textarea hidden id="d59">Kolekcjoner, finiszer, łowca trofeów, maratończyk. PS5 Vault ma 19 osiągnięć, które odblokowujesz, gdy dodajesz i kończysz gry.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trofea #platyna #ps5 #playstation #gry #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/11-osiagniecia-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 08.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c60" data-key="it-01">
+  <div class="num">61</div>
+  <video src="shorts/it/01-pila-della-vergogna.mp4" poster="shorts/it/01-pila-della-vergogna-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 09.11</b> · 18:00 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/01-pila-della-vergogna.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quanti soldi hai fermi sullo scaffale? 🎮 Pila della vergogna</pre><button data-copy="t60">Kopiuj tytuł</button></div>
+    <textarea hidden id="t60">Quanti soldi hai fermi sullo scaffale? 🎮 Pila della vergogna</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Giochi comprati in saldo e mai avviati. PS5 Vault conta quanti ne hai e quanti soldi ci sono dentro, poi ne fa un’immagine da condividere.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#backlog #piladellavergogna #ps5 #playstation #videogiochi #gamer #shorts</pre><button data-copy="d60">Kopiuj opis</button></div>
+    <textarea hidden id="d60">Giochi comprati in saldo e mai avviati. PS5 Vault conta quanti ne hai e quanti soldi ci sono dentro, poi ne fa un’immagine da condividere.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort01
+
+#backlog #piladellavergogna #ps5 #playstation #videogiochi #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/01-pila-della-vergogna-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 09.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c61" data-key="pl-08">
+  <div class="num">62</div>
+  <video src="shorts/pl/08-ile-godzin-przegrales.mp4" poster="shorts/pl/08-ile-godzin-przegrales-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 09.11</b> · 20:30 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/08-ile-godzin-przegrales.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Ile godzin naprawdę przegrałeś? ⏱ Top 10 gier, które zjadły Twój czas</pre><button data-copy="t61">Kopiuj tytuł</button></div>
+    <textarea hidden id="t61">Ile godzin naprawdę przegrałeś? ⏱ Top 10 gier, które zjadły Twój czas</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>PS5 Vault sumuje godziny z całej kolekcji i pokazuje, które gry zjadły najwięcej czasu, ile procent biblioteki ukończyłeś i ile masz platyn.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#gry #ps5 #playstation #statystyki #platyna #gracze #shorts</pre><button data-copy="d61">Kopiuj opis</button></div>
+    <textarea hidden id="d61">PS5 Vault sumuje godziny z całej kolekcji i pokazuje, które gry zjadły najwięcej czasu, ile procent biblioteki ukończyłeś i ile masz platyn.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort08
+
+#gry #ps5 #playstation #statystyki #platyna #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/08-ile-godzin-przegrales-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 09.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c62" data-key="en-02">
+  <div class="num">63</div>
+  <video src="shorts/en/02-how-much-you-spent.mp4" poster="shorts/en/02-how-much-you-spent-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 10.11</b> · 18:00 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/02-how-much-you-spent.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>How much have you REALLY spent on games? 💸 Games, DLC, microtransactions</pre><button data-copy="t62">Kopiuj tytuł</button></div>
+    <textarea hidden id="t62">How much have you REALLY spent on games? 💸 Games, DLC, microtransactions</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Log what you paid for games and DLC and what you got back from selling. PS5 Vault shows your spending month by month and where you overpay.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#gaming #ps5 #playstation #dlc #microtransactions #gamer #shorts</pre><button data-copy="d62">Kopiuj opis</button></div>
+    <textarea hidden id="d62">Log what you paid for games and DLC and what you got back from selling. PS5 Vault shows your spending month by month and where you overpay.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort02
+
+#gaming #ps5 #playstation #dlc #microtransactions #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/02-how-much-you-spent-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 10.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c63" data-key="de-05">
+  <div class="num">64</div>
+  <video src="shorts/de/05-was-spielen.mp4" poster="shorts/de/05-was-spielen-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 10.11</b> · 20:30 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/05-was-spielen.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Keine Ahnung, was du spielen sollst? 🎲 Lass deinen Pile of Shame entscheiden</pre><button data-copy="t63">Kopiuj tytuł</button></div>
+    <textarea hidden id="t63">Keine Ahnung, was du spielen sollst? 🎲 Lass deinen Pile of Shame entscheiden</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Eine Stunde durch die Bibliothek scrollen und null zocken? In PS5 Vault lost ein Knopf „Was spielen?“ ein Spiel aus deinem Stapel aus.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #pileofshame #ps5 #playstation #gaming #zocken #shorts</pre><button data-copy="d63">Kopiuj opis</button></div>
+    <textarea hidden id="d63">Eine Stunde durch die Bibliothek scrollen und null zocken? In PS5 Vault lost ein Knopf „Was spielen?“ ein Spiel aus deinem Stapel aus.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort05
+
+#backlog #pileofshame #ps5 #playstation #gaming #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/05-was-spielen-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 10.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c64" data-key="pt-12">
+  <div class="num">65</div>
+  <video src="shorts/pt/12-custo-por-hora.mp4" poster="shorts/pt/12-custo-por-hora-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 11.11</b> · 18:00 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/12-custo-por-hora.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Quanto custa uma hora de jogo? 🧮 Custo por hora de cada jogo</pre><button data-copy="t64">Kopiuj tytuł</button></div>
+    <textarea hidden id="t64">Quanto custa uma hora de jogo? 🧮 Custo por hora de cada jogo</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Um jogo de R$ 300 que você jogou por 100 horas custou R$ 3 por hora. O PS5 Vault calcula o custo por hora da sua coleção inteira e mostra os jogos que menos valeram a pena.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#games #ps5 #playstation #dinheiro #gamer #gaming #shorts</pre><button data-copy="d64">Kopiuj opis</button></div>
+    <textarea hidden id="d64">Um jogo de R$ 300 que você jogou por 100 horas custou R$ 3 por hora. O PS5 Vault calcula o custo por hora da sua coleção inteira e mostra os jogos que menos valeram a pena.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort12
+
+#games #ps5 #playstation #dinheiro #gamer #gaming #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/12-custo-por-hora-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 11.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c65" data-key="es-04">
+  <div class="num">66</div>
+  <video src="shorts/es/04-importa-tu-biblioteca.mp4" poster="shorts/es/04-importa-tu-biblioteca-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 11.11</b> · 20:30 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/04-importa-tu-biblioteca.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Toda tu biblioteca de juegos en un minuto 📥 Importa de Steam, PSN, Xbox y Playnite</pre><button data-copy="t65">Kopiuj tytuł</button></div>
+    <textarea hidden id="t65">Toda tu biblioteca de juegos en un minuto 📥 Importa de Steam, PSN, Xbox y Playnite</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>No hace falta escribir cientos de juegos a mano. PS5 Vault importa tu biblioteca de Steam, PSN, Xbox y Playnite (gratis hasta 50 juegos, sin límite con Pro).
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #videojuegos #shorts</pre><button data-copy="d65">Kopiuj opis</button></div>
+    <textarea hidden id="d65">No hace falta escribir cientos de juegos a mano. PS5 Vault importa tu biblioteca de Steam, PSN, Xbox y Playnite (gratis hasta 50 juegos, sin límite con Pro).
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort04
+
+#steam #psn #xbox #playnite #ps5 #videojuegos #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/04-importa-tu-biblioteca-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 11.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c66" data-key="fr-07">
+  <div class="num">67</div>
+  <video src="shorts/fr/07-compte-a-rebours-sortie.mp4" poster="shorts/fr/07-compte-a-rebours-sortie-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 12.11</b> · 18:00 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/07-compte-a-rebours-sortie.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Combien de jours avant la sortie ? ⏳ Compte à rebours pour tes jeux</pre><button data-copy="t66">Kopiuj tytuł</button></div>
+    <textarea hidden id="t66">Combien de jours avant la sortie ? ⏳ Compte à rebours pour tes jeux</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Ajoute un jeu avec sa date de sortie et PS5 Vault affiche le compte à rebours sur l’écran d’accueil et te prévient 3 jours avant et le jour J.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#sortie #precommande #ps5 #playstation #jeuxvideo #gamer #shorts</pre><button data-copy="d66">Kopiuj opis</button></div>
+    <textarea hidden id="d66">Ajoute un jeu avec sa date de sortie et PS5 Vault affiche le compte à rebours sur l’écran d’accueil et te prévient 3 jours avant et le jour J.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort07
+
+#sortie #precommande #ps5 #playstation #jeuxvideo #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/07-compte-a-rebours-sortie-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 12.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c67" data-key="it-10">
+  <div class="num">68</div>
+  <video src="shorts/it/10-scansiona-la-confezione.mp4" poster="shorts/it/10-scansiona-la-confezione-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 12.11</b> · 20:30 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/10-scansiona-la-confezione.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Scansiona la confezione e il gioco è nella collezione 📷 Scanner codici a barre</pre><button data-copy="t67">Kopiuj tytuł</button></div>
+    <textarea hidden id="t67">Scansiona la confezione e il gioco è nella collezione 📷 Scanner codici a barre</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Collezioni giochi fisici? Scansiona il codice a barre sul retro e PS5 Vault compila titolo, genere e anno. Con Pro scansioni tutto lo scaffale di fila.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#fisico #collezione #ps5 #playstation #videogiochi #gamer #shorts</pre><button data-copy="d67">Kopiuj opis</button></div>
+    <textarea hidden id="d67">Collezioni giochi fisici? Scansiona il codice a barre sul retro e PS5 Vault compila titolo, genere e anno. Con Pro scansioni tutto lo scaffale di fila.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort10
+
+#fisico #collezione #ps5 #playstation #videogiochi #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/10-scansiona-la-confezione-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 12.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c68" data-key="pl-09">
+  <div class="num">69</div>
+  <video src="shorts/pl/09-bez-subskrypcji.mp4" poster="shorts/pl/09-bez-subskrypcji-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 13.11</b> · 18:00 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/09-bez-subskrypcji.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Apka dla graczy bez subskrypcji i bez reklam 🔒 PS5 Vault</pre><button data-copy="t68">Kopiuj tytuł</button></div>
+    <textarea hidden id="t68">Apka dla graczy bez subskrypcji i bez reklam 🔒 PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Kolekcja gier, statystyki, premiery i podsumowanie roku za darmo. Pro to jeden zakup w Google Play, bez abonamentu. Bez konta, kolekcja zostaje na telefonie.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#bezreklam #ps5 #playstation #gry #aplikacja #gracze #shorts</pre><button data-copy="d68">Kopiuj opis</button></div>
+    <textarea hidden id="d68">Kolekcja gier, statystyki, premiery i podsumowanie roku za darmo. Pro to jeden zakup w Google Play, bez abonamentu. Bez konta, kolekcja zostaje na telefonie.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort09
+
+#bezreklam #ps5 #playstation #gry #aplikacja #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/09-bez-subskrypcji-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 13.11 18:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c69" data-key="en-11">
+  <div class="num">70</div>
+  <video src="shorts/en/11-achievements.mp4" poster="shorts/en/11-achievements-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 13.11</b> · 20:30 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/11-achievements.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Trophies for your game collection 🏆 19 achievements in PS5 Vault</pre><button data-copy="t69">Kopiuj tytuł</button></div>
+    <textarea hidden id="t69">Trophies for your game collection 🏆 19 achievements in PS5 Vault</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Collector, finisher, trophy hunter, marathoner. PS5 Vault has 19 achievements you unlock as you add and finish games.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trophies #platinum #ps5 #playstation #gaming #gamer #shorts</pre><button data-copy="d69">Kopiuj opis</button></div>
+    <textarea hidden id="d69">Collector, finisher, trophy hunter, marathoner. PS5 Vault has 19 achievements you unlock as you add and finish games.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort11
+
+#trophies #platinum #ps5 #playstation #gaming #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/11-achievements-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 13.11 20:30</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c70" data-key="pl-06">
+  <div class="num">71</div>
+  <video src="shorts/pl/06-kupuj-tylko-w-promocji.mp4" poster="shorts/pl/06-kupuj-tylko-w-promocji-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 16.11</b> · 19:00 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/06-kupuj-tylko-w-promocji.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Nigdy nie kupuj gry w pełnej cenie 🎯 Lista życzeń z ceną docelową</pre><button data-copy="t70">Kopiuj tytuł</button></div>
+    <textarea hidden id="t70">Nigdy nie kupuj gry w pełnej cenie 🎯 Lista życzeń z ceną docelową</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Wpisz, ile chcesz zapłacić za grę, a gdy trafisz na promocję w PS Store, PS5 Vault powie, że to już ten moment.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#promocja #psstore #ps5 #playstation #gry #wishlist #shorts</pre><button data-copy="d70">Kopiuj opis</button></div>
+    <textarea hidden id="d70">Wpisz, ile chcesz zapłacić za grę, a gdy trafisz na promocję w PS Store, PS5 Vault powie, że to już ten moment.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#promocja #psstore #ps5 #playstation #gry #wishlist #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/06-kupuj-tylko-w-promocji-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 16.11 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c71" data-key="en-06">
+  <div class="num">72</div>
+  <video src="shorts/en/06-only-buy-on-sale.mp4" poster="shorts/en/06-only-buy-on-sale-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 17.11</b> · 19:00 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/06-only-buy-on-sale.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Never buy a game at full price 🎯 Wishlist with target prices</pre><button data-copy="t71">Kopiuj tytuł</button></div>
+    <textarea hidden id="t71">Never buy a game at full price 🎯 Wishlist with target prices</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Set what you want to pay for a game, and when you spot a PS Store sale, PS5 Vault tells you it is time to buy.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#pssale #psstore #ps5 #playstation #gaming #wishlist #shorts</pre><button data-copy="d71">Kopiuj opis</button></div>
+    <textarea hidden id="d71">Set what you want to pay for a game, and when you spot a PS Store sale, PS5 Vault tells you it is time to buy.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#pssale #psstore #ps5 #playstation #gaming #wishlist #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/06-only-buy-on-sale-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 17.11 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c72" data-key="de-06">
+  <div class="num">73</div>
+  <video src="shorts/de/06-nur-im-sale-kaufen.mp4" poster="shorts/de/06-nur-im-sale-kaufen-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 18.11</b> · 19:00 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/06-nur-im-sale-kaufen.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Kauf nie ein Spiel zum Vollpreis 🎯 Wunschliste mit Zielpreis</pre><button data-copy="t72">Kopiuj tytuł</button></div>
+    <textarea hidden id="t72">Kauf nie ein Spiel zum Vollpreis 🎯 Wunschliste mit Zielpreis</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Trag ein, was du für ein Spiel zahlen willst, und wenn du einen Sale im PS Store siehst, sagt dir PS5 Vault, dass jetzt der Moment ist.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#sale #psstore #ps5 #playstation #gaming #zocken #shorts</pre><button data-copy="d72">Kopiuj opis</button></div>
+    <textarea hidden id="d72">Trag ein, was du für ein Spiel zahlen willst, und wenn du einen Sale im PS Store siehst, sagt dir PS5 Vault, dass jetzt der Moment ist.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#sale #psstore #ps5 #playstation #gaming #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/06-nur-im-sale-kaufen-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 18.11 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c73" data-key="pt-06">
+  <div class="num">74</div>
+  <video src="shorts/pt/06-so-compre-na-promocao.mp4" poster="shorts/pt/06-so-compre-na-promocao-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 19.11</b> · 19:00 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/06-so-compre-na-promocao.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Nunca compre jogo pelo preço cheio 🎯 Lista de desejos com preço-alvo</pre><button data-copy="t73">Kopiuj tytuł</button></div>
+    <textarea hidden id="t73">Nunca compre jogo pelo preço cheio 🎯 Lista de desejos com preço-alvo</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Diga quanto quer pagar num jogo e, quando aparecer uma promoção na PS Store, o PS5 Vault avisa que chegou a hora.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#promocao #psstore #ps5 #playstation #games #gamer #shorts</pre><button data-copy="d73">Kopiuj opis</button></div>
+    <textarea hidden id="d73">Diga quanto quer pagar num jogo e, quando aparecer uma promoção na PS Store, o PS5 Vault avisa que chegou a hora.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#promocao #psstore #ps5 #playstation #games #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/06-so-compre-na-promocao-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 19.11 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c74" data-key="es-06">
+  <div class="num">75</div>
+  <video src="shorts/es/06-compra-solo-en-oferta.mp4" poster="shorts/es/06-compra-solo-en-oferta-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 20.11</b> · 19:00 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/06-compra-solo-en-oferta.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Nunca compres un juego a precio completo 🎯 Lista de deseos con precio objetivo</pre><button data-copy="t74">Kopiuj tytuł</button></div>
+    <textarea hidden id="t74">Nunca compres un juego a precio completo 🎯 Lista de deseos con precio objetivo</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Indica cuánto quieres pagar por un juego y, cuando veas una oferta en PS Store, PS5 Vault te avisa de que es el momento.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#ofertas #psstore #ps5 #playstation #videojuegos #gamer #shorts</pre><button data-copy="d74">Kopiuj opis</button></div>
+    <textarea hidden id="d74">Indica cuánto quieres pagar por un juego y, cuando veas una oferta en PS Store, PS5 Vault te avisa de que es el momento.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#ofertas #psstore #ps5 #playstation #videojuegos #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/06-compra-solo-en-oferta-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 20.11 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c75" data-key="fr-06">
+  <div class="num">76</div>
+  <video src="shorts/fr/06-achete-seulement-en-promo.mp4" poster="shorts/fr/06-achete-seulement-en-promo-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 21.11</b> · 19:00 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/06-achete-seulement-en-promo.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>N’achète jamais un jeu au prix fort 🎯 Liste de souhaits avec prix cible</pre><button data-copy="t75">Kopiuj tytuł</button></div>
+    <textarea hidden id="t75">N’achète jamais un jeu au prix fort 🎯 Liste de souhaits avec prix cible</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Indique combien tu veux payer un jeu et, quand tu vois une promo sur le PS Store, PS5 Vault te dit que c’est le moment.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#promo #psstore #ps5 #playstation #jeuxvideo #gamer #shorts</pre><button data-copy="d75">Kopiuj opis</button></div>
+    <textarea hidden id="d75">Indique combien tu veux payer un jeu et, quand tu vois une promo sur le PS Store, PS5 Vault te dit que c’est le moment.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#promo #psstore #ps5 #playstation #jeuxvideo #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/06-achete-seulement-en-promo-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 21.11 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c76" data-key="it-06">
+  <div class="num">77</div>
+  <video src="shorts/it/06-compra-solo-in-saldo.mp4" poster="shorts/it/06-compra-solo-in-saldo-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 22.11</b> · 19:00 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/06-compra-solo-in-saldo.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Mai comprare un gioco a prezzo pieno 🎯 Lista desideri con prezzo obiettivo</pre><button data-copy="t76">Kopiuj tytuł</button></div>
+    <textarea hidden id="t76">Mai comprare un gioco a prezzo pieno 🎯 Lista desideri con prezzo obiettivo</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Scrivi quanto vuoi pagare un gioco e, quando trovi un saldo sul PS Store, PS5 Vault ti dice che è il momento.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#saldi #psstore #ps5 #playstation #videogiochi #gamer #shorts</pre><button data-copy="d76">Kopiuj opis</button></div>
+    <textarea hidden id="d76">Scrivi quanto vuoi pagare un gioco e, quando trovi un saldo sul PS Store, PS5 Vault ti dice che è il momento.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort06
+
+#saldi #psstore #ps5 #playstation #videogiochi #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/06-compra-solo-in-saldo-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 22.11 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c77" data-key="pl-03">
+  <div class="num">78</div>
+  <video src="shorts/pl/03-rok-w-grach.mp4" poster="shorts/pl/03-rok-w-grach-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>wt 01.12</b> · 19:00 · 🇵🇱 Język filmu: <b>Polski</b></div>
+    <div class="file">📁 marketing/shorts/pl/03-rok-w-grach.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Twój rok w grach w liczbach 🎁 Podsumowanie roku dla graczy</pre><button data-copy="t77">Kopiuj tytuł</button></div>
+    <textarea hidden id="t77">Twój rok w grach w liczbach 🎁 Podsumowanie roku dla graczy</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Ile godzin grałeś w tym roku, co ukończyłeś, ile platyn wbiłeś i jaki gatunek wygrał. PS5 Vault robi z tego gotowy obrazek do udostępnienia.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#podsumowanieroku #gry #ps5 #playstation #platyna #gracze #shorts</pre><button data-copy="d77">Kopiuj opis</button></div>
+    <textarea hidden id="d77">Ile godzin grałeś w tym roku, co ukończyłeś, ile platyn wbiłeś i jaki gatunek wygrał. PS5 Vault robi z tego gotowy obrazek do udostępnienia.
+
+Link w profilu kanału:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#podsumowanieroku #gry #ps5 #playstation #platyna #gracze #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Polski</b> · Miniatura: <a href="shorts/pl/03-rok-w-grach-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj wt 01.12 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c78" data-key="en-03">
+  <div class="num">79</div>
+  <video src="shorts/en/03-year-in-games.mp4" poster="shorts/en/03-year-in-games-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>śr 02.12</b> · 19:00 · 🇬🇧 Język filmu: <b>Angielski</b></div>
+    <div class="file">📁 marketing/shorts/en/03-year-in-games.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Your year in games, in numbers 🎁 A year recap for gamers</pre><button data-copy="t78">Kopiuj tytuł</button></div>
+    <textarea hidden id="t78">Your year in games, in numbers 🎁 A year recap for gamers</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>How many hours you played this year, what you finished, how many platinums you earned and which genre won. PS5 Vault turns it into an image ready to share.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#yearinreview #gaming #ps5 #playstation #platinum #gamer #shorts</pre><button data-copy="d78">Kopiuj opis</button></div>
+    <textarea hidden id="d78">How many hours you played this year, what you finished, how many platinums you earned and which genre won. PS5 Vault turns it into an image ready to share.
+
+Link in the channel profile:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#yearinreview #gaming #ps5 #playstation #platinum #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Angielski</b> · Miniatura: <a href="shorts/en/03-year-in-games-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj śr 02.12 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c79" data-key="de-03">
+  <div class="num">80</div>
+  <video src="shorts/de/03-jahr-in-spielen.mp4" poster="shorts/de/03-jahr-in-spielen-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>cz 03.12</b> · 19:00 · 🇩🇪 Język filmu: <b>Niemiecki</b></div>
+    <div class="file">📁 marketing/shorts/de/03-jahr-in-spielen.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Dein Jahr in Spielen in Zahlen 🎁 Der Jahresrückblick für Gamer</pre><button data-copy="t79">Kopiuj tytuł</button></div>
+    <textarea hidden id="t79">Dein Jahr in Spielen in Zahlen 🎁 Der Jahresrückblick für Gamer</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Wie viele Stunden du dieses Jahr gespielt hast, was du beendet hast, wie viele Platin-Trophäen du geholt hast und welches Genre gewonnen hat. PS5 Vault macht daraus ein Bild zum Teilen.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#jahresrückblick #gaming #ps5 #playstation #platin #zocken #shorts</pre><button data-copy="d79">Kopiuj opis</button></div>
+    <textarea hidden id="d79">Wie viele Stunden du dieses Jahr gespielt hast, was du beendet hast, wie viele Platin-Trophäen du geholt hast und welches Genre gewonnen hat. PS5 Vault macht daraus ein Bild zum Teilen.
+
+Link im Kanalprofil:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#jahresrückblick #gaming #ps5 #playstation #platin #zocken #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Niemiecki</b> · Miniatura: <a href="shorts/de/03-jahr-in-spielen-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj cz 03.12 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c80" data-key="pt-03">
+  <div class="num">81</div>
+  <video src="shorts/pt/03-ano-em-jogos.mp4" poster="shorts/pt/03-ano-em-jogos-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pt 04.12</b> · 19:00 · 🇧🇷 Język filmu: <b>Portugalski (Brazylia)</b></div>
+    <div class="file">📁 marketing/shorts/pt/03-ano-em-jogos.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Seu ano em jogos em números 🎁 A retrospectiva para gamers</pre><button data-copy="t80">Kopiuj tytuł</button></div>
+    <textarea hidden id="t80">Seu ano em jogos em números 🎁 A retrospectiva para gamers</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Quantas horas você jogou este ano, o que zerou, quantas platinas pegou e qual gênero venceu. O PS5 Vault transforma tudo numa imagem pronta para compartilhar.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#retrospectiva #games #ps5 #playstation #platina #gamer #shorts</pre><button data-copy="d80">Kopiuj opis</button></div>
+    <textarea hidden id="d80">Quantas horas você jogou este ano, o que zerou, quantas platinas pegou e qual gênero venceu. O PS5 Vault transforma tudo numa imagem pronta para compartilhar.
+
+Link no perfil do canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#retrospectiva #games #ps5 #playstation #platina #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Portugalski (Brazylia)</b> · Miniatura: <a href="shorts/pt/03-ano-em-jogos-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pt 04.12 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c81" data-key="es-03">
+  <div class="num">82</div>
+  <video src="shorts/es/03-ano-en-juegos.mp4" poster="shorts/es/03-ano-en-juegos-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>sb 05.12</b> · 19:00 · 🇪🇸 Język filmu: <b>Hiszpański</b></div>
+    <div class="file">📁 marketing/shorts/es/03-ano-en-juegos.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Tu año en juegos en números 🎁 El resumen del año para gamers</pre><button data-copy="t81">Kopiuj tytuł</button></div>
+    <textarea hidden id="t81">Tu año en juegos en números 🎁 El resumen del año para gamers</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Cuántas horas jugaste este año, qué terminaste, cuántos platinos sacaste y qué género ganó. PS5 Vault lo convierte en una imagen lista para compartir.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#resumendelaño #videojuegos #ps5 #playstation #platino #gamer #shorts</pre><button data-copy="d81">Kopiuj opis</button></div>
+    <textarea hidden id="d81">Cuántas horas jugaste este año, qué terminaste, cuántos platinos sacaste y qué género ganó. PS5 Vault lo convierte en una imagen lista para compartir.
+
+Enlace en el perfil del canal:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#resumendelaño #videojuegos #ps5 #playstation #platino #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Hiszpański</b> · Miniatura: <a href="shorts/es/03-ano-en-juegos-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj sb 05.12 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c82" data-key="fr-03">
+  <div class="num">83</div>
+  <video src="shorts/fr/03-annee-en-jeux.mp4" poster="shorts/fr/03-annee-en-jeux-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>nd 06.12</b> · 19:00 · 🇫🇷 Język filmu: <b>Francuski</b></div>
+    <div class="file">📁 marketing/shorts/fr/03-annee-en-jeux.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Ton année en jeux en chiffres 🎁 Le bilan de l’année pour les joueurs</pre><button data-copy="t82">Kopiuj tytuł</button></div>
+    <textarea hidden id="t82">Ton année en jeux en chiffres 🎁 Le bilan de l’année pour les joueurs</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Combien d’heures tu as joué cette année, ce que tu as terminé, combien de platines tu as eues et quel genre a gagné. PS5 Vault en fait une image prête à partager.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#bilan #jeuxvideo #ps5 #playstation #platine #gamer #shorts</pre><button data-copy="d82">Kopiuj opis</button></div>
+    <textarea hidden id="d82">Combien d’heures tu as joué cette année, ce que tu as terminé, combien de platines tu as eues et quel genre a gagné. PS5 Vault en fait une image prête à partager.
+
+Lien dans le profil de la chaîne:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#bilan #jeuxvideo #ps5 #playstation #platine #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Francuski</b> · Miniatura: <a href="shorts/fr/03-annee-en-jeux-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj nd 06.12 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+<article class="card" id="c83" data-key="it-03">
+  <div class="num">84</div>
+  <video src="shorts/it/03-anno-in-giochi.mp4" poster="shorts/it/03-anno-in-giochi-cover.png" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>pn 07.12</b> · 19:00 · 🇮🇹 Język filmu: <b>Włoski</b></div>
+    <div class="file">📁 marketing/shorts/it/03-anno-in-giochi.mp4</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>Il tuo anno in giochi in numeri 🎁 Il riepilogo dell’anno per gamer</pre><button data-copy="t83">Kopiuj tytuł</button></div>
+    <textarea hidden id="t83">Il tuo anno in giochi in numeri 🎁 Il riepilogo dell’anno per gamer</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>Quante ore hai giocato quest’anno, cosa hai finito, quanti platini hai preso e quale genere ha vinto. PS5 Vault lo trasforma in un’immagine pronta da condividere.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#riepilogo #videogiochi #ps5 #playstation #platino #gamer #shorts</pre><button data-copy="d83">Kopiuj opis</button></div>
+    <textarea hidden id="d83">Quante ore hai giocato quest’anno, cosa hai finito, quanti platini hai preso e quale genere ha vinto. PS5 Vault lo trasforma in un’immagine pronta da condividere.
+
+Link nel profilo del canale:
+https://play.google.com/store/apps/details?id=com.skudev.ps5vault&amp;referrer=utm_source%3Dyoutube%26utm_medium%3Dshorts%26utm_campaign%3Dshort03
+
+#riepilogo #videogiochi #ps5 #playstation #platino #gamer #shorts</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: Włoski</b> · Miniatura: <a href="shorts/it/03-anno-in-giochi-cover.png" download>okładka</a> · Widoczność: <b>Zaplanuj pn 07.12 19:00</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>
+</main>
+<script>
+const KEY = 'ps5vault_shorts_done'
+let done = {}
+try { done = JSON.parse(localStorage.getItem(KEY) || '{}') } catch {}
+const cards = [...document.querySelectorAll('.card')]
+function save() { try { localStorage.setItem(KEY, JSON.stringify(done)) } catch {} }
+function refresh() {
+  let n = 0, next = null
+  for (const c of cards) {
+    const d = !!done[c.dataset.key]
+    c.classList.toggle('isdone', d)
+    c.querySelector('.done input').checked = d
+    c.classList.remove('next')
+    if (d) n++; else if (!next) next = c
+  }
+  if (next) next.classList.add('next')
+  document.getElementById('prog').textContent = n + ' / ' + cards.length + ' wrzuconych'
+  document.getElementById('bar').style.width = (100 * n / cards.length) + '%'
+  return next
+}
+for (const c of cards) c.querySelector('.done input').addEventListener('change', e => { done[c.dataset.key] = e.target.checked; save(); refresh() })
+document.getElementById('next').onclick = () => { const n = refresh(); if (n) n.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+document.getElementById('hide').onchange = e => document.body.classList.toggle('hide', e.target.checked)
+document.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
+  const text = document.getElementById(b.dataset.copy).value
+  try { await navigator.clipboard.writeText(text) } catch {
+    const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove()
+  }
+  const old = b.textContent; b.textContent = 'Skopiowane ✓'; b.classList.add('ok')
+  setTimeout(() => { b.textContent = old; b.classList.remove('ok') }, 1500)
+})
+refresh()
+</script>
+</body></html>

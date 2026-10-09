@@ -130,3 +130,136 @@ for (const lang of LANG_ORDER) {
 if (/[\u2013\u2014]/.test(md)) throw new Error('Długi myślnik w tekstach')
 fs.writeFileSync(path.join(DIR, 'SHORTS.md'), md)
 console.log('marketing/SHORTS.md')
+
+// ── Shorts-PO-KOLEI.html ───────────────────────────────────────────────────────
+// Strona do wrzucania po kolei: film, data i godzina, tytuł i opis z przyciskiem „Kopiuj”,
+// ptaszek „Wrzucone” (zapamiętany w przeglądarce). Otwórz z folderu marketing
+// (filmy są w shorts/ obok), np. dwuklikiem w Eksploratorze.
+const escH = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const items = []
+for (const r of schedule()) {
+  r.items.forEach((it, k) => {
+    const v = byId[it.id]
+    const yt = v.text[it.lang].yt
+    items.push({
+      key: `${it.lang}-${it.id}`,
+      date: fmt(r.date),
+      time: r.items.length === 1 ? '19:00' : k === 0 ? '18:00' : '20:30',
+      lang: it.lang,
+      file: `shorts/${file(v, it.lang)}`,
+      cover: `shorts/${it.lang}/${v.slug[it.lang]}-cover.png`,
+      name: `${v.slug[it.lang]}.mp4`,
+      title: yt.title,
+      desc: `${yt.desc}\n\n${COMMON[it.lang].link}:\n${link(v.id)}\n\n${yt.tags}`,
+    })
+  })
+}
+
+const cards = items.map((it, i) => `
+<article class="card" id="c${i}" data-key="${it.key}">
+  <div class="num">${i + 1}</div>
+  <video src="${it.file}" poster="${it.cover}" controls preload="none" playsinline></video>
+  <div class="body">
+    <div class="when"><b>${it.date}</b> · ${it.time} · ${FLAG[it.lang]} Język filmu: <b>${LANG_NAME[it.lang]}</b></div>
+    <div class="file">📁 marketing/${escH(it.file)}</div>
+    <label>Tytuł</label>
+    <div class="box"><pre>${escH(it.title)}</pre><button data-copy="t${i}">Kopiuj tytuł</button></div>
+    <textarea hidden id="t${i}">${escH(it.title)}</textarea>
+    <label>Opis</label>
+    <div class="box"><pre>${escH(it.desc)}</pre><button data-copy="d${i}">Kopiuj opis</button></div>
+    <textarea hidden id="d${i}">${escH(it.desc)}</textarea>
+    <div class="steps">Odbiorcy: <b>Nieprzeznaczony dla dzieci</b> · Pokaż więcej → <b>Język filmu: ${LANG_NAME[it.lang]}</b> · Miniatura: <a href="${it.cover}" download>okładka</a> · Widoczność: <b>Zaplanuj ${it.date} ${it.time}</b></div>
+    <label class="done"><input type="checkbox"> Wrzucone</label>
+  </div>
+</article>`).join('')
+
+const html = `<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PS5 Vault: shorty po kolei</title>
+<style>
+:root { --bg:#080B14; --card:#0D1120; --bdr:#1E2A42; --txt:#E8EDF8; --dim:#7B8AAD; --blu:#00D4FF; --grn:#39FF6E; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--txt); font: 15px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: rgba(8,11,20,.95); border-bottom: 1px solid var(--bdr); padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+h1 { margin: 0; font-size: 20px; color: var(--blu); }
+.prog { color: var(--dim); }
+.bar { flex: 1 1 200px; height: 8px; background: var(--bdr); border-radius: 9px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--blu), var(--grn)); width: 0; }
+header button, .box button { background: var(--blu); color: #04121a; border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer; }
+header label { color: var(--dim); display: inline; margin: 0; font-size: 14px; text-transform: none; letter-spacing: 0; }
+main { max-width: 980px; margin: 0 auto; padding: 16px; }
+.intro { background: var(--card); border: 1px solid var(--bdr); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; color: var(--dim); }
+.intro b { color: var(--txt); }
+.card { position: relative; display: flex; gap: 16px; background: var(--card); border: 1px solid var(--bdr); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+.card.next { border-color: var(--blu); box-shadow: 0 0 24px rgba(0,212,255,.25); }
+.card.isdone { opacity: .45; }
+.hide .card.isdone { display: none; }
+.num { position: absolute; left: -8px; top: -8px; background: var(--blu); color: #04121a; font-weight: 800; border-radius: 999px; min-width: 30px; height: 30px; display: grid; place-items: center; padding: 0 8px; }
+video { width: 200px; aspect-ratio: 9/16; background: #000; border-radius: 10px; flex: none; }
+.body { flex: 1; min-width: 0; }
+.when { font-size: 16px; }
+.file { color: var(--dim); font-size: 13px; margin: 4px 0 8px; word-break: break-all; }
+label { display: block; color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-top: 8px; }
+.box { display: flex; gap: 8px; align-items: flex-start; }
+pre { flex: 1; margin: 2px 0 0; white-space: pre-wrap; word-break: break-word; font: inherit; background: #111827; border: 1px solid var(--bdr); border-radius: 8px; padding: 8px 10px; max-height: 170px; overflow: auto; }
+.box button.ok { background: var(--grn); }
+.steps { margin-top: 10px; color: var(--dim); font-size: 13px; }
+.steps b { color: var(--txt); } a { color: var(--blu); }
+.done { margin-top: 10px; font-size: 15px; text-transform: none; letter-spacing: 0; color: var(--txt); cursor: pointer; }
+.done input { width: 18px; height: 18px; vertical-align: -3px; }
+@media (max-width: 640px) { .card { flex-direction: column; } video { width: 100%; max-width: 260px; } }
+</style></head>
+<body>
+<header>
+  <h1>PS5 Vault: shorty po kolei</h1>
+  <span class="prog" id="prog"></span>
+  <div class="bar"><i id="bar"></i></div>
+  <button id="next">Następny do wrzucenia ↓</button>
+  <label><input type="checkbox" id="hide"> ukryj wrzucone</label>
+</header>
+<main>
+  <div class="intro">
+    Kanał: <b>PS5 Vault</b> (nie Spokojny Rodzic). YouTube Studio → <b>Utwórz → Prześlij filmy</b>.
+    Przy każdym filmie: wklej tytuł i opis, ustaw <b>Język filmu</b>, dodaj okładkę i <b>Zaplanuj</b> na podaną datę i godzinę.
+    Ptaszek „Wrzucone” zapamiętuje ta przeglądarka. Plik musi leżeć w folderze <b>marketing</b>, obok folderu <b>shorts</b>.
+  </div>
+  ${cards}
+</main>
+<script>
+const KEY = 'ps5vault_shorts_done'
+let done = {}
+try { done = JSON.parse(localStorage.getItem(KEY) || '{}') } catch {}
+const cards = [...document.querySelectorAll('.card')]
+function save() { try { localStorage.setItem(KEY, JSON.stringify(done)) } catch {} }
+function refresh() {
+  let n = 0, next = null
+  for (const c of cards) {
+    const d = !!done[c.dataset.key]
+    c.classList.toggle('isdone', d)
+    c.querySelector('.done input').checked = d
+    c.classList.remove('next')
+    if (d) n++; else if (!next) next = c
+  }
+  if (next) next.classList.add('next')
+  document.getElementById('prog').textContent = n + ' / ' + cards.length + ' wrzuconych'
+  document.getElementById('bar').style.width = (100 * n / cards.length) + '%'
+  return next
+}
+for (const c of cards) c.querySelector('.done input').addEventListener('change', e => { done[c.dataset.key] = e.target.checked; save(); refresh() })
+document.getElementById('next').onclick = () => { const n = refresh(); if (n) n.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+document.getElementById('hide').onchange = e => document.body.classList.toggle('hide', e.target.checked)
+document.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
+  const text = document.getElementById(b.dataset.copy).value
+  try { await navigator.clipboard.writeText(text) } catch {
+    const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove()
+  }
+  const old = b.textContent; b.textContent = 'Skopiowane ✓'; b.classList.add('ok')
+  setTimeout(() => { b.textContent = old; b.classList.remove('ok') }, 1500)
+})
+refresh()
+</script>
+</body></html>
+`
+if (/[–—]/.test(html)) throw new Error('Długi myślnik w HTML')
+fs.writeFileSync(path.join(DIR, 'Shorts-PO-KOLEI.html'), html)
+console.log('marketing/Shorts-PO-KOLEI.html')
