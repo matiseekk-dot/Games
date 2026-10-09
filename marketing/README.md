@@ -6,6 +6,7 @@
 | Zrzuty do Google Play, 8 na język | `store/{język}/` |
 | Shorty YouTube / Reels / TikTok, 12 na język | `shorts/{język}/*.mp4` + `*-cover.png` |
 | Kanał, harmonogram, tytuły i opisy shortów | `SHORTS.md` |
+| Kanał YouTube: baner, opis w 7 językach, linki | `youtube/KANAL.md`, `youtube/banner.png` |
 | **Wrzucanie po kolei** (filmy, Kopiuj tytuł/opis, ptaszki) | `Shorts-PO-KOLEI.html` |
 
 Wszystko powstaje z prawdziwych ekranów apki z przykładową kolekcją 48 gier (`seed.mjs`).
