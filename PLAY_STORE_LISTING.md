@@ -35,10 +35,10 @@ Kategoria: **Rozrywka**. Tagi w Play Console: Gry wideo, Narzędzia, Finanse oso
 PS5 Vault: Tracker Gier
 ```
 
-**Krótki opis** (66/80)
+**Krótki opis** (69/80)
 
 ```
-Kolekcja gier, wydatki i podsumowanie roku. Bez konta, bez reklam.
+Kolekcja gier, godziny, wydatki i podsumowanie roku w jednym miejscu.
 ```
 
 **Pełny opis** (2915/4000)
@@ -119,10 +119,10 @@ Do tego lista życzeń z ceną docelową, obrazek „kupka wstydu” i 7 język�
 PS5 Vault: Game Tracker
 ```
 
-**Krótki opis** (75/80)
+**Krótki opis** (76/80)
 
 ```
-Track your games, spending and backlog. Year in review. No account, no ads.
+Track your game collection, hours, spending and backlog. Your year in games.
 ```
 
 **Pełny opis** (2976/4000)
@@ -203,10 +203,10 @@ Plus a wishlist with target prices, the pile of shame image and 7 languages.
 PS5 Vault: Tracker de Juegos
 ```
 
-**Krótki opis** (70/80)
+**Krótki opis** (73/80)
 
 ```
-Tu colección, tus gastos y tu resumen del año. Sin cuenta ni anuncios.
+Tu colección de juegos, horas, gastos y resumen del año en un solo lugar.
 ```
 
 **Pełny opis** (3156/4000)
@@ -287,10 +287,10 @@ Además: lista de deseos con precio objetivo, la imagen de tu pila de la vergüe
 PS5 Vault: Spiele-Tracker
 ```
 
-**Krótki opis** (71/80)
+**Krótki opis** (69/80)
 
 ```
-Spielesammlung, Ausgaben und Jahresrückblick. Ohne Konto, ohne Werbung.
+Spielesammlung, Spielzeit, Ausgaben und Jahresrückblick an einem Ort.
 ```
 
 **Pełny opis** (3252/4000)
@@ -374,7 +374,7 @@ PS5 Vault : Suivi de Jeux
 **Krótki opis** (72/80)
 
 ```
-Ta collection, tes dépenses et ton bilan de l’année. Sans compte ni pub.
+Ta collection de jeux, tes heures, tes dépenses et ton bilan de l’année.
 ```
 
 **Pełny opis** (3286/4000)
@@ -455,10 +455,10 @@ Et aussi : liste de souhaits avec prix cible, l’image de ta pile de la honte e
 PS5 Vault: Tracker Giochi
 ```
 
-**Krótki opis** (69/80)
+**Krótki opis** (73/80)
 
 ```
-Collezione, spese e riepilogo dell’anno. Senza account né pubblicità.
+Collezione di giochi, ore, spese e riepilogo dell’anno in un unico posto.
 ```
 
 **Pełny opis** (3185/4000)
@@ -539,10 +539,10 @@ In più: lista desideri con prezzo obiettivo, l’immagine della tua pila della 
 PS5 Vault: Controle de Jogos
 ```
 
-**Krótki opis** (76/80)
+**Krótki opis** (74/80)
 
 ```
-Sua coleção, seus gastos e a retrospectiva do ano. Sem conta e sem anúncios.
+Sua coleção de jogos, horas, gastos e a retrospectiva do ano num só lugar.
 ```
 
 **Pełny opis** (3086/4000)
