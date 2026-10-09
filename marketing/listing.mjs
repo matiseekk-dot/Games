@@ -23,12 +23,14 @@ PS5 Vault to prywatny tracker kolekcji gier. Dodajesz gry, a apka liczy godziny,
 📷 Zeskanuj kod kreskowy z pudełka i gra jest w kolekcji.
 📥 Masz już setki gier? Zaimportuj bibliotekę ze Steam, PSN, Xboxa albo Playnite (za darmo do 50 gier).
 🕹 PS5, PS4, Xbox, PC i Switch w jednym miejscu, także gry z PS Plus i Game Pass.
+🏷 Własne tagi i listy: „co-op”, „z Olą”, „na urlop”. Filtrujesz kolekcję jednym dotknięciem.
+⏱ Po sesji stuknij „+1 h”: godziny i seria dni grania liczą się same.
 
 ━━━ PIENIĄDZE POD KONTROLĄ ━━━
 💰 Ile wydałeś na gry, DLC i mikrotransakcje, a ile odzyskałeś ze sprzedaży.
 📉 Wydatki miesiąc po miesiącu i najdroższy miesiąc.
 🧊 Niezagrane gry: ile pieniędzy leży na półce.
-🎯 Lista życzeń z ceną docelową: wpisz, za ile kupisz, a apka powie, kiedy trafiłeś na promocję.
+🎯 Lista życzeń z ceną docelową: wpisz, za ile kupisz, a apka powie, kiedy trafiłeś na promocję. Jednym dotknięciem sprawdzisz też historię cen w PS Store.
 
 ━━━ KUPKA WSTYDU I PODSUMOWANIE ROKU ━━━
 📦 Twoja kupka wstydu na jednym obrazku: ile gier i ile złotych czeka. Udostępnij znajomym.
@@ -85,12 +87,14 @@ PS5 Vault is a private tracker for your game collection. Add your games and the 
 📷 Scan the barcode on the box and the game is in your collection.
 📥 Hundreds of games already? Import your library from Steam, PSN, Xbox or Playnite (free up to 50 games).
 🕹 PS5, PS4, Xbox, PC and Switch in one place, including PS Plus and Game Pass games.
+🏷 Your own tags and lists: "co-op", "with Sam", "for the holidays". Filter the collection with one tap.
+⏱ After a session, tap "+1 h": hours and your daily play streak add up by themselves.
 
 ━━━ MONEY UNDER CONTROL ━━━
 💰 What you spent on games, DLC and microtransactions, and what you got back from selling.
 📉 Spending month by month and your most expensive month.
 🧊 Unplayed games: how much money is sitting on the shelf.
-🎯 Wishlist with a target price: say what you would pay and the app tells you when the sale is good enough.
+🎯 Wishlist with a target price: say what you would pay and the app tells you when the sale is good enough. One tap also shows the PS Store price history.
 
 ━━━ PILE OF SHAME AND YEAR IN GAMES ━━━
 📦 Your pile of shame in one image: how many games and how much money are waiting. Share it with friends.
@@ -147,12 +151,14 @@ PS5 Vault es un tracker privado para tu colección de juegos. Añade tus juegos 
 📷 Escanea el código de barras de la caja y el juego ya está en tu colección.
 📥 ¿Ya tienes cientos de juegos? Importa tu biblioteca de Steam, PSN, Xbox o Playnite (gratis hasta 50 juegos).
 🕹 PS5, PS4, Xbox, PC y Switch en un solo lugar, también juegos de PS Plus y Game Pass.
+🏷 Tus propias etiquetas y listas: "coop", "con Ana", "para vacaciones". Filtra la colección con un toque.
+⏱ Después de jugar, toca "+1 h": las horas y tu racha de días se suman solas.
 
 ━━━ TU DINERO BAJO CONTROL ━━━
 💰 Cuánto gastaste en juegos, DLC y microtransacciones, y cuánto recuperaste al venderlos.
 📉 Gastos mes a mes y tu mes más caro.
 🧊 Juegos sin jugar: cuánto dinero está parado en la estantería.
-🎯 Lista de deseos con precio objetivo: indica cuánto pagarías y la app te avisa cuando la oferta merece la pena.
+🎯 Lista de deseos con precio objetivo: indica cuánto pagarías y la app te avisa cuando la oferta merece la pena. Con un toque ves también el historial de precios de PS Store.
 
 ━━━ PILA DE LA VERGÜENZA Y AÑO EN JUEGOS ━━━
 📦 Tu pila de la vergüenza en una imagen: cuántos juegos y cuánto dinero esperan. Compártela con tus amigos.
@@ -209,12 +215,14 @@ PS5 Vault ist ein privater Tracker für deine Spielesammlung. Du trägst deine S
 📷 Barcode auf der Hülle scannen und das Spiel ist in deiner Sammlung.
 📥 Schon Hunderte Spiele? Importiere deine Bibliothek aus Steam, PSN, Xbox oder Playnite (kostenlos bis 50 Spiele).
 🕹 PS5, PS4, Xbox, PC und Switch an einem Ort, auch Spiele aus PS Plus und Game Pass.
+🏷 Eigene Tags und Listen: „Koop“, „mit Ben“, „für den Urlaub“. Filtere die Sammlung mit einem Tipp.
+⏱ Nach dem Zocken auf „+1 Std.“ tippen: Stunden und deine Tage-Serie zählen von selbst.
 
 ━━━ GELD IM BLICK ━━━
 💰 Was du für Spiele, DLCs und Mikrotransaktionen ausgegeben und durch Verkäufe zurückbekommen hast.
 📉 Ausgaben Monat für Monat und dein teuerster Monat.
 🧊 Ungespielte Spiele: wie viel Geld im Regal liegt.
-🎯 Wunschliste mit Zielpreis: Trag ein, was du zahlen würdest, und die App sagt dir, wann das Angebot passt.
+🎯 Wunschliste mit Zielpreis: Trag ein, was du zahlen würdest, und die App sagt dir, wann das Angebot passt. Mit einem Tipp siehst du auch den PS-Store-Preisverlauf.
 
 ━━━ PILE OF SHAME UND JAHR IN SPIELEN ━━━
 📦 Dein Pile of Shame auf einem Bild: wie viele Spiele und wie viel Geld warten. Teile es mit Freunden.
@@ -271,12 +279,14 @@ PS5 Vault est un suivi privé pour ta collection de jeux. Ajoute tes jeux, l’a
 📷 Scanne le code-barres de la boîte et le jeu est dans ta collection.
 📥 Déjà des centaines de jeux ? Importe ta bibliothèque depuis Steam, PSN, Xbox ou Playnite (gratuit jusqu’à 50 jeux).
 🕹 PS5, PS4, Xbox, PC et Switch au même endroit, y compris les jeux PS Plus et Game Pass.
+🏷 Tes propres tags et listes : « coop », « avec Léa », « pour les vacances ». Filtre la collection d’un geste.
+⏱ Après une session, touche « +1 h » : les heures et ta série de jours se comptent toutes seules.
 
 ━━━ TON ARGENT SOUS CONTRÔLE ━━━
 💰 Ce que tu as dépensé en jeux, DLC et microtransactions, et ce que tu as récupéré en les revendant.
 📉 Tes dépenses mois par mois et ton mois le plus cher.
 🧊 Jeux pas encore lancés : combien d’argent dort sur l’étagère.
-🎯 Liste de souhaits avec prix cible : indique combien tu paierais et l’app te dit quand la promo vaut le coup.
+🎯 Liste de souhaits avec prix cible : indique combien tu paierais et l’app te dit quand la promo vaut le coup. Un geste suffit pour voir l’historique des prix du PS Store.
 
 ━━━ PILE DE LA HONTE ET ANNÉE EN JEUX ━━━
 📦 Ta pile de la honte en une image : combien de jeux et combien d’argent attendent. Partage-la avec tes amis.
@@ -333,12 +343,14 @@ PS5 Vault è un tracker privato per la tua collezione di giochi. Aggiungi i tuoi
 📷 Scansiona il codice a barre della confezione e il gioco è nella tua collezione.
 📥 Hai già centinaia di giochi? Importa la tua libreria da Steam, PSN, Xbox o Playnite (gratis fino a 50 giochi).
 🕹 PS5, PS4, Xbox, PC e Switch in un unico posto, compresi i giochi di PS Plus e Game Pass.
+🏷 Tag e liste tutte tue: "co-op", "con Luca", "per le vacanze". Filtri la collezione con un tocco.
+⏱ Dopo una sessione tocca "+1 h": ore e serie di giorni di gioco si contano da sole.
 
 ━━━ SOLDI SOTTO CONTROLLO ━━━
 💰 Quanto hai speso in giochi, DLC e microtransazioni e quanto hai recuperato vendendoli.
 📉 Spese mese per mese e il tuo mese più caro.
 🧊 Giochi mai avviati: quanti soldi restano fermi sullo scaffale.
-🎯 Lista desideri con prezzo obiettivo: scrivi quanto pagheresti e l’app ti dice quando l’offerta è quella giusta.
+🎯 Lista desideri con prezzo obiettivo: scrivi quanto pagheresti e l’app ti dice quando l’offerta è quella giusta. Con un tocco vedi anche lo storico prezzi del PS Store.
 
 ━━━ PILA DELLA VERGOGNA E ANNO IN GIOCHI ━━━
 📦 La tua pila della vergogna in un’immagine: quanti giochi e quanti soldi ti aspettano. Condividila con gli amici.
@@ -395,12 +407,14 @@ PS5 Vault é um controle particular da sua coleção de jogos. Você adiciona se
 📷 Escaneie o código de barras da caixa e o jogo já está na sua coleção.
 📥 Já tem centenas de jogos? Importe sua biblioteca da Steam, PSN, Xbox ou Playnite (grátis até 50 jogos).
 🕹 PS5, PS4, Xbox, PC e Switch num só lugar, incluindo jogos da PS Plus e do Game Pass.
+🏷 Suas próprias tags e listas: "co-op", "com a Ana", "para as férias". Filtre a coleção com um toque.
+⏱ Depois de jogar, toque em "+1 h": as horas e sua sequência de dias somam sozinhas.
 
 ━━━ DINHEIRO SOB CONTROLE ━━━
 💰 Quanto você gastou com jogos, DLCs e microtransações, e quanto recuperou vendendo.
 📉 Gastos mês a mês e o seu mês mais caro.
 🧊 Jogos nunca jogados: quanto dinheiro está parado na estante.
-🎯 Lista de desejos com preço-alvo: diga quanto pagaria e o app avisa quando a promoção vale a pena.
+🎯 Lista de desejos com preço-alvo: diga quanto pagaria e o app avisa quando a promoção vale a pena. Com um toque você vê também o histórico de preços da PS Store.
 
 ━━━ PILHA DA VERGONHA E ANO EM JOGOS ━━━
 📦 Sua pilha da vergonha numa imagem: quantos jogos e quanto dinheiro estão esperando. Compartilhe com os amigos.

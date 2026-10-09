@@ -3,6 +3,7 @@
 | Co | Gdzie |
 |---|---|
 | Teksty do Google Play (7 języków) | `../PLAY_STORE_LISTING.md` (źródło: `listing.mjs`) |
+| Jeden plik z opisami w 7 językach do „Importuj tłumaczenia za pomocą AI” w Play Console | `store/PS5Vault-tlumaczenia-sklep.txt` |
 | Zrzuty do Google Play, 8 na język | `store/{język}/` |
 | Shorty YouTube / Reels / TikTok, 12 na język | `shorts/{język}/*.mp4` + `*-cover.png` |
 | Kanał, harmonogram, tytuły i opisy shortów | `SHORTS.md` |
@@ -21,6 +22,7 @@ node marketing/build-store-shots.mjs      # zrzuty do sklepu
 node marketing/build-shorts.mjs           # shorty (np. tylko: node marketing/build-shorts.mjs pl 01)
 node marketing/build-shorts-copy.mjs      # SHORTS.md
 node marketing/listing.mjs && node marketing/build-listing.mjs   # PLAY_STORE_LISTING.md
+node marketing/build-store-translations.mjs   # plik do importu tłumaczeń w Play Console
 ```
 
 Potrzebne: Node, ffmpeg (`FFMPEG_PATH=...`, jeśli nie ma go w PATH) i Playwright z Chromium
