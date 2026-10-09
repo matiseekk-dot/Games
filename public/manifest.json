@@ -1,8 +1,8 @@
 {
   "id": "ps5vault",
-  "name": "PS5 Vault — Game Tracker",
+  "name": "PS5 Vault: Game Tracker",
   "short_name": "PS5 Vault",
-  "description": "Spotify Wrapped dla Twoich gier + finansowy audyt + skanowanie EAN",
+  "description": "Tracker kolekcji gier: wydatki, kupka wstydu, premiery i podsumowanie roku. Bez konta i bez reklam.",
   "start_url": "/Games/",
   "scope": "/Games/",
   "display": "standalone",

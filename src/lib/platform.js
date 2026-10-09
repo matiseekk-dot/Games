@@ -36,6 +36,13 @@ export async function checkReleases(games, lang) {
   try {
     const reg = await navigator.serviceWorker.ready;
     reg.active?.postMessage({ type:'CHECK_RELEASES', games, lang:lang || 'pl' });
+    // v1.21.2 - background re-check about twice a day (Chrome/Android; silently skipped
+    // where Periodic Background Sync isn't available or allowed)
+    if (reg.periodicSync) {
+      let ok = true;
+      try { const st = await navigator.permissions.query({ name: 'periodic-background-sync' }); ok = st.state === 'granted'; } catch {}
+      if (ok) await reg.periodicSync.register('ps5vault-releases', { minInterval: 12 * 3600 * 1000 }).catch(() => {});
+    }
   } catch {}
 }
 

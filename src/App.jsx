@@ -5,7 +5,7 @@ import {
   APP_VER,
   LS_LANG, LS_CURRENCY,
   G, GENRES_PL, GENRES_EN, GENRES_BY_LANG, LANGS, READY_LANGS, localeFor, localizeGenre, STORES, PLATFORMS, SOURCES, isOwned, CURRENCIES, EF,
-  PRO_ENABLED, FREE_IMPORT_LIMIT, PLAY_STORE_URL,
+  PRO_ENABLED, FREE_IMPORT_LIMIT, PLAY_STORE_URL, CPH_POOR,
 } from './constants.js';
 import { CSS } from './styles.js';
 import { t, getSM } from './i18n.js';
@@ -229,7 +229,7 @@ function RawgCredit({lang}){
 
 function Toast({msg,onUndo,lang}){
   if(!msg)return null;
-  const type=msg.startsWith('❌')?'err':msg.startsWith('ℹ')?'info':'ok';
+  const type=msg.startsWith('❌')||msg.startsWith('⚠')?'err':msg.startsWith('ℹ')?'info':'ok';
   return<div className={`toast toast-${type}`}>{msg}{onUndo&&<button type='button' className='toast-undo' onClick={onUndo}>{t(lang,'undo')}</button>}</div>;
 }
 
@@ -259,7 +259,7 @@ function Confirm({title,body,onYes,onNo,lang}){
 // This banner only fires for genuine NEW unlocks during the session.
 function AchievementBanner({ ach, queueLen, onTap, onDismiss, lang }){
   if(!ach) return null;
-  const title = ach.title?.[lang] || ach.title?.pl || ach.id;
+  const title = ach.title?.[lang] || ach.title?.en || ach.id;
   return (
     <div className={'ach-banner'+(ach.rare?' rare':'')} onClick={onTap}>
       <div className='ach-banner-ico'>{ach.ico||'🏆'}</div>
@@ -590,7 +590,7 @@ function BarcodeScanner({ onPick, onBulkAdd, onClose, lang, mode='single' }){
                   {r.cover ? <img className='rthm' src={coverThumb(r.cover)} alt='' loading='lazy' onError={e=>{e.currentTarget.style.visibility='hidden';}}/> : <div className='rph'>🎮</div>}
                   <div className='rinf'>
                     <div className='rnm'>{r.title}</div>
-                    <div className='rmt'>{r.year}{r.genre?' · '+r.genre:''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div>
+                    <div className='rmt'>{r.year}{r.genre?' · '+localizeGenre(r.genre,lang):''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div>
                   </div>
                 </div>
               ))}
@@ -702,13 +702,16 @@ function RawgSearch({onSelect,lang}){
         {busy&&res.length===0&&<div style={{padding:'14px',textAlign:'center',color:'#8B93A7',fontSize:11}}>{t(lang,'rawgSearching')}</div>}
         {!busy&&res.length===0&&q.trim()&&<div style={{padding:'14px 12px',textAlign:'center'}}>
           <div style={{fontSize:22,marginBottom:6}}>🔍</div>
-          <div style={{fontSize:12,fontWeight:700,color:G.txt,marginBottom:3}}>{t(lang,'rawgNotFound')}</div>
-          <div style={{fontSize:10,color:G.dim,lineHeight:1.4}}>{t(lang,'rawgNotFoundHint')}</div>
+          {/* v1.21.2 - a failed request (offline) used to say "not found" */}
+          {typeof navigator!=='undefined'&&navigator.onLine===false
+            ? <div style={{fontSize:11,color:G.dim,lineHeight:1.4}}>{t(lang,'rawgOffline')}</div>
+            : <><div style={{fontSize:12,fontWeight:700,color:G.txt,marginBottom:3}}>{t(lang,'rawgNotFound')}</div>
+              <div style={{fontSize:10,color:G.dim,lineHeight:1.4}}>{t(lang,'rawgNotFoundHint')}</div></>}
         </div>}
         {res.map(r=>(
         <div key={r.id} className='rit' onClick={()=>pick(r)}>
           {r.cover?<img className='rthm' src={coverThumb(r.cover)} alt='' loading='lazy' onError={e=>{e.currentTarget.style.visibility='hidden';}}/>:<div className='rph'>🎮</div>}
-          <div className='rinf'><div className='rnm'>{r.title}</div><div className='rmt'>{r.year}{r.genre?' · '+r.genre:''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div></div>
+          <div className='rinf'><div className='rnm'>{r.title}</div><div className='rmt'>{r.year}{r.genre?' · '+localizeGenre(r.genre,lang):''}{r.releaseDate?' · '+fmtDate(r.releaseDate,lang):''}</div></div>
         </div>
       ))}</div>}
       {scanOpen && <BarcodeScanner onPick={pickFromScan} onClose={()=>setScanOpen(false)} lang={lang}/>}
@@ -1088,7 +1091,7 @@ function Home({games,onOpen,onStatusChange,onAddFirst,onToggleNotify,lang,welcom
                 {g.cover?<div className='cont-cover' style={{backgroundImage:`url(${coverThumb(g.cover)})`}}/>:<div className='cont-cover0'>{g.abbr||'??'}</div>}
                 <div className='cont-body'>
                   <div className='cont-title'>{g.title}</div>
-                  <div className='cont-meta'>{[g.genre,g.hours&&t(lang,'hoursPlayed',{h:fmtHours(g.hours)})].filter(Boolean).join(' · ')}</div>
+                  <div className='cont-meta'>{[localizeGenre(g.genre,lang),g.hours&&t(lang,'hoursPlayed',{h:fmtHours(g.hours)})].filter(Boolean).join(' · ')}</div>
                   {gProg!==null?(<><div className='prog-bar'><div className='prog-fill' style={{width:gProg+'%'}}/></div><div className='prog-label'><span>{t(lang,'progComplete',{n:gProg})}</span>{gProg<100&&<span>~{fmtHours(gRem)} {t(lang,'remaining')}</span>}</div></>):(g.hours>0&&<div style={{fontSize:11,color:G.dim}}>{t(lang,'addTargetHint')}</div>)}
                 </div>
               </div>
@@ -1209,7 +1212,7 @@ function UpcomingCard({g,d,lang,onOpen,onStatusChange,onToggleNotify,onRequestNo
           : <div className='upc-bd'>{d}d</div>}
       </div>
       <div className='upc-body'>
-        <div className='upc-date'>{fmtDate(g.releaseDate,lang)}{g.genre?' · '+g.genre:''}</div>
+        <div className='upc-date'>{fmtDate(g.releaseDate,lang)}{g.genre?' · '+localizeGenre(g.genre,lang):''}</div>
         <div className='upc-acts'>{d===0
           ? (<><button type='button' className='upc-btn upc-btn-play' onClick={()=>onStatusChange(g.id,'gram')}>{t(lang,'startPlaying')}</button><button type='button' className='upc-btn upc-btn-add' onClick={()=>onOpen(g)}>{t(lang,'addToColl')}</button></>)
           : (<>
@@ -1472,7 +1475,7 @@ function Stats({games,lang}){
   const genreHoursData = Object.entries(hoursByGenre)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([n, v]) => ({ n, v: Math.round(v) }));
+    .map(([n, v]) => ({ n: localizeGenre(n, lang), v: Math.round(v) }));
 
   // Backlog runway: at user's historical pace, how long to clear backlog?
   // Uses average yearly hours from user's library spread (best estimate without
@@ -1515,7 +1518,7 @@ function Stats({games,lang}){
   const kpis=[{l:t(lang,'gamesTotal'),v:games.length,c:G.blu},{l:t(lang,'completed2'),v:games.filter(g=>g.status==='ukonczone').length,c:G.grn},{l:t(lang,'hoursTotal'),v:fmtHours(hrs),c:G.pur},{l:t(lang,'avgRating'),v:avg,c:G.gld}];
   const sData=Object.entries(SM2).map(([k,m])=>({n:m.label,v:games.filter(g=>g.status===k).length,c:m.c})).filter(d=>d.v>0);
   const gMap={}; games.forEach(g=>{if(g.genre)gMap[g.genre]=(gMap[g.genre]||0)+1;});
-  const gData=Object.entries(gMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v}));
+  const gData=Object.entries(gMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n:localizeGenre(n,lang),v}));
   const buckets=[1,2,3,4,5,6,7,8,9,10].map(r=>({n:String(r),v:games.filter(g=>g.rating!=null&&Math.round(g.rating)===r).length,min:0.01}));
   const bought=games.filter(g=>isOwned(g) && !!+g.priceBought);
   const sold=games.filter(g=>isOwned(g) && g.priceSold!=null&&!!+g.priceSold);
@@ -1529,7 +1532,7 @@ function Stats({games,lang}){
   const storeMap={}; bought.forEach(g=>{const s=g.storeBought||'Other';storeMap[s]=(storeMap[s]||0)+ +g.priceBought;});
   const storeData=Object.entries(storeMap).sort((a,b)=>b[1]-a[1]).map(([n,v])=>({n,v:+v.toFixed(0)}));
   const gcMap={}; bought.forEach(g=>{if(g.genre)gcMap[g.genre]=(gcMap[g.genre]||0)+ +g.priceBought;});
-  const gcData=Object.entries(gcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v:+v.toFixed(0)}));
+  const gcData=Object.entries(gcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n:localizeGenre(n,lang),v:+v.toFixed(0)}));
   const soldG=sold.map(g=>({...g,roi:+g.priceSold - +g.priceBought})).sort((a,b)=>b.roi-a.roi);
   const fkpis=[
     {l:t(lang,'spent'),        v:pln(totalBase,lang),   c:G.red, bg:'rgba(255,77,109,.07)'},
@@ -1547,7 +1550,7 @@ function Stats({games,lang}){
     const bCph=[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours))[0];
     if(worst)insights.push({ico:'📉',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:worst.title,amount:pln(Math.abs(worst.roi),lang)}),val:'-'+pln(Math.abs(worst.roi),lang)});
     if(best)insights.push({ico:'📈',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestDesc',{title:best.title,amount:pln(best.roi,lang)}),val:'+'+pln(best.roi,lang)});
-    if(wCph&&wCph.hours>0)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,28,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:wCph.title,cph:fmtCph(+wCph.priceBought/wCph.hours).replace('/h','')}),val:fmtCph(+wCph.priceBought/wCph.hours)});
+    if(wCph&&wCph.hours>0)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,28,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:wCph.title,cph:fmtCph(+wCph.priceBought/wCph.hours).replace('/h',''),limit:fmtCph(CPH_POOR[getCurrency()]||10).replace('/h','')}),val:fmtCph(+wCph.priceBought/wCph.hours)});
     if(bCph&&bCph.hours>0)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bCph.title,cph:fmtCph(+bCph.priceBought/bCph.hours).replace('/h','')}),val:fmtCph(+bCph.priceBought/bCph.hours)});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
@@ -1849,7 +1852,7 @@ function Finance({games,lang,proLocked=false,onUnlock,onShareShame}){
   const storeMap={}; bought.forEach(g=>{const s=g.storeBought||'Other';storeMap[s]=(storeMap[s]||0)+ +g.priceBought;});
   const storeData=Object.entries(storeMap).sort((a,b)=>b[1]-a[1]).map(([n,v])=>({n,v:+v.toFixed(0)}));
   const gcMap={}; bought.forEach(g=>{if(g.genre)gcMap[g.genre]=(gcMap[g.genre]||0)+ +g.priceBought;});
-  const gcData=Object.entries(gcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n,v:+v.toFixed(0)}));
+  const gcData=Object.entries(gcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,v])=>({n:localizeGenre(n,lang),v:+v.toFixed(0)}));
   const soldG=sold.map(g=>({...g,roi:+g.priceSold - +g.priceBought})).sort((a,b)=>b.roi-a.roi);
   // Monthly spending - last 12 months, oldest first for chart left-to-right
   // Aggregates priceBought + extraSpend per month based on g.addedAt (UTC ok for trend visualization)
@@ -1929,7 +1932,7 @@ function Finance({games,lang,proLocked=false,onUnlock,onShareShame}){
     genreAgg[ge].count++;
   });
   const perGenreData=Object.entries(genreAgg)
-    .map(([n,v])=>({n,cph:v.cost/v.hours,hours:v.hours,count:v.count}))
+    .map(([n,v])=>({n:localizeGenre(n,lang),cph:v.cost/v.hours,hours:v.hours,count:v.count}))
     .filter(d=>d.count>=1)  // at least 1 game with hours
     .sort((a,b)=>a.cph-b.cph)  // best (lowest) first
     .slice(0,5);
@@ -1976,7 +1979,8 @@ function Finance({games,lang,proLocked=false,onUnlock,onShareShame}){
     const biggestLossGame=abandoned.sort((a,b)=>+b.priceBought - +a.priceBought)[0];
     const completedROI=sold.map(g=>({...g,roi:+g.priceSold - +g.priceBought})).filter(g=>g.roi>0).sort((a,b)=>b.roi-a.roi);
     const bestInvestGame=completedROI[0];
-    const expensiveHours=withHrs.filter(g=>+g.priceBought/g.hours>10).sort((a,b)=>(+b.priceBought/b.hours)-(+a.priceBought/a.hours));
+    const cphPoor=CPH_POOR[getCurrency()]||10;
+    const expensiveHours=withHrs.filter(g=>+g.priceBought/g.hours>cphPoor).sort((a,b)=>(+b.priceBought/b.hours)-(+a.priceBought/a.hours));
     const mostExpHour=expensiveHours[0];
     const bestValGame=[...withHrs].sort((a,b)=>(+a.priceBought/a.hours)-(+b.priceBought/b.hours))[0];
     const savingsFromAvoidance=biggestLossGame?Math.round(+biggestLossGame.priceBought*0.3):0;
@@ -1984,7 +1988,7 @@ function Finance({games,lang,proLocked=false,onUnlock,onShareShame}){
     if(totalPotentialSavings>0)insights.push({ico:'💡',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'potentialSaving'),body:t(lang,'savingsDesc',{amount:pln(totalPotentialSavings,lang)}),val:pln(totalPotentialSavings,lang),big:true});
     if(biggestLossGame)insights.push({ico:'🚨',color:G.red,bg:'rgba(255,77,109,.07)',title:t(lang,'biggestLoss'),body:t(lang,'biggestLossDesc',{title:biggestLossGame.title,amount:pln(+biggestLossGame.priceBought,lang)}),val:'-'+pln(+biggestLossGame.priceBought,lang),actionKey:'avoidLoss'});
     if(bestInvestGame)insights.push({ico:'✅',color:G.grn,bg:'rgba(57,255,110,.07)',title:t(lang,'bestInvestment'),body:t(lang,'bestInvestmentDesc',{title:bestInvestGame.title,amount:pln(bestInvestGame.roi,lang)}),val:'+'+pln(bestInvestGame.roi,lang),actionKey:'buyBetter'});
-    if(mostExpHour)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,64,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:mostExpHour.title,cph:fmtCph(+mostExpHour.priceBought/mostExpHour.hours).replace('/h','')}),val:fmtCph(+mostExpHour.priceBought/mostExpHour.hours),actionKey:'optimizeBacklog'});
+    if(mostExpHour)insights.push({ico:'⚠️',color:G.org,bg:'rgba(255,159,64,.07)',title:t(lang,'mostExpensiveHours'),body:t(lang,'expHoursDesc',{title:mostExpHour.title,cph:fmtCph(+mostExpHour.priceBought/mostExpHour.hours).replace('/h',''),limit:fmtCph(cphPoor).replace('/h','')}),val:fmtCph(+mostExpHour.priceBought/mostExpHour.hours),actionKey:'optimizeBacklog'});
     if(bestValGame)insights.push({ico:'💎',color:G.blu,bg:'rgba(0,212,255,.07)',title:t(lang,'bestValueShort'),body:t(lang,'bestValDesc',{title:bestValGame.title,cph:fmtCph(+bestValGame.priceBought/bestValGame.hours).replace('/h','')}),val:fmtCph(+bestValGame.priceBought/bestValGame.hours),actionKey:'findSimilar'});
     if(totalSpent>0)insights.push({ico:'💰',color:G.pur,bg:'rgba(167,139,250,.07)',title:t(lang,'financeSummary'),body:t(lang,'finSummaryDesc',{spent:pln(totalSpent,lang),earned:pln(totalEarned,lang),net:pln(netCost,lang)}),val:pln(netCost,lang)});
   }
@@ -2459,7 +2463,6 @@ function YearInReview({ games, lang, onClose, flash }){
   const defaultYear = years.includes(currentYear) ? currentYear : (years[0] || currentYear);
   const [year,setYear]=useState(defaultYear);
   const review=computeYearReview(games, year);
-  const sym=getCurSymbol();
   // v1.7.0: native share sheet with clipboard fallback.
   async function handleShare(){
     if(!review) return;
@@ -2473,7 +2476,7 @@ function YearInReview({ games, lang, onClose, flash }){
     const result = await shareText({
       title: t(lang,'wrappedShareTitle',{year}),
       text,
-      url: 'https://matiseekk-dot.github.io/Games/',
+      url: PLAY_STORE_URL,
     });
     if(result==='shared')   { /* OS handled it */ }
     else if(result==='copied')    { flash && flash(t(lang,'wrappedShareCopied')); }
@@ -2569,7 +2572,7 @@ function YearInReview({ games, lang, onClose, flash }){
                   {g.cover ? <img className='wr-cov' src={coverThumb(g.cover)} alt='' loading='lazy' onError={e=>{e.currentTarget.style.visibility='hidden';}}/> : <div className='wr-cov0'>{g.abbr||'??'}</div>}
                   <div className='wr-row-body'>
                     <div className='wr-row-title'>{g.title}</div>
-                    <div className='wr-row-meta'>{Math.round(entry.hours)}h{g.genre?' · '+g.genre:''}</div>
+                    <div className='wr-row-meta'>{Math.round(entry.hours)}h{g.genre?' · '+localizeGenre(g.genre,lang):''}</div>
                   </div>
                 </div>
               );
@@ -2591,7 +2594,7 @@ function YearInReview({ games, lang, onClose, flash }){
           {/* Top genre */}
           {review.topGenre && <div className='wr-card'>
             <div className='wr-card-h'>{t(lang,'wrappedTopGenre')}</div>
-            <div className='wr-genre-name'>{review.topGenre.name}</div>
+            <div className='wr-genre-name'>{localizeGenre(review.topGenre.name,lang)}</div>
             <div className='wr-genre-meta'>{t(lang,'wrappedTopGenreDesc',{n:review.topGenre.hours, hrs:hoursWord(review.topGenre.hours,lang), games:review.topGenre.gamesCount, gw:gamesWord(review.topGenre.gamesCount,lang)})}</div>
           </div>}
 
@@ -2599,11 +2602,11 @@ function YearInReview({ games, lang, onClose, flash }){
           {(review.totalSpent>0 || review.totalRecovered>0) && (
             <div className='wr-grid'>
               <div className='wr-stat'>
-                <div className='wr-stat-num' style={{color:G.org}}>{Math.round(review.totalSpent)}{sym}</div>
+                <div className='wr-stat-num' style={{color:G.org}}>{pln(review.totalSpent,lang)}</div>
                 <div className='wr-stat-lbl'>{t(lang,'wrappedSpent')}</div>
               </div>
               <div className='wr-stat'>
-                <div className='wr-stat-num' style={{color:G.grn}}>{Math.round(review.totalRecovered)}{sym}</div>
+                <div className='wr-stat-num' style={{color:G.grn}}>{pln(review.totalRecovered,lang)}</div>
                 <div className='wr-stat-lbl'>{t(lang,'wrappedRecovered')}</div>
               </div>
             </div>
@@ -2909,9 +2912,12 @@ function Settings({games,setGames,flash,lang,setLang,currency,setCurrency,openIm
       </div>
       <div className='set-section'>
         <div className='set-section-title'>{t(lang,'support')}</div>
-        <div className='set-row' onClick={()=>window.open('https://buycoffee.to/skudev','_blank','noopener,noreferrer')}>
+        {/* v1.21.2 - Google Play's payments policy treats tips to the developer as digital
+            goods that must go through Play Billing, so the external tip link is web-only.
+            In the Play app, support = Pro. */}
+        {getPlatform()!=='play'&&<div className='set-row' onClick={()=>window.open('https://buycoffee.to/skudev','_blank','noopener,noreferrer')}>
           <span className='set-row-ico'>☕</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'buyCoffee')}</div><div className='set-row-desc'>{t(lang,'buyCoffeeDesc')}</div></div><span className='set-row-arrow'>›</span>
-        </div>
+        </div>}
         {getPlatform()==='play'&&<div className='set-row' onClick={()=>{ writeRate({rated:true}); track('rate_click',{from:'settings'}); window.location.href=PLAY_REVIEW_URL; }}>
           <span className='set-row-ico'>⭐</span><div className='set-row-body'><div className='set-row-title'>{t(lang,'rateRowTitle')}</div><div className='set-row-desc'>{t(lang,'rateRowDesc')}</div></div><span className='set-row-arrow'>›</span>
         </div>}
@@ -3636,7 +3642,7 @@ function BudgetEditor({budget,setBudget,games,flash,lang}){
           <input className='fi' style={{flex:1}} inputMode='decimal'
             placeholder={t(lang,'budgetPlaceholder')}
             value={draft}
-            onChange={e=>setDraft(e.target.value.replace(/[^\d.]/g,''))}
+            onChange={e=>setDraft(e.target.value.replace(/[^\d.,\s]/g,''))}
             onKeyDown={e=>{if(e.key==='Enter')commit();}}
             autoFocus={!budget.amount}/>
           <button type='button' onClick={commit}
@@ -3769,7 +3775,23 @@ export default function App(){
       return next;
     });
   },[]);
-  useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&Notification.permission==='granted')checkReleases(g,lang);});},[]);// eslint-disable-line
+  useEffect(()=>{registerSW().then(()=>{const g=games.filter(g=>g.notifyEnabled&&g.releaseDate);if(g.length&&typeof Notification!=='undefined'&&Notification.permission==='granted')checkReleases(g,lang);});},[]);// eslint-disable-line
+  // v1.21.2 - re-check release reminders whenever the app comes back to the foreground (a
+  // phone app is rarely restarted, so the mount-only check missed exact days) and keep the
+  // service worker's background list current after the user edits games
+  const gamesRef=useRef(games); gamesRef.current=games;
+  const langRef=useRef(lang); langRef.current=lang;
+  useEffect(()=>{
+    const run=()=>{ if(document.visibilityState!=='visible'||typeof Notification==='undefined'||Notification.permission!=='granted') return;
+      checkReleases(gamesRef.current.filter(g=>g.notifyEnabled&&g.releaseDate),langRef.current); };
+    document.addEventListener('visibilitychange',run);
+    return ()=>document.removeEventListener('visibilitychange',run);
+  },[]);
+  const notifySig=games.filter(g=>g.notifyEnabled&&g.releaseDate).map(g=>g.id+g.releaseDate+g.title).join('|');
+  useEffect(()=>{
+    if(typeof Notification==='undefined'||Notification.permission!=='granted') return;
+    checkReleases(gamesRef.current.filter(g=>g.notifyEnabled&&g.releaseDate),langRef.current);
+  },[notifySig,lang]);
   // v1.17.7 - Funnel analytics (no-op until UMAMI_WEBSITE_ID is set). first_open only for
   // fresh installs: anyone already past onboarding is an existing user, not a new one.
   useEffect(()=>{
@@ -4017,14 +4039,38 @@ export default function App(){
       || (form.status==='gram' && prevGame?.status!=='gram')
       || (isCompleted && !wasCompleted);
     const lastPlayed = playedNow ? now : (form.lastPlayed||null);
-    const game={...form,id,addedAt:form.addedAt||now,completedAt,lastPlayed};
+    // v1.21.2 - logging more hours counts as a play day. Since the session timer went away
+    // (v1.17.4) nothing created sessions, so the 7/30-day streak achievements and the weekly
+    // summary could never trigger for new users. Record the added hours as today's session.
+    const added = (+form.hours||0) - (+prevGame?.hours||0);
+    const sessions = isEdit && added > 0
+      ? [...(Array.isArray(form.sessions)?form.sessions:[]), { startedAt: now, endedAt: now, hours: Math.round(added*100)/100 }]
+      : (Array.isArray(form.sessions)?form.sessions:[]);
+    const game={...form,id,addedAt:form.addedAt||now,completedAt,lastPlayed,sessions};
     // Fix zombie timer: if edit sets status away from 'gram' while this game's timer is active, clean it up
     if(isEdit && game.status!=='gram'){
       const t=timerRead(); if(t&&t.gameId===id) timerWrite(null);
     }
+    const nextGames=isEdit?games.map(g=>g.id===id?game:g):[...games,game];
     setGames(prev=>isEdit?prev.map(g=>g.id===id?game:g):[...prev,game]);
-    setModal(null);flash(isEdit?t(lang,'saved'):t(lang,'added'));
+    setModal(null);
+    // v1.21.2 - the Pro "budget with an alert": warn the moment a save pushes this month over
+    const over=budgetCrossed(games,nextGames);
+    flash(over?t(lang,'budgetOverToast',over):(isEdit?t(lang,'saved'):t(lang,'added')));
     if(isCompleted&&!wasCompleted) maybeAskRating('complete',isEdit?games.map(g=>g.id===id?game:g):[...games,game]);
+  }
+  // v1.21.2 - month spend as counted by the budget card (BudgetEditor): games added this
+  // local month with a price, plus DLC, minus unreleased pre-orders
+  function monthSpend(list){
+    const d=new Date(); const mk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    return list.filter(g=>g.addedAt&&g.addedAt.slice(0,7)===mk&&!!+g.priceBought&&!(g.preOrdered&&g.releaseDate&&daysUntil(g.releaseDate)>0))
+      .reduce((s,g)=>s+ +g.priceBought + +(g.extraSpend||0),0);
+  }
+  function budgetCrossed(before,after){
+    const limit=+budget.amount;
+    if(!limit||(proGateActive()&&!isPro)) return null;
+    const a=monthSpend(before), b=monthSpend(after);
+    return a<=limit&&b>limit ? {spent:pln(b,lang),budget:pln(limit,lang)} : null;
   }
   // v1.19.2 - deletes can be undone from the toast for a few seconds
   function deleteWithUndo(ids,msg){
@@ -4127,6 +4173,15 @@ export default function App(){
       if (rateModal != null) { setRateModal(null); return; }
       if (privacyOpen)        { setPrivacyOpen(false); return; }
       if (importModal != null){ setImportModal(null); return; }
+      // v1.21.2 - these full-screen views were missing here: back armed "press again to
+      // exit" and the second press closed the app with the view still open
+      if (randomPick)         { setRandomPick(null); return; }
+      if (bulkScannerOpen)    { setBulkScannerOpen(false); return; }
+      if (psnImportOpen)      { setPsnImportOpen(false); return; }
+      if (steamImportOpen)    { setSteamImportOpen(false); return; }
+      if (xboxImportOpen)     { setXboxImportOpen(false); return; }
+      if (playniteImportOpen) { setPlayniteImportOpen(false); return; }
+      if (importUndoOpen)     { setImportUndoOpen(false); return; }
       // Priority 2: Add/Edit game modal
       if (modal != null)      { setModal(null); return; }
       // Priority 3: hamburger overlay screens (settings, wrapped, achievements, etc.)
@@ -4153,7 +4208,7 @@ export default function App(){
       window.removeEventListener('popstate', onPop);
       if (backDisarmTimer.current) clearTimeout(backDisarmTimer.current);
     };
-  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, proSheet, bulkSheet, sel, rateAsk, lang, flash]);
+  }, [onboarded, rateModal, privacyOpen, importModal, modal, overlay, proSheet, bulkSheet, sel, rateAsk, randomPick, bulkScannerOpen, psnImportOpen, steamImportOpen, xboxImportOpen, playniteImportOpen, importUndoOpen, lang, flash]);
 
   // v1.17.6 - reset the render cap whenever the filter/search/sort signature
   // changes, so a new query always starts from the top page.
@@ -4598,9 +4653,8 @@ export default function App(){
           lang={lang}
           onClose={()=>setImportUndoOpen(false)}
           onRemoveBatch={(idsToRemove)=>{
-            const idSet = new Set(idsToRemove);
-            setGames(prev => prev.filter(g => !idSet.has(g.id)));
-            flash(t(lang,'importUndoSuccess',{n:idsToRemove.length}));
+            // v1.21.2 - same undo toast as every other delete
+            deleteWithUndo(idsToRemove, t(lang,'importUndoSuccess',{n:idsToRemove.length}));
             setImportUndoOpen(false);
           }}
         />}

@@ -1,5 +1,5 @@
-// PS5 Vault: Service Worker v1.21.1 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
-const CACHE = "ps5vault-v79";
+// PS5 Vault: Service Worker v1.21.2 (NETWORK-FIRST + i18n notifications + tab-aware click + correct icon paths)
+const CACHE = "ps5vault-v80";
 const OFFLINE_URLS = ["/Games/", "/Games/index.html"];
 
 const NOTIF_I18N = {
@@ -115,14 +115,14 @@ self.addEventListener("fetch", e => {
   );
 });
 
-self.addEventListener("message", async event => {
-  if (event.data?.type === "SKIP_WAITING") { self.skipWaiting(); return; }
-  if (event.data?.type !== "CHECK_RELEASES") return;
-  const games = event.data.games || [];
-  // v1.14.2 - accept es alongside pl/en. Anything else (or undefined) defaults to pl
-  // for backward-compat with pre-v1.14.2 scheduled notifications.
-  // v1.21.0 - any language with texts here; unknown/undefined stays Polish (old app versions)
-  const lang = NOTIF_I18N[event.data.lang] ? event.data.lang : "pl";
+// v1.21.2 - The release check used to run only when the app was open (the page posts the
+// list). The list is now kept in Cache Storage and re-checked by Periodic Background Sync
+// (Chrome on Android, including the Play app) roughly twice a day, so a reminder can arrive
+// without opening the app. Browsers without periodic sync keep the open-the-app behaviour.
+const LIST_KEY = "/__release_list";
+
+async function checkReleaseList(games, langCode) {
+  const lang = NOTIF_I18N[langCode] ? langCode : "pl";
   const i18n = NOTIF_I18N[lang];
   const today = new Date(); today.setHours(0,0,0,0);
   for (const game of games) {
@@ -138,7 +138,8 @@ self.addEventListener("message", async event => {
     let shown = false;
     try { const c = await caches.open("ps5vault-notifs"); shown = !!(await c.match("/"+key)); } catch {}
     if (shown) continue;
-    const opts = base => ({ body: base, icon:"/Games/icons/icon-192.png", badge:"/Games/icons/icon-192.png", tag:key });
+    const opts = base => ({ body: base, icon:"/Games/icons/icon-192.png", badge:"/Games/icons/icon-192.png", tag:key, data:{ tab:"upc" } });
+    let fired = true;
     if (diff === 0) {
       await self.registration.showNotification(i18n.todayTitle, opts(i18n.todayBody(game.title)));
     } else if (diff === 7) {
@@ -147,9 +148,32 @@ self.addEventListener("message", async event => {
       await self.registration.showNotification(i18n.monthTitle, opts(i18n.monthBody(game.title)));
     } else if (diff > 0 && diff <= 3) {
       await self.registration.showNotification(i18n.daysTitle(diff), opts(i18n.daysBody(game.title)));
-    }
-    try { const c = await caches.open("ps5vault-notifs"); await c.put("/"+key, new Response("1")); } catch {}
+    } else fired = false;
+    // Only days that actually notified are remembered (the log no longer grows every day)
+    if (fired) { try { const c = await caches.open("ps5vault-notifs"); await c.put("/"+key, new Response("1")); } catch {} }
   }
+}
+
+self.addEventListener("message", async event => {
+  if (event.data?.type === "SKIP_WAITING") { self.skipWaiting(); return; }
+  if (event.data?.type !== "CHECK_RELEASES") return;
+  const games = (event.data.games || []).map(g => ({ id: g.id, title: g.title, releaseDate: g.releaseDate, notifyEnabled: g.notifyEnabled }));
+  const lang = event.data.lang;
+  try { const c = await caches.open("ps5vault-notifs"); await c.put(LIST_KEY, new Response(JSON.stringify({ games, lang }))); } catch {}
+  await checkReleaseList(games, lang);
+});
+
+self.addEventListener("periodicsync", event => {
+  if (event.tag !== "ps5vault-releases") return;
+  event.waitUntil((async () => {
+    try {
+      const c = await caches.open("ps5vault-notifs");
+      const res = await c.match(LIST_KEY);
+      if (!res) return;
+      const { games, lang } = await res.json();
+      await checkReleaseList(games || [], lang);
+    } catch {}
+  })());
 });
 
 self.addEventListener("notificationclick", e => {

@@ -33,11 +33,18 @@ export function fmtShort(d, lang) {
   return `${dayOf(dt, lang)} ${monthsFor(lang)[dt.getMonth()]}`;
 }
 
+// v1.21.2 - the euro sign goes after the amount in every app language but English
+// ("328 €" in de/fr/it/es/pt/pl, "€328" in en). Other currencies keep their table setting.
+function symbolAfter(def, lang) {
+  if (def.code === 'EUR') { let l = lang; try { if (!l) l = getLang(); } catch {} return l !== 'en'; }
+  return def.after;
+}
+
 // Money formatter. Uses active currency (read from localStorage on every call).
 export function pln(v, lang) {
   const num = (+v || 0).toFixed(0);
   const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
-  return def.after ? `${num} ${def.symbol}` : `${def.symbol}${num}`;
+  return symbolAfter(def, lang) ? `${num} ${def.symbol}` : `${def.symbol}${num}`;
 }
 
 // v1.19.4 - one game's price as typed: 59,99 zł keeps its cents (pln() rounds, which is
@@ -48,7 +55,7 @@ export function plnExact(v, lang) {
   let num = cents ? n.toFixed(2) : n.toFixed(0);
   if (cents && (lang || getLang()) !== 'en') num = num.replace('.', ',');
   const def = CURRENCIES[getCurrency()] || CURRENCIES.PLN;
-  return def.after ? `${num} ${def.symbol}` : `${def.symbol}${num}`;
+  return symbolAfter(def, lang) ? `${num} ${def.symbol}` : `${def.symbol}${num}`;
 }
 
 // Polish has 3-form plural: 1 gra, 2-4 gry, 5+ gier (also 12-14 → "gier", 22-24 → "gry")

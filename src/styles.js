@@ -62,7 +62,7 @@ body{background:${G.bg};color:${G.txt};font-family:'Syne',sans-serif;-webkit-fon
 /* v1.13.2 - A1 fix: bumped tab font from 9px → 11px (+22%) and min-height 42→46 to better
    match Material Design 14sp/48dp recommendation. Cannot hit 14sp exactly with 5 tabs on
    narrow screens (would clip "Premiery"/"Releases"), but +22% font is significant readability win. */
-.tab{flex:1;min-height:46px;padding:8px 2px;border:none;border-radius:9px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;position:relative;line-height:1.3;transition:all .18s}
+.tab{flex:1;min-height:46px;padding:8px 2px;border:none;border-radius:9px;background:transparent;color:${G.dim};font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;position:relative;line-height:1.3;transition:all .18s}
 .tab.on{background:rgba(0,212,255,.15);color:${G.blu}}
 .tab-dot{position:absolute;top:5px;right:4px;width:5px;height:5px;border-radius:50%;background:${G.org};animation:pulse 1.5s infinite}
 

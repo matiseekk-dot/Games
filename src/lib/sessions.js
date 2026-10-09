@@ -1,7 +1,7 @@
 // Session aggregation and streak computation.
 // `dayKey` (YYYY-MM-DD in local time) is the join key for everything time-series.
 // Streak math is exact-day-based - gaps of any size break the streak.
-import { dayKey } from './util.js';
+import { dayKey, parseDay } from './util.js';
 
 export function collectSessions(games) {
   const out = [];
@@ -21,7 +21,8 @@ export function collectSessions(games) {
       });
     });
   });
-  return out.sort((a, b) => b.startedAt - a.startedAt);  // newest first
+  // v1.21.2 - startedAt is an ISO string; subtracting strings gave NaN and no sorting
+  return out.sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt));  // newest first
 }
 
 // Compute current streak: consecutive days ending today (or yesterday if no session today)
@@ -48,7 +49,9 @@ export function computeLongestStreak(sessionsByDay) {
   const days = [...sessionsByDay.keys()].sort();
   let longest = 1, current = 1;
   for (let i = 1; i < days.length; i++) {
-    const prev = new Date(days[i - 1]); prev.setDate(prev.getDate() + 1);
+    // v1.21.2 - parseDay reads YYYY-MM-DD as a local day; new Date() read it as UTC, so west
+    // of Greenwich the next day never matched and every streak stayed at 1
+    const prev = parseDay(days[i - 1]); prev.setDate(prev.getDate() + 1);
     if (dayKey(prev) === days[i]) { current++; if (current > longest) longest = current; }
     else current = 1;
   }

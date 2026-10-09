@@ -2,7 +2,7 @@
 // genre/store/platform enums, currency table, default form shape.
 // No external dependencies - every other module imports from here.
 
-export const APP_VER  = '1.21.1';
+export const APP_VER  = '1.21.2';
 export const RAWG_KEY = import.meta.env.VITE_RAWG_KEY || '0c13edec026d489a97cc183170d796fd';
 // v1.17.7 - Umami Cloud website ID (public by design, like the Cloudflare beacon token).
 // Empty = funnel analytics fully off (see src/lib/analytics.js).
@@ -128,6 +128,10 @@ export const CURRENCIES = {
   BRL: { code:'BRL', symbol:'R$', after:false, name:{pl:'Real brazylijski', en:'Brazilian real', es:'Real brasileño', de:'Brasilianischer Real', fr:'Réal brésilien', it:'Real brasiliano', pt:'Real brasileiro'} },
   NOK: { code:'NOK', symbol:'kr', after:true,  name:{pl:'Korona norweska',   en:'Norwegian krone',  es:'Corona noruega', de:'Norwegische Krone', fr:'Couronne norvégienne', it:'Corona norvegese', pt:'Coroa norueguesa'} },
 };
+
+// v1.21.2 - "poor value" cost per hour for the Finance insight, per currency. Was a flat
+// 10 in any currency: fine for złoty, but 10 €/h almost never triggered. Roughly 10 zł.
+export const CPH_POOR = { PLN:10, EUR:2.5, USD:2.5, GBP:2, CAD:3.5, AUD:4, MXN:45, CZK:60, SEK:25, NOK:25, BRL:14 };
 
 // ─── Game source ──────────────────────────────────────────────────────────
 // v1.14.0 - Where did the user get the game from? Drives cost-exclusion: subscription

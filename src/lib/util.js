@@ -28,11 +28,24 @@ export function daysUntil(d) { if (!d) return null; const a = new Date(); a.setH
 // v1.18.1 - Numbers typed on Polish/Spanish keyboards arrive as "89,99" or "1 299,99".
 // Plain `+value` turns those into NaN, so prices silently dropped out of every total and
 // hours fell back to 0. Returns a finite number or null.
+// v1.21.2 - also thousands separators: "1.299,99" (de/it/pt-BR), "1,299.99" (en) and
+// "1'299.99". When both "." and "," appear, the last one is the decimal mark. A lone
+// separator before exactly 3 digits after a 1-3 digit group ("1.299", "2,000") is a
+// thousands separator; anything else ("59,99", "12.5") is a decimal mark.
 export function parseNum(v) {
   if (v === null || v === undefined) return null;
   if (typeof v === 'number') return Number.isFinite(v) ? v : null;
-  const s = String(v).trim().replace(/[\s  ]/g, '').replace(',', '.');
+  let s = String(v).trim().replace(/[\s\u00a0\u202f']/g, '');
   if (s === '') return null;
+  const dot = s.lastIndexOf('.'), comma = s.lastIndexOf(',');
+  if (dot >= 0 && comma >= 0) {
+    const dec = dot > comma ? '.' : ',';
+    s = s.split(dec === '.' ? ',' : '.').join('').replace(',', '.');
+  } else if (/^-?[1-9]\d{0,2}([.,]\d{3})+$/.test(s)) {
+    s = s.replace(/[.,]/g, '');
+  } else {
+    s = s.replace(',', '.');
+  }
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 }

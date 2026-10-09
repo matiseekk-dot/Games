@@ -22,6 +22,9 @@ export function lsRead() {
     // completions. Idempotent.
     let dirty = false;
     const migrated = games.map(g => {
+      // v1.21.2 - a null/non-object entry used to throw here and make the WHOLE collection
+      // "unreadable" (the app then started empty). Drop just that entry.
+      if (!g || typeof g !== 'object') { dirty = true; return null; }
       let next = g;
       if (next.priceSold === '') { dirty = true; next = { ...next, priceSold:null }; }
       if (next.status === 'ukonczone' && !next.completedAt) {
@@ -68,8 +71,20 @@ export function lsRead() {
           if (n !== null) { dirty = true; next = { ...next, [key]: String(n) }; }
         }
       }
+      // v1.21.2 - hours/rating/targetHours stored as strings (old versions, hand-edited or
+      // foreign backups) were summed as text in Stats ("0"+"12" = "012"). Store numbers.
+      for (const key of ['hours', 'targetHours', 'rating']) {
+        const v = next[key];
+        if (typeof v === 'string') {
+          const n = parseNum(v);
+          dirty = true;
+          next = { ...next, [key]: n === null ? (key === 'rating' ? null : 0) : n };
+        }
+      }
+      // v1.21.2 - Playnite imports wrote platform 'Switch', which is not in PLATFORMS
+      if (next.platform === 'Switch') { dirty = true; next = { ...next, platform: 'Nintendo Switch' }; }
       return next;
-    });
+    }).filter(Boolean);
     if (dirty) { try { localStorage.setItem(LS_KEY, JSON.stringify(migrated)); } catch {} }
     return migrated;
   } catch {
@@ -267,6 +282,10 @@ export function isValidGameShape(g) {
 // v1.15.3 - also backfill preOrdered:false for pre-v1.15.3 backups.
 function applyImportDefaults(g) {
   let out = g;
+  for (const key of ['hours', 'targetHours', 'rating']) {
+    if (typeof out[key] === 'string') { const n = parseNum(out[key]); out = { ...out, [key]: n === null ? (key === 'rating' ? null : 0) : n }; }
+  }
+  if (out.platform === 'Switch') out = { ...out, platform: 'Nintendo Switch' };
   if (out.source == null) out = { ...out, source: 'owned' };
   if (typeof out.preOrdered !== 'boolean') out = { ...out, preOrdered: false };
   if (out.status === 'psplus') out = psPlusStatusToSource(out);
@@ -347,6 +366,11 @@ export function wipeAllData() {
       wiped++;
     } catch (e) { errors.push(`${k}: ${e.message || e}`); }
   }
+
+  // v1.21.2 - also the game-search cache and the release-reminder log (Cache Storage)
+  try {
+    if (typeof caches !== 'undefined') ['ps5vault-rawg', 'ps5vault-notifs'].forEach(c => caches.delete(c).catch(() => {}));
+  } catch {}
 
   return { wiped, errors };
 }

@@ -38,7 +38,7 @@ PS5 Vault to prywatny tracker kolekcji gier. Dodajesz gry, a apka liczy godziny,
 
 ━━━ PREMIERY ━━━
 📅 Gry z przyszłą datą premiery trafiają do osobnej zakładki z odliczaniem.
-🔔 Przypomnienie 3 dni przed premierą i w dniu premiery.
+🔔 Przypomnienie na miesiąc, tydzień i 3 dni przed premierą oraz w dniu premiery.
 
 ━━━ STATYSTYKI ━━━
 📊 Top 10 gier, w które poszło najwięcej czasu, procent ukończonej biblioteki, platyny, oceny i gatunki.
@@ -100,7 +100,7 @@ PS5 Vault is a private tracker for your game collection. Add your games and the 
 
 ━━━ RELEASES ━━━
 📅 Games with a future release date get their own tab with a countdown.
-🔔 A reminder 3 days before launch and on launch day.
+🔔 Reminders a month, a week and 3 days before launch, and on launch day.
 
 ━━━ STATS ━━━
 📊 Your top 10 games by time played, library completion, platinums, ratings and genres.
@@ -162,7 +162,7 @@ PS5 Vault es un tracker privado para tu colección de juegos. Añade tus juegos 
 
 ━━━ LANZAMIENTOS ━━━
 📅 Los juegos con fecha de lanzamiento futura tienen su propia pestaña con cuenta atrás.
-🔔 Recordatorio 3 días antes y el día del lanzamiento.
+🔔 Avisos un mes, una semana y 3 días antes del lanzamiento, y el mismo día.
 
 ━━━ ESTADÍSTICAS ━━━
 📊 Tu top 10 de juegos por tiempo jugado, porcentaje de biblioteca terminada, platinos, notas y géneros.
@@ -224,7 +224,7 @@ PS5 Vault ist ein privater Tracker für deine Spielesammlung. Du trägst deine S
 
 ━━━ RELEASES ━━━
 📅 Spiele mit künftigem Erscheinungsdatum bekommen einen eigenen Tab mit Countdown.
-🔔 Erinnerung 3 Tage vor dem Release und am Release-Tag.
+🔔 Erinnerungen einen Monat, eine Woche und 3 Tage vor dem Release sowie am Release-Tag.
 
 ━━━ STATISTIKEN ━━━
 📊 Deine Top 10 nach Spielzeit, Anteil beendeter Spiele, Platin-Trophäen, Bewertungen und Genres.
@@ -286,7 +286,7 @@ PS5 Vault est un suivi privé pour ta collection de jeux. Ajoute tes jeux, l’a
 
 ━━━ SORTIES ━━━
 📅 Les jeux avec une date de sortie à venir ont leur propre onglet avec compte à rebours.
-🔔 Un rappel 3 jours avant la sortie et le jour J.
+🔔 Des rappels un mois, une semaine et 3 jours avant la sortie, et le jour J.
 
 ━━━ STATISTIQUES ━━━
 📊 Ton top 10 par temps de jeu, la part de ta bibliothèque terminée, tes platines, tes notes et tes genres.
@@ -348,7 +348,7 @@ PS5 Vault è un tracker privato per la tua collezione di giochi. Aggiungi i tuoi
 
 ━━━ USCITE ━━━
 📅 I giochi con data di uscita futura hanno una scheda tutta loro con il conto alla rovescia.
-🔔 Un promemoria 3 giorni prima dell’uscita e il giorno stesso.
+🔔 Promemoria un mese, una settimana e 3 giorni prima dell’uscita, e il giorno stesso.
 
 ━━━ STATISTICHE ━━━
 📊 La tua top 10 per tempo di gioco, la percentuale di libreria finita, platini, voti e generi.
@@ -410,7 +410,7 @@ PS5 Vault é um controle particular da sua coleção de jogos. Você adiciona se
 
 ━━━ LANÇAMENTOS ━━━
 📅 Jogos com data de lançamento futura ganham uma aba própria com contagem regressiva.
-🔔 Lembrete 3 dias antes do lançamento e no dia.
+🔔 Lembretes um mês, uma semana e 3 dias antes do lançamento, e no dia.
 
 ━━━ ESTATÍSTICAS ━━━
 📊 Seu top 10 por tempo jogado, a porcentagem da biblioteca zerada, platinas, notas e gêneros.

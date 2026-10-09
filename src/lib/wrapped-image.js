@@ -16,6 +16,7 @@
 
 import { hoursWord, gamesWord, platynaWord } from './format.js';
 import { t } from '../i18n.js';
+import { localizeGenre } from '../constants.js';
 
 // Brand colors duplicated here (avoids importing the full G object - small win,
 // but keeps this module self-contained and free to be tree-shaken if someone strips
@@ -243,7 +244,7 @@ export async function buildWrappedImage(review, year, lang) {
   const genreY = 1340;
   if (review.topGenre && review.topGenre.name) {
     ctx.textAlign = 'center';
-    const pillText = `🎮  ${review.topGenre.name.toUpperCase()}  ·  ${review.topGenre.hours}h`;
+    const pillText = `🎮  ${String(localizeGenre(review.topGenre.name, lang)).toUpperCase()}  ·  ${review.topGenre.hours}h`;
     ctx.font = "700 30px 'Syne', Arial, sans-serif";
     const pillW = ctx.measureText(pillText).width + 80;
     const pillH = 70;
@@ -280,16 +281,13 @@ export async function buildWrappedImage(review, year, lang) {
   ctx.textAlign = 'center';
   ctx.font = "400 24px 'Syne', Arial, sans-serif";
   ctx.fillStyle = COL.dim;
-  const footerByLang = {
-    pl: 'matiseekk-dot.github.io/Games',
-    en: 'matiseekk-dot.github.io/Games',
-    es: 'matiseekk-dot.github.io/Games',
-  };
-  ctx.fillText(footerByLang[lang] || footerByLang.en, W / 2, H - 110);
+  // Every shared poster is an ad: point people at the app page (it links to Google Play)
+  // rather than the plain web build. Same address in every language.
+  ctx.fillText('skudev.pl/ps5-vault', W / 2, H - 110);
 
   ctx.font = "700 28px 'Orbitron', Arial, sans-serif";
   ctx.fillStyle = COL.blu;
-  ctx.fillText('PS5 VAULT', W / 2, H - 60);
+  ctx.fillText('PS5 VAULT · GOOGLE PLAY', W / 2, H - 60);
 
   // ── Convert to blob ────────────────────────────────────────────────────────
   return await new Promise((resolve) => {

@@ -1,6 +1,7 @@
-// v1.20.1 - "Pile of shame": games the user has but never started. Same rules as the
-// Finance "Unplayed games" card (no hours logged, not completed or abandoned, not a
-// pre-order, already released), demo games excluded. Money counts only bought games.
+// v1.20.1 - "Pile of shame": games the user has but never started (no hours logged, not
+// completed or abandoned, not a pre-order, already released), demo games excluded.
+// Unlike the Finance "Unplayed games" card, which counts only games with a purchase price,
+// the pile also includes PS Plus / Game Pass / free games; money counts only bought games.
 import { isOwned } from '../constants.js';
 import { daysUntil } from './util.js';
 

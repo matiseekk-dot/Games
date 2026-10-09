@@ -33,6 +33,9 @@
 function mapPlayniteStatus(name) {
   const s = String(name || '').toLowerCase().trim();
   if (!s) return null;
+  // v1.21.2 - "Not Played" must be checked before "played": it contains that word, and
+  // it is Playnite's default status, so every untouched game was imported as "Playing".
+  if (s.includes('not played') || s.includes('unplayed')) return 'planuje';
   if (s.includes('completed')) return 'ukonczone';   // "Completed" = 100% achievements
   if (s.includes('beaten'))    return 'ukonczone';   // "Beaten" = main story done
   if (s.includes('playing'))   return 'gram';        // "Playing" = active
@@ -41,8 +44,6 @@ function mapPlayniteStatus(name) {
   if (s.includes('on hold'))   return 'porzucone';   // "On Hold" → shelf'd
   if (s.includes('on-hold'))   return 'porzucone';
   if (s.includes('plan'))      return 'planuje';     // "Plan to Play"
-  if (s === 'not played')      return 'planuje';
-  if (s.includes('not played')) return 'planuje';
   if (s.includes('wishlist'))  return 'planuje';
   return null;  // unknown → fall back to derived
 }
@@ -57,12 +58,16 @@ function mapPlaynitePlatform(platformName, sourceName) {
   if (candidate.includes('ps5') || candidate.includes('playstation 5')) return 'PS5';
   if (candidate.includes('ps4') || candidate.includes('playstation 4')) return 'PS4';
   if (candidate.includes('ps3') || candidate.includes('ps2') || candidate.includes('vita')) return 'Other';
+  // v1.21.2 - PlayStation 1/2/3 and Portable were mapped to PS5 by the generic rule below
+  if (/playstation\s*([123]\b|portable|vita)|\bpsp\b|\bpsx\b|\bps1\b/.test(candidate)) return 'Other';
   if (candidate.includes('playstation') && !candidate.includes('5') && !candidate.includes('4')) return 'PS5'; // "PlayStation" generic
   if (candidate.includes('xbox series')) return 'Xbox Series X/S';
   if (candidate.includes('xbox one')) return 'Xbox One';
   if (candidate.includes('xbox 360')) return 'Other';
   if (candidate.includes('xbox')) return 'Xbox Series X/S';
-  if (candidate.includes('switch') || candidate.includes('nintendo')) return 'Switch';
+  // v1.21.2 - must match PLATFORMS ('Nintendo Switch'); plain 'Switch' fell outside the
+  // platform filter and the edit form's dropdown
+  if (candidate.includes('switch') || candidate.includes('nintendo')) return 'Nintendo Switch';
   if (candidate.includes('android') || candidate.includes('ios') || candidate === 'mobile') return 'Mobile';
   // Anything PC-ish (Steam, Epic, GOG, Origin, Uplay, Battle.net, GOG Galaxy, etc.)
   return 'PC';
